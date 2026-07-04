@@ -443,6 +443,22 @@ export default function App() {
               <kbd className="text-[9px] font-mono bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500">⌘K</kbd>
             </button>
 
+            {/* Tech Stack Status Badges */}
+            <div className="hidden xl:flex items-center gap-1.5 text-[9px] font-mono">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold" title="PostgreSQL + pgvector active">
+                PostgreSQL/pgvector
+              </span>
+              <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold" title="FastAPI LangGraph multi-agent engine active">
+                FastAPI/LangGraph
+              </span>
+              <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold" title="Model Context Protocol tools enabled">
+                MCP Tools
+              </span>
+              <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold" title="HashiCorp Vault secret manager">
+                Vault
+              </span>
+            </div>
+
             {/* Dynamic mini cash balance widget */}
             <div className="px-3.5 py-1.5 rounded-lg bg-[#111827] border border-[#27272A] flex items-center gap-2 text-xs">
               <span className="text-[10px] uppercase font-semibold text-gray-400 font-mono">Treasury:</span>

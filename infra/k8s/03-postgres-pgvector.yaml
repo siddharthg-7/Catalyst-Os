@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: catalyst-os
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalyst-postgres
+  namespace: catalyst-os
+  labels:
+    app: catalyst-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalyst-postgres
+  template:
+    metadata:
+      labels:
+        app: catalyst-postgres
+    spec:
+      containers:
+        - name: postgres-pgvector
+          image: pgvector/pgvector:pg16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "catalyst_db"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "catalyst_secure_pass"
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalyst-postgres-service
+  namespace: catalyst-os
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: catalyst-postgres

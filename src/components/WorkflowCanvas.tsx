@@ -429,6 +429,33 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                   </div>
                 </div>
 
+                {/* MCP Tool Calls Telemetry */}
+                {activeInit.mcp_tool_calls && activeInit.mcp_tool_calls.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                        <h4 className="text-xs font-semibold text-white uppercase tracking-wider">MCP Tools Executed</h4>
+                      </div>
+                      <span className="text-[9px] font-mono text-cyan-400/80 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">Model Context Protocol</span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {activeInit.mcp_tool_calls.map((tc, idx) => (
+                        <div key={idx} className="p-3 rounded-lg bg-zinc-950/80 border border-cyan-900/30 text-xs font-mono space-y-1">
+                          <div className="flex items-center justify-between text-cyan-400 font-bold">
+                            <span>🛠️ {tc.tool}</span>
+                            <span className="text-[9px] text-emerald-400">SUCCESS</span>
+                          </div>
+                          <div className="text-[10px] text-zinc-400 truncate">
+                            Output: {JSON.stringify(tc.output)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Deliverables Produced */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">

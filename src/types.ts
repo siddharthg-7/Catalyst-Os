@@ -91,6 +91,25 @@ export interface Initiative {
   tasks: WorkflowTask[];
   messages: AgentMessage[];
   deliverables: Deliverable[];
+  mcp_tool_calls?: MCPToolCall[];
+}
+
+export interface MCPToolCall {
+  tool: string;
+  input: any;
+  output: any;
+}
+
+export interface MCPTool {
+  name: string;
+  description: string;
+  parameters?: any;
+}
+
+export interface VaultStatus {
+  status: 'connected' | 'fallback';
+  vaultAddr: string;
+  keysFound: string[];
 }
 
 export interface KnowledgeFile {

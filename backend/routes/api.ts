@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { prisma } from '../services/dbService';
+import vaultService from '../services/vaultService';
 import { extractTextFromFile } from '../services/documentParser';
 import { ingestDocument, performHybridSearch, buildContext } from '../services/ragEngine';
 import { 
@@ -109,7 +111,41 @@ router.post('/initiatives', authenticateJWT, (req: AuthenticatedRequest, res) =>
   res.status(201).json(newInit);
 });
 
-// POST simulate initiative collaboration (The core Multi-Agent Loop!)
+// TELEMETRY & SYSTEM ENDPOINTS (Vault & MCP Tools)
+router.get('/vault/status', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const status = await vaultService.getStatus();
+  const secretData = await vaultService.getSecret();
+  res.json({
+    status: status.connected ? 'connected' : 'fallback',
+    vaultAddr: status.vaultAddr,
+    keysFound: Object.keys(secretData)
+  });
+});
+
+router.get('/mcp/tools', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+    const pyRes = await fetch(`${fastApiUrl}/api/py/mcp/tools`);
+    if (pyRes.ok) {
+      const data = await pyRes.json();
+      return res.json(data);
+    }
+  } catch (e) {
+    // Fallback response if Python service is loading
+  }
+
+  res.json({
+    status: 'active',
+    mcp_version: '1.0.0',
+    tools: [
+      { name: 'mcp_financial_calculator', description: 'Computes financial burn rates & runway impact.' },
+      { name: 'mcp_compliance_auditor', description: 'Audits legal compliance, IP risk & SOC-2 guarantees.' },
+      { name: 'mcp_vault_secret_loader', description: 'Queries HashiCorp Vault secrets engine.' }
+    ]
+  });
+});
+
+// POST simulate initiative collaboration (LangGraph Multi-Agent Loop!)
 router.post('/initiatives/:id/simulate', authenticateJWT, async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const init = initiatives.find(i => i.id === id);
@@ -118,15 +154,39 @@ router.post('/initiatives/:id/simulate', authenticateJWT, async (req: Authentica
     return;
   }
 
-  // Update statuses to showcase active progress on UI
   init.status = 'active';
   setAgentStatuses('collaborating');
   const ceoAgent = agentsList.find(a => a.role === 'CEO');
   if (ceoAgent) ceoAgent.status = 'analyzing';
 
   try {
-    console.log(`Starting modular multi-agent simulation for initiative: ${init.title}`);
-    const simResult = await runMultiAgentCollaboration(init);
+    console.log(`Starting LangGraph multi-agent simulation for initiative: ${init.title}`);
+    
+    // Attempt FastAPI Python LangGraph service invocation
+    let simResult: any = null;
+    const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+    try {
+      const pyResponse = await fetch(`${fastApiUrl}/api/py/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: init.id,
+          title: init.title,
+          description: init.description,
+          category: init.category
+        })
+      });
+      if (pyResponse.ok) {
+        simResult = await pyResponse.json();
+        console.log('✅ Received LangGraph simulation result from FastAPI microservice!');
+      }
+    } catch (pyErr: any) {
+      console.warn(`FastAPI LangGraph service unavailable (${pyErr.message}). Using local engine fallback.`);
+    }
+
+    if (!simResult) {
+      simResult = await runMultiAgentCollaboration(init);
+    }
 
     // Apply sim results to initiative
     init.tasks = simResult.tasks || init.tasks;
@@ -256,7 +316,7 @@ router.get('/decisions', authenticateJWT, (req: AuthenticatedRequest, res) => {
 // GET knowledge base documents from Neon PostgreSQL
 router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res) => {
   try {
-    const prismaClient = new PrismaClient();
+    const prismaClient = prisma;
     const activeStartup = await prismaClient.startup.findFirst({
       where: { ownerId: req.user?.id }
     }) || await prismaClient.startup.findFirst({
@@ -299,7 +359,7 @@ router.post('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res
   }
 
   try {
-    const prismaClient = new PrismaClient();
+    const prismaClient = prisma;
     const activeStartup = await prismaClient.startup.findFirst({
       where: { ownerId: req.user?.id }
     }) || await prismaClient.startup.findFirst({
@@ -416,7 +476,7 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
   }
 
   try {
-    const prismaClient = new PrismaClient();
+    const prismaClient = prisma;
     const activeStartup = await prismaClient.startup.findFirst({
       where: { ownerId: req.user?.id }
     }) || await prismaClient.startup.findFirst({

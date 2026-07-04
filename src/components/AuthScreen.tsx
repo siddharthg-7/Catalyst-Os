@@ -1,153 +1,296 @@
 import React, { useState } from 'react';
-import { SignIn, SignUp } from '@clerk/clerk-react';
-import { Shield } from 'lucide-react';
-
-// Dark glassmorphic appearance config matching the app's design system
-const clerkAppearance = {
-  variables: {
-    colorPrimary: '#6366f1',          // indigo-500
-    colorBackground: '#09090b',       // zinc-950
-    colorInputBackground: '#09090b',  // zinc-950
-    colorInputText: '#ffffff',
-    colorText: '#ffffff',
-    colorTextSecondary: '#a1a1aa',    // zinc-400
-    colorDanger: '#f87171',           // red-400
-    colorSuccess: '#34d399',          // emerald-400
-    borderRadius: '0.5rem',
-    fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-    fontSize: '0.875rem',
-  },
-  elements: {
-    // Outermost card — transparent so our own container shows through
-    card: {
-      background: 'transparent',
-      boxShadow: 'none',
-      padding: '0',
-    },
-    // Hide Clerk's own header (we render our own above the component)
-    header: { display: 'none' },
-    // Social / OAuth buttons row
-    socialButtonsBlockButton: {
-      background: '#18181b',
-      border: '1px solid #27272a',
-      color: '#fff',
-    },
-    socialButtonsBlockButton__hover: {
-      background: '#27272a',
-    },
-    // Divider
-    dividerLine: { background: '#27272a' },
-    dividerText: { color: '#52525b' },
-    // Input fields
-    formFieldInput: {
-      background: '#09090b',
-      border: '1px solid #3f3f46',
-      color: '#fff',
-    },
-    formFieldLabel: {
-      color: '#a1a1aa',
-      textTransform: 'uppercase' as const,
-      fontSize: '0.65rem',
-      letterSpacing: '0.08em',
-      fontWeight: '600',
-    },
-    // Primary action button
-    formButtonPrimary: {
-      background: '#6366f1',
-      boxShadow: '0 4px 14px 0 rgba(99, 102, 241, 0.15)',
-      fontWeight: '600',
-    },
-    // Footer links
-    footerActionLink: { color: '#818cf8' },  // indigo-400
-    // Error message
-    formFieldErrorText: { color: '#f87171' },
-    // The "Already have an account? Sign in" footer — we handle tab switching,
-    // so hide Clerk's own version to avoid double navigation links.
-    footer: { display: 'none' },
-    // Internal card body
-    cardBox: {
-      boxShadow: 'none',
-      background: 'transparent',
-    },
-  },
-};
+import { useAuth } from '../context/AuthContext';
+import { Shield, Sparkles, LogIn, UserPlus, Check, ArrowRight, Building2, Rocket, Upload, CheckCircle2, RefreshCw } from 'lucide-react';
+import HackathonLandingPage from './HackathonLandingPage';
 
 export default function AuthScreen() {
-  const [tab, setTab] = useState<'signin' | 'signup'>('signin');
+  const { login, signup } = useAuth();
+  
+  // Navigation & View State
+  const [view, setView] = useState<'landing' | 'auth' | 'onboarding'>('landing');
+  const [isLogin, setIsLogin] = useState(true);
+  
+  // Auth Form State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<'Founder' | 'Executive' | 'Admin'>('Founder');
+  
+  // Onboarding Form State
+  const [onboardingPath, setOnboardingPath] = useState<'existing' | 'new'>('existing');
+  const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1);
+  const [buildingAgents, setBuildingAgents] = useState(false);
+  const [agentProgress, setAgentProgress] = useState({
+    ceo: false,
+    cfo: false,
+    talent: false,
+    growth: false,
+    ops: false,
+  });
+
+  // Existing Startup Form
+  const [startupName, setStartupName] = useState('AeroFlow AI');
+  const [industry, setIndustry] = useState('B2B SaaS / Developer Tools');
+  const [stage, setStage] = useState('Pre-Seed');
+  const [teamSize, setTeamSize] = useState('6 employees');
+  const [revenue, setRevenue] = useState('$12,000 / mo');
+  const [burnRate, setBurnRate] = useState('$18,500 / mo');
+  const [runway, setRunway] = useState('13.2 months');
+  const [fundingRaised, setFundingRaised] = useState('$250,000');
+
+  // New Startup Form
+  const [idea, setIdea] = useState('');
+  const [businessModel, setBusinessModel] = useState('Subscription SaaS');
+  const [targetAudience, setTargetAudience] = useState('Mid-market DevOps Engineering Teams');
+  const [budget, setBudget] = useState('$50,000');
+  const [timeline, setTimeline] = useState('30 Days');
+
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDemoLogin = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await login('founder@founder.os', 'password123');
+    } catch (err: any) {
+      setError(err.message || 'Demo login failed.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || (!isLogin && !name)) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await signup(name, email, password, role);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication operation failed.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const startOnboardingAnimation = async () => {
+    setBuildingAgents(true);
+    
+    // Animate agent building checkmarks sequentially
+    await new Promise(r => setTimeout(r, 600));
+    setAgentProgress(p => ({ ...p, ceo: true }));
+    await new Promise(r => setTimeout(r, 600));
+    setAgentProgress(p => ({ ...p, cfo: true }));
+    await new Promise(r => setTimeout(r, 600));
+    setAgentProgress(p => ({ ...p, talent: true }));
+    await new Promise(r => setTimeout(r, 600));
+    setAgentProgress(p => ({ ...p, growth: true }));
+    await new Promise(r => setTimeout(r, 600));
+    setAgentProgress(p => ({ ...p, ops: true }));
+    await new Promise(r => setTimeout(r, 800));
+
+    // Complete login as founder
+    await login('founder@founder.os', 'password123');
+  };
 
   return (
-    <div className="min-h-screen bg-[#030303] flex items-center justify-center p-6 relative overflow-hidden font-sans">
-
-      {/* Ambient glow decorations */}
-      <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="w-full max-w-md bg-[#09090b] border border-[#1e1e24] rounded-2xl shadow-2xl p-8 relative z-10">
-
-        {/* Logo + header */}
-        <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white shadow-lg mb-4">
-            <Shield className="w-6 h-6" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            CatalystOS{' '}
-            <span className="text-[10px] uppercase bg-zinc-800 text-zinc-400 font-mono tracking-wider px-2 py-0.5 rounded border border-zinc-700">
-              v2.0
-            </span>
-          </h1>
-          <p className="text-zinc-500 text-xs mt-1">
-            {tab === 'signin'
-              ? 'Sign in to access your multi-agent corporate matrix'
-              : 'Create your account to get started'}
-          </p>
+    <div className={`min-h-screen bg-[#050505] text-white relative font-sans ${view === 'landing' ? 'p-0 w-full block' : 'p-6 flex items-center justify-center'}`}>
+      
+      {/* 1. LANDING PAGE VIEW (Hackathon Blueprint Design) */}
+      {view === 'landing' && (
+        <div className="w-full min-h-screen">
+          <HackathonLandingPage
+            onStartBuilding={() => setView('onboarding')}
+            onViewDemo={handleDemoLogin}
+          />
         </div>
+      )}
 
-        {/* Tab toggle */}
-        <div className="grid grid-cols-2 p-1 bg-zinc-950 border border-zinc-800 rounded-lg mb-6">
-          <button
-            id="auth-signin-tab"
-            onClick={() => setTab('signin')}
-            className={`py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-              tab === 'signin'
-                ? 'bg-[#18181b] text-white shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            id="auth-signup-tab"
-            onClick={() => setTab('signup')}
-            className={`py-1.5 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-              tab === 'signup'
-                ? 'bg-[#18181b] text-white shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            Register
-          </button>
-        </div>
+      {/* 2. SMART ONBOARDING FLOW */}
+      {view === 'onboarding' && (
+        <div className="max-w-2xl w-full bg-[#09090b] border border-zinc-800 rounded-2xl p-8 relative z-10 shadow-2xl space-y-6">
+          {!buildingAgents ? (
+            <>
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-white">Smart Onboarding</h2>
+                  <p className="text-zinc-500 text-xs">Configure your startup parameters for executive AI context</p>
+                </div>
+                <button
+                  onClick={() => setView('landing')}
+                  className="text-xs text-zinc-400 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
 
-        {/* Clerk auth components */}
-        <div id="clerk-auth-container">
-          {tab === 'signin' ? (
-            <SignIn
-              appearance={clerkAppearance}
-              routing="hash"
-              signUpUrl="#signup"
-              fallbackRedirectUrl="/"
-            />
+              {/* Pathway Selector */}
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => setOnboardingPath('existing')}
+                  className={`p-4 rounded-xl border text-left space-y-1 transition-all cursor-pointer ${
+                    onboardingPath === 'existing'
+                      ? 'bg-zinc-900 border-white text-white'
+                      : 'bg-zinc-950/40 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  <Building2 className="w-5 h-5 text-white" />
+                  <h4 className="text-xs font-bold text-white">Existing Startup</h4>
+                  <p className="text-[10px] text-zinc-500">Provide team size, revenue, burn rate, and pitch deck</p>
+                </button>
+
+                <button
+                  onClick={() => setOnboardingPath('new')}
+                  className={`p-4 rounded-xl border text-left space-y-1 transition-all cursor-pointer ${
+                    onboardingPath === 'new'
+                      ? 'bg-zinc-900 border-white text-white'
+                      : 'bg-zinc-950/40 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  <Rocket className="w-5 h-5 text-white" />
+                  <h4 className="text-xs font-bold text-white">New Startup Idea</h4>
+                  <p className="text-[10px] text-zinc-500">Define concept, target audience, budget, and timeline</p>
+                </button>
+              </div>
+
+              {/* Onboarding Fields */}
+              {onboardingPath === 'existing' ? (
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Startup Name</label>
+                    <input type="text" value={startupName} onChange={e => setStartupName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Industry</label>
+                    <input type="text" value={industry} onChange={e => setIndustry(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Monthly Burn</label>
+                    <input type="text" value={burnRate} onChange={e => setBurnRate(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Runway</label>
+                    <input type="text" value={runway} onChange={e => setRunway(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="col-span-2">
+                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Startup Concept</label>
+                    <input type="text" placeholder="e.g. AI-powered automated code review platform" value={idea} onChange={e => setIdea(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Budget</label>
+                    <input type="text" value={budget} onChange={e => setBudget(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Target Launch</label>
+                    <input type="text" value={timeline} onChange={e => setTimeline(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 border-t border-zinc-800 flex justify-end">
+                <button
+                  onClick={startOnboardingAnimation}
+                  className="px-6 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold font-mono transition-all cursor-pointer shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                >
+                  Deploy Executive Team →
+                </button>
+              </div>
+            </>
           ) : (
-            <SignUp
-              appearance={clerkAppearance}
-              routing="hash"
-              signInUrl="#signin"
-              fallbackRedirectUrl="/"
-            />
+            /* Animated Building Executive Team checkmark screen */
+            <div className="py-8 text-center space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white font-mono">Building Your Executive Team...</h3>
+                <p className="text-xs text-zinc-400">Synthesizing domain contexts and initializing agent state graphs</p>
+              </div>
+
+              <div className="space-y-3 max-w-sm mx-auto text-xs font-mono text-left">
+                <div className={`p-3 rounded-lg border flex items-center justify-between transition-all ${agentProgress.ceo ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-zinc-950/40 border-zinc-850 text-zinc-600'}`}>
+                  <span>✓ CEO Orchestrator</span>
+                  {agentProgress.ceo ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                </div>
+
+                <div className={`p-3 rounded-lg border flex items-center justify-between transition-all ${agentProgress.cfo ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-zinc-950/40 border-zinc-850 text-zinc-600'}`}>
+                  <span>✓ CFO (Treasury & Burn)</span>
+                  {agentProgress.cfo ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : agentProgress.ceo ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                </div>
+
+                <div className={`p-3 rounded-lg border flex items-center justify-between transition-all ${agentProgress.talent ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-zinc-950/40 border-zinc-850 text-zinc-600'}`}>
+                  <span>✓ Head of Talent</span>
+                  {agentProgress.talent ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : agentProgress.cfo ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                </div>
+
+                <div className={`p-3 rounded-lg border flex items-center justify-between transition-all ${agentProgress.growth ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-zinc-950/40 border-zinc-850 text-zinc-600'}`}>
+                  <span>✓ Head of Growth</span>
+                  {agentProgress.growth ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : agentProgress.talent ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                </div>
+
+                <div className={`p-3 rounded-lg border flex items-center justify-between transition-all ${agentProgress.ops ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-zinc-950/40 border-zinc-850 text-zinc-600'}`}>
+                  <span>✓ Operations Executive</span>
+                  {agentProgress.ops ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : agentProgress.growth ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : null}
+                </div>
+              </div>
+            </div>
           )}
         </div>
+      )}
 
-      </div>
+      {/* 3. AUTH / LOGIN FORM */}
+      {view === 'auth' && (
+        <div className="max-w-md w-full bg-[#09090b] border border-zinc-800 rounded-2xl p-8 relative z-10 shadow-2xl space-y-6">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <h2 className="text-lg font-bold text-white">{isLogin ? 'Sign In' : 'Create Account'}</h2>
+            <button onClick={() => setView('landing')} className="text-xs text-zinc-400 hover:text-white cursor-pointer">
+              Cancel
+            </button>
+          </div>
+
+          <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs font-mono">
+            {!isLogin && (
+              <div>
+                <label className="block text-zinc-400 mb-1 uppercase">Full Name</label>
+                <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-zinc-400 mb-1 uppercase">Email Address</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+            </div>
+
+            <div>
+              <label className="block text-zinc-400 mb-1 uppercase">Password</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
+            </div>
+
+            {error && <p className="text-rose-400 text-[11px]">{error}</p>}
+
+            <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs transition-all cursor-pointer font-mono shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+              {submitting ? 'Processing...' : isLogin ? 'Sign In →' : 'Create Account →'}
+            </button>
+          </form>
+
+          <div className="pt-2 text-center text-xs text-zinc-500">
+            <button onClick={() => setIsLogin(!isLogin)} className="hover:text-white cursor-pointer underline">
+              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

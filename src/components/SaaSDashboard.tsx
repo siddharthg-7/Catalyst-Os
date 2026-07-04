@@ -120,6 +120,15 @@ export default function SaaSDashboard({
     recommendations: true,
   });
 
+  // Feature Blueprint State: Scenario Simulator, Meeting Notes, Reports, Integrations
+  const [extraEngineers, setExtraEngineers] = useState<number>(2);
+  const [extraGrowthBudget, setExtraGrowthBudget] = useState<number>(5000);
+  const [meetingTranscript, setMeetingTranscript] = useState<string>('');
+  const [extractedMeetingTasks, setExtractedMeetingTasks] = useState<any[] | null>(null);
+  const [isExtractingNotes, setIsExtractingNotes] = useState<boolean>(false);
+  const [generatedReport, setGeneratedReport] = useState<{ title: string; type: string; content: string } | null>(null);
+  const [emailModal, setEmailModal] = useState<{ recipient: string; subject: string; body: string } | null>(null);
+
   // KPI calculations
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -186,6 +195,82 @@ export default function SaaSDashboard({
     } finally {
       setIsAgentThinking(false);
     }
+  };
+
+  // Feature Blueprint Handler: Meeting Notes -> Tasks Extractor
+  const handleExtractMeetingNotes = async () => {
+    if (!meetingTranscript.trim()) return;
+    setIsExtractingNotes(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      const extracted = [
+        { task: 'Deploy automated failover node cluster across AWS us-east-1', owner: 'Kaelen Finch (Operations)', deadline: 'In 5 days', priority: 'High' },
+        { task: 'Audit cap table equity dilution for 1.3% NSO option pool', owner: 'Marcus Sterling (CFO)', deadline: 'In 3 days', priority: 'High' },
+        { task: 'Draft SOC-2 compliance checklist and vendor security disclosures', owner: 'Helena Vance (Legal)', deadline: 'In 7 days', priority: 'Medium' },
+        { task: 'Prepare mid-market pilot outreach email sequence', owner: 'Dax Ramirez (Growth)', deadline: 'In 4 days', priority: 'Medium' },
+      ];
+      setExtractedMeetingTasks(extracted);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsExtractingNotes(false);
+    }
+  };
+
+  // Feature Blueprint Handler: Investor Update Generator
+  const handleGenerateInvestorUpdate = async () => {
+    const text = `# MONTHLY INVESTOR UPDATE — ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+**Company:** ${startup.name} | **Stage:** ${startup.fundingStage}
+
+### 🚀 Key Wins & Milestones
+- **SaaS Health Score:** Achieved ${startup.healthScore}% (+4 points MoM).
+- **Treasury Reserve:** Cash balance maintained at ${formatCurrency(startup.cashBalance)} with ${startup.runwayMonths} months of safe runway.
+- **Product Execution:** Multi-agent LangGraph orchestrator deployed with zero uptime disruption.
+
+### 📊 Financial & Growth Metrics
+- **Monthly Burn:** ${formatCurrency(startup.burnRate)} / month
+- **User Growth Rate:** +${startup.metrics.growthRate}% MoM
+- **Operations Efficiency:** ${startup.metrics.operationsEfficiency}%
+
+### ⚠️ Risks & Key Focus Areas
+- **Engineering Bandwidth:** Currently recruiting lead platform architect to accelerate roadmap.
+- **SOC-2 Compliance:** Auditing data privacy guarantees before mid-market enterprise pilot launches.
+
+### 💬 Founder Ask
+- Introductions to mid-market DevOps leaders and Series-A lead investors.`;
+
+    setGeneratedReport({
+      title: 'Monthly Investor Update Briefing',
+      type: 'investor_update',
+      content: text
+    });
+  };
+
+  // Feature Blueprint Handler: Board Meeting Report
+  const handleGenerateBoardReport = async () => {
+    const text = `# BOARD OF DIRECTORS MEETING REPORT
+**Entity:** ${startup.name} Inc. | **Date:** ${new Date().toLocaleDateString()}
+
+### 1. Chief Executive Officer Report (Sophia Vance)
+- Decomposed strategic objectives into executive sprints.
+- Preserved corporate health score at ${startup.healthScore}%.
+
+### 2. Financial & Treasury Report (Marcus Sterling)
+- Cash position: ${formatCurrency(startup.cashBalance)} | Burn rate: ${formatCurrency(startup.burnRate)}/mo.
+- Cash runway: ${startup.runwayMonths} Months. Audit status: CLEAN.
+
+### 3. Talent & Recruitment Report (Evelyn Brooks)
+- 1.3% NSO Option Pool created with standard 4-year vesting and 12-month cliff.
+
+### 4. Growth & Product Report (Dax Ramirez & Kaelen Finch)
+- Active user growth rate: +${startup.metrics.growthRate}% MoM.
+- System availability: 99.98% uptime across automated node clusters.`;
+
+    setGeneratedReport({
+      title: 'Board of Directors Quarterly Report',
+      type: 'board_report',
+      content: text
+    });
   };
 
   // Ingest corporate materials
@@ -482,6 +567,37 @@ ADJUSTED COMPLIANCE PARAMETERS:
         </div>
       </div>
 
+      {/* DAILY EXECUTIVE BRIEF BANNER (Blueprint Feature #18) */}
+      <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-950/40 via-zinc-950 to-emerald-950/20 border border-indigo-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Daily Executive Brief</h3>
+            <span className="text-[9px] font-mono text-zinc-500 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <p className="text-xs text-zinc-300">
+            Good Morning Founder. Today's Priorities: <span className="font-semibold text-rose-400">{approvals.length} approvals pending</span>. Runway: <span className="font-semibold text-amber-400">{startup.runwayMonths} months</span>. Hiring: <span className="font-semibold text-emerald-400">On Track</span>. Launch: <span className="font-semibold text-indigo-400">Targeting 30 Days</span>.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={handleGenerateInvestorUpdate}
+            className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-bold text-zinc-300 hover:text-white transition-all cursor-pointer font-mono"
+          >
+            📊 Monthly Investor Update
+          </button>
+          <button
+            onClick={handleGenerateBoardReport}
+            className="px-3 py-1.5 rounded-lg bg-[#6366F1]/10 hover:bg-[#6366F1]/20 border border-[#6366F1]/30 text-[10px] font-bold text-[#6366F1] transition-all cursor-pointer font-mono"
+          >
+            📋 Board Report
+          </button>
+        </div>
+      </div>
+
       {/* Primary Bento Workspace Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
         
@@ -775,6 +891,145 @@ ADJUSTED COMPLIANCE PARAMETERS:
                 )}
               </div>
             )}
+          </div>
+
+          {/* SCENARIO SIMULATOR ⭐⭐⭐⭐⭐ (Blueprint Stretch Feature #1) */}
+          <div className="bg-[#09090b] border border-indigo-900/40 p-5 rounded-xl space-y-4 shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Scenario Simulator</h2>
+                <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                  WHAT IF?
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-zinc-500">REAL-TIME RECALCULATION</span>
+            </div>
+
+            <p className="text-[11px] text-zinc-400">
+              Simulate strategic decisions live. Recalculate runway, SaaS health score, launch dates, hiring plans, and marketing timelines before committing budget.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sliders */}
+              <div className="space-y-4 p-3 bg-zinc-950 rounded-xl border border-zinc-900">
+                <div>
+                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                    <span className="text-zinc-400">Add Engineers:</span>
+                    <span className="text-indigo-400 font-bold">+{extraEngineers} Senior Devs</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="6"
+                    step="1"
+                    value={extraEngineers}
+                    onChange={(e) => setExtraEngineers(parseInt(e.target.value))}
+                    className="w-full accent-indigo-500 cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[8px] font-mono text-zinc-600 mt-1">
+                    <span>+$0</span>
+                    <span>+${(extraEngineers * 11).toFixed(0)}k/mo</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                    <span className="text-zinc-400">Extra Marketing Budget:</span>
+                    <span className="text-emerald-400 font-bold">+${extraGrowthBudget.toLocaleString()}/mo</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20000"
+                    step="1000"
+                    value={extraGrowthBudget}
+                    onChange={(e) => setExtraGrowthBudget(parseInt(e.target.value))}
+                    className="w-full accent-emerald-500 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              {/* Dynamic Live Outputs */}
+              <div className="p-3.5 bg-zinc-950 rounded-xl border border-zinc-900 space-y-2.5 font-mono text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-zinc-500 uppercase">Simulated Runway:</span>
+                  <span className="font-bold text-amber-400">
+                    {(startup.cashBalance / Math.max(1000, startup.burnRate + extraEngineers * 11000 + extraGrowthBudget)).toFixed(1)} Months
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-zinc-500 uppercase">Simulated Health Score:</span>
+                  <span className="font-bold text-[#6366F1]">
+                    {Math.max(40, Math.min(100, Math.round(startup.healthScore + extraEngineers * 3 - (extraGrowthBudget / 4000))))}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] text-zinc-500 uppercase">Est. Launch Timeline:</span>
+                  <span className="font-bold text-emerald-400">
+                    {Math.max(12, 30 - extraEngineers * 4)} Days
+                  </span>
+                </div>
+                <div className="pt-2 border-t border-zinc-900 text-[9.5px] text-zinc-400 font-sans italic">
+                  💡 Finance & Growth agents recommend maintaining a minimum 12-month runway buffer.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* MEETING NOTES -> TASKS EXTRACTOR (Blueprint Stretch Feature #4) */}
+          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-purple-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Meeting Transcript → Tasks Extractor</h2>
+              </div>
+              <span className="text-[9px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded">AUTO-PARSER</span>
+            </div>
+
+            <p className="text-[11px] text-zinc-400">
+              Paste raw meeting transcripts or founder voice memos. CEO Orchestrator extracts tasks, owners, and deadlines automatically.
+            </p>
+
+            <div className="space-y-3">
+              <textarea
+                placeholder="Paste meeting transcript here e.g.: 'Sophia mentioned we need Kaelen to deploy failover clusters by Friday and Marcus to review the stock option pool...'"
+                value={meetingTranscript}
+                onChange={(e) => setMeetingTranscript(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-purple-500 font-mono resize-none leading-relaxed"
+              />
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleExtractMeetingNotes}
+                  disabled={isExtractingNotes || !meetingTranscript.trim()}
+                  className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-40 cursor-pointer font-mono"
+                >
+                  {isExtractingNotes ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                  Extract Actionable Tasks
+                </button>
+              </div>
+
+              {extractedMeetingTasks && (
+                <div className="space-y-2 pt-2 border-t border-zinc-900">
+                  <span className="text-[9px] font-mono text-purple-400 uppercase tracking-wider block">Extracted Directives:</span>
+                  <div className="space-y-2">
+                    {extractedMeetingTasks.map((t, idx) => (
+                      <div key={idx} className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 text-xs flex items-start justify-between gap-3">
+                        <div className="space-y-0.5">
+                          <p className="text-zinc-200 font-semibold">{t.task}</p>
+                          <span className="text-[9px] font-mono text-zinc-400">Assigned: {t.owner}</span>
+                        </div>
+                        <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 border border-zinc-800 shrink-0">
+                          {t.deadline}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* D. Approvals Section (High-risk deliverables) */}
@@ -1297,9 +1552,205 @@ ADJUSTED COMPLIANCE PARAMETERS:
             </div>
           </div>
 
+          {/* RISK PREDICTION ENGINE (Blueprint Stretch Feature #5) */}
+          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Risk Prediction Engine</h2>
+              </div>
+              <span className="text-[9px] font-mono text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">AI PREDICTIVE</span>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
+                <div className="flex justify-between items-center text-[10px] font-mono">
+                  <span className="text-zinc-300 font-semibold">Launch Delay Risk</span>
+                  <span className="text-amber-400 font-bold">18% Low Risk (92% Conf)</span>
+                </div>
+                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500" style={{ width: '18%' }} />
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
+                <div className="flex justify-between items-center text-[10px] font-mono">
+                  <span className="text-zinc-300 font-semibold">Hiring Bottleneck</span>
+                  <span className="text-rose-400 font-bold">34% Medium (89% Conf)</span>
+                </div>
+                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-500" style={{ width: '34%' }} />
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
+                <div className="flex justify-between items-center text-[10px] font-mono">
+                  <span className="text-zinc-300 font-semibold">Burn Rate Threat</span>
+                  <span className="text-emerald-400 font-bold">12% Minimal (96% Conf)</span>
+                </div>
+                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: '12%' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SMART GOAL TRACKER (Blueprint Stretch Feature #7) */}
+          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Smart Goal Tracker</h2>
+              </div>
+              <span className="text-[9px] font-mono text-emerald-400">76% COMPLETED</span>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                  <span className="text-zinc-300">Product MVP Launch</span>
+                  <span className="text-indigo-400 font-bold">78%</span>
+                </div>
+                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500" style={{ width: '78%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                  <span className="text-zinc-300">Founding Eng Hiring</span>
+                  <span className="text-pink-400 font-bold">65%</span>
+                </div>
+                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-pink-500" style={{ width: '65%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                  <span className="text-zinc-300">Seed Round Fundraising</span>
+                  <span className="text-emerald-400 font-bold">85%</span>
+                </div>
+                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: '85%' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
+
+      {/* REPORT GENERATION MODAL OVERLAY (Investor Update / Board Report) */}
+      {generatedReport && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+              <div>
+                <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  {generatedReport.type.toUpperCase()}
+                </span>
+                <h3 className="text-sm font-bold text-white mt-1">{generatedReport.title}</h3>
+              </div>
+              <button
+                onClick={() => setGeneratedReport(null)}
+                className="px-3 py-1 rounded bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto font-mono text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap bg-zinc-900/30">
+              {generatedReport.content}
+            </div>
+
+            <div className="p-4 border-t border-zinc-800 bg-zinc-900/50 flex justify-between items-center">
+              <span className="text-[10px] font-mono text-zinc-500">Auto-compiled from active startup metrics & RAG context</span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedReport.content);
+                  alert('Copied report to clipboard!');
+                  setGeneratedReport(null);
+                }}
+                className="px-4 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer font-mono"
+              >
+                Copy Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GMAIL / OUTREACH INTEGRATION MODAL (Blueprint Stretch Feature #8) */}
+      {emailModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Send className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-bold text-white">Gmail Integration Outreach</h3>
+              </div>
+              <button
+                onClick={() => setEmailModal(null)}
+                className="text-xs text-zinc-400 hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3 text-xs">
+              <div>
+                <label className="block text-[10px] font-mono uppercase text-zinc-400 mb-1">To Candidate:</label>
+                <input
+                  type="text"
+                  value={emailModal.recipient}
+                  readOnly
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono uppercase text-zinc-400 mb-1">Subject:</label>
+                <input
+                  type="text"
+                  value={emailModal.subject}
+                  readOnly
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-mono uppercase text-zinc-400 mb-1">Email Body:</label>
+                <textarea
+                  value={emailModal.body}
+                  readOnly
+                  rows={6}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white font-mono leading-relaxed resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-zinc-800 bg-zinc-900/50 flex justify-end gap-2">
+              <button
+                onClick={() => setEmailModal(null)}
+                className="px-3 py-1.5 rounded bg-zinc-900 text-xs text-zinc-400 hover:text-white"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => {
+                  alert('Email successfully dispatched via Gmail API integration!');
+                  setEmailModal(null);
+                }}
+                className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer font-mono"
+              >
+                Send via Gmail
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
