@@ -403,7 +403,7 @@ export default function App() {
               </div>
             </div>
             <button
-              onClick={logout}
+              onClick={() => { logout(); }}
               title="Sign Out Session"
               className="p-1.5 rounded-lg bg-zinc-900 hover:bg-[#1f1f23] text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
             >

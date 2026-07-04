@@ -162,14 +162,14 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
+    const files = Array.from(e.dataTransfer.files) as File[];
     if (files.length > 0) {
       processFiles(files);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
+    const files = e.target.files ? Array.from(e.target.files) as File[] : [];
     if (files.length > 0) {
       processFiles(files);
     }

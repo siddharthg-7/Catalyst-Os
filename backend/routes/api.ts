@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import { extractTextFromFile } from '../services/documentParser';
 import { ingestDocument, performHybridSearch, buildContext } from '../services/ragEngine';
@@ -12,136 +11,24 @@ import {
   decisionLog, 
   knowledgeFiles,
   setAgentStatuses,
-  resetAgentStatuses,
-  users,
-  addUser
+  resetAgentStatuses
 } from '../state';
 import { ai, runMultiAgentCollaboration } from '../services/geminiService';
 import { Initiative, Deliverable, UserRole } from '../../src/types';
 import { 
-  generateAccessToken, 
-  generateRefreshToken, 
-  verifyRefreshToken, 
   authenticateJWT, 
   requireRole, 
   AuthenticatedRequest 
-} from '../services/authService';
+} from '../services/clerkAuthMiddleware';
 import agentsRouter from '../agents/controller';
 
 const router = Router();
 
 // ============================================================================
-// AUTHENTICATION ENDPOINTS (JWT + REFRESH TOKENS)
+// AUTHENTICATION
+// Handled entirely by Clerk on the frontend.
+// The backend only verifies Clerk session tokens via clerkAuthMiddleware.
 // ============================================================================
-
-router.post('/auth/signup', (req, res) => {
-  const { email, password, name, role } = req.body;
-
-  if (!email || !password || !name) {
-    res.status(400).json({ error: 'Missing required signup fields: email, password, and name are required.' });
-    return;
-  }
-
-  const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-  if (existing) {
-    res.status(409).json({ error: 'User with this email already exists.' });
-    return;
-  }
-
-  const allowedRoles: UserRole[] = ['Founder', 'Executive', 'Admin'];
-  const userRole = (role && allowedRoles.includes(role)) ? role : 'Founder';
-
-  const newUser = {
-    id: `usr_${Date.now()}`,
-    email: email.toLowerCase(),
-    name,
-    role: userRole as UserRole,
-    passwordHash: bcrypt.hashSync(password, 10),
-    createdAt: new Date().toISOString()
-  };
-
-  addUser(newUser);
-
-  const accessToken = generateAccessToken(newUser);
-  const refreshToken = generateRefreshToken(newUser);
-
-  res.status(201).json({
-    user: {
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      role: newUser.role,
-      createdAt: newUser.createdAt
-    },
-    accessToken,
-    refreshToken
-  });
-});
-
-router.post('/auth/login', (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    res.status(400).json({ error: 'Email and password are required.' });
-    return;
-  }
-
-  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-  if (!user) {
-    res.status(401).json({ error: 'Invalid email or password.' });
-    return;
-  }
-
-  const match = bcrypt.compareSync(password, user.passwordHash);
-  if (!match) {
-    res.status(401).json({ error: 'Invalid email or password.' });
-    return;
-  }
-
-  const accessToken = generateAccessToken(user);
-  const refreshToken = generateRefreshToken(user);
-
-  res.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      createdAt: user.createdAt
-    },
-    accessToken,
-    refreshToken
-  });
-});
-
-router.post('/auth/refresh', (req, res) => {
-  const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    res.status(400).json({ error: 'Refresh token is required.' });
-    return;
-  }
-
-  const decoded = verifyRefreshToken(refreshToken);
-  if (!decoded) {
-    res.status(401).json({ error: 'Invalid or expired refresh token.' });
-    return;
-  }
-
-  const user = users.find(u => u.id === decoded.id);
-  if (!user) {
-    res.status(404).json({ error: 'User session not found.' });
-    return;
-  }
-
-  const newAccessToken = generateAccessToken(user);
-  const newRefreshToken = generateRefreshToken(user);
-
-  res.json({
-    accessToken: newAccessToken,
-    refreshToken: newRefreshToken
-  });
-});
 
 router.get('/auth/me', authenticateJWT, (req: AuthenticatedRequest, res) => {
   res.json({ user: req.user });
