@@ -518,50 +518,50 @@ ADJUSTED COMPLIANCE PARAMETERS:
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       
       {/* 1. Header Status Grid Bar (Linear-style) */}
-      <div className="flex flex-col xl:flex-row items-stretch gap-4 justify-between bg-zinc-950 p-4 border border-zinc-900 rounded-xl">
+      <div className="flex flex-col xl:flex-row items-stretch gap-4 justify-between bg-white p-5 border border-[#141413]/10 rounded-[20px] shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-zinc-900 border border-zinc-700 rounded-lg flex items-center justify-center p-1 shadow-[0_0_15px_rgba(249,115,22,0.35)]">
-            <CatalystLogo className="w-6 h-6 text-orange-500" />
+          <div className="w-9 h-9 bg-[#F3F0EE] border border-[#141413]/15 rounded-lg flex items-center justify-center p-1">
+            <CatalystLogo className="w-6 h-6 text-[#141413]" />
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-sm font-bold tracking-tight text-[#141413] flex items-center gap-2">
               Catalyst OS Central Command
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
+              <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse inline-block" />
             </h1>
-            <p className="text-[10px] text-zinc-500 font-mono tracking-wide uppercase">
+            <p className="text-[10px] text-[#696969] font-mono tracking-wide uppercase font-bold">
               ACTIVE NODE • MULTI-AGENT CORPORATE SYSTEM
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
-          <div className="px-3 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/40 text-center">
-            <span className="text-[9px] text-zinc-500 font-semibold block uppercase">Treasury</span>
-            <span className="text-xs font-mono font-bold text-emerald-400">
+          <div className="px-3.5 py-2 rounded-[10px] border border-[#141413]/10 bg-[#F3F0EE]/50 text-center">
+            <span className="text-[9px] text-[#696969] font-bold block uppercase font-mono">Treasury</span>
+            <span className="text-xs font-mono font-bold text-emerald-700">
               {formatCurrency(startup.cashBalance)}
             </span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/40 text-center">
-            <span className="text-[9px] text-zinc-500 font-semibold block uppercase">Active Burn</span>
-            <span className="text-xs font-mono font-bold text-rose-400">
+          <div className="px-3.5 py-2 rounded-[10px] border border-[#141413]/10 bg-[#F3F0EE]/50 text-center">
+            <span className="text-[9px] text-[#696969] font-bold block uppercase font-mono">Active Burn</span>
+            <span className="text-xs font-mono font-bold text-rose-700">
               {formatCurrency(startup.burnRate)}/mo
             </span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/40 text-center">
-            <span className="text-[9px] text-zinc-500 font-semibold block uppercase">Runway</span>
-            <span className="text-xs font-mono font-bold text-amber-400">
+          <div className="px-3.5 py-2 rounded-[10px] border border-[#141413]/10 bg-[#F3F0EE]/50 text-center">
+            <span className="text-[9px] text-[#696969] font-bold block uppercase font-mono">Runway</span>
+            <span className="text-xs font-mono font-bold text-amber-700">
               {startup.runwayMonths} Months
             </span>
           </div>
 
-          <div className="px-3 py-1.5 rounded-lg border border-zinc-800/60 bg-zinc-900/40 text-center">
-            <span className="text-[9px] text-zinc-500 font-semibold block uppercase">Health Score</span>
-            <span className="text-xs font-mono font-bold text-[#6366F1]">
+          <div className="px-3.5 py-2 rounded-[10px] border border-[#141413]/10 bg-[#F3F0EE]/50 text-center">
+            <span className="text-[9px] text-[#696969] font-bold block uppercase font-mono">Health Score</span>
+            <span className="text-xs font-mono font-bold text-indigo-700">
               {startup.healthScore}%
             </span>
           </div>
@@ -569,30 +569,30 @@ ADJUSTED COMPLIANCE PARAMETERS:
       </div>
 
       {/* DAILY EXECUTIVE BRIEF BANNER (Blueprint Feature #18) */}
-      <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-950/40 via-zinc-950 to-emerald-950/20 border border-indigo-900/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-5 rounded-[20px] bg-white border border-[#141413]/10 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <h3 className="text-xs font-bold text-white font-mono uppercase tracking-wider">Daily Executive Brief</h3>
-            <span className="text-[9px] font-mono text-zinc-500 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+            <Sparkles className="w-4 h-4 text-[#141413]" />
+            <h3 className="text-xs font-bold text-[#141413] font-mono uppercase tracking-wider">Daily Executive Brief</h3>
+            <span className="text-[9px] font-mono text-[#696969] bg-[#F3F0EE] px-1.5 py-0.5 rounded border border-[#141413]/10">
               {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
           </div>
-          <p className="text-xs text-zinc-300">
-            Good Morning Founder. Today's Priorities: <span className="font-semibold text-rose-400">{approvals.length} approvals pending</span>. Runway: <span className="font-semibold text-amber-400">{startup.runwayMonths} months</span>. Hiring: <span className="font-semibold text-emerald-400">On Track</span>. Launch: <span className="font-semibold text-indigo-400">Targeting 30 Days</span>.
+          <p className="text-xs text-[#696969]">
+            Good Morning Founder. Today's Priorities: <span className="font-bold text-rose-700">{approvals.length} approvals pending</span>. Runway: <span className="font-bold text-amber-700">{startup.runwayMonths} months</span>. Hiring: <span className="font-bold text-emerald-700">On Track</span>. Launch: <span className="font-bold text-indigo-700">Targeting 30 Days</span>.
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleGenerateInvestorUpdate}
-            className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-bold text-zinc-300 hover:text-white transition-all cursor-pointer font-mono"
+            className="px-3 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 text-[10px] font-bold text-[#141413] hover:bg-white hover:border-[#141413]/30 transition-all cursor-pointer font-sans"
           >
             📊 Monthly Investor Update
           </button>
           <button
             onClick={handleGenerateBoardReport}
-            className="px-3 py-1.5 rounded-lg bg-[#6366F1]/10 hover:bg-[#6366F1]/20 border border-[#6366F1]/30 text-[10px] font-bold text-[#6366F1] transition-all cursor-pointer font-mono"
+            className="px-3 py-1.5 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-[10px] font-bold text-[#F3F0EE] transition-all cursor-pointer font-sans"
           >
             📋 Board Report
           </button>
@@ -606,24 +606,24 @@ ADJUSTED COMPLIANCE PARAMETERS:
         <div className="space-y-6 lg:col-span-1 xl:col-span-1">
           
           {/* A. Startup Health Card */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <Activity className="w-4 h-4 text-[#6366F1]" />
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <Activity className="w-4 h-4 text-[#141413]" />
                 SaaS Health Index
               </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">VETTED</span>
+              <span className="text-[10px] font-mono text-[#696969] font-bold">VETTED</span>
             </div>
 
             {/* Glowing health score gauge */}
-            <div className="flex items-center justify-between gap-4 p-3 bg-zinc-900/30 rounded-xl border border-zinc-900/50">
+            <div className="flex items-center justify-between gap-4 p-3 bg-[#FCFBFA] rounded-[16px] border border-[#141413]/10">
               <div className="space-y-1">
-                <span className="text-[10px] text-zinc-400 font-mono">Consensus Metric</span>
-                <p className="text-3xl font-bold tracking-tight text-white font-mono">
+                <span className="text-[10px] text-[#696969] font-mono font-bold">Consensus Metric</span>
+                <p className="text-3xl font-bold tracking-tight text-[#141413] font-mono">
                   {startup.healthScore}%
                 </p>
-                <span className="text-[9px] text-emerald-400 font-mono flex items-center gap-0.5">
-                  <TrendingUp className="w-3 h-3" /> Optimizing
+                <span className="text-[9px] text-emerald-700 font-mono font-bold flex items-center gap-0.5">
+                  <TrendingUp className="w-3 h-3 text-emerald-600" /> Optimizing
                 </span>
               </div>
               
@@ -631,14 +631,14 @@ ADJUSTED COMPLIANCE PARAMETERS:
               <div className="relative w-16 h-16">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                   <path
-                    className="text-zinc-800"
+                    className="text-[#F3F0EE]"
                     strokeWidth="3"
                     stroke="currentColor"
                     fill="none"
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
                   <path
-                    className="text-[#6366F1] transition-all duration-700 ease-out"
+                    className="text-[#141413] transition-all duration-700 ease-out"
                     strokeDasharray={`${startup.healthScore}, 100`}
                     strokeWidth="3.2"
                     strokeLinecap="round"
@@ -647,7 +647,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
                 </svg>
-                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-mono text-zinc-400 font-bold">
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-mono text-[#696969] font-bold">
                   CORE
                 </div>
               </div>
@@ -657,79 +657,79 @@ ADJUSTED COMPLIANCE PARAMETERS:
             <div className="space-y-3 pt-1">
               <div>
                 <div className="flex justify-between items-center text-[10px] mb-1">
-                  <span className="text-zinc-400 font-medium">Engineering Velocity</span>
-                  <span className="font-mono text-zinc-300 font-bold">{startup.metrics.velocity}%</span>
+                  <span className="text-[#696969] font-bold font-mono">Engineering Velocity</span>
+                  <span className="font-mono text-[#141413] font-bold">{startup.metrics.velocity}%</span>
                 </div>
-                <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#6366F1] rounded-full" style={{ width: `${startup.metrics.velocity}%` }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center text-[10px] mb-1">
-                  <span className="text-zinc-400 font-medium">Capital Efficiency</span>
-                  <span className="font-mono text-zinc-300 font-bold">{startup.metrics.financialHealth}%</span>
-                </div>
-                <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${startup.metrics.financialHealth}%` }} />
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#141413] rounded-full" style={{ width: `${startup.metrics.velocity}%` }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center text-[10px] mb-1">
-                  <span className="text-zinc-400 font-medium">Legal Compliance</span>
-                  <span className="font-mono text-zinc-300 font-bold">{startup.metrics.legalCompliance}%</span>
+                  <span className="text-[#696969] font-bold font-mono">Capital Efficiency</span>
+                  <span className="font-mono text-[#141413] font-bold">{startup.metrics.financialHealth}%</span>
                 </div>
-                <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-rose-500 rounded-full" style={{ width: `${startup.metrics.legalCompliance}%` }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center text-[10px] mb-1">
-                  <span className="text-zinc-400 font-medium">Pipeline Growth</span>
-                  <span className="font-mono text-zinc-300 font-bold">{startup.metrics.growthRate}%</span>
-                </div>
-                <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${startup.metrics.growthRate}%` }} />
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${startup.metrics.financialHealth}%` }} />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center text-[10px] mb-1">
-                  <span className="text-zinc-400 font-medium">Operations Efficiency</span>
-                  <span className="font-mono text-zinc-300 font-bold">{startup.metrics.operationsEfficiency}%</span>
+                  <span className="text-[#696969] font-bold font-mono">Legal Compliance</span>
+                  <span className="font-mono text-[#141413] font-bold">{startup.metrics.legalCompliance}%</span>
                 </div>
-                <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-sky-500 rounded-full" style={{ width: `${startup.metrics.operationsEfficiency}%` }} />
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-600 rounded-full" style={{ width: `${startup.metrics.legalCompliance}%` }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1">
+                  <span className="text-[#696969] font-bold font-mono">Pipeline Growth</span>
+                  <span className="font-mono text-[#141413] font-bold">{startup.metrics.growthRate}%</span>
+                </div>
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-600 rounded-full" style={{ width: `${startup.metrics.growthRate}%` }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1">
+                  <span className="text-[#696969] font-bold font-mono">Operations Efficiency</span>
+                  <span className="font-mono text-[#141413] font-bold">{startup.metrics.operationsEfficiency}%</span>
+                </div>
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-sky-600 rounded-full" style={{ width: `${startup.metrics.operationsEfficiency}%` }} />
                 </div>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-zinc-900 grid grid-cols-2 gap-2 text-[10px]">
+            <div className="pt-2 border-t border-[#141413]/10 grid grid-cols-2 gap-2 text-[10px]">
               <div>
-                <span className="text-zinc-500 block font-mono">CONFIDENCE:</span>
-                <span className="font-bold text-emerald-400 font-mono">98.2% HIGH</span>
+                <span className="text-[#696969] block font-mono font-bold">CONFIDENCE:</span>
+                <span className="font-bold text-emerald-700 font-mono">98.2% HIGH</span>
               </div>
               <div>
-                <span className="text-zinc-500 block font-mono">RISK PROFILE:</span>
-                <span className="font-bold text-rose-400 font-mono">STABILIZED</span>
+                <span className="text-[#696969] block font-mono font-bold">RISK PROFILE:</span>
+                <span className="font-bold text-rose-700 font-mono font-bold">STABILIZED</span>
               </div>
             </div>
           </div>
 
           {/* B. Executive AI Cards (Roster) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#6366F1]" />
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <Users className="w-4 h-4 text-[#141413]" />
                 Executive AI Council
               </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">{agents.length} AGENTS</span>
+              <span className="text-[10px] font-mono text-[#696969] font-bold">{agents.length} AGENTS</span>
             </div>
 
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Vetted specialized executives. Click an officer below to consult their specific departmental directives instantly.
+            <p className="text-xs text-[#696969] leading-relaxed">
+              Vetted specialized executives. Click an officer below to consult their directives.
             </p>
 
             <div className="space-y-2 max-h-[310px] overflow-y-auto pr-1">
@@ -737,10 +737,10 @@ ADJUSTED COMPLIANCE PARAMETERS:
                 <button
                   key={agent.id}
                   onClick={() => handleConsultAgent(agent)}
-                  className={`w-full p-2.5 rounded-lg border text-left transition-all flex items-center gap-3 cursor-pointer ${
+                  className={`w-full p-2.5 rounded-[12px] border text-left transition-all flex items-center gap-3 cursor-pointer ${
                     consultingAgent?.id === agent.id
-                      ? 'bg-zinc-900 border-zinc-700 shadow-inner'
-                      : 'bg-zinc-900/20 border-zinc-900 hover:border-zinc-800 hover:bg-zinc-900/40'
+                      ? 'bg-[#F3F0EE] border-[#141413] shadow-inner'
+                      : 'bg-[#FCFBFA] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white'
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -748,27 +748,27 @@ ADJUSTED COMPLIANCE PARAMETERS:
                       src={agent.avatar}
                       alt={agent.name}
                       referrerPolicy="no-referrer"
-                      className="w-8 h-8 rounded-md object-cover border border-zinc-800 filter grayscale hover:grayscale-0 transition-all"
+                      className="w-8 h-8 rounded-full object-cover border border-[#141413]/10 filter grayscale group-hover:grayscale-0 transition-all"
                     />
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-zinc-950 ${
-                      agent.status !== 'idle' ? 'bg-emerald-500 animate-ping' : 'bg-zinc-600'
+                    <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-white ${
+                      agent.status !== 'idle' ? 'bg-emerald-500 animate-ping' : 'bg-[#696969]'
                     }`} />
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-zinc-950 ${
-                      agent.status !== 'idle' ? 'bg-emerald-500' : 'bg-zinc-600'
+                    <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-white ${
+                      agent.status !== 'idle' ? 'bg-emerald-500' : 'bg-[#696969]'
                     }`} />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-semibold text-zinc-300">
+                      <span className="text-[10px] font-mono font-bold text-[#141413]">
                         {agent.name.split(' ')[0]}
                       </span>
-                      <span className="text-[9px] font-mono text-zinc-500 font-semibold bg-zinc-900/80 px-1 py-0.5 rounded border border-zinc-800">
+                      <span className="text-[9px] font-mono text-[#696969] font-bold bg-[#F3F0EE] px-1 py-0.5 rounded border border-[#141413]/10">
                         {agent.role}
                       </span>
                     </div>
-                    <p className="text-[10px] text-zinc-500 truncate mt-0.5">
-                      {agent.keyMetric}: <span className="text-zinc-400 font-mono font-semibold">{agent.metricValue}</span>
+                    <p className="text-[10px] text-[#696969] truncate mt-0.5">
+                      {agent.keyMetric}: <span className="text-[#141413] font-mono font-bold">{agent.metricValue}</span>
                     </p>
                   </div>
                 </button>
@@ -777,23 +777,23 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
             {/* Consulting active feedback bubble */}
             {consultingAgent && (
-              <div className="p-3.5 rounded-xl bg-[#6366F1]/5 border border-[#6366F1]/20 space-y-2 animate-fade-in text-[11px] leading-relaxed">
+              <div className="p-3.5 rounded-[12px] bg-[#F3F0EE] border border-[#141413]/10 space-y-2 animate-fade-in text-[11px] leading-relaxed">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-semibold text-[#6366F1] uppercase tracking-wider flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
+                  <span className="text-[9px] font-bold text-[#141413] uppercase tracking-wider flex items-center gap-1 font-mono">
+                    <MessageSquare className="w-3 h-3 text-[#141413]" />
                     Consulting {consultingAgent.name}
                   </span>
-                  <button onClick={() => setConsultingAgent(null)} className="text-[9px] text-zinc-500 hover:text-zinc-300">
+                  <button onClick={() => setConsultingAgent(null)} className="text-[9px] text-[#696969] hover:text-[#141413]">
                     Dismiss
                   </button>
                 </div>
                 {isAgentThinking ? (
-                  <div className="flex items-center gap-1.5 text-zinc-500 font-mono">
-                    <RefreshCw className="w-3 h-3 animate-spin text-[#6366F1]" />
+                  <div className="flex items-center gap-1.5 text-[#696969] font-mono">
+                    <RefreshCw className="w-3 h-3 animate-spin text-[#141413]" />
                     Processing advisor transcript...
                   </div>
                 ) : (
-                  <p className="text-zinc-300 font-sans italic">
+                  <p className="text-[#141413] font-sans italic">
                     "{agentAnswer}"
                   </p>
                 )}
@@ -807,17 +807,17 @@ ADJUSTED COMPLIANCE PARAMETERS:
         <div className="space-y-6 lg:col-span-2 xl:col-span-2">
           
           {/* C. Founder Command Box (Terminal) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <Terminal className="w-4 h-4 text-[#6366F1]" />
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <Terminal className="w-4 h-4 text-[#141413]" />
                 Founder Command Box
               </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">CONSOLE INTERACTION</span>
+              <span className="text-[10px] font-mono text-[#696969] font-bold">CONSOLE INTERACTION</span>
             </div>
 
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Launch strategic multi-agent sprints or search pgvector RAG memory directly. Standard syntax: <code>what did we decide about...</code>
+            <p className="text-xs text-[#696969]">
+              Launch strategic multi-agent sprints or search pgvector RAG memory directly. Standard syntax: <code className="bg-[#F3F0EE] px-1 rounded text-[#141413]">what did we decide about...</code>
             </p>
 
             <form onSubmit={handleCommandSubmit} className="flex gap-2.5">
@@ -828,16 +828,16 @@ ADJUSTED COMPLIANCE PARAMETERS:
                   value={command}
                   onChange={(e) => setCommand(e.target.value)}
                   disabled={isExecutingCommand}
-                  className="w-full pl-3.5 pr-8 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#6366F1] font-mono"
+                  className="w-full pl-3.5 pr-8 py-2.5 rounded-[12px] bg-white border border-[#141413]/15 text-xs text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413] font-mono"
                 />
-                <span className="absolute right-2.5 top-2.5 text-[9px] font-mono text-zinc-600 select-none">
+                <span className="absolute right-2.5 top-3.5 text-[9px] font-mono text-[#696969] select-none font-bold">
                   ⌘K
                 </span>
               </div>
               <button
                 type="submit"
                 disabled={isExecutingCommand || !command.trim()}
-                className="px-4 py-2 rounded-lg bg-[#6366F1] hover:bg-[#6366F1]/85 font-bold text-xs text-white transition-all flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+                className="px-4 py-2 rounded-[20px] bg-[#141413] hover:bg-[#262627] font-bold text-xs text-[#F3F0EE] transition-all flex items-center gap-1.5 disabled:opacity-40 cursor-pointer font-sans"
               >
                 {isExecutingCommand ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 Run
@@ -848,19 +848,19 @@ ADJUSTED COMPLIANCE PARAMETERS:
             <div className="flex flex-wrap gap-2 pt-1">
               <button
                 onClick={() => setCommand('What did we decide about hiring last month?')}
-                className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-[10px] text-zinc-400 transition-all cursor-pointer font-mono"
+                className="px-3 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 hover:border-[#141413]/30 text-[10px] text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-mono"
               >
                 🔍 Search Decs: Hiring last month
               </button>
               <button
                 onClick={() => setCommand('Optimize our monthly cloud-spend budget')}
-                className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-[10px] text-zinc-400 transition-all cursor-pointer font-mono"
+                className="px-3 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 hover:border-[#141413]/30 text-[10px] text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-mono"
               >
                 ⚙️ Sprint: Optimize cloud-spend
               </button>
               <button
                 onClick={() => setCommand('Formulate founding compensation policy details')}
-                className="px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-[10px] text-zinc-400 transition-all cursor-pointer font-mono"
+                className="px-3 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 hover:border-[#141413]/30 text-[10px] text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-mono"
               >
                 💼 Sprint: Compensation policy
               </button>
@@ -868,23 +868,23 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
             {/* Command Feedback Console */}
             {commandResponse && (
-              <div className="p-4 rounded-lg bg-zinc-900 border border-zinc-800 space-y-3 text-xs leading-relaxed animate-fade-in font-mono">
-                <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+              <div className="p-4 rounded-[12px] bg-[#F3F0EE] border border-[#141413]/10 space-y-3 text-xs leading-relaxed animate-fade-in font-mono text-[#141413]">
+                <div className="flex items-center justify-between border-b border-[#141413]/10 pb-1.5">
                   <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${
-                    commandResponse.type === 'success' ? 'text-emerald-400' :
-                    commandResponse.type === 'rag' ? 'text-[#6366F1]' : 'text-zinc-400'
+                    commandResponse.type === 'success' ? 'text-emerald-700' :
+                    commandResponse.type === 'rag' ? 'text-indigo-700' : 'text-[#696969]'
                   }`}>
                     {commandResponse.type === 'rag' ? '🧠 SEMANTIC RECALL FOUND' : '⚙️ EXECUTIVE GATEWAY RESPONSE'}
                   </span>
-                  <button onClick={() => setCommandResponse(null)} className="text-[10px] text-zinc-500 hover:text-zinc-300">
+                  <button onClick={() => setCommandResponse(null)} className="text-[10px] text-[#696969] hover:text-[#141413]">
                     Clear
                   </button>
                 </div>
-                <div className="text-zinc-300 whitespace-pre-wrap leading-relaxed font-sans">
+                <div className="text-[#141413] whitespace-pre-wrap leading-relaxed font-sans">
                   {commandResponse.text}
                 </div>
                 {commandResponse.metadata && (
-                  <div className="text-[9px] text-zinc-500 flex items-center gap-3">
+                  <div className="text-[9px] text-[#696969] flex items-center gap-3 font-bold">
                     <span>Relevance: {(commandResponse.metadata.score * 100).toFixed(1)}%</span>
                     <span>Database: pgvector-hnsw</span>
                     <span>Verified: SHA-256</span>
@@ -895,29 +895,29 @@ ADJUSTED COMPLIANCE PARAMETERS:
           </div>
 
           {/* SCENARIO SIMULATOR ⭐⭐⭐⭐⭐ (Blueprint Stretch Feature #1) */}
-          <div className="bg-[#09090b] border border-indigo-900/40 p-5 rounded-xl space-y-4 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Scenario Simulator</h2>
-                <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                <Sparkles className="w-4 h-4 text-[#141413] animate-pulse" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] font-mono">Scenario Simulator</h2>
+                <span className="text-[9px] font-mono bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded-full font-bold">
                   WHAT IF?
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-zinc-500">REAL-TIME RECALCULATION</span>
+              <span className="text-[10px] font-mono text-[#696969] font-bold">REAL-TIME RECALCULATION</span>
             </div>
 
-            <p className="text-[11px] text-zinc-400">
+            <p className="text-xs text-[#696969]">
               Simulate strategic decisions live. Recalculate runway, SaaS health score, launch dates, hiring plans, and marketing timelines before committing budget.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Sliders */}
-              <div className="space-y-4 p-3 bg-zinc-950 rounded-xl border border-zinc-900">
+              <div className="space-y-4 p-3 bg-[#FCFBFA] rounded-[16px] border border-[#141413]/10">
                 <div>
-                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                    <span className="text-zinc-400">Add Engineers:</span>
-                    <span className="text-indigo-400 font-bold">+{extraEngineers} Senior Devs</span>
+                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono font-bold">
+                    <span className="text-[#696969]">Add Engineers:</span>
+                    <span className="text-[#141413] font-bold">+{extraEngineers} Senior Devs</span>
                   </div>
                   <input
                     type="range"
@@ -926,18 +926,18 @@ ADJUSTED COMPLIANCE PARAMETERS:
                     step="1"
                     value={extraEngineers}
                     onChange={(e) => setExtraEngineers(parseInt(e.target.value))}
-                    className="w-full accent-indigo-500 cursor-pointer"
+                    className="w-full accent-[#141413] cursor-pointer"
                   />
-                  <div className="flex justify-between text-[8px] font-mono text-zinc-600 mt-1">
+                  <div className="flex justify-between text-[8px] font-mono text-[#696969] mt-1 font-bold">
                     <span>+$0</span>
                     <span>+${(extraEngineers * 11).toFixed(0)}k/mo</span>
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                    <span className="text-zinc-400">Extra Marketing Budget:</span>
-                    <span className="text-emerald-400 font-bold">+${extraGrowthBudget.toLocaleString()}/mo</span>
+                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono font-bold">
+                    <span className="text-[#696969]">Extra Marketing Budget:</span>
+                    <span className="text-[#141413] font-bold">+${extraGrowthBudget.toLocaleString()}/mo</span>
                   </div>
                   <input
                     type="range"
@@ -946,32 +946,32 @@ ADJUSTED COMPLIANCE PARAMETERS:
                     step="1000"
                     value={extraGrowthBudget}
                     onChange={(e) => setExtraGrowthBudget(parseInt(e.target.value))}
-                    className="w-full accent-emerald-500 cursor-pointer"
+                    className="w-full accent-[#141413] cursor-pointer"
                   />
                 </div>
               </div>
 
               {/* Dynamic Live Outputs */}
-              <div className="p-3.5 bg-zinc-950 rounded-xl border border-zinc-900 space-y-2.5 font-mono text-xs">
+              <div className="p-3.5 bg-[#FCFBFA] rounded-[16px] border border-[#141413]/10 space-y-2.5 font-mono text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Simulated Runway:</span>
-                  <span className="font-bold text-amber-400">
+                  <span className="text-[10px] text-[#696969] uppercase font-bold">Simulated Runway:</span>
+                  <span className="font-bold text-amber-700">
                     {(startup.cashBalance / Math.max(1000, startup.burnRate + extraEngineers * 11000 + extraGrowthBudget)).toFixed(1)} Months
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Simulated Health Score:</span>
-                  <span className="font-bold text-[#6366F1]">
+                  <span className="text-[10px] text-[#696969] uppercase font-bold">Simulated Health Score:</span>
+                  <span className="font-bold text-[#141413]">
                     {Math.max(40, Math.min(100, Math.round(startup.healthScore + extraEngineers * 3 - (extraGrowthBudget / 4000))))}%
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Est. Launch Timeline:</span>
-                  <span className="font-bold text-emerald-400">
+                  <span className="text-[10px] text-[#696969] uppercase font-bold">Est. Launch Timeline:</span>
+                  <span className="font-bold text-emerald-700">
                     {Math.max(12, 30 - extraEngineers * 4)} Days
                   </span>
                 </div>
-                <div className="pt-2 border-t border-zinc-900 text-[9.5px] text-zinc-400 font-sans italic">
+                <div className="pt-2 border-t border-[#141413]/10 text-[9.5px] text-[#696969] font-sans italic">
                   💡 Finance & Growth agents recommend maintaining a minimum 12-month runway buffer.
                 </div>
               </div>
@@ -979,16 +979,16 @@ ADJUSTED COMPLIANCE PARAMETERS:
           </div>
 
           {/* MEETING NOTES -> TASKS EXTRACTOR (Blueprint Stretch Feature #4) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-purple-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Meeting Transcript → Tasks Extractor</h2>
+                <FileText className="w-4 h-4 text-[#141413]" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] font-mono">Meeting Transcript → Tasks Extractor</h2>
               </div>
-              <span className="text-[9px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded">AUTO-PARSER</span>
+              <span className="text-[9px] font-mono text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-full font-bold">AUTO-PARSER</span>
             </div>
 
-            <p className="text-[11px] text-zinc-400">
+            <p className="text-xs text-[#696969]">
               Paste raw meeting transcripts or founder voice memos. CEO Orchestrator extracts tasks, owners, and deadlines automatically.
             </p>
 
@@ -998,14 +998,14 @@ ADJUSTED COMPLIANCE PARAMETERS:
                 value={meetingTranscript}
                 onChange={(e) => setMeetingTranscript(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-purple-500 font-mono resize-none leading-relaxed"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/20 text-xs text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413] font-mono resize-none leading-relaxed"
               />
 
               <div className="flex justify-end">
                 <button
                   onClick={handleExtractMeetingNotes}
                   disabled={isExtractingNotes || !meetingTranscript.trim()}
-                  className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-40 cursor-pointer font-mono"
+                  className="px-5 py-2 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold flex items-center gap-1.5 disabled:opacity-40 cursor-pointer font-sans"
                 >
                   {isExtractingNotes ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                   Extract Actionable Tasks
@@ -1013,16 +1013,16 @@ ADJUSTED COMPLIANCE PARAMETERS:
               </div>
 
               {extractedMeetingTasks && (
-                <div className="space-y-2 pt-2 border-t border-zinc-900">
-                  <span className="text-[9px] font-mono text-purple-400 uppercase tracking-wider block">Extracted Directives:</span>
+                <div className="space-y-2 pt-2 border-t border-[#141413]/10">
+                  <span className="text-[9px] font-mono text-[#696969] uppercase tracking-wider block font-bold">Extracted Directives:</span>
                   <div className="space-y-2">
                     {extractedMeetingTasks.map((t, idx) => (
-                      <div key={idx} className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 text-xs flex items-start justify-between gap-3">
+                      <div key={idx} className="p-2.5 rounded-[12px] bg-[#FCFBFA] border border-[#141413]/10 text-xs flex items-start justify-between gap-3">
                         <div className="space-y-0.5">
-                          <p className="text-zinc-200 font-semibold">{t.task}</p>
-                          <span className="text-[9px] font-mono text-zinc-400">Assigned: {t.owner}</span>
+                          <p className="text-[#141413] font-bold">{t.task}</p>
+                          <span className="text-[9px] font-mono text-[#696969]">Assigned: {t.owner}</span>
                         </div>
-                        <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 border border-zinc-800 shrink-0">
+                        <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#F3F0EE] text-[#141413] border border-[#141413]/15 shrink-0 font-bold">
                           {t.deadline}
                         </span>
                       </div>
@@ -1033,14 +1033,13 @@ ADJUSTED COMPLIANCE PARAMETERS:
             </div>
           </div>
 
-          {/* D. Approvals Section (High-risk deliverables) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <CheckSquare className="w-4 h-4 text-[#6366F1]" />
+                  <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <CheckSquare className="w-4 h-4 text-[#141413]" />
                 Founder Approvals Queue
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] font-mono font-bold">
                 {approvals.length} Blocked
               </span>
             </div>
@@ -1058,69 +1057,69 @@ ADJUSTED COMPLIANCE PARAMETERS:
                         setIsModifying(false);
                         setModifiedAssetContent(null);
                       }}
-                      className={`w-full p-3 rounded-lg border text-left transition-all flex flex-col gap-1.5 cursor-pointer ${
+                      className={`w-full p-3 rounded-[12px] border text-left transition-all flex flex-col gap-1.5 cursor-pointer ${
                         activeApproval?.id === item.id
-                          ? 'bg-zinc-900 border-zinc-700 shadow-inner'
-                          : 'bg-zinc-900/20 border-zinc-900/60 hover:border-zinc-800 hover:bg-zinc-900/40'
+                          ? 'bg-[#F3F0EE] border-[#141413] shadow-inner'
+                          : 'bg-[#FCFBFA] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className="text-[8px] font-mono bg-zinc-950/80 px-1 py-0.5 rounded border border-zinc-800 text-zinc-500 uppercase">
+                        <span className="text-[8px] font-mono bg-white px-1.5 py-0.5 rounded border border-[#141413]/10 text-[#696969] uppercase font-bold">
                           {item.type}
                         </span>
                         {item.financialChange !== undefined && (
                           <span className={`text-[9px] font-mono font-bold ${
-                            item.financialChange > 0 ? 'text-emerald-400' : 'text-rose-400'
+                            item.financialChange > 0 ? 'text-emerald-700' : 'text-rose-700'
                           }`}>
                             {item.financialChange > 0 ? '+' : ''}${Math.round(item.financialChange / 1000)}k
                           </span>
                         )}
                       </div>
-                      <h5 className="text-xs font-semibold text-zinc-200 line-clamp-1">{item.title}</h5>
-                      <p className="text-[10px] text-zinc-500 line-clamp-1">{item.description}</p>
+                      <h5 className="text-xs font-bold text-[#141413] line-clamp-1">{item.title}</h5>
+                      <p className="text-[10px] text-[#696969] line-clamp-1">{item.description}</p>
                     </button>
                   ))}
                 </div>
 
                 {/* Right detailed review canvas */}
-                <div className="md:col-span-2 p-4.5 rounded-xl border border-zinc-900 bg-zinc-900/30 space-y-4 flex flex-col justify-between">
+                <div className="md:col-span-2 p-4.5 rounded-[16px] border border-[#141413]/10 bg-[#FCFBFA] space-y-4 flex flex-col justify-between">
                   {activeApproval && (
                     <>
                       <div className="space-y-3.5">
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="px-2 py-0.5 text-[8px] font-mono rounded bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20 uppercase">
+                            <span className="px-2 py-0.5 text-[8px] font-mono font-bold rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10 uppercase">
                               HIGH-RISK: {activeApproval.type}
                             </span>
-                            <h4 className="text-xs font-bold text-white mt-1">{activeApproval.title}</h4>
+                            <h4 className="text-xs font-bold text-[#141413] mt-1">{activeApproval.title}</h4>
                           </div>
                           
-                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono flex items-center gap-1 shrink-0 self-start">
-                            <AlertCircle className="w-3 h-3 animate-pulse" />
+                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-mono flex items-center gap-1 shrink-0 self-start font-bold">
+                            <AlertCircle className="w-3.5 h-3.5 animate-pulse" />
                             Awaiting Signature
                           </span>
                         </div>
 
                         {/* Financial and metric preview impacts */}
-                        <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-900 grid grid-cols-2 sm:grid-cols-3 gap-3 text-[10px]">
+                        <div className="p-3 rounded-[12px] bg-white border border-[#141413]/10 grid grid-cols-2 sm:grid-cols-3 gap-3 text-[10px]">
                           <div>
-                            <span className="text-zinc-500 block uppercase font-mono tracking-wider">Runway Impact</span>
-                            <span className="font-semibold text-zinc-300">{activeApproval.impact}</span>
+                            <span className="text-[#696969] block uppercase font-mono tracking-wider font-bold">Runway Impact</span>
+                            <span className="font-semibold text-[#141413]">{activeApproval.impact}</span>
                           </div>
                           <div>
-                            <span className="text-zinc-500 block uppercase font-mono tracking-wider">Treasury Allocation</span>
+                            <span className="text-[#696969] block uppercase font-mono tracking-wider font-bold">Treasury Allocation</span>
                             <span className={`font-mono font-bold ${
-                              activeApproval.financialChange && activeApproval.financialChange > 0 ? 'text-emerald-400' : 'text-zinc-300'
+                              activeApproval.financialChange && activeApproval.financialChange > 0 ? 'text-emerald-700' : 'text-[#141413]'
                             }`}>
                               {activeApproval.financialChange ? `${activeApproval.financialChange > 0 ? '+' : ''}$${activeApproval.financialChange.toLocaleString()}` : 'N/A'}
                             </span>
                           </div>
                           <div className="sm:col-span-1 col-span-2">
-                            <span className="text-zinc-500 block uppercase font-mono tracking-wider">Department Adjustments</span>
+                            <span className="text-[#696969] block uppercase font-mono tracking-wider font-bold">Department Adjustments</span>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {activeApproval.metricChanges && Object.entries(activeApproval.metricChanges).map(([metric, change]) => (
-                                <span key={metric} className={`text-[8px] font-mono font-bold px-1 py-0.2 rounded ${
-                                  (change as number) > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                <span key={metric} className={`text-[8px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                                  (change as number) > 0 ? 'bg-emerald-500/10 text-emerald-700 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-700 border border-rose-500/20'
                                 }`}>
                                   {metric.replace('Health', '').toUpperCase()} {(change as number) > 0 ? '+' : ''}{change}
                                 </span>
@@ -1131,30 +1130,30 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
                         {/* Document display */}
                         <div className="space-y-1">
-                          <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-semibold font-mono block">Vetted Document Draft</span>
-                          <div className="p-4 rounded-lg border border-zinc-900 bg-zinc-950 max-h-[140px] overflow-y-auto text-[10.5px] text-zinc-400 leading-relaxed font-mono whitespace-pre-wrap">
+                          <span className="text-[9px] text-[#696969] uppercase tracking-wider font-semibold font-mono block">Vetted Document Draft</span>
+                          <div className="p-4 rounded-[12px] border border-[#141413]/10 bg-[#F3F0EE] max-h-[140px] overflow-y-auto text-[10.5px] text-[#141413] leading-relaxed font-mono whitespace-pre-wrap">
                             {modifiedAssetContent || activeApproval.content}
                           </div>
                         </div>
                       </div>
 
                       {/* Modify Panel toggles */}
-                      <div className="pt-3 border-t border-zinc-900 space-y-3">
+                      <div className="pt-3 border-t border-[#141413]/10 space-y-3">
                         {isModifying ? (
                           <div className="space-y-2 animate-fade-in">
-                            <label className="block text-[10px] font-mono text-[#6366F1] font-semibold uppercase">LangGraph Synthesis Override Instructions</label>
+                            <label className="block text-[10px] font-mono text-[#141413] font-bold uppercase">LangGraph Synthesis Override Instructions</label>
                             <div className="flex gap-2">
                               <input
                                 type="text"
                                 placeholder="e.g. Adjust base salary compensation to $120k and equity cliff to 1 year..."
                                 value={modifyInput}
                                 onChange={(e) => setModifyInput(e.target.value)}
-                                className="flex-1 px-3 py-1.5 rounded bg-zinc-950 border border-zinc-900 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-mono"
+                                className="flex-1 px-3 py-1.5 rounded-[8px] bg-white border border-[#141413]/25 text-[11px] text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413] font-mono"
                               />
                               <button
                                 onClick={executeModifyLoop}
                                 disabled={isReSynthesizing || !modifyInput.trim()}
-                                className="px-3.5 py-1.5 rounded bg-[#6366F1] text-white text-[10px] font-bold hover:bg-[#6366F1]/80 disabled:opacity-50 cursor-pointer flex items-center gap-1 font-mono"
+                                className="px-3.5 py-1.5 rounded-[20px] bg-[#141413] text-[#F3F0EE] text-[10px] font-bold hover:bg-[#262627] disabled:opacity-50 cursor-pointer flex items-center gap-1 font-mono"
                               >
                                 {isReSynthesizing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Layers className="w-3 h-3" />}
                                 Re-Synthesize
@@ -1168,7 +1167,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                               placeholder="Feedback on rejection..."
                               value={feedback}
                               onChange={(e) => setFeedback(e.target.value)}
-                              className="w-full px-3 py-1.5 rounded bg-zinc-950 border border-zinc-900 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-sans mb-3"
+                              className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/20 text-[11px] text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413] font-sans mb-3"
                             />
                           </div>
                         )}
@@ -1176,7 +1175,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                         <div className="flex gap-2.5 justify-end">
                           <button
                             onClick={() => setIsModifying(prev => !prev)}
-                            className="px-3.5 py-1.5 rounded-lg border border-zinc-800 text-[10px] font-bold text-zinc-400 hover:text-white transition-all cursor-pointer font-mono"
+                            className="px-3.5 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 text-[10px] font-bold text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-mono"
                           >
                             {isModifying ? 'Cancel Override' : 'Modify Draft'}
                           </button>
@@ -1184,7 +1183,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                           <button
                             onClick={() => executeReviewAction('reject')}
                             disabled={isSubmittingReview}
-                            className="px-3.5 py-1.5 rounded-lg border border-rose-950 bg-rose-950/10 hover:bg-rose-950/20 text-[10px] font-bold text-rose-400 transition-all flex items-center gap-1 cursor-pointer"
+                            className="px-3.5 py-1.5 rounded-[20px] border border-rose-200 bg-rose-50 hover:bg-rose-100 text-[10px] font-bold text-rose-700 transition-all flex items-center gap-1 cursor-pointer"
                           >
                             <XCircle className="w-3.5 h-3.5" />
                             Reject
@@ -1193,7 +1192,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                           <button
                             onClick={() => executeReviewAction('approve')}
                             disabled={isSubmittingReview}
-                            className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[10px] font-bold text-white transition-all flex items-center gap-1 shadow-md shadow-emerald-950/20 cursor-pointer"
+                            className="px-4 py-1.5 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-[10px] font-bold text-[#F3F0EE] transition-all flex items-center gap-1 cursor-pointer"
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             Approve
@@ -1206,22 +1205,22 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
               </div>
             ) : (
-              <div className="p-8 rounded-xl border border-dashed border-zinc-900 text-center text-xs text-zinc-500 flex flex-col items-center justify-center min-h-[220px]">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2.5" />
-                <h4 className="font-semibold text-zinc-300">All Clear!</h4>
-                <p className="text-zinc-500 mt-0.5 max-w-sm">No high-risk actions are currently blocked for founder reviews.</p>
+              <div className="p-8 rounded-[20px] border border-dashed border-[#141413]/20 bg-white text-center text-xs text-[#696969] flex flex-col items-center justify-center min-h-[220px]">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600 mb-2.5" />
+                <h4 className="font-bold text-[#141413]">All Clear!</h4>
+                <p className="text-[#696969] mt-0.5 max-w-sm font-sans">No high-risk actions are currently blocked for founder reviews.</p>
               </div>
             )}
           </div>
 
           {/* E. Active Sprint / Timeline Section */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-[#6366F1]" />
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <Layers className="w-4 h-4 text-[#141413]" />
                 Sprint Timeline Topology
               </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold uppercase tracking-wider">Active Workspace</span>
+              <span className="text-[10px] font-mono text-[#696969] font-bold uppercase tracking-wider">Active Workspace</span>
             </div>
 
             {activeInitiative ? (
@@ -1236,57 +1235,57 @@ ADJUSTED COMPLIANCE PARAMETERS:
                         setSelectedInitId(init.id);
                         setSimStep(-1);
                       }}
-                      className={`w-full p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                      className={`w-full p-2.5 rounded-[12px] border text-left transition-all cursor-pointer ${
                         selectedInitId === init.id
-                          ? 'bg-zinc-900 border-zinc-700 shadow-inner'
-                          : 'bg-zinc-900/20 border-zinc-900/60 hover:border-zinc-800 hover:bg-zinc-900/40'
+                          ? 'bg-[#F3F0EE] border-[#141413] shadow-inner'
+                          : 'bg-[#FCFBFA] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center justify-between w-full">
-                        <span className={`text-[8px] font-mono font-bold px-1.5 py-0.2 rounded uppercase ${
-                          init.category === 'funding' ? 'bg-emerald-500/10 text-emerald-400' :
-                          init.category === 'hiring' ? 'bg-pink-500/10 text-pink-400' : 'bg-indigo-500/10 text-[#6366F1]'
+                        <span className={`text-[8px] font-mono font-bold px-1.5 py-0.2 rounded-full uppercase ${
+                          init.category === 'funding' ? 'bg-emerald-500/10 text-emerald-700' :
+                          init.category === 'hiring' ? 'bg-pink-500/10 text-pink-700' : 'bg-indigo-500/10 text-indigo-700'
                         }`}>
                           {init.category}
                         </span>
-                        <span className="text-[9px] text-zinc-500 capitalize">{init.status}</span>
+                        <span className="text-[9px] text-[#696969] capitalize font-mono font-bold">{init.status}</span>
                       </div>
-                      <h5 className="text-[11px] font-semibold text-zinc-200 mt-1 line-clamp-1">{init.title}</h5>
+                      <h5 className="text-[11px] font-bold text-[#141413] mt-1 line-clamp-1">{init.title}</h5>
                     </button>
                   ))}
                 </div>
 
                 {/* Right side timeline feed */}
-                <div className="md:col-span-2 p-4 rounded-xl border border-zinc-900 bg-zinc-900/30 space-y-4">
+                <div className="md:col-span-2 p-4 rounded-[16px] border border-[#141413]/10 bg-[#FCFBFA] space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold text-white line-clamp-1">{activeInitiative.title}</h4>
-                      <p className="text-[10.5px] text-zinc-500 mt-0.5 line-clamp-2">{activeInitiative.description}</p>
+                      <h4 className="text-xs font-bold text-[#141413] line-clamp-1">{activeInitiative.title}</h4>
+                      <p className="text-[10.5px] text-[#696969] mt-0.5 line-clamp-2 leading-relaxed">{activeInitiative.description}</p>
                     </div>
 
                     {activeInitiative.status === 'pending' && (
                       <button
                         onClick={() => handleOrchestrateSprint(activeInitiative.id)}
                         disabled={simulatingId !== null}
-                        className="px-3 py-1.5 rounded bg-[#6366F1] hover:bg-[#6366F1]/80 text-[10px] font-bold text-white transition-all flex items-center gap-1 shrink-0 disabled:opacity-50 cursor-pointer font-mono"
+                        className="px-3.5 py-1.5 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-[10px] font-bold text-[#F3F0EE] transition-all flex items-center gap-1 shrink-0 disabled:opacity-50 cursor-pointer font-mono"
                       >
-                        <Play className="w-3 h-3" />
+                        <Play className="w-3.5 h-3.5" />
                         Orchestrate
                       </button>
                     )}
                   </div>
 
                   {/* Visual Timeline Nodes */}
-                  <div className="relative border-l border-zinc-800 ml-2.5 pl-5.5 py-1.5 space-y-4">
+                  <div className="relative border-l border-[#141413]/10 ml-2.5 pl-5.5 py-1.5 space-y-4">
                     
                     {/* Visual glowing playhead inside active animation */}
                     {simulatingId === activeInitiative.id && (
-                      <div className="p-3 bg-zinc-950 border border-zinc-900 rounded-lg space-y-1.5 animate-fade-in font-mono">
-                        <div className="flex justify-between text-[8.5px] font-semibold text-[#6366F1]">
+                      <div className="p-3 bg-[#F3F0EE] border border-[#141413]/10 rounded-[12px] space-y-1.5 animate-fade-in font-mono text-[#141413]">
+                        <div className="flex justify-between text-[8.5px] font-bold text-[#141413] uppercase">
                           <span>SECURE DEBATE TUNNEL ACTIVE</span>
                           <span>STEP {simStep + 1} / 8</span>
                         </div>
-                        <p className="text-[10px] text-zinc-300">{simProgressMessage}</p>
+                        <p className="text-[10px] text-[#696969]">{simProgressMessage}</p>
                       </div>
                     )}
 
@@ -1298,21 +1297,21 @@ ADJUSTED COMPLIANCE PARAMETERS:
                       return (
                         <div key={task.id} className="relative text-xs">
                           {/* Dot */}
-                          <div className={`absolute -left-8.5 top-1.5 h-4 w-4 rounded-full border flex items-center justify-center bg-zinc-950 transition-all ${
-                            isComplete ? 'border-emerald-500/60 text-emerald-400' :
-                            isActive ? 'border-[#6366F1] text-[#6366F1] animate-pulse' : 'border-zinc-800 text-zinc-600'
+                          <div className={`absolute -left-8.5 top-1.5 h-4 w-4 rounded-full border flex items-center justify-center bg-white transition-all ${
+                            isComplete ? 'border-emerald-500/60 text-emerald-700 bg-white' :
+                            isActive ? 'border-[#141413] text-[#141413] animate-pulse bg-white' : 'border-[#141413]/10 text-[#696969]'
                           }`}>
-                            {isComplete ? <Check className="w-2.5 h-2.5" /> : <div className={`w-1 h-1 rounded-full ${isActive ? 'bg-[#6366F1]' : 'bg-zinc-700'}`} />}
+                            {isComplete ? <Check className="w-2.5 h-2.5" /> : <div className={`w-1 h-1 rounded-full ${isActive ? 'bg-[#141413]' : 'bg-[#696969]'}`} />}
                           </div>
 
                           <div className="space-y-0.5">
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-zinc-200">{task.title}</span>
-                              <span className="text-[9px] font-mono font-semibold bg-zinc-900 px-1 rounded border border-zinc-800 text-zinc-500">
+                              <span className="font-bold text-[#141413]">{task.title}</span>
+                              <span className="text-[9px] font-mono font-bold bg-[#F3F0EE] px-1 rounded border border-[#141413]/10 text-[#696969]">
                                 {task.assignedTo}
                               </span>
                             </div>
-                            <p className="text-[10px] text-zinc-500">
+                            <p className="text-[10px] text-[#696969] leading-relaxed">
                               {task.result || `Executive sign-off criteria queued for ${task.assignedTo} audit.`}
                             </p>
                           </div>
@@ -1326,30 +1325,28 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
               </div>
             ) : (
-              <div className="p-6 rounded-xl border border-zinc-900/60 text-center text-zinc-500 text-xs">
+              <div className="p-6 rounded-[20px] border border-[#141413]/10 text-center text-[#696969] text-xs">
                 No sprint metrics available.
               </div>
             )}
           </div>
 
-        </div>
-
-        {/* ==================== RIGHT COLUMN: KNOWLEDGE & MEMORY ==================== */}
+        </div>/div        {/* ==================== RIGHT COLUMN: KNOWLEDGE & MEMORY ==================== */}
         <div className="space-y-6 lg:col-span-1 xl:col-span-1">
           
           {/* F. Startup Memory System RAG Search */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-[#6366F1]" />
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <BookOpen className="w-4 h-4 text-[#141413]" />
                 Startup Memory System
               </h2>
-              <span className="text-[9px] font-mono bg-zinc-900 px-1 py-0.5 rounded text-emerald-400 border border-zinc-800">
+              <span className="text-[9px] font-mono bg-[#F3F0EE] px-2 py-0.5 rounded-full text-emerald-700 border border-[#141413]/10 font-bold">
                 pgvector-RAG
               </span>
             </div>
 
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#696969]">
               Retrieve immutable historical logs using high-dimensional cosine distance matches.
             </p>
 
@@ -1360,12 +1357,12 @@ ADJUSTED COMPLIANCE PARAMETERS:
                   placeholder="e.g. what did we decide about hiring?"
                   value={memoryQuery}
                   onChange={(e) => setMemoryQuery(e.target.value)}
-                  className="flex-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-white focus:outline-none focus:border-[#6366F1]"
+                  className="flex-1 px-3 py-1.5 rounded-[8px] bg-white border border-[#141413]/20 text-[11px] text-[#141413] focus:outline-none focus:border-[#141413] font-sans"
                 />
                 <button
                   onClick={() => handleMemorySearch()}
                   disabled={isSearchingMemory || !memoryQuery.trim()}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-semibold text-zinc-300 transition-all disabled:opacity-40 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 text-[11px] font-bold text-[#141413] hover:bg-white hover:border-[#141413]/30 transition-all disabled:opacity-40 cursor-pointer font-sans"
                 >
                   Query
                 </button>
@@ -1373,14 +1370,14 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
               {/* Scopes filters */}
               <div className="space-y-1.5 pt-1">
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block">Scope Indexes</span>
-                <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono text-zinc-400">
+                <span className="text-[9px] font-mono text-[#696969] uppercase tracking-wider block font-bold">Scope Indexes</span>
+                <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono text-[#696969] font-bold">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedMemoryScopes.decisions}
                       onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, decisions: e.target.checked }))}
-                      className="accent-[#6366F1]"
+                      className="accent-[#141413]"
                     />
                     Decisions
                   </label>
@@ -1389,7 +1386,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                       type="checkbox"
                       checked={selectedMemoryScopes.commands}
                       onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, commands: e.target.checked }))}
-                      className="accent-[#6366F1]"
+                      className="accent-[#141413]"
                     />
                     Commands
                   </label>
@@ -1398,7 +1395,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                       type="checkbox"
                       checked={selectedMemoryScopes.notes}
                       onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, notes: e.target.checked }))}
-                      className="accent-[#6366F1]"
+                      className="accent-[#141413]"
                     />
                     Meeting Notes
                   </label>
@@ -1407,7 +1404,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                       type="checkbox"
                       checked={selectedMemoryScopes.strategies}
                       onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, strategies: e.target.checked }))}
-                      className="accent-[#6366F1]"
+                      className="accent-[#141413]"
                     />
                     Strategies
                   </label>
@@ -1416,25 +1413,25 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
               {/* Memory query RAG outputs */}
               {isSearchingMemory ? (
-                <div className="flex items-center justify-center p-6 text-zinc-500 text-[11px] font-mono gap-1.5">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#6366F1]" />
+                <div className="flex items-center justify-center p-6 text-[#696969] text-[11px] font-mono gap-1.5">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#141413]" />
                   Executing cosine vector search...
                 </div>
               ) : memoryResults ? (
                 <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
                   {memoryResults.map((res, idx) => (
-                    <div key={idx} className="p-3 bg-zinc-900/60 border border-zinc-900 rounded-lg space-y-1.5">
-                      <div className="flex justify-between items-center text-[9px] font-mono border-b border-zinc-900 pb-1">
-                        <span className="text-[#6366F1] font-bold uppercase tracking-wider">{res.category}</span>
-                        <span className="text-emerald-400 font-bold bg-emerald-500/5 px-1 py-0.2 rounded border border-emerald-500/10">
+                    <div key={idx} className="p-3 bg-[#FCFBFA] border border-[#141413]/10 rounded-[12px] space-y-1.5">
+                      <div className="flex justify-between items-center text-[9px] font-mono border-b border-[#141413]/10 pb-1">
+                        <span className="text-[#141413] font-bold uppercase tracking-wider">{res.category}</span>
+                        <span className="text-emerald-700 font-bold bg-emerald-50 px-1 py-0.2 rounded border border-emerald-100">
                           {(res.score * 100).toFixed(1)}% Match
                         </span>
                       </div>
-                      <h5 className="text-[10px] font-bold text-zinc-200">{res.title}</h5>
-                      <p className="text-[10px] text-zinc-400 font-sans whitespace-pre-line leading-relaxed">
+                      <h5 className="text-[10px] font-bold text-[#141413]">{res.title}</h5>
+                      <p className="text-[10px] text-[#696969] font-sans whitespace-pre-line leading-relaxed">
                         {res.content}
                       </p>
-                      <div className="flex justify-between text-[8px] font-mono text-zinc-600">
+                      <div className="flex justify-between text-[8px] font-mono text-[#696969] font-bold">
                         <span>BY: {res.actor}</span>
                         <span>DATE: {res.date}</span>
                       </div>
@@ -1442,21 +1439,21 @@ ADJUSTED COMPLIANCE PARAMETERS:
                   ))}
                 </div>
               ) : (
-                <div className="p-4 bg-zinc-900/20 border border-dashed border-zinc-900 rounded-lg text-center text-zinc-500 text-[10.5px]">
+                <div className="p-4 bg-[#F3F0EE]/30 border border-dashed border-[#141413]/20 rounded-[12px] text-center text-[#696969] text-[10.5px]">
                   Submit query to retrieve semantic citations.
                 </div>
               )}
             </div>
           </div>
 
-          {/* G. Knowledge Base Upload Panel */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <HardDrive className="w-4 h-4 text-[#6366F1]" />
+          {/* G. Knowledge Base Ingestion Panel */}
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <HardDrive className="w-4 h-4 text-[#141413]" />
                 Knowledge Base Ingestion
               </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">{knowledge.length} FILES</span>
+              <span className="text-[10px] font-mono text-[#696969] font-bold">{knowledge.length} FILES</span>
             </div>
 
             <form onSubmit={handleIngestMaterials} className="space-y-3">
@@ -1466,12 +1463,12 @@ ADJUSTED COMPLIANCE PARAMETERS:
                 value={uploadName}
                 onChange={(e) => setUploadName(e.target.value)}
                 required
-                className="w-full px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-sans"
+                className="w-full px-3 py-1.5 rounded-[8px] bg-white border border-[#141413]/20 text-[11px] text-[#141413] focus:outline-none focus:border-[#141413] font-sans"
               />
               <select
                 value={uploadType}
                 onChange={(e) => setUploadType(e.target.value)}
-                className="w-full px-2 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-300 focus:outline-none focus:border-[#6366F1]"
+                className="w-full px-2 py-1.5 rounded-[8px] bg-[#F3F0EE] border border-[#141413]/20 text-[10px] text-[#141413] focus:outline-none focus:border-[#141413]"
               >
                 <option value="pitch_deck">Pitch Deck Outline</option>
                 <option value="business_plan">Business Plan Details</option>
@@ -1485,33 +1482,33 @@ ADJUSTED COMPLIANCE PARAMETERS:
                 onChange={(e) => setUploadContent(e.target.value)}
                 required
                 rows={3}
-                className="w-full px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-mono resize-none leading-relaxed"
+                className="w-full px-3 py-1.5 rounded-[8px] bg-white border border-[#141413]/20 text-[11px] text-[#141413] focus:outline-none focus:border-[#141413] font-mono resize-none leading-relaxed"
               />
               <button
                 type="submit"
                 disabled={isUploading || !uploadName || !uploadContent}
-                className="w-full py-1.5 rounded-lg bg-[#6366F1] text-white hover:bg-[#6366F1]/80 text-[11px] font-bold disabled:opacity-40 cursor-pointer"
+                className="w-full py-2.5 rounded-[20px] bg-[#141413] text-[#F3F0EE] hover:bg-[#262627] text-[11px] font-bold disabled:opacity-40 cursor-pointer font-sans"
               >
                 {isUploading ? 'Executing Vector Parse...' : 'Ingest to pgvector Base'}
               </button>
             </form>
 
             {/* List of active knowledge files */}
-            <div className="space-y-2 pt-1 border-t border-zinc-900">
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block">Indexed Materials</span>
+            <div className="space-y-2 pt-1 border-t border-[#141413]/10">
+              <span className="text-[9px] font-mono text-[#696969] uppercase tracking-wider block font-bold">Indexed Materials</span>
               <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
                 {knowledge.map(k => (
                   <button
                     key={k.id}
                     onClick={() => setSelectedDocId(k.id)}
-                    className={`w-full p-2 text-left rounded text-[10px] border transition-all cursor-pointer flex items-center justify-between ${
+                    className={`w-full p-2 text-left rounded-[8px] border transition-all cursor-pointer flex items-center justify-between ${
                       selectedDocId === k.id
-                        ? 'bg-zinc-900 border-zinc-700'
-                        : 'bg-zinc-900/10 border-zinc-900/60 hover:border-zinc-800 text-zinc-400 hover:text-white'
+                        ? 'bg-[#F3F0EE] border-[#141413]'
+                        : 'bg-[#FCFBFA] border-[#141413]/10 text-[#696969] hover:text-[#141413]'
                     }`}
                   >
-                    <span className="truncate max-w-[120px] font-medium">{k.name}</span>
-                    <span className="font-mono text-zinc-600 shrink-0 text-[8.5px] uppercase">{k.type.replace('_', ' ')}</span>
+                    <span className="truncate max-w-[120px] font-semibold">{k.name}</span>
+                    <span className="font-mono text-[#696969] shrink-0 text-[8.5px] uppercase font-bold">{k.type.replace('_', ' ')}</span>
                   </button>
                 ))}
               </div>
@@ -1519,33 +1516,33 @@ ADJUSTED COMPLIANCE PARAMETERS:
           </div>
 
           {/* H. Decision Log / Historic Ledger Section */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <ClipboardList className="w-4 h-4 text-[#6366F1]" />
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 font-mono">
+                <ClipboardList className="w-4 h-4 text-[#141413]" />
                 Governance Ledger
               </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">{decisions.length} AUDITED</span>
+              <span className="text-[10px] font-mono text-[#696969] font-bold">{decisions.length} AUDITED</span>
             </div>
 
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#696969]">
               Chronological immutable timeline of approved Human-in-the-Loop operational signs.
             </p>
 
             <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
               {decisions.map((dec) => (
-                <div key={dec.id} className="p-3 rounded-lg border border-zinc-900 bg-zinc-900/20 space-y-1">
+                <div key={dec.id} className="p-3 rounded-[12px] border border-[#141413]/10 bg-[#FCFBFA] space-y-1">
                   <div className="flex justify-between items-center text-[9px] font-mono">
-                    <span className={`font-bold px-1 py-0.2 rounded ${
-                      dec.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                    <span className={`font-bold px-1.5 py-0.2 rounded-full uppercase text-[8px] ${
+                      dec.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
                     }`}>
                       {dec.status.toUpperCase()}
                     </span>
-                    <span className="text-zinc-600">{new Date(dec.timestamp).toLocaleDateString()}</span>
+                    <span className="text-[#696969] font-bold">{new Date(dec.timestamp).toLocaleDateString()}</span>
                   </div>
-                  <h5 className="text-[10.5px] font-bold text-zinc-200 line-clamp-1">{dec.title}</h5>
-                  <p className="text-[10px] text-zinc-400 leading-normal line-clamp-2">{dec.description}</p>
-                  <p className="text-[9px] text-zinc-500 font-mono italic">
+                  <h5 className="text-[10.5px] font-bold text-[#141413] line-clamp-1">{dec.title}</h5>
+                  <p className="text-[10px] text-[#696969] leading-relaxed line-clamp-2">{dec.description}</p>
+                  <p className="text-[9px] text-[#696969] font-mono font-bold italic">
                     Outcome: {dec.impactText}
                   </p>
                 </div>
@@ -1554,86 +1551,86 @@ ADJUSTED COMPLIANCE PARAMETERS:
           </div>
 
           {/* RISK PREDICTION ENGINE (Blueprint Stretch Feature #5) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Risk Prediction Engine</h2>
+                <AlertCircle className="w-4 h-4 text-rose-700" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] font-mono">Risk Prediction Engine</h2>
               </div>
-              <span className="text-[9px] font-mono text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">AI PREDICTIVE</span>
+              <span className="text-[9px] font-mono text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-full font-bold">AI PREDICTIVE</span>
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-zinc-300 font-semibold">Launch Delay Risk</span>
-                  <span className="text-amber-400 font-bold">18% Low Risk (92% Conf)</span>
+              <div className="p-2.5 rounded-[12px] bg-[#FCFBFA] border border-[#141413]/10 space-y-1">
+                <div className="flex justify-between items-center text-[10px] font-mono font-bold">
+                  <span className="text-[#696969]">Launch Delay Risk</span>
+                  <span className="text-amber-700">18% Low Risk (92% Conf)</span>
                 </div>
-                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500" style={{ width: '18%' }} />
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-zinc-300 font-semibold">Hiring Bottleneck</span>
-                  <span className="text-rose-400 font-bold">34% Medium (89% Conf)</span>
-                </div>
-                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
-                  <div className="h-full bg-rose-500" style={{ width: '34%' }} />
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-600" style={{ width: '18%' }} />
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-zinc-300 font-semibold">Burn Rate Threat</span>
-                  <span className="text-emerald-400 font-bold">12% Minimal (96% Conf)</span>
+              <div className="p-2.5 rounded-[12px] bg-[#FCFBFA] border border-[#141413]/10 space-y-1">
+                <div className="flex justify-between items-center text-[10px] font-mono font-bold">
+                  <span className="text-[#696969]">Hiring Bottleneck</span>
+                  <span className="text-rose-700">34% Medium (89% Conf)</span>
                 </div>
-                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: '12%' }} />
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-600" style={{ width: '34%' }} />
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-[12px] bg-[#FCFBFA] border border-[#141413]/10 space-y-1">
+                <div className="flex justify-between items-center text-[10px] font-mono font-bold">
+                  <span className="text-[#696969]">Burn Rate Threat</span>
+                  <span className="text-emerald-700">12% Minimal (96% Conf)</span>
+                </div>
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-600" style={{ width: '12%' }} />
                 </div>
               </div>
             </div>
           </div>
 
           {/* SMART GOAL TRACKER (Blueprint Stretch Feature #7) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+          <div className="bg-white border border-[#141413]/10 p-5 rounded-[20px] space-y-4 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] hover:border-[#141413]/20 transition-all">
+            <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3">
               <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-emerald-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Smart Goal Tracker</h2>
+                <Award className="w-4 h-4 text-emerald-700" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#141413] font-mono">Smart Goal Tracker</h2>
               </div>
-              <span className="text-[9px] font-mono text-emerald-400">76% COMPLETED</span>
+              <span className="text-[9px] font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">76% COMPLETED</span>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
-                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                  <span className="text-zinc-300">Product MVP Launch</span>
-                  <span className="text-indigo-400 font-bold">78%</span>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono font-bold">
+                  <span className="text-[#696969]">Product MVP Launch</span>
+                  <span className="text-indigo-700 font-bold">78%</span>
                 </div>
-                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500" style={{ width: '78%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                  <span className="text-zinc-300">Founding Eng Hiring</span>
-                  <span className="text-pink-400 font-bold">65%</span>
-                </div>
-                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-pink-500" style={{ width: '65%' }} />
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-700" style={{ width: '78%' }} />
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                  <span className="text-zinc-300">Seed Round Fundraising</span>
-                  <span className="text-emerald-400 font-bold">85%</span>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono font-bold">
+                  <span className="text-[#696969]">Founding Eng Hiring</span>
+                  <span className="text-pink-700 font-bold">65%</span>
                 </div>
-                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: '85%' }} />
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-pink-600" style={{ width: '65%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono font-bold">
+                  <span className="text-[#696969]">Seed Round Fundraising</span>
+                  <span className="text-emerald-700 font-bold">85%</span>
+                </div>
+                <div className="h-1.5 bg-[#F3F0EE] rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-600" style={{ width: '85%' }} />
                 </div>
               </div>
             </div>
@@ -1645,36 +1642,36 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
       {/* REPORT GENERATION MODAL OVERLAY (Investor Update / Board Report) */}
       {generatedReport && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-white border border-[#141413]/10 rounded-[20px] shadow-[rgba(0,0,0,0.12)_0px_24px_48px_0px] overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="p-5 border-b border-[#141413]/10 flex items-center justify-between">
               <div>
-                <span className="text-[9px] font-mono uppercase px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <span className="text-[9px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10 font-bold">
                   {generatedReport.type.toUpperCase()}
                 </span>
-                <h3 className="text-sm font-bold text-white mt-1">{generatedReport.title}</h3>
+                <h3 className="text-sm font-bold text-[#141413] mt-1">{generatedReport.title}</h3>
               </div>
               <button
                 onClick={() => setGeneratedReport(null)}
-                className="px-3 py-1 rounded bg-zinc-900 border border-zinc-800 text-xs text-zinc-400 hover:text-white"
+                className="px-3.5 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 text-xs text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-sans"
               >
                 Close
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto font-mono text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap bg-zinc-900/30">
+            <div className="p-6 overflow-y-auto font-mono text-xs text-[#141413] leading-relaxed whitespace-pre-wrap bg-[#FCFBFA]">
               {generatedReport.content}
             </div>
 
-            <div className="p-4 border-t border-zinc-800 bg-zinc-900/50 flex justify-between items-center">
-              <span className="text-[10px] font-mono text-zinc-500">Auto-compiled from active startup metrics & RAG context</span>
+            <div className="p-4 border-t border-[#141413]/10 bg-[#F3F0EE] flex justify-between items-center">
+              <span className="text-[10px] font-mono text-[#696969] font-bold">Auto-compiled from active startup metrics & RAG context</span>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(generatedReport.content);
                   alert('Copied report to clipboard!');
                   setGeneratedReport(null);
                 }}
-                className="px-4 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer font-mono"
+                className="px-4 py-2 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-white font-bold text-xs cursor-pointer font-sans"
               >
                 Copy Report
               </button>
@@ -1685,16 +1682,16 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
       {/* GMAIL / OUTREACH INTEGRATION MODAL (Blueprint Stretch Feature #8) */}
       {emailModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white border border-[#141413]/10 rounded-[20px] shadow-[rgba(0,0,0,0.12)_0px_24px_48px_0px] overflow-hidden">
+            <div className="p-5 border-b border-[#141413]/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Send className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-sm font-bold text-white">Gmail Integration Outreach</h3>
+                <Send className="w-4 h-4 text-emerald-700" />
+                <h3 className="text-sm font-bold text-[#141413]">Gmail Integration Outreach</h3>
               </div>
               <button
                 onClick={() => setEmailModal(null)}
-                className="text-xs text-zinc-400 hover:text-white"
+                className="text-xs text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-sans font-bold"
               >
                 Cancel
               </button>
@@ -1702,40 +1699,40 @@ ADJUSTED COMPLIANCE PARAMETERS:
 
             <div className="p-5 space-y-3 text-xs">
               <div>
-                <label className="block text-[10px] font-mono uppercase text-zinc-400 mb-1">To Candidate:</label>
+                <label className="block text-[10px] font-mono uppercase text-[#696969] mb-1 font-bold">To Candidate:</label>
                 <input
                   type="text"
                   value={emailModal.recipient}
                   readOnly
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white font-mono"
+                  className="w-full bg-[#FCFBFA] border border-[#141413]/10 rounded-[8px] p-2.5 text-[#141413] font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase text-zinc-400 mb-1">Subject:</label>
+                <label className="block text-[10px] font-mono uppercase text-[#696969] mb-1 font-bold">Subject:</label>
                 <input
                   type="text"
                   value={emailModal.subject}
                   readOnly
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white font-mono"
+                  className="w-full bg-[#FCFBFA] border border-[#141413]/10 rounded-[8px] p-2.5 text-[#141413] font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase text-zinc-400 mb-1">Email Body:</label>
+                <label className="block text-[10px] font-mono uppercase text-[#696969] mb-1 font-bold">Email Body:</label>
                 <textarea
                   value={emailModal.body}
                   readOnly
                   rows={6}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-white font-mono leading-relaxed resize-none"
+                  className="w-full bg-[#FCFBFA] border border-[#141413]/10 rounded-[8px] p-2.5 text-[#141413] font-mono leading-relaxed resize-none"
                 />
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-800 bg-zinc-900/50 flex justify-end gap-2">
+            <div className="p-4 border-t border-[#141413]/10 bg-[#F3F0EE] flex justify-end gap-2">
               <button
                 onClick={() => setEmailModal(null)}
-                className="px-3 py-1.5 rounded bg-zinc-900 text-xs text-zinc-400 hover:text-white"
+                className="px-3.5 py-1.5 rounded-[20px] bg-white border border-[#141413]/10 text-xs text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-bold"
               >
                 Dismiss
               </button>
@@ -1744,7 +1741,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                   alert('Email successfully dispatched via Gmail API integration!');
                   setEmailModal(null);
                 }}
-                className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer font-mono"
+                className="px-5 py-1.5 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-white font-bold text-xs cursor-pointer font-sans"
               >
                 Send via Gmail
               </button>

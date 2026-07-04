@@ -38,7 +38,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`FounderOS Full-Stack Server active at http://0.0.0.0:${PORT}`);
+    console.log(`CatalystOS Full-Stack Server active at http://0.0.0.0:${PORT}`);
   });
 }
 

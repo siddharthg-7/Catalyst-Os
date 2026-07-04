@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+export let isDbAvailable = true;
 
 export interface UserDBRecord extends User {
   passwordHash: string;
@@ -28,7 +29,7 @@ export const users: UserDBRecord[] = [
   {
     id: 'usr_admin',
     email: 'admin@founder.os',
-    name: 'AeroFlow Admin',
+    name: 'CatalystOS Admin',
     role: 'Admin',
     passwordHash: bcrypt.hashSync('password123', 10),
     createdAt: new Date().toISOString()
@@ -37,6 +38,7 @@ export const users: UserDBRecord[] = [
 
 export function addUser(user: UserDBRecord) {
   users.push(user);
+  if (!isDbAvailable) return;
   prisma.user.create({
     data: {
       id: user.id,
@@ -53,7 +55,7 @@ export function addUser(user: UserDBRecord) {
 
 
 export let startupProfile: StartupProfile = {
-  name: 'AeroFlow AI',
+  name: 'CatalystOS Startup',
   industry: 'B2B SaaS / Developer Tools',
   description: 'Enterprise-grade automated workflow orchestration platform for hybrid cloud environments, optimizing resource usage and cloud spend.',
   fundingStage: 'Pre-Seed',
@@ -190,7 +192,7 @@ export let initiatives: Initiative[] = [
         description: 'Complete recruitment documents including employment offer, stock vesting terms (1-year cliff), and standard IP assignment clause.',
         type: 'contract',
         status: 'approved',
-        content: '# FOUNDING ENGINEER EMPLOYMENT OFFER\n\n**Position:** Lead Platform Architect\n**Base Compensation:** $132,000 USD / Year\n**Equity Compensation:** 1.3% Stock Options Pool\n\n### Vesting & Clauses:\n1. **Vesting Schedule:** 4-year monthly vesting with a standard 12-month cliff.\n2. **IP Assignment:** All work and IP created during employment is fully assigned to AeroFlow AI.\n3. **Non-Disclosure:** Multi-year strict proprietary data protection clause included.',
+        content: '# FOUNDING ENGINEER EMPLOYMENT OFFER\n\n**Position:** Lead Platform Architect\n**Base Compensation:** $132,000 USD / Year\n**Equity Compensation:** 1.3% Stock Options Pool\n\n### Vesting & Clauses:\n1. **Vesting Schedule:** 4-year monthly vesting with a standard 12-month cliff.\n2. **IP Assignment:** All work and IP created during employment is fully assigned to CatalystOS Startup.\n3. **Non-Disclosure:** Multi-year strict proprietary data protection clause included.',
         impact: 'Increases team velocity by 18 points, decreases runway by 1.1 months, increases operations efficiency.',
         financialChange: -11000,
         metricChanges: { velocity: 18, operationsEfficiency: 12, financialHealth: -5 }
@@ -223,7 +225,7 @@ export let approvals: Deliverable[] = [
     description: 'Enterprise agreement template for upcoming pilots with $15,000 pilot fee structures, 99.9% uptime commitments, and data privacy clauses.',
     type: 'contract',
     status: 'pending_review',
-    content: '# AEROFLOW AI PILOT AGREEMENT\n\nThis pilot program contract sets out the trial terms with mid-market testers.\n\n### Key Terms:\n- **Pilot Duration:** 90 Days\n- **Service Fee:** $15,000 USD flat fee\n- **Uptime Commitment:** 99.9% availability, standard support desk SLA.\n- **Data Privacy:** Full SOC-2 compliance compliance guarantees included.\n\n### Business Outcome:\n- Unlocks pilot pipeline value, validates SaaS pricing framework.',
+    content: '# CATALYSTOS PILOT AGREEMENT\n\nThis pilot program contract sets out the trial terms with mid-market testers.\n\n### Key Terms:\n- **Pilot Duration:** 90 Days\n- **Service Fee:** $15,000 USD flat fee\n- **Uptime Commitment:** 99.9% availability, standard support desk SLA.\n- **Data Privacy:** Full SOC-2 compliance compliance guarantees included.\n\n### Business Outcome:\n- Unlocks pilot pipeline value, validates SaaS pricing framework.',
     impact: 'Unlocks +$15,000 pilot revenue, increases growth metrics (+10 points) and customer confidence.',
     financialChange: 15000,
     metricChanges: { growthRate: 10, financialHealth: 6, operationsEfficiency: -2 }
@@ -246,11 +248,11 @@ export let decisionLog: DecisionRecord[] = [
 export let knowledgeFiles: KnowledgeFile[] = [
   {
     id: 'doc_1',
-    name: 'AeroFlow_Pitch_Deck.md',
+    name: 'CatalystOS_Pitch_Deck.md',
     type: 'pitch_deck',
     size: '14 KB',
     uploadDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    summary: 'Core fundraising presentation detailing AeroFlow AI Cloud Orchestrator, market size ($22B), product roadmap, and founder experience.',
+    summary: 'Core fundraising presentation detailing CatalystOS Cloud Orchestrator, market size ($22B), product roadmap, and founder experience.',
     insights: [
       'Targeting $1.5M Seed round at $10M pre-money valuation.',
       'Saves cloud costs by up to 34% using predictive scheduling algorithms.',
@@ -269,25 +271,27 @@ export function updateStartupProfile(updater: Partial<StartupProfile>) {
   }
 
   // Update in background
-  prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } })
-    .then(profile => {
-      if (profile) {
-        return prisma.startup.update({
-          where: { id: profile.id },
-          data: {
-            name: updater.name,
-            industry: updater.industry,
-            description: updater.description,
-            fundingStage: updater.fundingStage,
-            cashBalance: updater.cashBalance,
-            burnRate: updater.burnRate,
-            healthScore: updater.healthScore,
-          }
-        });
-      }
-    })
-    .then(() => console.log('[Database] Startup profile updated in Neon PostgreSQL.'))
-    .catch(err => console.error('[Database] Failed to persist startup updates:', err.message));
+  if (isDbAvailable) {
+    prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } })
+      .then(profile => {
+        if (profile) {
+          return prisma.startup.update({
+            where: { id: profile.id },
+            data: {
+              name: updater.name,
+              industry: updater.industry,
+              description: updater.description,
+              fundingStage: updater.fundingStage,
+              cashBalance: updater.cashBalance,
+              burnRate: updater.burnRate,
+              healthScore: updater.healthScore,
+            }
+          });
+        }
+      })
+      .then(() => console.log('[Database] Startup profile updated in Neon PostgreSQL.'))
+      .catch(err => console.error('[Database] Failed to persist startup updates:', err.message));
+  }
 
   return startupProfile;
 }
@@ -295,6 +299,7 @@ export function updateStartupProfile(updater: Partial<StartupProfile>) {
 export function resetAgentStatuses() {
   agentsList.forEach(a => {
     a.status = 'idle';
+    if (!isDbAvailable) return;
     prisma.executiveAgent.update({
       where: { id: a.id },
       data: { status: 'idle', currentTask: null }
@@ -307,12 +312,14 @@ export function setAgentStatuses(status: 'idle' | 'analyzing' | 'collaborating' 
     const isTarget = activeRole ? a.role === activeRole : true;
     if (isTarget) {
       a.status = status;
+      if (!isDbAvailable) return;
       prisma.executiveAgent.update({
         where: { id: a.id },
         data: { status, currentTask: status !== 'idle' ? `${status.toUpperCase()}...` : null }
       }).catch(() => {});
     } else if (activeRole) {
       a.status = 'idle';
+      if (!isDbAvailable) return;
       prisma.executiveAgent.update({
         where: { id: a.id },
         data: { status: 'idle', currentTask: null }
@@ -392,7 +399,8 @@ async function syncStateWithDatabase() {
 
     console.log('🎉 Neon PostgreSQL state synchronization complete.');
   } catch (err: any) {
-    console.warn('⚠️ Could not connect to Neon PostgreSQL for startup sync. Falling back to high-fidelity offline default states.', err.message);
+    isDbAvailable = false;
+    console.warn('⚠️ Could not connect to Neon PostgreSQL for startup sync. Falling back to high-fidelity offline default states.');
   }
 }
 

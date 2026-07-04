@@ -163,7 +163,7 @@ class LangGraphEngine:
             deliv_content = """# LEAD PLATFORM ARCHITECT OFFER & IP ASSIGNMENT PACKAGE
 
 ### 1. Executive Summary
-This package formalizes the recruitment and legal terms for the Lead Core Platform Architect at AeroFlow AI.
+This package formalizes the recruitment and legal terms for the Lead Core Platform Architect at CatalystOS Startup.
 
 ### 2. Compensation & Vesting Structure
 - **Annual Base Salary:** $128,000 USD
@@ -199,7 +199,7 @@ This package formalizes the recruitment and legal terms for the Lead Core Platfo
             deliv_content = f"""# {title.upper()} STRATEGIC DELIVERABLE
 
 ### 1. Executive Summary
-Strategic synthesis compiled by FounderOS multi-agent executive team for goal: '{title}'.
+Strategic synthesis compiled by CatalystOS multi-agent executive team for goal: '{title}'.
 
 ### 2. Operational Directives
 - Growth & User Acquisition metrics targeted.

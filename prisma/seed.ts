@@ -57,7 +57,7 @@ async function main() {
     data: {
       id: 'usr_admin',
       email: 'admin@founder.os',
-      name: 'AeroFlow Admin',
+      name: 'CatalystOS Admin',
       role: 'Admin',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -70,8 +70,8 @@ async function main() {
   console.log('🏢 Seeding startup profile...');
   const startup = await prisma.startup.create({
     data: {
-      id: 'st_aeroflow',
-      name: 'AeroFlow AI',
+      id: 'st_catalystos',
+      name: 'CatalystOS Startup',
       industry: 'B2B SaaS / Developer Tools',
       description: 'Enterprise-grade automated workflow orchestration platform for hybrid cloud environments, optimizing resource usage and cloud spend.',
       fundingStage: 'Pre-Seed',
@@ -170,10 +170,10 @@ async function main() {
   const doc = await prisma.startupDocument.create({
     data: {
       id: 'doc_1',
-      name: 'AeroFlow_Pitch_Deck.md',
+      name: 'CatalystOS_Pitch_Deck.md',
       type: 'pitch_deck',
       size: '14 KB',
-      summary: 'Core fundraising presentation detailing AeroFlow AI Cloud Orchestrator, market size ($22B), product roadmap, and founder experience.',
+      summary: 'Core fundraising presentation detailing CatalystOS Cloud Orchestrator, market size ($22B), product roadmap, and founder experience.',
       insights: [
         'Targeting $1.5M Seed round at $10M pre-money valuation.',
         'Saves cloud costs by up to 34% using predictive scheduling algorithms.',
@@ -186,7 +186,7 @@ async function main() {
   const chunk = await prisma.knowledgeChunk.create({
     data: {
       id: 'chunk_1',
-      content: 'AeroFlow AI is an enterprise-grade automated workflow orchestration platform for hybrid cloud environments, optimizing resource usage and cloud spend.',
+      content: 'CatalystOS Startup is an enterprise-grade automated workflow orchestration platform for hybrid cloud environments, optimizing resource usage and cloud spend.',
       documentId: doc.id,
     },
   });
@@ -284,7 +284,7 @@ async function main() {
       description: 'Enterprise agreement template for upcoming pilots with $15,000 pilot fee structures, 99.9% uptime commitments, and data privacy clauses.',
       type: 'contract',
       status: 'pending_review',
-      content: '# AEROFLOW AI PILOT AGREEMENT\n\nThis pilot program contract sets out the trial terms with mid-market testers.\n\n### Key Terms:\n- **Pilot Duration:** 90 Days\n- **Service Fee:** $15,000 USD flat fee\n- **Uptime Commitment:** 99.9% availability, standard support desk SLA.\n- **Data Privacy:** Full SOC-2 compliance compliance guarantees included.\n\n### Business Outcome:\n- Unlocks pilot pipeline value, validates SaaS pricing framework.',
+      content: '# CATALYSTOS PILOT AGREEMENT\n\nThis pilot program contract sets out the trial terms with mid-market testers.\n\n### Key Terms:\n- **Pilot Duration:** 90 Days\n- **Service Fee:** $15,000 USD flat fee\n- **Uptime Commitment:** 99.9% availability, standard support desk SLA.\n- **Data Privacy:** Full SOC-2 compliance compliance guarantees included.\n\n### Business Outcome:\n- Unlocks pilot pipeline value, validates SaaS pricing framework.',
       impact: 'Unlocks +$15,000 pilot revenue, increases growth metrics (+10 points) and customer confidence.',
       financialChange: 15000,
       metricChanges: { growthRate: 10, financialHealth: 6, operationsEfficiency: -2 },

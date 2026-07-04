@@ -54,39 +54,50 @@ import { FaDocker, FaStripe, FaGithub, FaAws, FaBrain } from 'react-icons/fa6';
 
 interface HackathonLandingPageProps {
   onStartBuilding: () => void;
-  onViewDemo: () => void;
 }
 
-export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: HackathonLandingPageProps) {
+export default function HackathonLandingPage({ onStartBuilding }: HackathonLandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
-  const [selectedExec, setSelectedExec] = useState<'ceo' | 'cfo' | 'coo' | 'cmo' | 'cto' | 'hr'>('ceo');
-  const [activeModuleTab, setActiveModuleTab] = useState<'all' | 'operate' | 'grow' | 'manage' | 'fund'>('all');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
+  const [activeAgent, setActiveAgent] = useState<'hiring' | 'finance' | 'legal' | 'investment' | 'growth'>('hiring');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [lottieError, setLottieError] = useState(false);
 
-  // AI Assistant Chat State
-  const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState([
-    { role: 'assistant', text: 'Good morning Founder. I analyzed your Q3 metrics. Runway is stable at 13.2 months. Growth speed is +24.8% MoM. Shall we review top priorities?' }
-  ]);
+  // Workspace typing simulation state
+  const [typingText, setTypingText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingDone, setTypingDone] = useState(false);
 
-  const handleSendChat = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!chatInput.trim()) return;
+  const hiringTypingMsg = "I've analysed 47 applicants for your Senior Backend Engineer role. Three candidates stand out based on your criteria — strong Rust/TypeScript background, startup experience, and immediate availability.";
+  const financeTypingMsg = "I've reviewed your June SaaS subscriptions. We can reclaim ₹82,000/month by archiving 14 inactive Slack accounts and deprecating the old testing server.";
+  const legalTypingMsg = "Your custom NDA draft is ready. I've incorporated local intellectual property clauses and standard startup non-solicits. Ready for sign-off.";
+  const investmentTypingMsg = "Here is your pre-meeting prep sheet for Sequoia. Key metric highlight: your ARR growth rate is in the top decile for SaaS startups at this stage.";
+  const growthTypingMsg = "Based on your current MRR of ₹8.4L, I recommend launching a referral program targeting your top 20% power users. Estimated uplift: +18% signups in 60 days.";
 
-    const userText = chatInput;
-    setChatMessages(prev => [...prev, { role: 'user', text: userText }]);
-    setChatInput('');
-
-    setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev, 
-        { role: 'assistant', text: `Understood. Deploying ${selectedExec.toUpperCase()} Agent sub-routine for: "${userText}". Executive strategy update queued.` }
-      ]);
-    }, 800);
-  };
+  useEffect(() => {
+    setTypingText('');
+    setTypingDone(false);
+    setIsTyping(false);
+    const delay = setTimeout(() => {
+      setIsTyping(true);
+      const msg = 
+        activeAgent === 'hiring' ? hiringTypingMsg : 
+        activeAgent === 'finance' ? financeTypingMsg : 
+        activeAgent === 'legal' ? legalTypingMsg : 
+        activeAgent === 'investment' ? investmentTypingMsg : 
+        activeAgent === 'growth' ? growthTypingMsg : '';
+      if (!msg) { setIsTyping(false); setTypingDone(true); return; }
+      let i = 0;
+      const timer = setInterval(() => {
+        setTypingText(msg.slice(0, i + 1));
+        i++;
+        if (i >= msg.length) { clearInterval(timer); setIsTyping(false); setTypingDone(true); }
+      }, 10);
+      return () => clearInterval(timer);
+    }, 150);
+    return () => clearTimeout(delay);
+  }, [activeAgent]);
 
   // Dynamic Cursor Spotlight
   useEffect(() => {
@@ -119,176 +130,86 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
     { name: 'Cloudflare', icon: SiCloudflare },
   ];
 
-  const execData = {
-    ceo: {
-      role: 'CEO Advisor',
-      title: 'Strategic Overview of Your Startup',
-      desc: 'Decomposes founder vision into actionable engineering, hiring, and growth sprints.',
-      score: '95.4%',
-      scoreLabel: 'Strategic Execution Score',
-      priorities: [
-        'Increase User Activation (+18% Target)',
-        'Optimize CAC Payback Period to <6 Mos',
-        'Expand to New Enterprise Markets'
-      ],
-      insight: 'Recommended action: Authorize CFO Agent to allocate $12k towards proven Q3 viral referral loops.'
-    },
-    cfo: {
-      role: 'CFO Advisor',
-      title: 'Treasury & Financial Audit',
-      desc: 'Monitors 13.2-month runway, audits recurring SaaS expenses, and models cap table scenarios.',
-      score: '13.2 Mos',
-      scoreLabel: 'Verified Cash Runway Balance',
-      priorities: [
-        'Cap Monthly AWS Compute Burn at $8,500',
-        'Audit SaaS Subscriptions & Unused Seats',
-        'Prepare Series A Financial Data Room'
-      ],
-      insight: 'Treasury status optimal. Cash reserves will sustain planned headcount expansion through Q4.'
-    },
-    cto: {
-      role: 'CTO Advisor',
-      title: 'Architecture & Security Health',
-      desc: 'Orchestrates CI/CD deployments, monitors latency, and rebuilds pgvector RAG indexes.',
-      score: '99.99%',
-      scoreLabel: 'Infrastructure System Uptime',
-      priorities: [
-        'SOC-2 Type II Automated Audit Sweep',
-        'pgvector HNSW Index Performance Rebuild',
-        'MCP Tool Schema Validation'
-      ],
-      insight: 'All 1536-dim vector stores synchronized. API latency under 24ms across 12 regions.'
-    },
-    cmo: {
-      role: 'CMO Advisor',
-      title: 'Growth Loops & Viral Funnel',
-      desc: 'Generates product marketing sequences, analyzes SEO clusters, and tracks conversions.',
-      score: '+24.8%',
-      scoreLabel: 'MoM User Conversion Rate',
-      priorities: [
-        'Deploy B2B Landing Page Variant A/B Test',
-        'Scale Organic Developer Newsletter',
-        'Launch Referral Rewards Engine'
-      ],
-      insight: 'Organic search traffic grew +32% following the latest executive product playbook release.'
-    },
-    hr: {
-      role: 'HR Advisor',
-      title: 'Recruitment & Equity Pools',
-      desc: 'Parses incoming candidate resumes, rates skill match, and drafts Outreach emails.',
-      score: '98.4%',
-      scoreLabel: 'Candidate Match Accuracy',
-      priorities: [
-        'Screen Senior Staff Frontend Engineers',
-        'Draft Stock Option Grant Contracts',
-        'Schedule Founder Final Round Interviews'
-      ],
-      insight: '3 Tier-1 engineering candidates parsed. Outreach sequences ready for Founder sign-off.'
-    },
-    coo: {
-      role: 'COO Advisor',
-      title: 'Operations & Process Engine',
-      desc: 'Automates vendor SLA compliance, legal NDAs, and daily cross-department logistics.',
-      score: '94.1%',
-      scoreLabel: 'Process Automation Ratio',
-      priorities: [
-        'Automate Vendor NDA Approvals',
-        'Reconcile Monthly Board Reporting',
-        'Streamline Customer Support Escalation'
-      ],
-      insight: 'Operational overhead reduced by 42 hours/week using autonomous agent workflows.'
-    }
-  };
+
 
   const testimonials = [
     {
-      quote: "FounderOS became our executive team overnight.",
-      author: "Sarah Khan",
-      role: "CEO, TechScale",
+      quote: "CatalystOS became our core workspace overnight.",
+      author: "Verified SaaS Founder",
+      role: "CEO",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
     },
     {
-      quote: "The CFO agent alone saved us $40k in the first quarter.",
-      author: "Arjun Patel",
-      role: "Founder, FinOps",
+      quote: "The finance module alone saved us $40k in the first quarter.",
+      author: "Verified Growth Founder",
+      role: "Founder",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
     },
     {
-      quote: "From fundraising to hiring — everything we need in one place.",
-      author: "Maya Johnson",
-      role: "COO, SmartLab",
+      quote: "From planning to hiring — everything we need in one place.",
+      author: "Verified Operations Lead",
+      role: "COO",
       avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80"
     }
   ];
 
   const faqs = [
     {
-      question: "What is FounderOS?",
-      answer: "An AI-powered platform that gives founders an autonomous executive team to plan, execute, and scale."
+      question: "What is CatalystOS?",
+      answer: "CatalystOS is an AI Operating System that helps startups plan, execute, hire, operate, and grow from a single intelligent workspace."
     },
     {
-      question: "Is my data secure?",
-      answer: "Yes. End-to-end encryption, zero-trust architecture, and vault-isolated secrets. Your data is never shared."
+      question: "Which AI advisors are included?",
+      answer: "Our council includes specialized AI agents for strategy (CEO), treasury (CFO), engineering (CTO), growth (CMO), operations (COO), and hiring (HR)."
+    },
+    {
+      question: "Can I invite my team?",
+      answer: "Yes. Collaborate seamlessly with your human team members and delegate workflows to AI executive agents directly."
+    },
+    {
+      question: "Is my startup data secure?",
+      answer: "Yes. We protect your data with end-to-end encryption, secure sandboxing, and strict privacy controls."
     },
     {
       question: "Can I integrate with my existing tools?",
-      answer: "Yes. Native integrations with Slack, GitHub, Stripe, Vercel, and more via the Model Context Protocol."
+      answer: "Yes. Connect with developer tools, payment platforms, chat systems, and other developer tools via the Model Context Protocol."
     },
     {
       question: "Do you offer a free trial?",
-      answer: "Yes. The Starter tier is free with full access to basic modules and up to 2 team members."
+      answer: "Yes. Start with a 14-day free trial to explore all CatalystOS capabilities before selecting a plan."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#000000] text-[#FFFFFF] font-sans selection:bg-white/20 selection:text-white relative overflow-x-hidden">
-      
-      {/* Dynamic Monochrome Spotlight */}
-      <div 
-        className="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300"
-        style={{
-          background: `radial-gradient(750px circle at ${mousePos.x}px ${mousePos.y}px, rgba(255, 255, 255, 0.04), transparent 80%)`
-        }}
-      />
+    <div className="min-h-screen bg-[#F3F0EE] text-[#141413] font-sans selection:bg-[#141413]/20 selection:text-[#141413] relative overflow-x-hidden">
 
-      {/* Subtle Grain Noise Texture Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.03] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]" />
-
-      {/* 1. STICKY FLOATING GLASS NAVBAR (84px -> 68px ON SCROLL) */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 flex justify-center pointer-events-none">
-        <nav className={`w-full max-w-[1320px] rounded-full bg-[#000000]/80 backdrop-blur-[20px] border border-white/[0.08] px-8 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.9)] transition-all duration-300 pointer-events-auto ${
-          scrolled ? 'h-[68px] bg-[#000000]/95 border-white/[0.15] shadow-[0_12px_40px_rgba(0,0,0,1)]' : 'h-[84px]'
+      {/* 1. STICKY FLOATING WHITE PILL NAVBAR */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-6 flex justify-center pointer-events-none">
+        <nav className={`w-full max-w-[1280px] rounded-full bg-white px-8 flex items-center justify-between shadow-[rgba(0,0,0,0.04)_0px_4px_24px_0px] transition-all duration-300 pointer-events-auto ${
+          scrolled ? 'h-[68px]' : 'h-[84px]'
         }`}>
           
           {/* Brand Logo */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-9 h-9 rounded-xl bg-[#090909] border border-white/10 p-1 flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white transition-colors">
-              <CatalystLogo className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-[#F3F0EE] border border-[#141413]/20 p-1 flex items-center justify-center hover:border-[#141413] transition-colors">
+              <CatalystLogo className="w-5 h-5 text-[#141413]" />
             </div>
-            <span className="font-extrabold text-white text-lg tracking-tight font-sans">FounderOS</span>
+            <span className="font-bold text-[#141413] text-lg font-sans" style={{letterSpacing: '-0.02em'}}>CatalystOS</span>
           </div>
 
           {/* Navigation Items */}
-          <div className="hidden lg:flex items-center gap-9 text-sm font-medium text-[#B8B8B8] font-sans">
-            <a href="#platform" className="hover:text-white transition-colors">Platform</a>
-            <a href="#solutions" className="hover:text-white transition-colors">Solutions</a>
-            <a href="#resources" className="hover:text-white transition-colors">Resources</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-            <a href="#about" className="hover:text-white transition-colors">About</a>
+          <div className="hidden lg:flex items-center gap-9 text-sm font-medium text-[#141413]/70 font-sans">
+            <a href="#solutions" className="hover:text-[#141413] transition-colors">AI Team</a>
+            <a href="#execution" className="hover:text-[#141413] transition-colors">Process</a>
+            <a href="#pricing" className="hover:text-[#141413] transition-colors">Pricing</a>
+            <a href="#faq" className="hover:text-[#141413] transition-colors">FAQ</a>
           </div>
 
-          {/* Action CTA Buttons */}
+          {/* Action CTA Button */}
           <div className="flex items-center gap-4">
             <button
               onClick={onStartBuilding}
-              className="text-xs font-semibold text-[#B8B8B8] hover:text-white transition-colors cursor-pointer px-3 py-2 font-sans"
-            >
-              Log In
-            </button>
-
-            <button
-              onClick={onStartBuilding}
-              className="px-6 py-2.5 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-semibold transition-all shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] cursor-pointer flex items-center gap-2 font-sans"
+              className="px-6 py-2.5 bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-medium transition-all cursor-pointer flex items-center gap-2 font-sans rounded-[20px]"
             >
               <span>Get Started</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -297,43 +218,33 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
         </nav>
       </header>
 
-      {/* 2. HERO SECTION (STRICT MONOCHROME EDITORIAL REDESIGN + PRESERVED HERO RIGHT LOTTIE ANIMATION) */}
+      {/* 2. HERO SECTION - CREAM CANVAS EDITORIAL */}
       <section className="pt-48 pb-28 px-6 relative overflow-hidden">
-        
-        {/* Soft Radial White Spotlight Glow */}
-        <div className="absolute top-1/4 right-10 w-[700px] h-[550px] bg-gradient-to-tr from-white/[0.04] via-white/[0.02] to-transparent rounded-full blur-[170px] pointer-events-none" />
 
-        <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* Left Column: Editorial Monochrome Copy (Max Width 560px) */}
+          {/* Left Column: Editorial Copy */}
           <div className="lg:col-span-6 space-y-8 text-left z-10 max-w-[560px]">
             
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#111111] border border-white/[0.1] text-xs font-mono font-medium text-white/80"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
-              <span>AI EXECUTIVE TEAM</span>
-            </motion.div>
+
 
             <motion.h1 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-5xl sm:text-7xl lg:text-[80px] font-extrabold tracking-[-4px] text-white leading-[0.95] font-sans"
+              className="text-5xl sm:text-7xl lg:text-[80px] font-bold text-[#141413] leading-[0.95] font-sans"
+              style={{letterSpacing: '-0.02em'}}
             >
-              Build Faster.<br />Scale Smarter.
+              From Idea to Launch.<br />One AI Operating System.
             </motion.h1>
 
             <motion.p 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-[#B8B8B8] text-lg leading-[170%] font-sans"
+              className="text-[#696969] text-lg leading-[170%] font-sans"
             >
-              One platform that helps founders plan, execute, hire, grow, and raise capital using AI.
+              Everything you need to take your startup from idea to launch, with AI by your side.
             </motion.p>
 
             <motion.div 
@@ -344,40 +255,21 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
             >
               <button
                 onClick={onStartBuilding}
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-white hover:bg-zinc-200 text-black font-semibold text-[15px] shadow-[0_0_35px_rgba(255,255,255,0.35)] transition-all cursor-pointer flex items-center justify-center gap-2 font-sans"
+                className="w-full sm:w-auto px-8 py-4 bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] font-medium text-[15px] transition-all cursor-pointer flex items-center justify-center gap-2 font-sans rounded-[20px]"
               >
-                <span>Get Started</span>
+                <span>Start Free Trial</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              <button
-                onClick={onViewDemo}
-                className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#111111] hover:bg-[#181818] border border-white/10 text-white font-medium text-[15px] transition-all cursor-pointer flex items-center justify-center gap-2 backdrop-blur-md font-sans"
-              >
-                <span>Book Demo</span>
-              </button>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="pt-6 border-t border-white/[0.08] flex flex-wrap items-center gap-6 opacity-60 text-xs font-medium text-[#B8B8B8]"
-            >
-              <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-white" /> Techstars</span>
-              <span className="flex items-center gap-1.5"><Rocket className="w-3.5 h-3.5 text-white" /> Y Combinator</span>
-              <span className="flex items-center gap-1.5"><FaAws className="w-3.5 h-3.5 text-white" /> AWS</span>
-              <span className="flex items-center gap-1.5"><SiGooglecloud className="w-3.5 h-3.5 text-white" /> Google</span>
             </motion.div>
 
           </div>
 
-          {/* Right Column: PRESERVED HERO LOTTIE ANIMATION EXACTLY AS REQUIRED */}
+          {/* Right Column: PRESERVED HERO LOTTIE ANIMATION */}
           <div className="lg:col-span-6 relative flex items-center justify-center z-20">
             
-            {/* Ambient Animated Orbit Rings */}
-            <div className="absolute w-[540px] h-[540px] rounded-full border border-white/10 animate-spin pointer-events-none" style={{ animationDuration: '35s' }} />
-            <div className="absolute w-[460px] h-[460px] rounded-full border border-white/10 animate-spin pointer-events-none" style={{ animationDuration: '50s', animationDirection: 'reverse' }} />
+            {/* Ambient Animated Orbit Rings — Light Signal Orange */}
+            <div className="absolute w-[540px] h-[540px] rounded-full border border-[#F37338]/20 animate-spin pointer-events-none" style={{ animationDuration: '35s' }} />
+            <div className="absolute w-[460px] h-[460px] rounded-full border border-[#F37338]/20 animate-spin pointer-events-none" style={{ animationDuration: '50s', animationDirection: 'reverse' }} />
 
             {/* Freely Floating Lottie Animation (520x520px) */}
             <motion.div 
@@ -398,36 +290,36 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
                 <iframe
                   src="https://lottie.host/embed/eb092f61-1eb3-4de7-8db1-7c72da2a7379/cAAGtnj4dN.lottie"
                   className="w-full h-full border-0 pointer-events-none"
-                  title="FounderOS AI Core"
+                  title="CatalystOS AI Core"
                 />
               )}
 
-              {/* Floating AI Notification Badges around Lottie */}
+              {/* Floating AI Notification Badges — white cards on cream */}
               <motion.div 
-                className="absolute -top-4 -left-6 p-3.5 rounded-2xl bg-[#090909]/90 border border-white/10 backdrop-blur-xl shadow-2xl flex items-center gap-3 z-30"
+                className="absolute -top-4 -left-6 p-3.5 rounded-[20px] bg-white shadow-[rgba(0,0,0,0.08)_0px_24px_48px_0px] border border-[#141413]/10 flex items-center gap-3 z-30"
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
               >
-                <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                  <Bot className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-xl bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-[#141413]" />
                 </div>
                 <div>
-                  <span className="text-[9px] font-mono text-[#777777] uppercase block">CEO AGENT</span>
-                  <span className="text-xs font-bold text-white font-sans">Strategic OKR Decomposed</span>
+                  <span className="text-[9px] font-mono text-[#696969] uppercase block">CEO AGENT</span>
+                  <span className="text-xs font-bold text-[#141413] font-sans">Launch Roadmap Ready</span>
                 </div>
               </motion.div>
 
               <motion.div 
-                className="absolute -bottom-4 -right-6 p-3.5 rounded-2xl bg-[#090909]/90 border border-white/10 backdrop-blur-xl shadow-2xl flex items-center gap-3 z-30"
+                className="absolute -bottom-4 -right-6 p-3.5 rounded-[20px] bg-white shadow-[rgba(0,0,0,0.08)_0px_24px_48px_0px] border border-[#141413]/10 flex items-center gap-3 z-30"
                 animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
               >
-                <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                  <CheckCircle2 className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-xl bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 text-[#141413]" />
                 </div>
                 <div>
-                  <span className="text-[9px] font-mono text-[#777777] uppercase block">CFO AGENT</span>
-                  <span className="text-xs font-bold text-white font-sans">13.2-Month Runway Verified</span>
+                  <span className="text-[9px] font-mono text-[#696969] uppercase block">CFO AGENT</span>
+                  <span className="text-xs font-bold text-[#141413] font-sans">13.2-Month Runway Verified</span>
                 </div>
               </motion.div>
 
@@ -438,427 +330,504 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
         </div>
       </section>
 
-      {/* 3. TRUST BAR (MONOCHROME GLASS SCROLLING LOGO MARQUEE) */}
-      <section className="py-12 border-y border-white/[0.08] bg-[#090909]">
-        <div className="max-w-[1320px] mx-auto px-6 text-center space-y-6">
-          
-          <div className="relative w-full overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
-            <div className="flex w-[200%] animate-marquee space-x-16 items-center">
-              {[...partnerLogos, ...partnerLogos].map((partner, idx) => {
-                const IconComponent = partner.icon;
-                return (
-                  <div key={idx} className="flex items-center gap-3 opacity-50 hover:opacity-100 transition-opacity cursor-pointer shrink-0">
-                    <IconComponent className="w-5 h-5 text-white" />
-                    <span className="text-xs font-bold tracking-wide text-white font-sans">{partner.name}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+      {/* 3. TRUST BAR (REMOVED) */}
+
+      {/* 4. FEATURES BENTO GRID SECTION */}
+
+
+      {/* 5. MEET YOUR AI TEAM SECTION */}
+      <section id="solutions" className="py-36 px-6 bg-[#F3F0EE] border-y border-[#141413]/10 relative overflow-hidden">
+        {/* Ghost watermark headline */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+          <span className="text-[200px] font-black text-[#141413]/[0.025] font-sans whitespace-nowrap" style={{letterSpacing: '-0.04em'}}>AI TEAM</span>
         </div>
-      </section>
 
-      {/* 4. FEATURES BENTO GRID SECTION (MONOCHROME 21st.dev BENTO GRID) */}
-      <section id="platform" className="py-36 px-6 relative">
-        
-        {/* Ambient White Radial Mask */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[550px] bg-white/[0.02] rounded-full blur-[180px] pointer-events-none" />
+        <div className="max-w-[1280px] mx-auto space-y-16 relative">
 
-        <div className="max-w-[1320px] mx-auto space-y-16 relative z-10">
-          
-          {/* Header */}
+          {/* Section header */}
           <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">PLATFORM</span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Your AI Executive Team
+            <span className="text-xs font-mono text-[#696969] uppercase tracking-widest font-bold">• AI WORKSPACE</span>
+            <h2 className="text-4xl sm:text-5xl font-bold text-[#141413] font-sans" style={{letterSpacing: '-0.02em'}}>
+              Meet Your AI Team
             </h2>
-            <p className="text-[#B8B8B8] text-base">
-              Six AI advisors working together to guide every decision.
-            </p>
-
-            {/* Filter Module Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
-              {[
-                { id: 'all', label: 'All Modules' },
-                { id: 'operate', label: 'Operate' },
-                { id: 'grow', label: 'Grow' },
-                { id: 'manage', label: 'Manage' },
-                { id: 'fund', label: 'Fund' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveModuleTab(tab.id as any)}
-                  className={`px-5 py-2 rounded-full text-xs font-medium transition-all cursor-pointer font-sans ${
-                    activeModuleTab === tab.id
-                      ? 'bg-white text-black font-bold shadow-[0_0_20px_rgba(255,255,255,0.4)]'
-                      : 'bg-[#090909] text-white/60 hover:text-white hover:bg-[#111111] border border-white/[0.08]'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* BENTO GRID (28px rounded corners, 24px gap, monochrome glass cards) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Card 1: Large Featured Bento Card (AI Executive Council) */}
-            <div className="md:col-span-2 p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] hover:border-white transition-all duration-300 space-y-6 relative overflow-hidden group hover:-translate-y-1 shadow-2xl">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                  <Bot className="w-6 h-6" />
-                </div>
-                <span className="text-[10px] font-mono px-3 py-1 rounded-full bg-white/10 text-white border border-white/20 font-bold uppercase">
-                  ACTIVE MATRIX
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-white font-sans">AI Executive Council</h3>
-                <p className="text-[#B8B8B8] text-base leading-[170%] font-sans max-w-xl">
-                  AI advisors for strategy, finance, hiring, and growth.
-                </p>
-              </div>
-
-              {/* Mini Graph / Executive Status Pills inside Card */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                <div className="p-3.5 rounded-xl bg-[#111111] border border-white/[0.08]">
-                  <span className="text-[10px] font-mono text-[#777777] uppercase block">CEO AGENT</span>
-                  <span className="text-xs font-bold text-white">98.4% Velocity</span>
-                </div>
-                <div className="p-3.5 rounded-xl bg-[#111111] border border-white/[0.08]">
-                  <span className="text-[10px] font-mono text-[#777777] uppercase block">CFO AGENT</span>
-                  <span className="text-xs font-bold text-white">13.2 Mos Runway</span>
-                </div>
-                <div className="p-3.5 rounded-xl bg-[#111111] border border-white/[0.08]">
-                  <span className="text-[10px] font-mono text-[#777777] uppercase block">CTO AGENT</span>
-                  <span className="text-xs font-bold text-white">99.99% Uptime</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs font-bold text-white group-hover:translate-x-1 transition-transform cursor-pointer pt-2 font-sans">
-                <span>Explore Module</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Card 2: Intelligent Hiring */}
-            <div className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] hover:border-white transition-all duration-300 space-y-6 relative overflow-hidden group hover:-translate-y-1 shadow-2xl">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                <Users className="w-6 h-6" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white font-sans">Smart Hiring</h3>
-                <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Hire better candidates in minutes.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-[#111111] border border-white/[0.08] flex items-center justify-between">
-                <span className="text-xs font-mono text-[#B8B8B8]">Skill Match</span>
-                <span className="text-xs font-mono font-bold text-white">98.4% Match</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs font-bold text-white group-hover:translate-x-1 transition-transform cursor-pointer font-sans">
-                <span>Explore</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Card 3: Investor Outreach */}
-            <div className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] hover:border-white transition-all duration-300 space-y-6 relative overflow-hidden group hover:-translate-y-1 shadow-2xl">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                <DollarSign className="w-6 h-6" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white font-sans">Investor Outreach</h3>
-                <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Manage investors and fundraising from one place.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-[#111111] border border-white/[0.08] flex items-center justify-between">
-                <span className="text-xs font-mono text-[#B8B8B8]">Seed Committed</span>
-                <span className="text-xs font-mono font-bold text-white">$2.4M Closed</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs font-bold text-white group-hover:translate-x-1 transition-transform cursor-pointer font-sans">
-                <span>Explore</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Card 4: Workflow Automation */}
-            <div className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] hover:border-white transition-all duration-300 space-y-6 relative overflow-hidden group hover:-translate-y-1 shadow-2xl">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                <Zap className="w-6 h-6" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white font-sans">Workflow Automation</h3>
-                <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Automate repetitive business operations.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-[#111111] border border-white/[0.08] flex items-center justify-between">
-                <span className="text-xs font-mono text-[#B8B8B8]">Manual Friction</span>
-                <span className="text-xs font-mono font-bold text-white">0% Manual</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs font-bold text-white group-hover:translate-x-1 transition-transform cursor-pointer font-sans">
-                <span>Explore</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-            {/* Card 5: Business Analytics */}
-            <div className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] hover:border-white transition-all duration-300 space-y-6 relative overflow-hidden group hover:-translate-y-1 shadow-2xl">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                <LineChart className="w-6 h-6" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white font-sans">Business Analytics</h3>
-                <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Real-time insights for better decisions.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-[#111111] border border-white/[0.08] flex items-center justify-between">
-                <span className="text-xs font-mono text-[#B8B8B8]">Audit Speed</span>
-                <span className="text-xs font-mono font-bold text-white">Real-Time</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs font-bold text-white group-hover:translate-x-1 transition-transform cursor-pointer font-sans">
-                <span>Explore</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-
-          </div>
-
-          <div className="text-center pt-4">
-            <button
-              onClick={onStartBuilding}
-              className="px-8 py-3.5 rounded-full bg-[#090909] hover:bg-[#111111] border border-white/[0.1] text-white font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-2 font-sans"
-            >
-              <span>Explore All Features</span>
-              <ArrowRight className="w-4 h-4 text-white" />
-            </button>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 5. EXECUTIVE COUNCIL SECTION (AI CHAT & TELEMETRY TERMINAL) */}
-      <section id="solutions" className="py-36 px-6 bg-[#090909] border-y border-white/[0.08] relative">
-        <div className="max-w-[1320px] mx-auto space-y-16">
-          
-          <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">AI COUNCIL</span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Your AI Executive Team
-            </h2>
-            <p className="text-[#B8B8B8] text-base leading-[170%] font-sans">
-              Six advisors working together to guide every decision.
+            <p className="text-[#696969] text-base leading-[170%] font-sans max-w-xl mx-auto">
+              Every AI agent specialises in one part of building your startup. They work together, so you don't have to switch between tools.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            
-            {/* Left: Floating Role Selector Sidebar */}
-            <div className="lg:col-span-4 space-y-3">
-              {[
-                { key: 'ceo', name: 'CEO Advisor', icon: Bot, tag: 'Strategy' },
-                { key: 'cfo', name: 'CFO Advisor', icon: DollarSign, tag: 'Treasury' },
-                { key: 'cto', name: 'CTO Advisor', icon: Cpu, tag: 'Architecture' },
-                { key: 'cmo', name: 'CMO Advisor', icon: TrendingUp, tag: 'Growth' },
-                { key: 'hr', name: 'HR Advisor', icon: Users, tag: 'Hiring' },
-                { key: 'coo', name: 'COO Advisor', icon: Layers, tag: 'Operations' },
-              ].map((ex) => {
-                const isSel = selectedExec === ex.key;
-                const ExecIcon = ex.icon;
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            {/* ── Left: Agent Navigation ── */}
+            <div className="lg:col-span-4 space-y-2.5">
+              {([
+                { key: 'hiring',     label: 'Hiring',     sub: 'Recruitment & JD builder',   icon: Users },
+                { key: 'finance',    label: 'Finance',    sub: 'Burn, runway & budgets',       icon: DollarSign },
+                { key: 'legal',      label: 'Legal',      sub: 'Contracts & NDA generator',   icon: FileText },
+                { key: 'investment', label: 'Investment', sub: 'Investor prep & decks',       icon: TrendingUp },
+                { key: 'growth',     label: 'Growth',     sub: 'GTM strategy & campaigns',    icon: Rocket },
+              ] as const).map((agent) => {
+                const isActive = activeAgent === agent.key;
+                const AgentIcon = agent.icon;
                 return (
-                  <div
-                    key={ex.key}
-                    onClick={() => setSelectedExec(ex.key as any)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between font-sans ${
-                      isSel 
-                        ? 'bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.3)] scale-[1.02]' 
-                        : 'bg-[#111111] text-[#B8B8B8] border-white/[0.08] hover:border-white/20 hover:text-white'
+                  <button
+                    key={agent.key}
+                    onClick={() => setActiveAgent(agent.key)}
+                    className={`w-full p-4 rounded-[20px] border text-left transition-all duration-200 cursor-pointer flex items-center justify-between font-sans group ${
+                      isActive
+                        ? 'bg-[#141413] text-[#F3F0EE] border-[#141413] shadow-[rgba(0,0,0,0.12)_0px_8px_24px_0px]'
+                        : 'bg-white text-[#696969] border-[#141413]/10 hover:border-[#141413]/25 hover:shadow-[rgba(0,0,0,0.04)_0px_4px_16px_0px]'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isSel ? 'bg-black/10 text-black' : 'bg-white/[0.05] text-white'}`}>
-                        <ExecIcon className="w-4 h-4" />
+                    <div className="flex items-center gap-3.5">
+                      <div className={`w-9 h-9 rounded-[12px] flex items-center justify-center transition-all ${
+                        isActive ? 'bg-white/15' : 'bg-[#F3F0EE] group-hover:bg-[#F3F0EE]'
+                      }`}>
+                        <AgentIcon className={`w-4 h-4 ${isActive ? 'text-[#F3F0EE]' : 'text-[#141413]'}`} />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold">{ex.name}</h4>
-                        <span className={`text-[10px] font-mono ${isSel ? 'text-black/70' : 'text-[#777777]'}`}>{ex.tag} Engine</span>
+                        <div className={`text-sm font-bold leading-tight ${isActive ? 'text-[#F3F0EE]' : 'text-[#141413]'}`}>{agent.label}</div>
+                        <div className={`text-[10px] font-mono mt-0.5 ${isActive ? 'text-[#F3F0EE]/55' : 'text-[#696969]'}`}>{agent.sub}</div>
                       </div>
                     </div>
-                    <ChevronRight className={`w-4 h-4 ${isSel ? 'text-black' : 'text-[#777777]'}`} />
-                  </div>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                      isActive ? 'bg-white/20' : 'bg-transparent'
+                    }`}>
+                      <ChevronRight className={`w-3 h-3 ${isActive ? 'text-[#F3F0EE]' : 'text-[#696969]/40'}`} />
+                    </div>
+                  </button>
                 );
               })}
             </div>
 
-            {/* Right: AI Chat & Telemetry Interface (Monochrome Dark Glass Terminal) */}
-            <div className="lg:col-span-8 p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] backdrop-blur-2xl space-y-6 shadow-2xl relative flex flex-col justify-between">
-              
-              <div className="space-y-6">
-                
-                {/* Window Header */}
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
-                    <span className="text-xs font-mono font-bold text-white uppercase">{execData[selectedExec].role} LIVE TELEMETRY</span>
+            {/* ── Right: Workspace Preview ── */}
+            <div className="lg:col-span-8">
+              <div className="rounded-[40px] bg-white border border-[#141413]/10 shadow-[rgba(0,0,0,0.08)_0px_24px_48px_0px] overflow-hidden">
+
+                {/* Window chrome */}
+                <div className="px-6 py-4 border-b border-[#141413]/08 bg-[#FCFBFA] flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    </div>
+                    <div className="h-4 w-px bg-[#141413]/10 mx-1" />
+                    <span className="text-[11px] font-mono text-[#696969] font-bold uppercase tracking-wider">
+                      CatalystOS — {activeAgent.charAt(0).toUpperCase() + activeAgent.slice(1)} Workspace
+                    </span>
                   </div>
-                  <span className="text-[10px] font-mono px-3 py-1 rounded-full bg-[#111111] border border-white/10 text-[#B8B8B8]">
-                    STATUS: ACTIVE AGENT GRAPH
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-mono text-[#696969]">LIVE</span>
+                  </div>
                 </div>
 
-                {/* Score & Priorities Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-5 rounded-2xl bg-[#111111] border border-white/[0.08]">
-                    <span className="text-[10px] font-mono text-[#777777] uppercase block">{execData[selectedExec].scoreLabel}</span>
-                    <span className="text-3xl font-extrabold text-white font-mono">{execData[selectedExec].score}</span>
-                  </div>
+                {/* Workspace content — switches by agent */}
+                <div className="p-6 min-h-[480px]">
 
-                  <div className="p-5 rounded-2xl bg-[#111111] border border-white/[0.08] space-y-2">
-                    <span className="text-[10px] font-mono text-[#777777] uppercase block">Top Priorities</span>
-                    <div className="space-y-1.5">
-                      {execData[selectedExec].priorities.map((item, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs text-[#B8B8B8] font-sans">
-                          <Check className="w-3.5 h-3.5 text-white shrink-0" />
-                          <span className="truncate">{item}</span>
+                  {/* ── HIRING WORKSPACE ── */}
+                  {activeAgent === 'hiring' && (
+                    <div className="space-y-4 animate-fadeIn">
+                      {/* AI Agent Chat */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-full bg-[#141413] flex items-center justify-center">
+                            <Bot className="w-3 h-3 text-[#F3F0EE]" />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[#696969] uppercase">Hiring Agent</span>
                         </div>
-                      ))}
+                        <div className="bg-[#FCFBFA] border border-[#141413]/10 rounded-[16px] p-4 min-h-[76px] flex items-center">
+                          <p className="text-sm text-[#141413] leading-relaxed font-sans">
+                            {typingText}
+                            {isTyping && <span className="inline-block w-0.5 h-4 bg-[#141413] ml-0.5 animate-pulse align-middle" />}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* JD Generator + Resume Upload */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-3.5 h-3.5 text-[#141413]" />
+                            <span className="text-[10px] font-mono font-bold text-[#141413] uppercase">Create Job Description</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <input 
+                              type="text" 
+                              value="Senior Backend Engineer"
+                              readOnly
+                              className="flex-1 bg-white border border-[#141413]/10 rounded-[12px] px-3 py-1.5 text-[11px] text-[#141413] focus:outline-none"
+                            />
+                            <button className="px-3 py-1 bg-[#141413] text-[#F3F0EE] rounded-[12px] text-[10px] font-bold font-sans hover:bg-[#262627] transition-all">
+                              Create
+                            </button>
+                          </div>
+                          <div className="p-2.5 bg-white rounded-[12px] border border-[#141413]/05">
+                            <p className="text-[10px] text-[#696969] leading-relaxed font-sans">
+                              <strong>Preview:</strong> 5+ yrs Rust/Go, distributed systems, high concurrency.
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10 space-y-2 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Plus className="w-3.5 h-3.5 text-[#141413]" />
+                              <span className="text-[10px] font-mono font-bold text-[#141413] uppercase">Resume Upload</span>
+                            </div>
+                            <div className="border-2 border-dashed border-[#141413]/15 rounded-[12px] p-3 text-center bg-white/50">
+                              <p className="text-[10px] text-[#696969] font-sans">Drop CVs here or browse</p>
+                              <p className="text-[9px] font-mono text-[#696969]/60 mt-0.5">PDF, DOCX accepted</p>
+                            </div>
+                          </div>
+                          <button className="w-full py-1.5 bg-white hover:bg-[#F3F0EE] border border-[#141413]/10 text-[#141413] rounded-[12px] text-[10px] font-bold font-sans transition-all">
+                            Parse Resumes
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Candidate ranking */}
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-mono font-bold text-[#696969] uppercase">Candidate Ranking — ATS Score</span>
+                        {[
+                          { name: 'Arjun Mehta', score: 94, tag: 'Rust · Go · AWS' },
+                          { name: 'Priya Sharma', score: 88, tag: 'Node · PostgreSQL · Docker' },
+                          { name: 'Rohan Das',   score: 81, tag: 'Python · FastAPI · k8s' },
+                        ].map((c, i) => (
+                          <div key={i} className="flex items-center gap-3 p-3 rounded-[12px] bg-[#FCFBFA] border border-[#141413]/08">
+                            <div className="w-7 h-7 rounded-full bg-[#141413] flex items-center justify-center text-[10px] font-bold text-[#F3F0EE] font-mono shrink-0">{c.name.split(' ').map(n => n[0]).join('')}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-bold text-[#141413] font-sans">{c.name}</div>
+                              <div className="text-[10px] font-mono text-[#696969]">{c.tag}</div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="h-1.5 w-16 bg-[#F3F0EE] rounded-full overflow-hidden">
+                                <div className="h-full bg-emerald-600 rounded-full transition-all duration-500" style={{ width: `${c.score}%` }} />
+                              </div>
+                              <span className="text-[10px] font-mono font-bold text-emerald-700 w-7 text-right">{c.score}%</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
 
-                {/* Interactive AI Chat Transcript Stream */}
-                <div className="p-5 rounded-2xl bg-[#000000] border border-white/[0.08] space-y-3 font-mono text-xs max-h-[220px] overflow-y-auto">
-                  {chatMessages.map((msg, idx) => (
-                    <div key={idx} className={`p-3 rounded-xl ${msg.role === 'user' ? 'bg-[#181818] text-white ml-8 border border-white/10' : 'bg-[#111111] text-[#B8B8B8] border border-white/10'}`}>
-                      <span className="text-[10px] text-[#777777] block mb-1 uppercase font-bold">{msg.role === 'user' ? 'Founder' : execData[selectedExec].role}</span>
-                      <p className="leading-relaxed font-sans text-sm">{msg.text}</p>
+                  {/* ── FINANCE WORKSPACE ── */}
+                  {activeAgent === 'finance' && (
+                    <div className="space-y-4 animate-fadeIn">
+                      {/* AI Agent Chat */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-full bg-[#141413] flex items-center justify-center">
+                            <Bot className="w-3 h-3 text-[#F3F0EE]" />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[#696969] uppercase">Finance Agent</span>
+                        </div>
+                        <div className="bg-[#FCFBFA] border border-[#141413]/10 rounded-[16px] p-4 min-h-[76px] flex items-center">
+                          <p className="text-sm text-[#141413] leading-relaxed font-sans">
+                            {typingText}
+                            {isTyping && <span className="inline-block w-0.5 h-4 bg-[#141413] ml-0.5 animate-pulse align-middle" />}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { label: 'Monthly Burn',   value: '₹14.2L',  sub: '+₹1.1L vs last month', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-100' },
+                          { label: 'Cash Runway',    value: '11.4 mo', sub: 'At current burn rate',  color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100' },
+                          { label: 'Cash Available', value: '₹1.62Cr', sub: 'As of today',            color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-100' },
+                        ].map((m, i) => (
+                          <div key={i} className={`p-4 rounded-[16px] border ${m.bg}`}>
+                            <span className="text-[10px] font-mono font-bold text-[#696969] uppercase block mb-1">{m.label}</span>
+                            <span className={`text-2xl font-black font-mono ${m.color}`}>{m.value}</span>
+                            <span className="text-[10px] font-mono text-[#696969] block mt-1">{m.sub}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Burn breakdown bar */}
+                      <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10 space-y-3">
+                        <span className="text-[10px] font-mono font-bold text-[#696969] uppercase">Burn Breakdown</span>
+                        {[
+                          { label: 'Salaries',       pct: 62, color: 'bg-[#141413]' },
+                          { label: 'Cloud Infra',    pct: 18, color: 'bg-amber-500' },
+                          { label: 'Tools & SaaS',   pct: 12, color: 'bg-rose-400' },
+                          { label: 'Other',          pct: 8,  color: 'bg-[#696969]' },
+                        ].map((b, i) => (
+                          <div key={i} className="flex items-center gap-3 text-xs">
+                            <span className="w-20 text-[#696969] font-sans shrink-0">{b.label}</span>
+                            <div className="flex-1 h-1.5 bg-white rounded-full overflow-hidden">
+                              <div className={`h-full ${b.color} rounded-full transition-all duration-700`} style={{ width: `${b.pct}%` }} />
+                            </div>
+                            <span className="text-[10px] font-mono font-bold text-[#141413] w-7 text-right">{b.pct}%</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* AI Recommendation */}
+                      <div className="p-4 rounded-[16px] bg-[#141413] space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-3.5 h-3.5 text-[#F3F0EE]/70" />
+                          <span className="text-[10px] font-mono font-bold text-[#F3F0EE]/70 uppercase">AI Recommendation</span>
+                        </div>
+                        <p className="text-sm text-[#F3F0EE] leading-relaxed font-sans">
+                          Delaying one planned hire extends your runway by <strong>1.4 months</strong>.
+                        </p>
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  )}
 
-              </div>
+                  {/* ── LEGAL WORKSPACE ── */}
+                  {activeAgent === 'legal' && (
+                    <div className="space-y-4 animate-fadeIn">
+                      {/* AI Agent Chat */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-full bg-[#141413] flex items-center justify-center">
+                            <Bot className="w-3 h-3 text-[#F3F0EE]" />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[#696969] uppercase">Legal Agent</span>
+                        </div>
+                        <div className="bg-[#FCFBFA] border border-[#141413]/10 rounded-[16px] p-4 min-h-[76px] flex items-center">
+                          <p className="text-sm text-[#141413] leading-relaxed font-sans">
+                            {typingText}
+                            {isTyping && <span className="inline-block w-0.5 h-4 bg-[#141413] ml-0.5 animate-pulse align-middle" />}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* Chat Input Prompt Form */}
-              <form onSubmit={handleSendChat} className="flex items-center gap-3 pt-2">
-                <input
-                  type="text"
-                  placeholder="Ask your executive team anything..."
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  className="flex-1 bg-[#111111] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-[#777777] focus:outline-none focus:border-white font-sans"
-                />
-                <button
-                  type="submit"
-                  className="px-5 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold transition-all cursor-pointer font-sans shrink-0 flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
-                >
-                  <span>Ask Question</span>
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </form>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { label: 'Generate NDA',          icon: FileText, ready: true },
+                          { label: 'Employee Contract',      icon: Briefcase, ready: true },
+                          { label: 'Founder Agreement',      icon: Users, ready: false },
+                          { label: 'IP Assignment Deed',     icon: Lock, ready: false },
+                        ].map((doc, i) => (
+                          <button key={i} className={`p-4 rounded-[16px] border text-left transition-all group ${
+                            doc.ready
+                              ? 'bg-white border-[#141413]/15 hover:border-[#141413]/40 hover:shadow-[rgba(0,0,0,0.06)_0px_4px_16px_0px] cursor-pointer'
+                              : 'bg-[#F3F0EE] border-[#141413]/08 opacity-60 cursor-default'
+                          }`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <doc.icon className="w-4 h-4 text-[#141413]" />
+                              {doc.ready
+                                ? <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">READY</span>
+                                : <span className="text-[9px] font-mono font-bold text-[#696969] bg-[#F3F0EE] border border-[#141413]/10 px-1.5 py-0.5 rounded-full">SOON</span>
+                              }
+                            </div>
+                            <div className="text-xs font-bold text-[#141413] font-sans">{doc.label}</div>
+                          </button>
+                        ))}
+                      </div>
 
-            </div>
+                      {/* Document preview */}
+                      <div className="p-4 rounded-[16px] bg-[#FCFBFA] border border-[#141413]/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-mono font-bold text-[#141413] uppercase">NDA Preview</span>
+                          <button className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-[#141413] bg-white border border-[#141413]/15 px-3 py-1.5 rounded-full hover:bg-[#F3F0EE] transition-all cursor-pointer">
+                            <ArrowUpRight className="w-3 h-3" /> Download PDF
+                          </button>
+                        </div>
+                        <div className="space-y-2 font-mono text-[11px] text-[#696969] leading-relaxed">
+                          <div className="h-2 bg-[#141413]/10 rounded-full w-3/4" />
+                          <div className="h-2 bg-[#141413]/08 rounded-full w-full" />
+                          <div className="h-2 bg-[#141413]/08 rounded-full w-5/6" />
+                          <div className="h-2 bg-[#141413]/06 rounded-full w-4/5" />
+                          <div className="h-2 bg-[#141413]/08 rounded-full w-full" />
+                          <div className="h-2 bg-[#141413]/06 rounded-full w-2/3" />
+                        </div>
+                        <p className="text-[10px] font-mono text-[#696969] pt-1">This Non-Disclosure Agreement is entered into by <strong className="text-[#141413]">CatalystOS Inc.</strong> and the undersigned party on the effective date above...</p>
+                      </div>
+                    </div>
+                  )}
 
-          </div>
+                  {/* ── INVESTMENT WORKSPACE ── */}
+                  {activeAgent === 'investment' && (
+                    <div className="space-y-4 animate-fadeIn">
+                      {/* AI Agent Chat */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-full bg-[#141413] flex items-center justify-center">
+                            <Bot className="w-3 h-3 text-[#F3F0EE]" />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[#696969] uppercase">Investment Agent</span>
+                        </div>
+                        <div className="bg-[#FCFBFA] border border-[#141413]/10 rounded-[16px] p-4 min-h-[76px] flex items-center">
+                          <p className="text-sm text-[#141413] leading-relaxed font-sans">
+                            {typingText}
+                            {isTyping && <span className="inline-block w-0.5 h-4 bg-[#141413] ml-0.5 animate-pulse align-middle" />}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Upcoming meeting */}
+                      <div className="p-4 rounded-[16px] bg-[#141413] flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono font-bold text-[#F3F0EE]/60 uppercase">Upcoming Investor Meeting</span>
+                          <div className="text-sm font-bold text-[#F3F0EE] mt-0.5 font-sans">Sequoia India — Seed Round Call</div>
+                          <div className="text-[10px] font-mono text-[#F3F0EE]/50 mt-0.5">Tomorrow · 3:00 PM IST · Google Meet</div>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5">
+                          <Clock className="w-3 h-3 text-[#F3F0EE]/70" />
+                          <span className="text-[10px] font-mono text-[#F3F0EE] font-bold">17h away</span>
+                        </div>
+                      </div>
+
+                      {/* Startup metrics */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { label: 'MRR',       value: '₹8.4L' },
+                          { label: 'ARR',       value: '₹1.0Cr' },
+                          { label: 'Growth',    value: '+24%' },
+                          { label: 'NPS',       value: '72' },
+                        ].map((m, i) => (
+                          <div key={i} className="p-3 rounded-[12px] bg-[#F3F0EE] border border-[#141413]/10 text-center">
+                            <div className="text-[10px] font-mono text-[#696969] uppercase">{m.label}</div>
+                            <div className="text-base font-black font-mono text-[#141413] mt-0.5">{m.value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Investor update draft */}
+                      <div className="p-4 rounded-[16px] bg-[#FCFBFA] border border-[#141413]/10 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-mono font-bold text-[#141413] uppercase">Investor Update Draft</span>
+                          <button className="text-[10px] font-mono font-bold text-[#141413] underline underline-offset-2">Edit Draft</button>
+                        </div>
+                        <p className="text-xs text-[#696969] leading-relaxed font-sans">
+                          <strong className="text-[#141413]">Progress:</strong> Crossed ₹8.4L MRR (+24% MoM). Onboarded 12 new clients. Engineering team expanded to 6 FTEs.
+                        </p>
+                        <p className="text-xs text-[#696969] leading-relaxed font-sans">
+                          <strong className="text-[#141413]">Ask:</strong> We are raising ₹4.5Cr seed to accelerate GTM, expand sales team, and hit ₹3Cr ARR by Q4.
+                        </p>
+                      </div>
+
+                      {/* Meeting notes area */}
+                      <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10">
+                        <span className="text-[10px] font-mono font-bold text-[#696969] uppercase block mb-2">Meeting Notes</span>
+                        <div className="text-xs text-[#696969] font-sans italic">Agent will auto-transcribe and summarise your investor call in real-time...</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── GROWTH WORKSPACE ── */}
+                  {activeAgent === 'growth' && (
+                    <div className="space-y-4 animate-fadeIn">
+                      {/* AI Agent Chat */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-full bg-[#141413] flex items-center justify-center">
+                            <Bot className="w-3 h-3 text-[#F3F0EE]" />
+                          </div>
+                          <span className="text-[10px] font-mono font-bold text-[#696969] uppercase">Growth Agent</span>
+                        </div>
+                        <div className="bg-[#FCFBFA] border border-[#141413]/10 rounded-[16px] p-4 min-h-[76px] flex items-center">
+                          <p className="text-sm text-[#141413] leading-relaxed font-sans">
+                            {typingText}
+                            {isTyping && <span className="inline-block w-0.5 h-4 bg-[#141413] ml-0.5 animate-pulse align-middle" />}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* GTM Strategy & Campaign Generator */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10 space-y-2">
+                          <span className="text-[10px] font-mono font-bold text-[#696969] uppercase block mb-1">GTM Strategy — Q3 Sprint</span>
+                          <div className="space-y-1.5">
+                            {[
+                              { label: 'LinkedIn outreach campaign',        done: true },
+                              { label: 'Developer newsletter — Issue #3',   done: true },
+                              { label: 'Product Hunt launch prep',          done: false },
+                              { label: 'B2B landing page A/B test',         done: false },
+                            ].map((t, i) => (
+                              <div key={i} className="flex items-center gap-2 text-xs">
+                                <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${
+                                  t.done ? 'bg-emerald-600' : 'border border-[#141413]/25'
+                                }`}>
+                                  {t.done && <Check className="w-2 h-2 text-white" />}
+                                </div>
+                                <span className={`text-[10.5px] font-sans ${t.done ? 'text-[#696969] line-through' : 'text-[#141413]'}`}>{t.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10 space-y-2 flex flex-col justify-between">
+                          <div>
+                            <span className="text-[10px] font-mono font-bold text-[#696969] uppercase block mb-1.5">Marketing Campaign Generator</span>
+                            <input 
+                              type="text" 
+                              value="Developer referral loop"
+                              readOnly
+                              className="w-full bg-white border border-[#141413]/10 rounded-[12px] px-3 py-1.5 text-[11px] text-[#141413] focus:outline-none mb-2"
+                            />
+                          </div>
+                          <button className="w-full py-1.5 bg-[#141413] hover:bg-[#262627] text-white rounded-[12px] text-[10px] font-bold font-sans transition-all">
+                            Generate Campaign
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Campaign timeline */}
+                      <div className="p-4 rounded-[16px] bg-[#FCFBFA] border border-[#141413]/10 space-y-2">
+                        <span className="text-[10px] font-mono font-bold text-[#141413] uppercase">Campaign Timeline</span>
+                        <div className="flex items-center gap-0 text-[10px] font-mono">
+                          {['Week 1', 'Week 2', 'Week 3', 'Week 4'].map((w, i) => (
+                            <div key={i} className={`flex-1 py-2 text-center border-r last:border-r-0 border-[#141413]/08 ${
+                              i < 2 ? 'text-[#141413] font-bold bg-[#141413]/05' : 'text-[#696969]'
+                            }`}>{w}</div>
+                          ))}
+                        </div>
+                        <div className="text-[10px] text-[#696969] font-sans">
+                          <strong className="text-[#141413]">Suggested next action:</strong> Post the developer case study to Hacker News — your audience overlap with YC alumni is 68%.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                </div>{/* /workspace content */}
+              </div>{/* /workspace card */}
+            </div>{/* /right col */}
+
+          </div>{/* /grid */}
 
         </div>
       </section>
 
-      {/* 6. SECURITY SECTION (3D SHIELD & ZERO TRUST ARCHITECTURE) */}
-      <section id="security" className="py-36 px-6 relative">
-        <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Left Column: 3D Holographic Shield with Rotating Rings & Glow */}
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="w-72 h-72 sm:w-88 sm:h-88 rounded-full bg-[#090909] border border-white/10 flex items-center justify-center relative shadow-[0_0_90px_rgba(255,255,255,0.1)]">
-              <ShieldCheck className="w-28 h-28 text-white animate-pulse" />
-              <div className="absolute inset-4 rounded-full border border-dashed border-white/20 animate-spin pointer-events-none" style={{ animationDuration: '25s' }} />
-              <div className="absolute inset-10 rounded-full border border-dashed border-white/10 animate-spin pointer-events-none" style={{ animationDuration: '40s', animationDirection: 'reverse' }} />
-            </div>
-          </div>
+      {/* 6. SECURITY SECTION (REMOVED) */}
 
-          {/* Right Column: Security Checklist */}
-          <div className="lg:col-span-7 space-y-6 text-left">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">SECURITY</span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Enterprise Security
-            </h2>
-            <p className="text-[#B8B8B8] text-base leading-[170%] font-sans">
-              Your startup data stays private, encrypted, and fully isolated.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-              {[
-                { title: "End-to-End Encryption", desc: "256-bit AES-GCM in transit and at rest.", icon: Lock },
-                { title: "SOC 2 Ready", desc: "Automated compliance audit logs.", icon: ShieldCheck },
-                { title: "Zero Trust", desc: "No implicit access. Always verify.", icon: Shield },
-                { title: "Secure Vault", desc: "HashiCorp Vault secret isolation.", icon: Cpu },
-              ].map((item, idx) => {
-                const ItemIcon = item.icon;
-                return (
-                  <div key={idx} className="p-5 rounded-2xl bg-[#090909] border border-white/[0.08] hover:border-white transition-all space-y-1">
-                    <div className="flex items-center gap-2.5">
-                      <ItemIcon className="w-4 h-4 text-white" />
-                      <span className="text-sm font-bold text-white font-sans">{item.title}</span>
-                    </div>
-                    <p className="text-xs text-[#777777] leading-[160%] font-sans">{item.desc}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* 7. HOW IT WORKS (TIMELINE WORKFLOW) */}
-      <section className="py-36 px-6 bg-[#090909] border-y border-white/[0.08]">
-        <div className="max-w-[1320px] mx-auto space-y-16 text-center">
+      {/* 7. HOW IT WORKS */}
+      <section id="execution" className="py-36 px-6 bg-[#FCFBFA] border-y border-[#141413]/10">
+        <div className="max-w-[1280px] mx-auto space-y-16 text-center">
           
           <div className="space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">HOW IT WORKS</span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
+            <span className="text-xs font-mono text-[#696969] uppercase tracking-widest font-bold">HOW IT WORKS</span>
+            <h2 className="text-4xl sm:text-5xl font-bold text-[#141413] tracking-tight font-sans" style={{letterSpacing: '-0.02em'}}>
               From Idea to Execution
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
             {[
-              { step: '01', title: 'Set Goals', desc: 'Define what you want to achieve.', icon: Terminal },
-              { step: '02', title: 'Get AI Advice', desc: 'Your executive team analyzes and recommends.', icon: Bot },
-              { step: '03', title: 'Execute Faster', desc: 'Launch actions with automated workflows.', icon: Zap },
-              { step: '04', title: 'Track Progress', desc: 'Monitor results in real time.', icon: LineChart },
+              { step: '01', title: 'Connect Your Startup', desc: 'Securely set up your workspace and provide your business context.', icon: Terminal },
+              { step: '02', title: 'AI Understands Your Business', desc: 'CatalystOS builds context across your startup to deliver personalized recommendations.', icon: Bot },
+              { step: '03', title: 'Execute with AI', desc: 'Collaborative AI agents help plan work, automate tasks, and support better decisions.', icon: Zap },
+              { step: '04', title: 'Track & Scale', desc: 'Monitor progress, measure growth, and continuously improve as your startup evolves.', icon: LineChart },
             ].map((st, idx) => {
               const StepIcon = st.icon;
               return (
                 <div
                   key={idx}
-                  className="p-8 rounded-[28px] border border-white/[0.08] bg-[#000000] hover:border-white hover:-translate-y-1 transition-all text-left relative group shadow-xl"
+                  className="p-8 rounded-[40px] border border-[#141413]/10 bg-white hover:border-[#141413]/30 hover:-translate-y-1 transition-all text-left relative group shadow-[rgba(0,0,0,0.04)_0px_4px_24px_0px]"
                 >
                   <div className="flex items-center justify-between mb-6">
-                    <span className="text-3xl font-extrabold font-mono text-white/40 group-hover:text-white transition-colors">{st.step}</span>
-                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
-                      <StepIcon className="w-5 h-5" />
+                    <span className="text-3xl font-extrabold font-mono text-[#141413]/20 group-hover:text-[#141413]/40 transition-colors">{st.step}</span>
+                    <div className="w-10 h-10 rounded-full bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
+                      <StepIcon className="w-5 h-5 text-[#141413]" />
                     </div>
                   </div>
-                  <h3 className="text-xl font-bold mb-2 font-sans text-white">{st.title}</h3>
-                  <p className="text-sm leading-[170%] text-[#B8B8B8] font-sans">{st.desc}</p>
+                  <h3 className="text-xl font-bold mb-2 font-sans text-[#141413]" style={{letterSpacing: '-0.02em'}}>{st.title}</h3>
+                  <p className="text-sm leading-[170%] text-[#696969] font-sans">{st.desc}</p>
                 </div>
               );
             })}
@@ -867,98 +836,26 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
         </div>
       </section>
 
-      {/* 8. METRICS SECTION (ASYMMETRICAL LARGE STATS) */}
-      <section className="py-36 px-6 relative">
-        <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          <div className="lg:col-span-5 space-y-6 text-left">
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Trusted by Founders
-            </h2>
-            <p className="text-[#B8B8B8] text-base leading-[170%] font-sans">
-              Join 10,000+ founders building smarter with AI.
-            </p>
-            <button
-              onClick={onStartBuilding}
-              className="px-8 py-3.5 rounded-full bg-white hover:bg-zinc-200 text-black font-semibold text-xs shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all cursor-pointer inline-flex items-center gap-2 font-sans"
-            >
-              <span>Get Started</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+      {/* 8. METRICS SECTION (REMOVED) */}
 
-          <div className="lg:col-span-7 grid grid-cols-2 gap-6">
-            {[
-              { label: 'Founders', val: '10K+' },
-              { label: 'Countries', val: '100+' },
-              { label: 'Uptime', val: '99.9%' },
-              { label: 'AI Decisions', val: '1M+' },
-            ].map((st, idx) => (
-              <div key={idx} className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] text-center space-y-2 hover:border-white transition-all">
-                <span className="text-4xl font-extrabold text-white font-mono block">{st.val}</span>
-                <span className="text-xs font-mono text-[#777777] uppercase tracking-wider">{st.label}</span>
-              </div>
-            ))}
-          </div>
+      {/* 9. TESTIMONIALS SECTION (REMOVED) */}
 
-        </div>
-      </section>
-
-      {/* 9. TESTIMONIALS SECTION (WALL OF LOVE) */}
-      <section className="py-36 px-6 bg-[#090909] border-y border-white/[0.08]">
-        <div className="max-w-[1320px] mx-auto space-y-16">
-          <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">TESTIMONIALS</span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Loved by Founders
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, idx) => (
-              <div key={idx} className="p-8 rounded-[28px] bg-[#000000] border border-white/[0.08] hover:border-white transition-all space-y-6 flex flex-col justify-between group">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-1 text-white text-xs">
-                    <Star className="w-4 h-4 fill-current" />
-                    <Star className="w-4 h-4 fill-current" />
-                    <Star className="w-4 h-4 fill-current" />
-                    <Star className="w-4 h-4 fill-current" />
-                    <Star className="w-4 h-4 fill-current" />
-                  </div>
-                  <p className="text-sm text-white/80 leading-[170%] italic font-sans">
-                    "{t.quote}"
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 pt-4 border-t border-white/[0.08]">
-                  <img src={t.avatar} alt={t.author} className="w-11 h-11 rounded-full object-cover border border-white/20 filter grayscale" />
-                  <div>
-                    <h4 className="text-sm font-bold text-white font-sans">{t.author}</h4>
-                    <p className="text-xs text-[#777777] font-sans">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 10. PRICING SECTION (MONOCHROME PRICING WITH CRISP WHITE HIGHLIGHT PLAN) */}
-      <section id="pricing" className="py-36 px-6 relative">
-        <div className="max-w-[1320px] mx-auto space-y-16">
+      {/* 10. PRICING SECTION */}
+      <section id="pricing" className="py-36 px-6 relative bg-[#F3F0EE]">
+        <div className="max-w-[1280px] mx-auto space-y-16">
           
           <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">PRICING</span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
+            <span className="text-xs font-mono text-[#696969] uppercase tracking-widest font-bold">PRICING</span>
+            <h2 className="text-4xl sm:text-5xl font-bold text-[#141413] tracking-tight font-sans" style={{letterSpacing: '-0.02em'}}>
               Simple Pricing
             </h2>
 
             {/* Toggle Billing Cycle */}
-            <div className="inline-flex items-center gap-3 p-1.5 rounded-full bg-[#090909] border border-white/[0.08] pt-2">
+            <div className="inline-flex items-center gap-3 p-1.5 rounded-full bg-white border border-[#141413]/10 pt-2 shadow-[rgba(0,0,0,0.04)_0px_4px_24px_0px]">
               <button
                 onClick={() => setBillingCycle('monthly')}
                 className={`px-5 py-2 rounded-full text-xs font-medium transition-all cursor-pointer font-sans ${
-                  billingCycle === 'monthly' ? 'bg-white text-black font-bold' : 'text-[#B8B8B8] hover:text-white'
+                  billingCycle === 'monthly' ? 'bg-[#141413] text-[#F3F0EE] font-bold' : 'text-[#696969] hover:text-[#141413]'
                 }`}
               >
                 Monthly Billing
@@ -966,77 +863,96 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <button
                 onClick={() => setBillingCycle('annual')}
                 className={`px-5 py-2 rounded-full text-xs font-medium transition-all cursor-pointer font-sans flex items-center gap-1.5 ${
-                  billingCycle === 'annual' ? 'bg-white text-black font-bold' : 'text-[#B8B8B8] hover:text-white'
+                  billingCycle === 'annual' ? 'bg-[#141413] text-[#F3F0EE] font-bold' : 'text-[#696969] hover:text-[#141413]'
                 }`}
               >
                 <span>Annual Billing</span>
-                <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[9px] font-bold">SAVE 20%</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#141413]/10 text-[#141413] text-[9px] font-bold">SAVE 20%</span>
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             
-            {/* Starter Plan */}
-            <div className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] space-y-6 flex flex-col justify-between">
+            {/* Free Trial Plan */}
+            <div className="p-8 rounded-[40px] bg-white border border-[#141413]/10 space-y-6 flex flex-col justify-between shadow-[rgba(0,0,0,0.04)_0px_4px_24px_0px]">
               <div className="space-y-4">
-                <span className="text-xs font-mono text-[#777777] uppercase font-bold">STARTER</span>
-                <div className="text-4xl font-extrabold text-white font-mono">$0 <span className="text-xs text-[#777777] font-sans">/ month</span></div>
-                <p className="text-xs text-[#B8B8B8] leading-[170%] font-sans">For solo founders.</p>
+                <span className="text-xs font-mono text-[#696969] uppercase font-bold">FREE TRIAL</span>
+                <div className="text-4xl font-extrabold text-[#141413] font-mono">₹0 <span className="text-xs text-[#696969] font-sans">/ month</span></div>
+                <p className="text-xs text-[#696969] leading-[170%] font-sans">Explore CatalystOS with a 14-day free trial.</p>
 
-                <div className="space-y-2.5 text-xs pt-4 border-t border-white/[0.08] font-sans">
-                  <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Basic Modules</div>
-                  <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Community Access</div>
-                  <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Up to 2 Users</div>
+                <div className="space-y-2.5 text-xs pt-4 border-t border-[#141413]/10 font-sans">
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> Basic Modules</div>
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> Up to 2 Users</div>
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> 14-Day Free Trial</div>
                 </div>
               </div>
 
-              <button onClick={onStartBuilding} className="w-full py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold transition-all cursor-pointer font-sans">
+              <button onClick={onStartBuilding} className="w-full py-3.5 rounded-[20px] bg-white hover:bg-[#F3F0EE] border border-[#141413] text-[#141413] text-xs font-bold transition-all cursor-pointer font-sans">
+                Start Free Trial
+              </button>
+            </div>
+
+            {/* Starter Plan */}
+            <div className="p-8 rounded-[40px] bg-white border border-[#141413]/10 space-y-6 flex flex-col justify-between shadow-[rgba(0,0,0,0.04)_0px_4px_24px_0px]">
+              <div className="space-y-4">
+                <span className="text-xs font-mono text-[#696969] uppercase font-bold">STARTER</span>
+                <div className="text-4xl font-extrabold text-[#141413] font-mono">₹{billingCycle === 'annual' ? Math.round(999 * 0.8) : 999} <span className="text-xs text-[#696969] font-sans">/ month</span></div>
+                <p className="text-xs text-[#696969] leading-[170%] font-sans">Perfect for solo founders and early-stage startups.</p>
+
+                <div className="space-y-2.5 text-xs pt-4 border-t border-[#141413]/10 font-sans">
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> All Core Modules</div>
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> Standard Analytics</div>
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> Up to 5 Users</div>
+                </div>
+              </div>
+
+              <button onClick={onStartBuilding} className="w-full py-3.5 rounded-[20px] bg-white hover:bg-[#F3F0EE] border border-[#141413] text-[#141413] text-xs font-bold transition-all cursor-pointer font-sans">
                 Get Started
               </button>
             </div>
 
-            {/* Pro Plan (Elevated Center Plan with White Glow) */}
-            <div className="p-8 rounded-[28px] bg-[#111111] border-2 border-white space-y-6 flex flex-col justify-between relative shadow-[0_0_60px_rgba(255,255,255,0.25)] scale-[1.03]">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-white text-black text-[10px] font-mono font-bold uppercase tracking-wider shadow-md">
+            {/* Growth Plan — Featured Ink Black Stadium */}
+            <div className="p-8 rounded-[40px] bg-[#141413] border-2 border-[#141413] space-y-6 flex flex-col justify-between relative shadow-[rgba(0,0,0,0.25)_0px_70px_110px_0px] scale-[1.03]">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#F3F0EE] text-[#141413] text-[10px] font-mono font-bold uppercase tracking-wider shadow-md">
                 MOST POPULAR
               </div>
 
               <div className="space-y-4">
-                <span className="text-xs font-mono text-white uppercase font-bold">PRO</span>
-                <div className="text-4xl font-extrabold text-white font-mono">
-                  {billingCycle === 'annual' ? '$39' : '$49'} <span className="text-xs text-[#777777] font-sans">/ month</span>
+                <span className="text-xs font-mono text-[#F3F0EE]/60 uppercase font-bold">GROWTH</span>
+                <div className="text-4xl font-extrabold text-[#F3F0EE] font-mono">
+                  ₹{billingCycle === 'annual' ? Math.round(2999 * 0.8) : 2999} <span className="text-xs text-[#F3F0EE]/50 font-sans">/ month</span>
                 </div>
-                <p className="text-xs text-white/80 leading-[170%] font-sans">Everything you need to scale.</p>
+                <p className="text-xs text-[#F3F0EE]/70 leading-[170%] font-sans">Built for growing teams ready to scale efficiently.</p>
 
                 <div className="space-y-2.5 text-xs pt-4 border-t border-white/10 font-sans">
-                  <div className="flex items-center gap-2 text-white"><Check className="w-4 h-4 text-white" /> All Modules</div>
-                  <div className="flex items-center gap-2 text-white"><Check className="w-4 h-4 text-white" /> Advanced Analytics</div>
-                  <div className="flex items-center gap-2 text-white"><Check className="w-4 h-4 text-white" /> Up to 10 Users</div>
-                  <div className="flex items-center gap-2 text-white"><Check className="w-4 h-4 text-white" /> Priority Support</div>
+                  <div className="flex items-center gap-2 text-[#F3F0EE]/80"><Check className="w-4 h-4 text-[#F3F0EE]" /> Advanced Analytics</div>
+                  <div className="flex items-center gap-2 text-[#F3F0EE]/80"><Check className="w-4 h-4 text-[#F3F0EE]" /> Multi-Agent Collab</div>
+                  <div className="flex items-center gap-2 text-[#F3F0EE]/80"><Check className="w-4 h-4 text-[#F3F0EE]" /> Up to 15 Users</div>
+                  <div className="flex items-center gap-2 text-[#F3F0EE]/80"><Check className="w-4 h-4 text-[#F3F0EE]" /> 24/7 Priority Support</div>
                 </div>
               </div>
 
-              <button onClick={onStartBuilding} className="w-full py-4 rounded-full bg-white hover:bg-zinc-200 text-black text-xs font-bold transition-all cursor-pointer font-sans shadow-[0_0_25px_rgba(255,255,255,0.4)]">
+              <button onClick={onStartBuilding} className="w-full py-4 rounded-[20px] bg-[#F3F0EE] hover:bg-white text-[#141413] text-xs font-bold transition-all cursor-pointer font-sans">
                 Get Started
               </button>
             </div>
 
             {/* Custom Plan */}
-            <div className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] space-y-6 flex flex-col justify-between">
+            <div className="p-8 rounded-[40px] bg-white border border-[#141413]/10 space-y-6 flex flex-col justify-between shadow-[rgba(0,0,0,0.04)_0px_4px_24px_0px]">
               <div className="space-y-4">
-                <span className="text-xs font-mono text-[#777777] uppercase font-bold">ENTERPRISE</span>
-                <div className="text-4xl font-extrabold text-white font-mono">Custom</div>
-                <p className="text-xs text-[#B8B8B8] leading-[170%] font-sans">Custom AI solutions.</p>
+                <span className="text-xs font-mono text-[#696969] uppercase font-bold">ENTERPRISE</span>
+                <div className="text-4xl font-extrabold text-[#141413] font-mono">Custom</div>
+                <p className="text-xs text-[#696969] leading-[170%] font-sans">Tailored AI solutions for organizations with advanced requirements.</p>
 
-                <div className="space-y-2.5 text-xs pt-4 border-t border-white/[0.08] font-sans">
-                  <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Custom Solutions</div>
-                  <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Dedicated Support</div>
-                  <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Unlimited Users</div>
+                <div className="space-y-2.5 text-xs pt-4 border-t border-[#141413]/10 font-sans">
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> Custom Solutions</div>
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> Dedicated Support</div>
+                  <div className="flex items-center gap-2 text-[#696969]"><Check className="w-4 h-4 text-[#141413]" /> Unlimited Users</div>
                 </div>
               </div>
 
-              <button onClick={onViewDemo} className="w-full py-3.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-bold transition-all cursor-pointer font-sans">
+              <button onClick={onStartBuilding} className="w-full py-3.5 rounded-[20px] bg-white hover:bg-[#F3F0EE] border border-[#141413] text-[#141413] text-xs font-bold transition-all cursor-pointer font-sans">
                 Contact Sales
               </button>
             </div>
@@ -1046,27 +962,27 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
       </section>
 
       {/* 11. FAQ ACCORDION SECTION */}
-      <section id="resources" className="py-36 px-6 bg-[#090909] border-y border-white/[0.08]">
+      <section id="faq" className="py-36 px-6 bg-[#FCFBFA] border-y border-[#141413]/10">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">FAQ</span>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Questions & Answers
+            <span className="text-xs font-mono text-[#696969] uppercase tracking-widest font-bold">FAQ</span>
+            <h2 className="text-4xl sm:text-5xl font-bold text-[#141413] tracking-tight font-sans" style={{letterSpacing: '-0.02em'}}>
+              Questions &amp; Answers
             </h2>
           </div>
 
           <div className="space-y-4">
             {faqs.map((faq, idx) => (
-              <div key={idx} className="rounded-2xl bg-[#000000] border border-white/[0.08] overflow-hidden">
+              <div key={idx} className="rounded-[20px] bg-white border border-[#141413]/10 overflow-hidden shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
                 <button
                   onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                  className="w-full p-6 text-left font-bold text-base text-white flex items-center justify-between cursor-pointer font-sans"
+                  className="w-full p-6 text-left font-bold text-base text-[#141413] flex items-center justify-between cursor-pointer font-sans"
                 >
                   <span>{faq.question}</span>
-                  {activeFaq === idx ? <Minus className="w-4 h-4 text-white" /> : <Plus className="w-4 h-4 text-[#777777]" />}
+                  {activeFaq === idx ? <Minus className="w-4 h-4 text-[#141413]" /> : <Plus className="w-4 h-4 text-[#696969]" />}
                 </button>
                 {activeFaq === idx && (
-                  <div className="px-6 pb-6 text-sm text-[#B8B8B8] leading-[170%] border-t border-white/[0.08] pt-4 font-sans">
+                  <div className="px-6 pb-6 text-sm text-[#696969] leading-[170%] border-t border-[#141413]/10 pt-4 font-sans">
                     {faq.answer}
                   </div>
                 )}
@@ -1076,13 +992,10 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
         </div>
       </section>
 
-      {/* 12. FINAL CINEMATIC LOTTIE ROCKET CTA SECTION */}
-      <section className="py-36 px-6 relative overflow-hidden">
-        
-        {/* Soft White Radial Background Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] bg-white/[0.03] rounded-full blur-[190px] pointer-events-none" />
+      {/* 12. FINAL CTA SECTION — INK BLACK STADIUM ON CREAM */}
+      <section className="py-36 px-6 relative overflow-hidden bg-[#F3F0EE]">
 
-        <div className="max-w-5xl mx-auto p-16 rounded-[40px] bg-[#090909] border border-white/10 backdrop-blur-2xl text-center space-y-8 relative z-10 shadow-[0_0_100px_rgba(255,255,255,0.1)]">
+        <div className="max-w-5xl mx-auto p-16 rounded-[40px] bg-[#141413] text-center space-y-8 relative z-10 shadow-[rgba(0,0,0,0.25)_0px_70px_110px_0px]">
           
           {/* Animated Rocket Lottie Animation Emblem */}
           <div className="w-24 h-24 mx-auto relative flex items-center justify-center">
@@ -1094,50 +1007,44 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
             />
           </div>
 
-          <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight font-sans">
-            Ready to Build Faster?
+          <h2 className="text-4xl sm:text-6xl font-bold text-white tracking-tight font-sans" style={{letterSpacing: '-0.02em'}}>
+            Ready to Launch Smarter?
           </h2>
 
-          <p className="text-[#B8B8B8] text-lg max-w-xl mx-auto leading-[170%] font-sans">
-            Start using AI to grow your startup today.
+          <p className="text-white/70 text-lg max-w-xl mx-auto leading-[170%] font-sans">
+            Start your journey with CatalystOS and let AI help you build, operate, and scale your startup from one intelligent workspace.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <button
               onClick={onStartBuilding}
-              className="w-full sm:w-auto px-10 py-4 rounded-full bg-white hover:bg-zinc-200 text-black font-extrabold text-sm shadow-[0_0_35px_rgba(255,255,255,0.35)] transition-all cursor-pointer font-sans"
+              className="w-full sm:w-auto px-10 py-4 rounded-[20px] bg-[#F3F0EE] hover:bg-white text-[#141413] font-bold text-sm transition-all cursor-pointer font-sans"
             >
-              Get Started
-            </button>
-            <button
-              onClick={onViewDemo}
-              className="w-full sm:w-auto px-10 py-4 rounded-full bg-[#111111] hover:bg-[#181818] border border-white/10 text-white font-bold text-sm transition-all cursor-pointer font-sans backdrop-blur-md"
-            >
-              Book Demo
+              Start Free Trial
             </button>
           </div>
         </div>
       </section>
 
-      {/* 13. EDITORIAL MONOCHROME FOOTER */}
-      <footer id="about" className="py-20 px-6 border-t border-white/[0.08] bg-[#000000]">
-        <div className="max-w-[1320px] mx-auto grid grid-cols-2 md:grid-cols-5 gap-10 text-xs">
+      {/* 13. INK BLACK EDITORIAL FOOTER */}
+      <footer id="about" className="py-20 px-6 bg-[#141413]">
+        <div className="max-w-[1280px] mx-auto grid grid-cols-2 md:grid-cols-5 gap-10 text-xs">
           
           <div className="col-span-2 space-y-4">
             <div className="flex items-center gap-3 cursor-pointer">
-              <div className="w-8 h-8 rounded-lg bg-[#090909] border border-white/10 p-1 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-[#F3F0EE]/10 border border-white/20 p-1 flex items-center justify-center">
                 <CatalystLogo className="w-5 h-5 text-white" />
               </div>
-              <span className="font-extrabold text-white text-lg tracking-tight font-sans">FounderOS</span>
+              <span className="font-bold text-white text-lg font-sans" style={{letterSpacing: '-0.02em'}}>CatalystOS</span>
             </div>
-            <p className="text-[#777777] max-w-xs leading-[170%] font-sans">
-              The AI executive platform for founders.
+            <p className="text-white/50 max-w-xs leading-[170%] font-sans">
+              The AI operating platform for founders.
             </p>
           </div>
 
           <div className="space-y-3">
-            <h4 className="font-mono text-white font-bold uppercase text-[10px] tracking-wider">Product</h4>
-            <ul className="space-y-2.5 text-[#777777] font-sans">
+            <h4 className="font-mono text-white/50 font-bold uppercase text-[10px] tracking-wider">Product</h4>
+            <ul className="space-y-2.5 text-white/60 font-sans">
               <li className="hover:text-white transition-colors cursor-pointer">Overview</li>
               <li className="hover:text-white transition-colors cursor-pointer">Features</li>
               <li className="hover:text-white transition-colors cursor-pointer">Pricing</li>
@@ -1146,8 +1053,8 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           </div>
 
           <div className="space-y-3">
-            <h4 className="font-mono text-white font-bold uppercase text-[10px] tracking-wider">Company</h4>
-            <ul className="space-y-2.5 text-[#777777] font-sans">
+            <h4 className="font-mono text-white/50 font-bold uppercase text-[10px] tracking-wider">Company</h4>
+            <ul className="space-y-2.5 text-white/60 font-sans">
               <li className="hover:text-white transition-colors cursor-pointer">About</li>
               <li className="hover:text-white transition-colors cursor-pointer">Careers</li>
               <li className="hover:text-white transition-colors cursor-pointer">Blog</li>
@@ -1156,8 +1063,8 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           </div>
 
           <div className="space-y-3">
-            <h4 className="font-mono text-white font-bold uppercase text-[10px] tracking-wider">Resources</h4>
-            <ul className="space-y-2.5 text-[#777777] font-sans">
+            <h4 className="font-mono text-white/50 font-bold uppercase text-[10px] tracking-wider">Resources</h4>
+            <ul className="space-y-2.5 text-white/60 font-sans">
               <li className="hover:text-white transition-colors cursor-pointer">Docs</li>
               <li className="hover:text-white transition-colors cursor-pointer">User Guides</li>
               <li className="hover:text-white transition-colors cursor-pointer">Guides</li>
@@ -1167,9 +1074,8 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
 
         </div>
 
-        <div className="max-w-[1320px] mx-auto pt-14 mt-14 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#777777]">
-          <span>© {new Date().getFullYear()} FounderOS Inc.</span>
-          <span>Built for founders who ship.</span>
+        <div className="max-w-[1280px] mx-auto pt-14 mt-14 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-white/40 gap-4">
+          <span>© {new Date().getFullYear()} CatalystOS Inc. All rights reserved.</span>
         </div>
       </footer>
 

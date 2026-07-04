@@ -1,9 +1,9 @@
 @echo off
-TITLE FounderOS — Production Multi-Agent AI OS Launcher
+TITLE CatalystOS — Production Multi-Agent AI OS Launcher
 COLOR 0A
 
 echo ===================================================================
-echo   🚀 FounderOS — Executive Multi-Agent AI Operating System
+echo   🚀 CatalystOS — Multi-Agent AI Operating System
 echo ===================================================================
 echo.
 
@@ -35,7 +35,7 @@ if not exist node_modules (
 )
 
 echo.
-echo [INFO] Starting FounderOS Full-Stack Server on http://localhost:3000...
+echo [INFO] Starting CatalystOS Full-Stack Server on http://localhost:3000...
 echo [INFO] Launching browser window...
 echo.
 

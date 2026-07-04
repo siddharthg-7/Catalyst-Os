@@ -140,7 +140,7 @@ Analyze this goal and decompose it into exact subtasks for appropriate agents. R
           { id: 'task_l1', assignedTo: 'Legal', title: 'Construct Reg D disclosure terms for seed-stage investors.', constraints: 'Adhere to modern SEC standards.' }
         ],
         expectedDeliverables: [
-          { type: 'document', title: 'AeroFlow Institutional Funding Briefing Document' }
+          { type: 'document', title: 'CatalystOS Institutional Funding Briefing Document' }
         ]
       };
     } else {
@@ -155,7 +155,7 @@ Analyze this goal and decompose it into exact subtasks for appropriate agents. R
           { id: 'task_f1', assignedTo: 'Finance', title: 'Model marketing campaign cost threshold and server margin ratios.', constraints: 'Capped at $2k/mo budget.' }
         ],
         expectedDeliverables: [
-          { type: 'marketing_plan', title: 'AeroFlow Cloud Pilot Campaign & Referral Brief' }
+          { type: 'marketing_plan', title: 'CatalystOS Cloud Pilot Campaign & Referral Brief' }
         ]
       };
     }
@@ -557,7 +557,7 @@ No placeholders. Ensure all numbers, legal schedules, or plans are concrete and 
       return {
         id: `del_${Date.now()}`,
         initiativeId,
-        title: 'AeroFlow Pilot launch Campaign & Referral Guidelines',
+        title: 'CatalystOS Pilot launch Campaign & Referral Guidelines',
         description: 'Referral loop parameters, compute credit limits, and server scaling setups.',
         type: 'marketing_plan',
         content: `# PLATFORM INFORMATION SECURITY AND ACCESS CONTROL POLICY\n\n### Objective\nTo establish strict access rules, audit controls, and encryption schedules to satisfy SOC-2 criteria.\n\n### Access Protocols\n- Multi-factor authentication (MFA) required on all production systems.\n- IAM policies scoped strictly under least-privilege constraints.\n\n### Data Handling\n1. **In-Transit:** TLS 1.3 protocol enforced across all active API connections.\n2. **At-Rest:** AES-256 database and storage layer encryption.\n3. **Logging:** Immutable connection metrics aggregated into central secure logs.`,

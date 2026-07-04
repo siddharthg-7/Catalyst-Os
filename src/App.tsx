@@ -39,11 +39,38 @@ import CatalystLogo from './components/CatalystLogo';
 export default function App() {
   const { user, loading, logout, apiFetch } = useAuth();
   
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (user) {
+      setOnboardingCompleted(
+        localStorage.getItem(`catalystos_onboarding_completed_${user.id}`) === 'true'
+      );
+    } else {
+      setOnboardingCompleted(false);
+    }
+  }, [user]);
+
+  const handleOnboardingComplete = async (onboardingData: any) => {
+    if (startup) {
+      await handleUpdateStartup({
+        ...startup,
+        name: onboardingData.startupName,
+        industry: onboardingData.industry,
+        description: onboardingData.path === 'new'
+          ? `Concept: ${onboardingData.idea} | Budget: ${onboardingData.budget} | Launch Timeline: ${onboardingData.timeline}`
+          : startup.description,
+        burnRate: parseFloat(onboardingData.burnRate.replace(/[^0-9.]/g, '')) || startup.burnRate,
+      });
+    }
+    localStorage.setItem(`catalystos_onboarding_completed_${user?.id}`, 'true');
+    setOnboardingCompleted(true);
+  };
+
   const [activeTab, setActiveTab] = useState<'dashboard' | 'agents' | 'workflows' | 'approvals' | 'knowledge' | 'ledger' | 'godmode'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
-  // Keyboard shortcut listener for CMD/CTRL+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -55,7 +82,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Core domain state
   const [startup, setStartup] = useState<StartupProfile | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
@@ -63,7 +89,6 @@ export default function App() {
   const [decisions, setDecisions] = useState<DecisionRecord[]>([]);
   const [knowledge, setKnowledge] = useState<KnowledgeFile[]>([]);
 
-  // Toast status bar
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
 
   const showToast = (message: string, type: 'info' | 'success' | 'error' = 'success') => {
@@ -71,7 +96,6 @@ export default function App() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // State hydration on mount
   const hydrateState = async () => {
     if (!user) return;
     try {
@@ -100,7 +124,6 @@ export default function App() {
     hydrateState();
   }, [user]);
 
-  // Update handlers
   const handleUpdateStartup = async (updated: StartupProfile) => {
     if (user?.role === 'Executive') {
       showToast('Unauthorized: Executive accounts cannot update startup parameters. Please login as Founder.', 'error');
@@ -158,7 +181,6 @@ export default function App() {
         const updatedInit = await res.json();
         setInitiatives(prev => prev.map(i => i.id === id ? updatedInit : i));
         
-        // Refresh approvals and ledger from server
         const [apprRes, decRes, startRes] = await Promise.all([
           apiFetch('/api/approvals'),
           apiFetch('/api/decisions'),
@@ -196,7 +218,6 @@ export default function App() {
         setStartup(data.startupProfile);
         setApprovals(prev => prev.filter(item => item.id !== id));
         
-        // Refresh decision log
         const decRes = await apiFetch('/api/decisions');
         if (decRes.ok) setDecisions(await decRes.json());
 
@@ -238,183 +259,131 @@ export default function App() {
     }
   };
 
+  // ── Loading screen ──────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#09090b] text-zinc-400">
-        <div className="text-center space-y-3">
-          <RefreshCw className="w-8 h-8 text-[#6366F1] animate-spin mx-auto" />
-          <p className="text-xs font-mono">Verifying Active Platform Session...</p>
+      <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+        <div className="text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
+            <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+          </div>
+          <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Verifying Active Platform Session...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    return <AuthScreen />;
+    return <AuthScreen key="landing" initialView="landing" />;
   }
 
+  if (!onboardingCompleted) {
+    return (
+      <AuthScreen
+        key="onboarding"
+        initialView="onboarding"
+        onOnboardingComplete={handleOnboardingComplete}
+      />
+    );
+  }
+
+  // ── Startup-loading screen ─────────────────────────────────────────────────
   if (!startup) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#09090b] text-zinc-400">
-        <div className="text-center space-y-3">
-          <RefreshCw className="w-8 h-8 text-[#6366F1] animate-spin mx-auto" />
-          <p className="text-xs font-mono">Initializing FounderOS Executive Council...</p>
+      <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+        <div className="text-center space-y-4">
+          <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
+            <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+          </div>
+          <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Initializing CatalystOS Executive Council...</p>
         </div>
       </div>
     );
   }
 
+  // ── Navigation helpers ─────────────────────────────────────────────────────
+  const navItems = [
+    { id: 'dashboard' as const,  label: 'SaaS Dashboard',      Icon: Activity,     badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
+    { id: 'workflows' as const,  label: 'Strategic Sprints',   Icon: Terminal,     badge: initiatives.filter(i => i.status === 'active').length > 0 ? 'ACTIVE' : '', badgeColor: 'text-amber-700' },
+    { id: 'approvals' as const,  label: 'Approval Queue',      Icon: CheckSquare,  badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
+    { id: 'agents' as const,     label: 'Agent Configurator',  Icon: Settings,     badge: '', badgeColor: '' },
+    { id: 'knowledge' as const,  label: 'Knowledge Base',      Icon: FileText,     badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
+    { id: 'ledger' as const,     label: 'Governance Ledger',   Icon: Clipboard,    badge: '', badgeColor: '' },
+    { id: 'godmode' as const,    label: 'G0DM0D3 API Test',    Icon: Rocket,       badge: '', badgeColor: '' },
+  ];
+
+  const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
+
   return (
-    <div className="flex h-screen bg-[#09090b] text-[#f4f4f5] overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#F3F0EE] text-[#141413] overflow-hidden font-sans">
       
-      {/* Sidebar: Desktop */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-[#27272A] bg-[#09090b] p-6 shrink-0 justify-between">
+      {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-[#141413]/10 bg-white p-6 shrink-0 justify-between shadow-[rgba(0,0,0,0.04)_4px_0px_24px_0px]">
         <div className="space-y-8">
           
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#18181b] border border-zinc-700 p-1 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-              <CatalystLogo className="w-5 h-5 text-orange-500" />
+            <div className="w-8 h-8 rounded-lg bg-[#F3F0EE] border border-[#141413]/20 p-1 flex items-center justify-center">
+              <CatalystLogo className="w-5 h-5 text-[#141413]" />
             </div>
-            <span className="font-semibold text-lg tracking-tight text-white">Catalyst OS</span>
+            <span className="font-bold text-lg text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="space-y-1.5">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold mb-3 ml-2">Core Engine</div>
+          {/* Navigation */}
+          <nav className="space-y-1">
+            <div className="text-[10px] uppercase tracking-widest text-[#696969] font-bold mb-3 ml-2 font-mono">Core Engine</div>
 
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                activeTab === 'dashboard' 
-                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <Activity className="w-4 h-4 text-[#6366F1]" />
-                SaaS Dashboard
-              </span>
-              <span className="text-[10px] font-mono font-semibold text-emerald-400">{startup.healthScore}%</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('workflows')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                activeTab === 'workflows' 
-                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <Terminal className="w-4 h-4 text-[#6366F1]" />
-                Strategic Sprints
-              </span>
-              {initiatives.filter(i => i.status === 'active').length > 0 && (
-                <span className="px-1.5 py-0.5 rounded text-[8px] bg-amber-500/10 text-amber-500 border border-amber-500/20 font-mono font-semibold animate-pulse">
-                  ACTIVE
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('approvals')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                activeTab === 'approvals' 
-                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <CheckSquare className="w-4 h-4 text-[#6366F1]" />
-                Approval Queue
-              </span>
-              {approvals.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded text-[8px] bg-rose-500/15 text-rose-400 border border-rose-500/20 font-mono font-bold">
-                  {approvals.length}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('agents')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                activeTab === 'agents' 
-                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
-              }`}
-            >
-              <Settings className="w-4 h-4 text-[#6366F1]" />
-              Agent Configurator
-            </button>
-
-            <button
-              onClick={() => setActiveTab('knowledge')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                activeTab === 'knowledge' 
-                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <FileText className="w-4 h-4 text-[#6366F1]" />
-                Knowledge Base
-              </span>
-              <span className="text-[10px] font-mono text-zinc-500">{knowledge.length} files</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('ledger')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                activeTab === 'ledger' 
-                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
-              }`}
-            >
-              <Clipboard className="w-4 h-4 text-[#6366F1]" />
-              Governance Ledger
-            </button>
-
-            <button
-              onClick={() => setActiveTab('godmode')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                activeTab === 'godmode' 
-                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
-                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
-              }`}
-            >
-              <span className="flex items-center gap-2.5">
-                <Rocket className="w-4 h-4 text-indigo-500" />
-                G0DM0D3 API Test
-              </span>
-            </button>
-            
+            {navItems.map(({ id, label, Icon, badge, badgeColor }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all border font-sans ${
+                    isActive
+                      ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] shadow-sm'
+                      : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] border-transparent'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#F3F0EE]' : 'text-[#141413]/50'}`} />
+                    {label}
+                  </span>
+                  {badge && (
+                    <span className={`text-[10px] font-mono font-bold ${isActive ? 'text-[#F3F0EE]/70' : badgeColor}`}>
+                      {badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        {/* Sleek Health Score Widget */}
-        <div className="p-4 border-t border-[#27272A] space-y-4">
-          <div className="bg-[#111827] rounded-xl p-3.5 border border-[#27272A]">
-            <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 mb-1 uppercase tracking-wider">
+        {/* Bottom widgets */}
+        <div className="space-y-3 pt-4 border-t border-[#141413]/10">
+          {/* Health Score */}
+          <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10 space-y-2">
+            <div className="flex justify-between items-center text-[10px] font-bold text-[#696969] uppercase tracking-wider font-mono">
               <span>Health Score</span>
-              <span className="text-[9px] text-[#6366F1] font-mono font-normal">Dual Core</span>
+              <span className="text-[9px] text-[#141413]/50">Dual Core</span>
             </div>
-            <div className="text-2xl font-bold text-[#22C55E] font-mono">{startup.healthScore}%</div>
-            <div className="h-1.5 w-full bg-gray-800 rounded-full mt-2 overflow-hidden">
-              <div className="bg-[#22C55E] h-full transition-all duration-500" style={{ width: `${startup.healthScore}%` }}></div>
+            <div className="text-2xl font-bold text-emerald-700 font-mono">{startup.healthScore}%</div>
+            <div className="h-1.5 w-full bg-[#141413]/10 rounded-full overflow-hidden">
+              <div className="bg-emerald-600 h-full transition-all duration-500" style={{ width: `${startup.healthScore}%` }} />
             </div>
           </div>
 
-          {/* Logged in User Profile Card */}
-          <div className="bg-[#09090b]/50 rounded-xl p-3 border border-[#27272A] flex items-center justify-between gap-2 min-w-0">
+          {/* User profile */}
+          <div className="p-3 rounded-[12px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-between gap-2 min-w-0">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-indigo-950/80 border border-indigo-900/50 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0 uppercase font-mono">
+              <div className="w-8 h-8 rounded-lg bg-[#141413] flex items-center justify-center text-[#F3F0EE] font-bold text-xs shrink-0 uppercase font-mono">
                 {user?.name?.slice(0, 2)}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-zinc-100 truncate">{user?.name}</div>
-                <div className="text-[10px] text-zinc-500 truncate capitalize flex items-center gap-1 font-mono">
-                  <Shield className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
+                <div className="text-xs font-semibold text-[#141413] truncate font-sans">{user?.name}</div>
+                <div className="text-[10px] text-[#696969] truncate capitalize flex items-center gap-1 font-mono">
+                  <Shield className="w-2.5 h-2.5 text-[#141413]/40 shrink-0" />
                   <span>{user?.role}</span>
                 </div>
               </div>
@@ -422,85 +391,74 @@ export default function App() {
             <button
               onClick={() => { logout(); }}
               title="Sign Out Session"
-              className="p-1.5 rounded-lg bg-zinc-900 hover:bg-[#1f1f23] text-zinc-400 hover:text-white transition-colors cursor-pointer shrink-0"
+              className="p-1.5 rounded-lg bg-white hover:bg-[#141413] hover:text-[#F3F0EE] text-[#696969] transition-colors cursor-pointer shrink-0 border border-[#141413]/10"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
-
       </aside>
 
-      {/* Main Content Area */}
+      {/* ── Main Content ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         
         {/* Top Navbar */}
-        <header className="h-16 border-b border-[#27272A] bg-[#09090b] px-8 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4 text-sm text-gray-400">
+        <header className="h-16 border-b border-[#141413]/10 bg-white/80 backdrop-blur-sm px-6 md:px-8 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-4 text-sm text-[#696969]">
             {/* Mobile menu trigger */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-lg bg-[#18181B] border border-[#27272A] text-zinc-300 hover:text-white"
+              className="md:hidden p-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#141413]"
             >
               <Menu className="w-4 h-4" />
             </button>
-            <span className="font-semibold text-white">Catalyst OS</span>
-            <span className="text-gray-700">/</span>
-            <span className="text-gray-300 font-medium capitalize">{activeTab.replace('ledger', 'Governance Ledger').replace('approvals', 'Approval Queue').replace('workflows', 'Strategic Sprints').replace('knowledge', 'Knowledge Base').replace('agents', 'Agent Configurator')} Workspace</span>
+            <span className="font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
+            <span className="text-[#141413]/20">/</span>
+            <span className="text-[#696969] font-medium text-xs capitalize font-sans">{tabLabel} Workspace</span>
           </div>
 
-          <div className="flex items-center gap-6">
-            {/* Quick Command Search bar */}
+          <div className="flex items-center gap-3">
+            {/* Search bar */}
             <button
               onClick={() => setCommandPaletteOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#111827]/40 border border-[#27272A] text-zinc-400 hover:text-zinc-200 hover:bg-[#111827] text-xs transition-colors cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/20 text-xs transition-colors cursor-pointer font-sans"
             >
-              <Search className="w-3.5 h-3.5 text-zinc-500" />
+              <Search className="w-3.5 h-3.5" />
               <span>Search console...</span>
-              <kbd className="text-[9px] font-mono bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-500">⌘K</kbd>
+              <kbd className="text-[9px] font-mono bg-white border border-[#141413]/10 px-1.5 py-0.5 rounded text-[#696969]">⌘K</kbd>
             </button>
 
-            {/* Tech Stack Status Badges */}
+            {/* Tech badges */}
             <div className="hidden xl:flex items-center gap-1.5 text-[9px] font-mono">
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold" title="PostgreSQL + pgvector active">
-                PostgreSQL/pgvector
-              </span>
-              <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold" title="FastAPI LangGraph multi-agent engine active">
-                FastAPI/LangGraph
-              </span>
-              <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold" title="Model Context Protocol tools enabled">
-                MCP Tools
-              </span>
-              <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold" title="HashiCorp Vault secret manager">
-                Vault
-              </span>
+              <span className="px-2 py-1 rounded-full bg-[#F3F0EE] border border-[#141413]/10 text-[#141413] font-semibold">PostgreSQL</span>
+              <span className="px-2 py-1 rounded-full bg-[#F3F0EE] border border-[#141413]/10 text-[#141413] font-semibold">FastAPI</span>
+              <span className="px-2 py-1 rounded-full bg-[#F3F0EE] border border-[#141413]/10 text-[#141413] font-semibold">MCP Tools</span>
             </div>
 
-            {/* Dynamic mini cash balance widget */}
-            <div className="px-3.5 py-1.5 rounded-lg bg-[#111827] border border-[#27272A] flex items-center gap-2 text-xs">
-              <span className="text-[10px] uppercase font-semibold text-gray-400 font-mono">Treasury:</span>
-              <span className="font-mono text-[#22C55E] font-bold">
+            {/* Treasury widget */}
+            <div className="px-3.5 py-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center gap-2 text-xs font-sans">
+              <span className="text-[10px] uppercase font-semibold text-[#696969] font-mono">Treasury:</span>
+              <span className="font-mono text-emerald-700 font-bold">
                 ${startup.cashBalance.toLocaleString()}
               </span>
             </div>
             
-            {/* Interactive User Info Badge */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-zinc-900/60 border border-zinc-800 rounded-lg">
-              <div className="w-5 h-5 rounded-md bg-indigo-950 border border-indigo-900 flex items-center justify-center text-[10px] font-bold text-indigo-400 uppercase font-mono">
+            {/* User badge */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white border border-[#141413]/10 rounded-[10px]">
+              <div className="w-5 h-5 rounded-md bg-[#141413] flex items-center justify-center text-[10px] font-bold text-[#F3F0EE] uppercase font-mono">
                 {user?.name?.slice(0, 2)}
               </div>
-              <span className="text-xs text-zinc-300 font-medium">{user?.name}</span>
-              <span className="text-[9px] uppercase tracking-wider font-mono px-1.5 py-0.5 rounded bg-zinc-850 text-indigo-400 border border-zinc-800">
+              <span className="text-xs text-[#141413] font-medium font-sans">{user?.name}</span>
+              <span className="text-[9px] uppercase tracking-wider font-mono px-1.5 py-0.5 rounded-full bg-[#F3F0EE] text-[#696969] border border-[#141413]/10">
                 {user?.role}
               </span>
             </div>
           </div>
         </header>
 
-        {/* Interactive View Panel Scroll container */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+        {/* View Content */}
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-[#F3F0EE]">
           
-          {/* Active View Router */}
           {activeTab === 'dashboard' && startup && (
             <SaaSDashboard 
               startup={startup}
@@ -559,21 +517,21 @@ export default function App() {
 
         </main>
 
-      {/* Floating Custom Toast Alerts */}
+      {/* Toast Alerts */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 p-4 rounded-xl border shadow-xl flex items-center gap-3.5 min-w-[300px] animate-slide-in ${
-          toast.type === 'success' ? 'bg-zinc-950 border-emerald-950 text-emerald-400' :
-          toast.type === 'error' ? 'bg-zinc-950 border-rose-950 text-rose-400' :
-          'bg-zinc-950 border-zinc-800 text-zinc-300'
+        <div className={`fixed bottom-6 right-6 z-50 p-4 rounded-[16px] border shadow-[rgba(0,0,0,0.12)_0px_16px_32px] flex items-center gap-3.5 min-w-[300px] max-w-sm font-sans ${
+          toast.type === 'success' ? 'bg-white border-emerald-200 text-emerald-800' :
+          toast.type === 'error'   ? 'bg-white border-rose-200 text-rose-800' :
+                                     'bg-white border-[#141413]/10 text-[#141413]'
         }`}>
-          <Sparkles className="w-5 h-5 shrink-0" />
+          <Sparkles className="w-4 h-4 shrink-0 opacity-60" />
           <div className="flex-1">
             <p className="text-xs font-semibold leading-normal">{toast.message}</p>
           </div>
         </div>
       )}
 
-      {/* Global Command Console */}
+      {/* Command Palette */}
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
@@ -595,67 +553,47 @@ export default function App() {
 
       </div>
 
-      {/* Sidebar: Mobile Drawer */}
+      {/* ── Mobile Drawer ────────────────────────────────────────────────── */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm md:hidden" id="mobile-menu-overlay">
-          <div className="w-64 bg-zinc-950 border-r border-zinc-900 h-full p-6 flex flex-col justify-between" id="mobile-menu-drawer">
+        <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm md:hidden" id="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
+          <div className="w-72 bg-white border-r border-[#141413]/10 h-full p-6 flex flex-col justify-between shadow-[rgba(0,0,0,0.12)_8px_0px_32px]" id="mobile-menu-drawer" onClick={e => e.stopPropagation()}>
             <div className="space-y-6">
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CatalystLogo className="w-5 h-5 text-orange-500" />
-                  <span className="text-sm font-bold text-white">Catalyst OS</span>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
+                    <CatalystLogo className="w-4 h-4 text-[#141413]" />
+                  </div>
+                  <span className="text-sm font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1 rounded bg-zinc-900 text-zinc-400"
+                  className="p-1.5 rounded-lg bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413]"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <nav className="space-y-1.5 pt-4">
-                <button
-                  onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-zinc-900"
-                >
-                  Dashboard <span className="text-emerald-400 font-mono">{startup.healthScore}%</span>
-                </button>
-                <button
-                  onClick={() => { setActiveTab('workflows'); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-zinc-900"
-                >
-                  Strategic Sprints
-                </button>
-                <button
-                  onClick={() => { setActiveTab('approvals'); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-zinc-900"
-                >
-                  Approval Queue <span className="text-rose-400 font-mono font-bold">{approvals.length}</span>
-                </button>
-                <button
-                  onClick={() => { setActiveTab('agents'); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-zinc-900"
-                >
-                  Agent Configurator
-                </button>
-                <button
-                  onClick={() => { setActiveTab('knowledge'); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-zinc-900"
-                >
-                  Knowledge Base
-                </button>
-                <button
-                  onClick={() => { setActiveTab('ledger'); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-zinc-300 hover:bg-zinc-900"
-                >
-                  Governance Ledger
-                </button>
+              <nav className="space-y-1 pt-2">
+                {navItems.map(({ id, label, badge, badgeColor }) => (
+                  <button
+                    key={id}
+                    onClick={() => { setActiveTab(id); setMobileMenuOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium font-sans transition-all ${
+                      activeTab === id
+                        ? 'bg-[#141413] text-[#F3F0EE]'
+                        : 'text-[#696969] hover:bg-[#F3F0EE] hover:text-[#141413]'
+                    }`}
+                  >
+                    {label}
+                    {badge && <span className={`text-[10px] font-mono font-bold ${activeTab === id ? 'text-[#F3F0EE]/70' : badgeColor}`}>{badge}</span>}
+                  </button>
+                ))}
               </nav>
 
             </div>
 
-            <div className="pt-6 border-t border-zinc-900 text-center text-[10px] text-zinc-500 font-mono uppercase">
+            <div className="pt-6 border-t border-[#141413]/10 text-center text-[10px] text-[#696969] font-mono uppercase tracking-widest">
               Dual Core AI Council
             </div>
           </div>

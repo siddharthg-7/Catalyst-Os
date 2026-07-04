@@ -174,14 +174,14 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
         <div className="w-full max-w-6xl flex items-center justify-between pt-2">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-mono font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
-              F
+              C
             </div>
-            <span className="font-semibold text-lg tracking-tight text-white">FounderOS</span>
+            <span className="font-semibold text-lg tracking-tight text-white">CatalystOS</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-medium">
             <button
-              onClick={onBookDemo}
+              onClick={onStartBuilding}
               className="text-zinc-400 hover:text-white transition-colors cursor-pointer"
             >
               Sign In
@@ -221,17 +221,6 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
               <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-
-            <button
-              onClick={() => {
-                const el = containerRef.current;
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white font-semibold text-sm transition-all cursor-pointer flex items-center justify-center gap-2 font-mono"
-            >
-              <Play className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Watch Demo</span>
-            </button>
           </div>
         </div>
 
@@ -254,7 +243,7 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
           {loading && (
             <div className="absolute inset-0 z-50 bg-[#030303] flex flex-col items-center justify-center space-y-4">
               <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 font-mono text-xs font-bold animate-pulse">
-                F
+                C
               </div>
               <p className="text-xs font-mono text-zinc-400">Loading Frame Sequence... {loadProgress}%</p>
               <div className="w-48 h-1 bg-zinc-900 rounded-full overflow-hidden">
@@ -356,7 +345,7 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
               From Idea to Scale.
             </h2>
             <p className="text-zinc-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl">
-              FounderOS transforms scattered work into an intelligent operating company. Users grow. Teams expand. Revenue increases. Everything remains synchronized.
+              CatalystOS transforms scattered work into an intelligent operating company. Users grow. Teams expand. Revenue increases. Everything remains synchronized.
             </p>
           </div>
 
@@ -372,7 +361,7 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
               Build More. Manage Less.
             </h2>
             <p className="text-zinc-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl">
-              Focus on vision while FounderOS handles execution.
+              Focus on vision while CatalystOS handles execution.
             </p>
           </div>
 
@@ -382,7 +371,7 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
             className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center max-w-3xl mx-auto z-30"
           >
             <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-mono font-bold text-lg shadow-[0_0_30px_rgba(99,102,241,0.5)] mb-6">
-              F
+              C
             </div>
 
             <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4">
@@ -395,19 +384,11 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-xs">
               <button
-                onClick={onStartBuilding}
-                className="w-full py-3.5 rounded-xl bg-[#6366F1] hover:bg-[#6366F1]/90 text-white font-bold text-xs shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                <span>Start Building</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={onBookDemo}
-                className="w-full py-3.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer font-mono"
-              >
-                Book Demo
-              </button>
+              onClick={onStartBuilding}
+              className="w-full sm:w-auto px-10 py-4 rounded-xl bg-[#6366F1] hover:bg-[#6366F1]/90 text-white font-extrabold text-sm shadow-[0_0_35px_rgba(99,102,241,0.4)] transition-all cursor-pointer"
+            >
+              Get Started
+            </button>
             </div>
           </div>
 
