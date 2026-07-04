@@ -1,24 +1,77 @@
 import React, { useState } from 'react';
+import { SignIn, SignUp } from '@clerk/clerk-react';
+import { Shield, Building2, Rocket, CheckCircle2, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Sparkles, LogIn, UserPlus, Check, ArrowRight, Building2, Rocket, Upload, CheckCircle2, RefreshCw } from 'lucide-react';
 import HackathonLandingPage from './HackathonLandingPage';
+import CatalystLogo from './CatalystLogo';
+
+// Dark glassmorphic appearance config matching the app's design system
+const clerkAppearance = {
+  variables: {
+    colorPrimary: '#ffffff',
+    colorBackground: '#09090b',
+    colorInputBackground: '#09090b',
+    colorInputText: '#ffffff',
+    colorText: '#ffffff',
+    colorTextSecondary: '#a1a1aa',
+    colorDanger: '#f87171',
+    colorSuccess: '#34d399',
+    borderRadius: '0.75rem',
+    fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+    fontSize: '0.875rem',
+  },
+  elements: {
+    card: {
+      background: 'transparent',
+      boxShadow: 'none',
+      padding: '0',
+    },
+    header: { display: 'none' },
+    socialButtonsBlockButton: {
+      background: '#18181b',
+      border: '1px solid #27272a',
+      color: '#fff',
+    },
+    socialButtonsBlockButton__hover: {
+      background: '#27272a',
+    },
+    dividerLine: { background: '#27272a' },
+    dividerText: { color: '#52525b' },
+    formFieldInput: {
+      background: '#09090b',
+      border: '1px solid #3f3f46',
+      color: '#fff',
+    },
+    formFieldLabel: {
+      color: '#a1a1aa',
+      textTransform: 'uppercase' as const,
+      fontSize: '0.65rem',
+      letterSpacing: '0.08em',
+      fontWeight: '600',
+    },
+    formButtonPrimary: {
+      background: '#ffffff',
+      color: '#000000',
+      fontWeight: '700',
+    },
+    footerActionLink: { color: '#ffffff' },
+    formFieldErrorText: { color: '#f87171' },
+    footer: { display: 'none' },
+    cardBox: {
+      boxShadow: 'none',
+      background: 'transparent',
+    },
+  },
+};
 
 export default function AuthScreen() {
-  const { login, signup } = useAuth();
-  
-  // Navigation & View State
+  const { loginAsDemo } = useAuth();
+
   const [view, setView] = useState<'landing' | 'auth' | 'onboarding'>('landing');
-  const [isLogin, setIsLogin] = useState(true);
-  
-  // Auth Form State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [role, setRole] = useState<'Founder' | 'Executive' | 'Admin'>('Founder');
+  const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   
   // Onboarding Form State
   const [onboardingPath, setOnboardingPath] = useState<'existing' | 'new'>('existing');
-  const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1);
   const [buildingAgents, setBuildingAgents] = useState(false);
   const [agentProgress, setAgentProgress] = useState({
     ceo: false,
@@ -28,60 +81,14 @@ export default function AuthScreen() {
     ops: false,
   });
 
-  // Existing Startup Form
+  // Startup Form State
   const [startupName, setStartupName] = useState('AeroFlow AI');
   const [industry, setIndustry] = useState('B2B SaaS / Developer Tools');
-  const [stage, setStage] = useState('Pre-Seed');
-  const [teamSize, setTeamSize] = useState('6 employees');
-  const [revenue, setRevenue] = useState('$12,000 / mo');
   const [burnRate, setBurnRate] = useState('$18,500 / mo');
   const [runway, setRunway] = useState('13.2 months');
-  const [fundingRaised, setFundingRaised] = useState('$250,000');
-
-  // New Startup Form
   const [idea, setIdea] = useState('');
-  const [businessModel, setBusinessModel] = useState('Subscription SaaS');
-  const [targetAudience, setTargetAudience] = useState('Mid-market DevOps Engineering Teams');
   const [budget, setBudget] = useState('$50,000');
   const [timeline, setTimeline] = useState('30 Days');
-
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleDemoLogin = async () => {
-    setSubmitting(true);
-    setError(null);
-    try {
-      await login('founder@founder.os', 'password123');
-    } catch (err: any) {
-      setError(err.message || 'Demo login failed.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password || (!isLogin && !name)) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        await signup(name, email, password, role);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Authentication operation failed.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const startOnboardingAnimation = async () => {
     setBuildingAgents(true);
@@ -99,19 +106,18 @@ export default function AuthScreen() {
     setAgentProgress(p => ({ ...p, ops: true }));
     await new Promise(r => setTimeout(r, 800));
 
-    // Complete login as founder
-    await login('founder@founder.os', 'password123');
+    setView('auth');
   };
 
   return (
     <div className={`min-h-screen bg-[#050505] text-white relative font-sans ${view === 'landing' ? 'p-0 w-full block' : 'p-6 flex items-center justify-center'}`}>
       
-      {/* 1. LANDING PAGE VIEW (Hackathon Blueprint Design) */}
+      {/* 1. LANDING PAGE VIEW */}
       {view === 'landing' && (
         <div className="w-full min-h-screen">
           <HackathonLandingPage
             onStartBuilding={() => setView('onboarding')}
-            onViewDemo={handleDemoLogin}
+            onViewDemo={() => loginAsDemo()}
           />
         </div>
       )}
@@ -123,12 +129,12 @@ export default function AuthScreen() {
             <>
               <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Smart Onboarding</h2>
+                  <h2 className="text-lg font-bold text-white font-mono">Smart Onboarding</h2>
                   <p className="text-zinc-500 text-xs">Configure your startup parameters for executive AI context</p>
                 </div>
                 <button
                   onClick={() => setView('landing')}
-                  className="text-xs text-zinc-400 hover:text-white cursor-pointer"
+                  className="text-xs text-zinc-400 hover:text-white cursor-pointer font-mono"
                 >
                   Cancel
                 </button>
@@ -165,36 +171,36 @@ export default function AuthScreen() {
 
               {/* Onboarding Fields */}
               {onboardingPath === 'existing' ? (
-                <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                   <div>
-                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Startup Name</label>
+                    <label className="block text-[10px] uppercase text-zinc-400 mb-1">Startup Name</label>
                     <input type="text" value={startupName} onChange={e => setStartupName(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Industry</label>
+                    <label className="block text-[10px] uppercase text-zinc-400 mb-1">Industry</label>
                     <input type="text" value={industry} onChange={e => setIndustry(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Monthly Burn</label>
+                    <label className="block text-[10px] uppercase text-zinc-400 mb-1">Monthly Burn</label>
                     <input type="text" value={burnRate} onChange={e => setBurnRate(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Runway</label>
+                    <label className="block text-[10px] uppercase text-zinc-400 mb-1">Runway</label>
                     <input type="text" value={runway} onChange={e => setRunway(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4 text-xs">
+                <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                   <div className="col-span-2">
-                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Startup Concept</label>
+                    <label className="block text-[10px] uppercase text-zinc-400 mb-1">Startup Concept</label>
                     <input type="text" placeholder="e.g. AI-powered automated code review platform" value={idea} onChange={e => setIdea(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Budget</label>
+                    <label className="block text-[10px] uppercase text-zinc-400 mb-1">Budget</label>
                     <input type="text" value={budget} onChange={e => setBudget(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-mono text-zinc-400 mb-1">Target Launch</label>
+                    <label className="block text-[10px] uppercase text-zinc-400 mb-1">Target Launch</label>
                     <input type="text" value={timeline} onChange={e => setTimeline(e.target.value)} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
                   </div>
                 </div>
@@ -214,7 +220,7 @@ export default function AuthScreen() {
             <div className="py-8 text-center space-y-6">
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-white font-mono">Building Your Executive Team...</h3>
-                <p className="text-xs text-zinc-400">Synthesizing domain contexts and initializing agent state graphs</p>
+                <p className="text-xs text-zinc-400 font-mono">Synthesizing domain contexts and initializing agent state graphs</p>
               </div>
 
               <div className="space-y-3 max-w-sm mx-auto text-xs font-mono text-left">
@@ -248,44 +254,32 @@ export default function AuthScreen() {
         </div>
       )}
 
-      {/* 3. AUTH / LOGIN FORM */}
+      {/* 3. CLERK AUTH FORM */}
       {view === 'auth' && (
-        <div className="max-w-md w-full bg-[#09090b] border border-zinc-800 rounded-2xl p-8 relative z-10 shadow-2xl space-y-6">
-          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-            <h2 className="text-lg font-bold text-white">{isLogin ? 'Sign In' : 'Create Account'}</h2>
-            <button onClick={() => setView('landing')} className="text-xs text-zinc-400 hover:text-white cursor-pointer">
+        <div className="w-full max-w-md bg-[#09090b] border border-zinc-800 rounded-2xl shadow-2xl p-8 relative z-10">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800">
+            <div className="flex items-center gap-2.5">
+              <CatalystLogo className="w-5 h-5 text-orange-500" />
+              <h2 className="text-sm font-bold text-white font-mono">Catalyst OS Sign In</h2>
+            </div>
+            <button onClick={() => setView('landing')} className="text-xs text-zinc-400 hover:text-white cursor-pointer font-mono">
               Cancel
             </button>
           </div>
 
-          <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs font-mono">
-            {!isLogin && (
-              <div>
-                <label className="block text-zinc-400 mb-1 uppercase">Full Name</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} required className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
-              </div>
-            )}
+          {/* Clerk Component */}
+          {authTab === 'signin' ? (
+            <SignIn appearance={clerkAppearance} routing="hash" />
+          ) : (
+            <SignUp appearance={clerkAppearance} routing="hash" />
+          )}
 
-            <div>
-              <label className="block text-zinc-400 mb-1 uppercase">Email Address</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
-            </div>
-
-            <div>
-              <label className="block text-zinc-400 mb-1 uppercase">Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-white" />
-            </div>
-
-            {error && <p className="text-rose-400 text-[11px]">{error}</p>}
-
-            <button type="submit" disabled={submitting} className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs transition-all cursor-pointer font-mono shadow-[0_0_20px_rgba(255,255,255,0.3)]">
-              {submitting ? 'Processing...' : isLogin ? 'Sign In →' : 'Create Account →'}
-            </button>
-          </form>
-
-          <div className="pt-2 text-center text-xs text-zinc-500">
-            <button onClick={() => setIsLogin(!isLogin)} className="hover:text-white cursor-pointer underline">
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+          <div className="mt-6 pt-4 border-t border-zinc-850 text-center">
+            <button
+              onClick={() => setAuthTab(authTab === 'signin' ? 'signup' : 'signin')}
+              className="text-xs font-mono text-zinc-400 hover:text-white cursor-pointer underline transition-colors"
+            >
+              {authTab === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
           </div>
         </div>

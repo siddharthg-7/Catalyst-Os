@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
 import { User, UserRole } from '../types';
 
@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   logout: () => Promise<void>;
+  loginAsDemo: () => void;
   /**
    * Performs a fetch with the Clerk session token automatically attached
    * as a Bearer Authorization header. Drop-in replacement for the old
@@ -19,43 +20,66 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken, signOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
+  const [demoUser, setDemoUser] = useState<User | null>(null);
 
-  // Map Clerk user to the app's internal User shape
-  const user: User | null =
+  // Map Clerk user or Demo user to the app's internal User shape
+  const user: User | null = demoUser ?? (
     isSignedIn && clerkUser
       ? {
           id: clerkUser.id,
           email: clerkUser.primaryEmailAddress?.emailAddress ?? '',
-          name: clerkUser.fullName ?? clerkUser.username ?? '',
+          name: clerkUser.fullName ?? clerkUser.username ?? 'Founder User',
           role: ((clerkUser.publicMetadata?.role as UserRole) ?? 'Founder'),
         }
-      : null;
+      : null
+  );
 
-  const loading = !isLoaded;
+  const loading = !isLoaded && !demoUser;
+
+  const loginAsDemo = () => {
+    setDemoUser({
+      id: 'usr_founder_demo',
+      email: 'founder@founder.os',
+      name: 'Founder Demo',
+      role: 'Founder',
+    });
+  };
 
   const logout = async () => {
-    await signOut();
+    setDemoUser(null);
+    try {
+      await signOut();
+    } catch (e) {
+      // Ignore if not signed in via Clerk
+    }
   };
 
   /**
-   * Attaches the current Clerk session token to every API request.
-   * All existing callers of apiFetch continue to work unchanged.
+   * Attaches the session token to every API request.
    */
   const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-    const token = await getToken();
+    let token: string | null = null;
+    try {
+      token = await getToken();
+    } catch (e) {
+      token = 'mock_demo_bearer_token';
+    }
+
     const headers: Record<string, string> = {
       ...(options.headers as Record<string, string>),
     };
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      headers['Authorization'] = `Bearer mock_demo_bearer_token`;
     }
 
     return fetch(url, { ...options, headers });
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, apiFetch }}>
+    <AuthContext.Provider value={{ user, loading, logout, loginAsDemo, apiFetch }}>
       {children}
     </AuthContext.Provider>
   );

@@ -33,6 +33,7 @@ import {
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
 import AuthScreen from './components/AuthScreen';
+import CatalystLogo from './components/CatalystLogo';
 
 export default function App() {
   const { user, loading, logout, apiFetch } = useAuth();
@@ -271,10 +272,10 @@ export default function App() {
           
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#6366F1] rounded-lg flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]">
-              F
+            <div className="w-8 h-8 rounded-lg bg-[#18181b] border border-zinc-700 p-1 flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+              <CatalystLogo className="w-5 h-5 text-orange-500" />
             </div>
-            <span className="font-semibold text-lg tracking-tight text-white">FounderOS</span>
+            <span className="font-semibold text-lg tracking-tight text-white">Catalyst OS</span>
           </div>
 
           {/* Navigation Links */}
@@ -427,7 +428,7 @@ export default function App() {
             >
               <Menu className="w-4 h-4" />
             </button>
-            <span className="font-semibold text-white">FounderOS</span>
+            <span className="font-semibold text-white">Catalyst OS</span>
             <span className="text-gray-700">/</span>
             <span className="text-gray-300 font-medium capitalize">{activeTab.replace('ledger', 'Governance Ledger').replace('approvals', 'Approval Queue').replace('workflows', 'Strategic Sprints').replace('knowledge', 'Knowledge Base').replace('agents', 'Agent Configurator')} Workspace</span>
           </div>
@@ -582,8 +583,8 @@ export default function App() {
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Rocket className="w-5 h-5 text-indigo-500" />
-                  <span className="text-sm font-bold text-white">FounderOS</span>
+                  <CatalystLogo className="w-5 h-5 text-orange-500" />
+                  <span className="text-sm font-bold text-white">Catalyst OS</span>
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}

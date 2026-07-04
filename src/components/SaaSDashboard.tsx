@@ -11,6 +11,7 @@ import {
   Clock, ArrowUpRight, ArrowDownRight, ClipboardList, Shield, User, Landmark, 
   Briefcase, Users, Cog, MessageSquare, ArrowRight, RefreshCw, Layers, Check, CheckSquare
 } from 'lucide-react';
+import CatalystLogo from './CatalystLogo';
 
 interface SaaSDashboardProps {
   startup: StartupProfile;
@@ -522,12 +523,12 @@ ADJUSTED COMPLIANCE PARAMETERS:
       {/* 1. Header Status Grid Bar (Linear-style) */}
       <div className="flex flex-col xl:flex-row items-stretch gap-4 justify-between bg-zinc-950 p-4 border border-zinc-900 rounded-xl">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-mono font-bold shadow-[0_0_15px_rgba(99,102,241,0.35)]">
-            OS
+          <div className="w-9 h-9 bg-zinc-900 border border-zinc-700 rounded-lg flex items-center justify-center p-1 shadow-[0_0_15px_rgba(249,115,22,0.35)]">
+            <CatalystLogo className="w-6 h-6 text-orange-500" />
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-2">
-              FounderOS Central Command
+              Catalyst OS Central Command
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
             </h1>
             <p className="text-[10px] text-zinc-500 font-mono tracking-wide uppercase">
