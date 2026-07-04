@@ -19,3 +19,4 @@ View your app in AI Studio: https://ai.studio/apps/0404b094-7555-4e20-9413-23f92
 3. Run the app:
    `npm run dev`
 "# Catalyst-Os" 
+# Catalyst-Os
