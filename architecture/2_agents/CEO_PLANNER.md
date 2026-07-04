@@ -1,6 +1,6 @@
-# FounderOS Architecture: CEO Planner Agent
+# Catalyst OS Architecture: CEO Planner Agent
 
-This document details the operational specification, prompts, and internal reasoning loops for the **CEO Planner Agent (Sophia Vance)**, the primary orchestrator of FounderOS.
+This document details the operational specification, prompts, and internal reasoning loops for the **CEO Planner Agent (Sophia Vance)**, the primary orchestrator of Catalyst OS.
 
 ---
 

@@ -1,4 +1,4 @@
-# FounderOS Architecture: Founder Approval Workflow
+# Catalyst OS Architecture: Founder Approval Workflow
 
 This document details the backend APIs, database schemas, and state machine configurations for the **Founder Approval Workflow**. It integrates with the mandated tech stack (**Frontend: React**, **Backend: FastAPI/Node**, **AI: LangGraph/multi-agent, MCP tools**, **Data: PostgreSQL, pgvector**).
 
@@ -117,7 +117,7 @@ from typing import Dict, List, Optional
 from datetime import datetime
 import uuid
 
-app = FastAPI(title="FounderOS Approval Gateway")
+app = FastAPI(title="Catalyst OS Approval Gateway")
 
 # Data Models
 class ApprovalRequest(BaseModel):

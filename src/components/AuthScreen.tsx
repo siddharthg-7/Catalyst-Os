@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import HackathonLandingPage from './HackathonLandingPage';
+import CatalystOsChatbot from './chatbot/CatalystOsChatbot';
 import CatalystLogo from './CatalystLogo';
 
 const clerkAppearance = {
@@ -992,6 +993,9 @@ export default function AuthScreen() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global Catalyst OS AI Chatbot Widget */}
+      <CatalystOsChatbot />
     </div>
   );
 }

@@ -202,7 +202,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
 
   const testimonials = [
     {
-      quote: "FounderOS became our executive team overnight.",
+      quote: "Catalyst OS became our executive team overnight.",
       author: "Sarah Khan",
       role: "CEO, TechScale",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
@@ -223,7 +223,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
 
   const faqs = [
     {
-      question: "What is FounderOS?",
+      question: "What is Catalyst OS?",
       answer: "An AI-powered platform that gives founders an autonomous executive team to plan, execute, and scale."
     },
     {
@@ -265,7 +265,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
             <div className="w-9 h-9 rounded-xl bg-[#090909] border border-white/10 p-1 flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:border-white transition-colors">
               <CatalystLogo className="w-5 h-5 text-white" />
             </div>
-            <span className="font-extrabold text-white text-lg tracking-tight font-sans">FounderOS</span>
+            <span className="font-extrabold text-white text-lg tracking-tight font-sans">Catalyst OS</span>
           </div>
 
           {/* Navigation Items */}
@@ -398,7 +398,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
                 <iframe
                   src="https://lottie.host/embed/eb092f61-1eb3-4de7-8db1-7c72da2a7379/cAAGtnj4dN.lottie"
                   className="w-full h-full border-0 pointer-events-none"
-                  title="FounderOS AI Core"
+                  title="Catalyst OS AI Core"
                 />
               )}
 
@@ -1128,7 +1128,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <div className="w-8 h-8 rounded-lg bg-[#090909] border border-white/10 p-1 flex items-center justify-center">
                 <CatalystLogo className="w-5 h-5 text-white" />
               </div>
-              <span className="font-extrabold text-white text-lg tracking-tight font-sans">FounderOS</span>
+              <span className="font-extrabold text-white text-lg tracking-tight font-sans">Catalyst OS</span>
             </div>
             <p className="text-[#777777] max-w-xs leading-[170%] font-sans">
               The AI executive platform for founders.
@@ -1168,7 +1168,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
         </div>
 
         <div className="max-w-[1320px] mx-auto pt-14 mt-14 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#777777]">
-          <span>© {new Date().getFullYear()} FounderOS Inc.</span>
+          <span>© {new Date().getFullYear()} Catalyst OS Inc.</span>
           <span>Built for founders who ship.</span>
         </div>
       </footer>

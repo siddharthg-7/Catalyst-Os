@@ -1,4 +1,4 @@
-# FounderOS Architecture: RAG Pipeline & Document Ingestion
+# Catalyst OS Architecture: RAG Pipeline & Document Ingestion
 
 This document details the production-ready retrieval-augmented generation (RAG) architecture for indexing, chunking, and searching company-knowledge documents (Pitch Decks, Business Plans, financials, SOPs, and policies).
 

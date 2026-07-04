@@ -176,7 +176,7 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-mono font-bold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
               F
             </div>
-            <span className="font-semibold text-lg tracking-tight text-white">FounderOS</span>
+            <span className="font-semibold text-lg tracking-tight text-white">Catalyst OS</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-medium">
@@ -356,7 +356,7 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
               From Idea to Scale.
             </h2>
             <p className="text-zinc-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl">
-              FounderOS transforms scattered work into an intelligent operating company. Users grow. Teams expand. Revenue increases. Everything remains synchronized.
+              Catalyst OS transforms scattered work into an intelligent operating company. Users grow. Teams expand. Revenue increases. Everything remains synchronized.
             </p>
           </div>
 
@@ -372,7 +372,7 @@ export default function FrameSequenceCanvas({ onStartBuilding, onBookDemo }: Fra
               Build More. Manage Less.
             </h2>
             <p className="text-zinc-300 text-sm sm:text-base leading-relaxed font-sans max-w-xl">
-              Focus on vision while FounderOS handles execution.
+              Focus on vision while Catalyst OS handles execution.
             </p>
           </div>
 

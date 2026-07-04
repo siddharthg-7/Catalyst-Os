@@ -199,7 +199,7 @@ This package formalizes the recruitment and legal terms for the Lead Core Platfo
             deliv_content = f"""# {title.upper()} STRATEGIC DELIVERABLE
 
 ### 1. Executive Summary
-Strategic synthesis compiled by FounderOS multi-agent executive team for goal: '{title}'.
+Strategic synthesis compiled by Catalyst OS multi-agent executive team for goal: '{title}'.
 
 ### 2. Operational Directives
 - Growth & User Acquisition metrics targeted.

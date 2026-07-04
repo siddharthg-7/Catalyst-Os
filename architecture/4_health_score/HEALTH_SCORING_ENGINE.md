@@ -1,4 +1,4 @@
-# FounderOS Architecture: Startup Health Scoring Engine
+# Catalyst OS Architecture: Startup Health Scoring Engine
 
 This document outlines the backend architecture, mathematical formulas, data schemas, and multi-agent reasoning flow for the **Startup Health Scoring Engine**. It aligns with the mandated technology stack (React, Node/FastAPI, LangGraph/Multi-Agent, MCP Tools, PostgreSQL/pgvector).
 

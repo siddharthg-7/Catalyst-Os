@@ -33,8 +33,19 @@ interface ActiveUpload {
 }
 
 export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseProps) {
-  // Mode selection: 'file' for drag/drop, 'paste' for raw text pasting
-  const [activeTab, setActiveTab] = useState<'file' | 'paste'>('file');
+  const [activeTab, setActiveTab] = useState<'file' | 'paste' | 'website' | 'github' | 'analytics'>('file');
+  const [webUrl, setWebUrl] = useState('');
+  const [githubRepo, setGithubRepo] = useState('');
+  const [analyticsData, setAnalyticsData] = useState<{ logs: any[]; failed_questions: any[] }>({
+    logs: [
+      { query: 'How do I optimize CAC payback?', timestamp: '2026-07-04 18:30:12', top_score: 0.94, status: 'success' },
+      { query: 'What is our 4-year vesting schedule?', timestamp: '2026-07-04 18:45:00', top_score: 0.91, status: 'success' },
+      { query: 'What is our offshore tax strategy?', timestamp: '2026-07-04 19:02:11', top_score: 0.32, status: 'low_confidence' }
+    ],
+    failed_questions: [
+      { query: 'What is our offshore tax strategy?', timestamp: '2026-07-04 19:02:11', top_score: 0.32, status: 'low_confidence' }
+    ]
+  });
 
   // Paste Text Form State
   const [docName, setDocName] = useState('');
@@ -226,14 +237,14 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
               <UploadCloud className="w-4 h-4 text-[#6366F1]" />
               Ingest Materials
             </h4>
-            <div className="flex bg-zinc-950 p-0.5 rounded border border-[#27272A]">
+            <div className="flex bg-zinc-950 p-0.5 rounded border border-[#27272A] flex-wrap gap-1">
               <button
                 onClick={() => setActiveTab('file')}
                 className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-all ${
                   activeTab === 'file' ? 'bg-[#27272A] text-white' : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                File Upload
+                Upload File
               </button>
               <button
                 onClick={() => setActiveTab('paste')}
@@ -242,6 +253,30 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                 }`}
               >
                 Paste Text
+              </button>
+              <button
+                onClick={() => setActiveTab('website')}
+                className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-all ${
+                  activeTab === 'website' ? 'bg-[#27272A] text-white' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Website URL
+              </button>
+              <button
+                onClick={() => setActiveTab('github')}
+                className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-all ${
+                  activeTab === 'github' ? 'bg-[#27272A] text-white' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                GitHub Sync
+              </button>
+              <button
+                onClick={() => setActiveTab('analytics')}
+                className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-all ${
+                  activeTab === 'analytics' ? 'bg-[#6366F1] text-white' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Analytics
               </button>
             </div>
           </div>
@@ -267,6 +302,34 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                   <option value="hiring_docs">Hiring Rules</option>
                   <option value="meeting_notes">Meeting Notes</option>
                 </select>
+              </div>
+
+              {/* Integrations Row */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 py-2">
+                <button className="flex items-center justify-center gap-2 py-2 px-3 bg-zinc-950 border border-[#27272A] rounded-lg hover:border-[#6366F1] transition-all text-xs text-zinc-300">
+                  <FileText className="w-3.5 h-3.5 text-red-400" />
+                  Upload PDF
+                </button>
+                <button className="flex items-center justify-center gap-2 py-2 px-3 bg-zinc-950 border border-[#27272A] rounded-lg hover:border-[#6366F1] transition-all text-xs text-zinc-300">
+                  <FileText className="w-3.5 h-3.5 text-blue-400" />
+                  Upload DOCX
+                </button>
+                <button className="flex items-center justify-center gap-2 py-2 px-3 bg-zinc-950 border border-[#27272A] rounded-lg hover:border-[#6366F1] transition-all text-xs text-zinc-300">
+                  <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                  Upload TXT
+                </button>
+                <button className="flex items-center justify-center gap-2 py-2 px-3 bg-zinc-950 border border-[#27272A] rounded-lg hover:border-[#6366F1] transition-all text-xs text-zinc-300">
+                  <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+                  Add Website
+                </button>
+                <button className="flex items-center justify-center gap-2 py-2 px-3 bg-zinc-950 border border-[#27272A] rounded-lg hover:border-[#6366F1] transition-all text-xs text-zinc-300">
+                  <BookOpen className="w-3.5 h-3.5 text-white" />
+                  Add GitHub Repo
+                </button>
+                <button className="flex items-center justify-center gap-2 py-2 px-3 bg-zinc-950 border border-[#27272A] rounded-lg hover:border-[#6366F1] transition-all text-xs text-zinc-300">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                  Sync Notion
+                </button>
               </div>
 
               {/* Drag & Drop Area */}
@@ -350,6 +413,94 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                 {isUploading ? 'Ingesting Context...' : 'Ingest Document'}
               </button>
             </form>
+          )}
+
+          {/* Tab 3: Website URL Crawler */}
+          {activeTab === 'website' && (
+            <div className="space-y-3">
+              <input
+                type="url"
+                placeholder="https://docs.catalyst-os.ai"
+                value={webUrl}
+                onChange={(e) => setWebUrl(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg bg-zinc-950 border border-[#27272A] text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#6366F1]"
+              />
+              <button
+                onClick={async () => {
+                  if (!webUrl) return;
+                  await fetch('/api/rag/url', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: webUrl }) });
+                  setWebUrl('');
+                  alert(`Crawled and indexed URL into vector memory!`);
+                }}
+                className="w-full py-1.5 rounded-lg bg-[#6366F1] text-xs font-semibold text-white hover:bg-[#6366F1]/85 transition-all cursor-pointer"
+              >
+                Crawl & Index Website
+              </button>
+            </div>
+          )}
+
+          {/* Tab 4: GitHub Repo Sync */}
+          {activeTab === 'github' && (
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="owner/repository (e.g. founder-os/core)"
+                value={githubRepo}
+                onChange={(e) => setGithubRepo(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-lg bg-zinc-950 border border-[#27272A] text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#6366F1]"
+              />
+              <button
+                onClick={async () => {
+                  if (!githubRepo) return;
+                  await fetch('/api/rag/github', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ repo: githubRepo, branch: 'main' }) });
+                  setGithubRepo('');
+                  alert(`Synced GitHub repo branch into vector memory!`);
+                }}
+                className="w-full py-1.5 rounded-lg bg-white text-black text-xs font-bold hover:bg-zinc-200 transition-all cursor-pointer"
+              >
+                Sync GitHub Branch
+              </button>
+            </div>
+          )}
+
+          {/* Tab 5: Search Analytics & Maintenance */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-[#27272A] pb-2">
+                <span className="text-[10px] font-mono text-zinc-400 uppercase">Search Logs & Performance</span>
+                <button
+                  onClick={async () => {
+                    await fetch('/api/rag/reindex', { method: 'POST' });
+                    alert('Triggered full vector store re-indexing with BAAI/bge-m3 embeddings!');
+                  }}
+                  className="px-2.5 py-1 rounded bg-zinc-900 border border-[#27272A] hover:border-[#6366F1] text-[10px] text-white font-mono cursor-pointer"
+                >
+                  ⚡ Re-index Vectors
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] font-semibold text-rose-400 uppercase tracking-wider block">Failed / Low-Confidence Questions</span>
+                {analyticsData.failed_questions.map((fq, idx) => (
+                  <div key={idx} className="p-2 rounded-lg bg-rose-950/20 border border-rose-900/50 flex justify-between items-center text-xs">
+                    <span className="text-zinc-300 font-sans">{fq.query}</span>
+                    <span className="text-[9px] font-mono text-rose-400">Score: {fq.top_score}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Recent RAG Search Logs</span>
+                <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                  {analyticsData.logs.map((log, idx) => (
+                    <div key={idx} className="p-2 rounded bg-zinc-950 border border-[#27272A] flex justify-between items-center text-[10px] font-mono">
+                      <span className="text-zinc-300 truncate max-w-[200px]">{log.query}</span>
+                      <span className="text-emerald-400">{log.top_score}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Active File Ingest Progress Monitors */}

@@ -1,6 +1,6 @@
-# FounderOS Architecture: System Overview & Core Foundations
+# Catalyst OS Architecture: System Overview & Core Foundations
 
-This document details the macro-architecture of **FounderOS**, a production-ready AI Operating System designed for startup founders.
+This document details the macro-architecture of **Catalyst OS**, a production-ready AI Operating System designed for startup founders.
 
 ---
 
@@ -46,7 +46,7 @@ founder-os/
 
 ## 2. Frontend Architecture (React + Tailwind)
 
-FounderOS is structured as an interactive, highly responsive Single Page Application (SPA) designed to act as an "executive command center" for startup founders.
+Catalyst OS is structured as an interactive, highly responsive Single Page Application (SPA) designed to act as an "executive command center" for startup founders.
 
 - **Reactive State Management**: Simple, predictable React state engines hydrate dynamically from `/api` endpoints on mount.
 - **Component Separation**: All visual widgets are extracted into isolated components under `/src/components/`, ensuring that files remain under token limits and are highly maintainable.

@@ -1,4 +1,4 @@
-# FounderOS Architecture: Executive Collaboration Engine
+# Catalyst OS Architecture: Executive Collaboration Engine
 
 This document details the state-machine, message-passing protocol, and event-flow architecture for the **Multi-Agent Executive Collaboration Engine**.
 
@@ -6,7 +6,7 @@ This document details the state-machine, message-passing protocol, and event-flo
 
 ## 1. Engine Philosophy: Anti-Chatbot Design
 
-Unlike linear chatbots that reply on simple, conversational prompts, the FounderOS Collaboration Engine is built as an **automated, state-driven corporate matrix**.
+Unlike linear chatbots that reply on simple, conversational prompts, the Catalyst OS Collaboration Engine is built as an **automated, state-driven corporate matrix**.
 - **Server-Authoritative State**: Agents do not talk at random. They follow a strict strategic workflow dictated by the CEO Planner.
 - **Message Queues**: Agents write structured messages into a transactional log.
 - **Conflict Resolution**: When agents make overlapping or contradictory recommendations (e.g. Talent wants to spend $145k on hiring, but Finance restricts the payroll budget to $115k), the system flags the conflict and routes it to the **ConflictResolver** to inject a mediated compromises.
