@@ -12,6 +12,7 @@ import WorkflowCanvas from './components/WorkflowCanvas';
 import ApprovalQueue from './components/ApprovalQueue';
 import KnowledgeBase from './components/KnowledgeBase';
 import DecisionLog from './components/DecisionLog';
+import GodmodeTest from './components/GodmodeTest';
 import { 
   Rocket, 
   Terminal, 
@@ -38,7 +39,7 @@ import CatalystLogo from './components/CatalystLogo';
 export default function App() {
   const { user, loading, logout, apiFetch } = useAuth();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'agents' | 'workflows' | 'approvals' | 'knowledge' | 'ledger'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'agents' | 'workflows' | 'approvals' | 'knowledge' | 'ledger' | 'godmode'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
@@ -373,6 +374,21 @@ export default function App() {
               <Clipboard className="w-4 h-4 text-[#6366F1]" />
               Governance Ledger
             </button>
+
+            <button
+              onClick={() => setActiveTab('godmode')}
+              className={`w-full flex items-center px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                activeTab === 'godmode' 
+                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
+                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
+              }`}
+            >
+              <span className="flex items-center gap-2.5">
+                <Rocket className="w-4 h-4 text-indigo-500" />
+                G0DM0D3 API Test
+              </span>
+            </button>
+            
           </nav>
         </div>
 
@@ -535,6 +551,10 @@ export default function App() {
             <DecisionLog 
               decisions={decisions} 
             />
+          )}
+
+          {activeTab === 'godmode' && (
+            <GodmodeTest />
           )}
 
         </main>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Terminal, Activity, CheckSquare, Settings, FileText, Clipboard, Sparkles } from 'lucide-react';
+import { Search, Terminal, Activity, CheckSquare, Settings, FileText, Clipboard, Sparkles, Rocket, Loader2 } from 'lucide-react';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -10,8 +10,44 @@ interface CommandPaletteProps {
 
 export default function CommandPalette({ isOpen, onClose, onNavigate, onRunAction }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
+  const [isFetchingAI, setIsFetchingAI] = useState(false);
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  async function handleAskGodmode(userQuestion: string, targetAgent: string | null = null) {
+    setIsFetchingAI(true);
+    setAiResponse(null);
+    setApiError(null);
+    
+    const finalContent = targetAgent 
+      ? `As the ${targetAgent} of Catalyst OS, answer this: ${userQuestion}` 
+      : userQuestion;
+      
+    const url = "https://sathwik2212-backend-api.hf.space/v1/chat/completions";
+    const requestData = {
+        model: "ultraplinian/fast",
+        messages: [{ role: "user", content: finalContent }],
+        stream: false
+    };
+    
+    try {
+      const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestData)
+      });
+      const data = await response.json();
+      setAiResponse(data.choices[0].message.content);
+    } catch (err) {
+      console.error(err);
+      setApiError("Error: Could not reach the G0DM0D3 API.");
+    } finally {
+      setIsFetchingAI(false);
+    }
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +92,14 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
     cmd.category.toLowerCase().includes(query.toLowerCase())
   );
 
+  let targetAgent: string | null = null;
+  let cleanQuery = query;
+  const agentMatch = query.trim().match(/^@(\w+)\s+(.*)/i);
+  if (agentMatch) {
+    targetAgent = agentMatch[1];
+    cleanQuery = agentMatch[2];
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh] p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div 
@@ -68,9 +112,14 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
           <input
             ref={inputRef}
             type="text"
-            placeholder="Type a command or search..."
+            placeholder="Type a command or ask G0DM0D3..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && query.trim() && !isFetchingAI) {
+                handleAskGodmode(cleanQuery, targetAgent);
+              }
+            }}
             className="w-full bg-transparent text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none"
           />
           <span className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[9px] font-mono font-semibold text-zinc-500 shrink-0">
@@ -80,6 +129,42 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
 
         {/* Command list */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          {query.trim().length > 0 && (
+            <div className="mb-4">
+              <div className="px-3 py-1.5 text-[10px] font-bold text-indigo-500 uppercase tracking-wider">
+                G0DM0D3 Engine
+              </div>
+              <button
+                onClick={() => handleAskGodmode(cleanQuery, targetAgent)}
+                className="w-full text-left flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border border-indigo-500/20"
+              >
+                <span className="flex items-center gap-2.5">
+                  <Rocket className="w-4 h-4 text-indigo-400" />
+                  Ask {targetAgent ? `@${targetAgent.toUpperCase()}` : 'G0DM0D3'}: "{cleanQuery}"
+                </span>
+                <span className="text-[10px] font-mono text-indigo-500">↵ Enter</span>
+              </button>
+
+              {/* AI Response Card */}
+              {(isFetchingAI || aiResponse || apiError) && (
+                <div className="mt-2 mx-2 p-4 rounded-lg bg-[#18181b] border border-[#27272a] shadow-inner text-sm text-zinc-300">
+                  {isFetchingAI && (
+                    <div className="flex items-center gap-2 text-indigo-400 animate-pulse">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Racing 12 models to answer your query...
+                    </div>
+                  )}
+                  {aiResponse && (
+                    <div className="leading-relaxed whitespace-pre-wrap">{aiResponse}</div>
+                  )}
+                  {apiError && (
+                    <div className="text-red-400">{apiError}</div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <div className="text-center py-8 text-xs text-zinc-500">
               No results found for "{query}"
