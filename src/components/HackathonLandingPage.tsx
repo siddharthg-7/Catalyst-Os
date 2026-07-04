@@ -202,19 +202,19 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
 
   const testimonials = [
     {
-      quote: "FounderOS is like having a world-class executive team, without the overhead. It's a game-changer for our seed-stage startup.",
+      quote: "FounderOS became our executive team overnight.",
       author: "Sarah Khan",
       role: "CEO, TechScale",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
     },
     {
-      quote: "The AI insights are spot on and have helped us make better decisions, faster. The CFO agent alone saved $40k.",
+      quote: "The CFO agent alone saved us $40k in the first quarter.",
       author: "Arjun Patel",
       role: "Founder, FinOps",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
     },
     {
-      quote: "From fundraising to hiring, FounderOS covers everything we need to scale seamlessly across 12 countries.",
+      quote: "From fundraising to hiring — everything we need in one place.",
       author: "Maya Johnson",
       role: "COO, SmartLab",
       avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80"
@@ -224,19 +224,19 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
   const faqs = [
     {
       question: "What is FounderOS?",
-      answer: "FounderOS is an AI-powered operating system that provides founders with an autonomous executive team (CEO, CFO, CTO, CMO, HR, COO) to plan, execute, and scale startup operations seamlessly."
+      answer: "An AI-powered platform that gives founders an autonomous executive team to plan, execute, and scale."
     },
     {
       question: "Is my data secure?",
-      answer: "Yes. FounderOS utilizes end-to-end 256-bit encryption, HashiCorp Vault secrets isolation, and zero-trust memory boundaries. Your data is never shared or used to train public LLM models."
+      answer: "Yes. End-to-end encryption, zero-trust architecture, and vault-isolated secrets. Your data is never shared."
     },
     {
       question: "Can I integrate with my existing tools?",
-      answer: "Absolutely. FounderOS integrates natively with Slack, GitHub, Google Workspace, Stripe, Vercel, Notion, and major developer APIs through the Model Context Protocol (MCP)."
+      answer: "Yes. Native integrations with Slack, GitHub, Stripe, Vercel, and more via the Model Context Protocol."
     },
     {
       question: "Do you offer a free trial?",
-      answer: "Yes. You can start free with our Starter tier, which includes full access to basic modules and up to 2 team members with zero credit card required."
+      answer: "Yes. The Starter tier is free with full access to basic modules and up to 2 team members."
     }
   ];
 
@@ -308,7 +308,6 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           {/* Left Column: Editorial Monochrome Copy (Max Width 560px) */}
           <div className="lg:col-span-6 space-y-8 text-left z-10 max-w-[560px]">
             
-            {/* Tiny Monochrome Label */}
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -316,31 +315,27 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#111111] border border-white/[0.1] text-xs font-mono font-medium text-white/80"
             >
               <Sparkles className="w-3.5 h-3.5 text-white animate-pulse" />
-              <span>AI EXECUTIVE INTELLIGENCE</span>
+              <span>AI EXECUTIVE TEAM</span>
             </motion.div>
 
-            {/* Huge Heading: 80px / 72px Desktop, -4px Letter Spacing */}
             <motion.h1 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-5xl sm:text-7xl lg:text-[80px] font-extrabold tracking-[-4px] text-white leading-[0.95] font-sans"
             >
-              The Executive OS <br />
-              for Founders.
+              Build Faster.<br />Scale Smarter.
             </motion.h1>
 
-            {/* Body Description: 18px */}
             <motion.p 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-[#B8B8B8] text-lg leading-[170%] font-sans"
             >
-              All the tools, insights, and guidance you need to build, grow, and scale your startup — in one place.
+              One platform that helps founders plan, execute, hire, grow, and raise capital using AI.
             </motion.p>
 
-            {/* Primary & Secondary Magnetic Buttons */}
             <motion.div 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -359,28 +354,20 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
                 onClick={onViewDemo}
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#111111] hover:bg-[#181818] border border-white/10 text-white font-medium text-[15px] transition-all cursor-pointer flex items-center justify-center gap-2 backdrop-blur-md font-sans"
               >
-                <span>See Platform</span>
+                <span>Book Demo</span>
               </button>
             </motion.div>
 
-            {/* Social Proof Line */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="pt-6 border-t border-white/[0.08] space-y-3"
+              className="pt-6 border-t border-white/[0.08] flex flex-wrap items-center gap-6 opacity-60 text-xs font-medium text-[#B8B8B8]"
             >
-              <p className="text-xs font-mono uppercase tracking-wider text-[#777777]">
-                Trusted by Founders at
-              </p>
-
-              <div className="flex flex-wrap items-center gap-6 opacity-60 text-xs font-medium text-[#B8B8B8]">
-                <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-white" /> Techstars</span>
-                <span className="flex items-center gap-1.5"><Rocket className="w-3.5 h-3.5 text-white" /> Y Combinator</span>
-                <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5 text-white" /> TechCrunch</span>
-                <span className="flex items-center gap-1.5"><FaAws className="w-3.5 h-3.5 text-white" /> AWS</span>
-                <span className="flex items-center gap-1.5"><SiGooglecloud className="w-3.5 h-3.5 text-white" /> Google for Startups</span>
-              </div>
+              <span className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-white" /> Techstars</span>
+              <span className="flex items-center gap-1.5"><Rocket className="w-3.5 h-3.5 text-white" /> Y Combinator</span>
+              <span className="flex items-center gap-1.5"><FaAws className="w-3.5 h-3.5 text-white" /> AWS</span>
+              <span className="flex items-center gap-1.5"><SiGooglecloud className="w-3.5 h-3.5 text-white" /> Google</span>
             </motion.div>
 
           </div>
@@ -481,12 +468,12 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           
           {/* Header */}
           <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">EVERYTHING YOU NEED</span>
+            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">PLATFORM</span>
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Everything you need <br /> to build and scale.
+              Your AI Executive Team
             </h2>
-            <p className="text-[#B8B8B8] text-lg">
-              Powerful modules. Smarter decisions. Faster growth.
+            <p className="text-[#B8B8B8] text-base">
+              Six AI advisors working together to guide every decision.
             </p>
 
             {/* Filter Module Pills */}
@@ -530,7 +517,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold text-white font-sans">AI Executive Council</h3>
                 <p className="text-[#B8B8B8] text-base leading-[170%] font-sans max-w-xl">
-                  Get strategic advice from your AI-powered board of experts (CEO, CFO, CTO, CMO, HR, COO) operating 24/7 in unison.
+                  AI advisors for strategy, finance, hiring, and growth.
                 </p>
               </div>
 
@@ -563,9 +550,9 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white font-sans">Intelligent Hiring</h3>
+                <h3 className="text-xl font-bold text-white font-sans">Smart Hiring</h3>
                 <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Find, screen, and hire top talent 10x faster with AI candidate score models.
+                  Hire better candidates in minutes.
                 </p>
               </div>
 
@@ -589,7 +576,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-white font-sans">Investor Outreach</h3>
                 <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Personalize, automate, and close more investor meetings with data-room tracking.
+                  Manage investors and fundraising from one place.
                 </p>
               </div>
 
@@ -613,7 +600,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-white font-sans">Workflow Automation</h3>
                 <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Automate repetitive tasks, legal NDAs, and board updates to focus on product.
+                  Automate repetitive business operations.
                 </p>
               </div>
 
@@ -637,7 +624,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <div className="space-y-2">
                 <h3 className="text-xl font-bold text-white font-sans">Business Analytics</h3>
                 <p className="text-[#B8B8B8] text-sm leading-[170%] font-sans">
-                  Real-time insights and live telemetry dashboards to make smarter executive decisions.
+                  Real-time insights for better decisions.
                 </p>
               </div>
 
@@ -659,7 +646,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               onClick={onStartBuilding}
               className="px-8 py-3.5 rounded-full bg-[#090909] hover:bg-[#111111] border border-white/[0.1] text-white font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-2 font-sans"
             >
-              <span>Explore All Modules</span>
+              <span>Explore All Features</span>
               <ArrowRight className="w-4 h-4 text-white" />
             </button>
           </div>
@@ -672,12 +659,12 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
         <div className="max-w-[1320px] mx-auto space-y-16">
           
           <div className="text-center space-y-3 max-w-2xl mx-auto">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">AN ALWAYS-ON COUNCIL</span>
+            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">AI COUNCIL</span>
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Your always-on <br /> Executive Council.
+              Your AI Executive Team
             </h2>
             <p className="text-[#B8B8B8] text-base leading-[170%] font-sans">
-              Strategic guidance, anytime you need it.
+              Six advisors working together to guide every decision.
             </p>
           </div>
 
@@ -772,7 +759,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <form onSubmit={handleSendChat} className="flex items-center gap-3 pt-2">
                 <input
                   type="text"
-                  placeholder={`Ask ${execData[selectedExec].role} a strategic question...`}
+                  placeholder="Ask your executive team anything..."
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   className="flex-1 bg-[#111111] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-[#777777] focus:outline-none focus:border-white font-sans"
@@ -808,20 +795,20 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
 
           {/* Right Column: Security Checklist */}
           <div className="lg:col-span-7 space-y-6 text-left">
-            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">IN-HOUSE FIRST</span>
+            <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">SECURITY</span>
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Zero Trust Architecture. <br /> Total Data Isolation.
+              Enterprise Security
             </h2>
             <p className="text-[#B8B8B8] text-base leading-[170%] font-sans">
-              Your data is encrypted, isolated, and never shared. We follow enterprise-grade security standards.
+              Your startup data stays private, encrypted, and fully isolated.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
               {[
-                { title: "End-to-End Encryption", desc: "256-bit AES-GCM encryption in transit and at rest.", icon: Lock },
-                { title: "Compliance Ready", desc: "Automated SOC 2 Type II audit logs.", icon: ShieldCheck },
-                { title: "Vault Isolated", desc: "HashiCorp Vault secret manager keys.", icon: Cpu },
-                { title: "SOC 2 Compliant", desc: "Zero trust memory boundaries.", icon: Shield },
+                { title: "End-to-End Encryption", desc: "256-bit AES-GCM in transit and at rest.", icon: Lock },
+                { title: "SOC 2 Ready", desc: "Automated compliance audit logs.", icon: ShieldCheck },
+                { title: "Zero Trust", desc: "No implicit access. Always verify.", icon: Shield },
+                { title: "Secure Vault", desc: "HashiCorp Vault secret isolation.", icon: Cpu },
               ].map((item, idx) => {
                 const ItemIcon = item.icon;
                 return (
@@ -847,16 +834,16 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           <div className="space-y-4 max-w-2xl mx-auto">
             <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">HOW IT WORKS</span>
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              From Goal to Execution <br /> in 4 Simple Steps
+              From Idea to Execution
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
             {[
-              { step: '01', title: 'Set Goals', desc: 'Define your startup goals and milestones in plain language.', icon: Terminal },
-              { step: '02', title: 'Get Guidance', desc: 'Receive AI-powered strategic recommendations across departments.', icon: Bot },
-              { step: '03', title: 'Take Action', desc: 'Execute actions with smart automated tools and workflows.', icon: Zap },
-              { step: '04', title: 'Track Progress', desc: 'Monitor real-time performance and iterate 10x faster.', icon: LineChart },
+              { step: '01', title: 'Set Goals', desc: 'Define what you want to achieve.', icon: Terminal },
+              { step: '02', title: 'Get AI Advice', desc: 'Your executive team analyzes and recommends.', icon: Bot },
+              { step: '03', title: 'Execute Faster', desc: 'Launch actions with automated workflows.', icon: Zap },
+              { step: '04', title: 'Track Progress', desc: 'Monitor results in real time.', icon: LineChart },
             ].map((st, idx) => {
               const StepIcon = st.icon;
               return (
@@ -886,26 +873,26 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           
           <div className="lg:col-span-5 space-y-6 text-left">
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Loved by ambitious <br /> founders.
+              Trusted by Founders
             </h2>
             <p className="text-[#B8B8B8] text-base leading-[170%] font-sans">
-              Join thousands of founders building smarter, faster, and bigger.
+              Join 10,000+ founders building smarter with AI.
             </p>
             <button
               onClick={onStartBuilding}
               className="px-8 py-3.5 rounded-full bg-white hover:bg-zinc-200 text-black font-semibold text-xs shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all cursor-pointer inline-flex items-center gap-2 font-sans"
             >
-              <span>Join Now</span>
+              <span>Get Started</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
           <div className="lg:col-span-7 grid grid-cols-2 gap-6">
             {[
-              { label: 'Active Founders', val: '10,000+' },
+              { label: 'Founders', val: '10K+' },
               { label: 'Countries', val: '100+' },
               { label: 'Uptime', val: '99.9%' },
-              { label: 'Decisions Processed', val: '1,000,000+' },
+              { label: 'AI Decisions', val: '1M+' },
             ].map((st, idx) => (
               <div key={idx} className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] text-center space-y-2 hover:border-white transition-all">
                 <span className="text-4xl font-extrabold text-white font-mono block">{st.val}</span>
@@ -923,7 +910,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           <div className="text-center space-y-4 max-w-2xl mx-auto">
             <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">TESTIMONIALS</span>
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Loved by Startup Founders
+              Loved by Founders
             </h2>
           </div>
 
@@ -963,7 +950,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           <div className="text-center space-y-4 max-w-2xl mx-auto">
             <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">PRICING</span>
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Invest in Execution, Not Overhead.
+              Simple Pricing
             </h2>
 
             {/* Toggle Billing Cycle */}
@@ -995,7 +982,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <div className="space-y-4">
                 <span className="text-xs font-mono text-[#777777] uppercase font-bold">STARTER</span>
                 <div className="text-4xl font-extrabold text-white font-mono">$0 <span className="text-xs text-[#777777] font-sans">/ month</span></div>
-                <p className="text-xs text-[#B8B8B8] leading-[170%] font-sans">For new founders getting started.</p>
+                <p className="text-xs text-[#B8B8B8] leading-[170%] font-sans">For solo founders.</p>
 
                 <div className="space-y-2.5 text-xs pt-4 border-t border-white/[0.08] font-sans">
                   <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Basic Modules</div>
@@ -1020,7 +1007,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
                 <div className="text-4xl font-extrabold text-white font-mono">
                   {billingCycle === 'annual' ? '$39' : '$49'} <span className="text-xs text-[#777777] font-sans">/ month</span>
                 </div>
-                <p className="text-xs text-white/80 leading-[170%] font-sans">For growing startups.</p>
+                <p className="text-xs text-white/80 leading-[170%] font-sans">Everything you need to scale.</p>
 
                 <div className="space-y-2.5 text-xs pt-4 border-t border-white/10 font-sans">
                   <div className="flex items-center gap-2 text-white"><Check className="w-4 h-4 text-white" /> All Modules</div>
@@ -1038,9 +1025,9 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
             {/* Custom Plan */}
             <div className="p-8 rounded-[28px] bg-[#090909] border border-white/[0.08] space-y-6 flex flex-col justify-between">
               <div className="space-y-4">
-                <span className="text-xs font-mono text-[#777777] uppercase font-bold">CUSTOM</span>
-                <div className="text-4xl font-extrabold text-white font-mono">Let's talk</div>
-                <p className="text-xs text-[#B8B8B8] leading-[170%] font-sans">For scaling teams & enterprise.</p>
+                <span className="text-xs font-mono text-[#777777] uppercase font-bold">ENTERPRISE</span>
+                <div className="text-4xl font-extrabold text-white font-mono">Custom</div>
+                <p className="text-xs text-[#B8B8B8] leading-[170%] font-sans">Custom AI solutions.</p>
 
                 <div className="space-y-2.5 text-xs pt-4 border-t border-white/[0.08] font-sans">
                   <div className="flex items-center gap-2 text-white/80"><Check className="w-4 h-4 text-white" /> Custom Solutions</div>
@@ -1064,7 +1051,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           <div className="text-center space-y-4">
             <span className="text-xs font-mono text-white/60 uppercase tracking-widest font-bold">FAQ</span>
             <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight font-sans">
-              Got Questions? We Have Answers.
+              Questions & Answers
             </h2>
           </div>
 
@@ -1108,11 +1095,11 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
           </div>
 
           <h2 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight font-sans">
-            Ready to build the future?
+            Ready to Build Faster?
           </h2>
 
           <p className="text-[#B8B8B8] text-lg max-w-xl mx-auto leading-[170%] font-sans">
-            Join thousands of founders already building smarter with their AI executive team.
+            Start using AI to grow your startup today.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -1126,7 +1113,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               onClick={onViewDemo}
               className="w-full sm:w-auto px-10 py-4 rounded-full bg-[#111111] hover:bg-[#181818] border border-white/10 text-white font-bold text-sm transition-all cursor-pointer font-sans backdrop-blur-md"
             >
-              Book a Demo
+              Book Demo
             </button>
           </div>
         </div>
@@ -1144,7 +1131,7 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
               <span className="font-extrabold text-white text-lg tracking-tight font-sans">FounderOS</span>
             </div>
             <p className="text-[#777777] max-w-xs leading-[170%] font-sans">
-              The Executive OS for Founders. Empowering the next generation of autonomous startups.
+              The AI executive platform for founders.
             </p>
           </div>
 
@@ -1181,8 +1168,8 @@ export default function HackathonLandingPage({ onStartBuilding, onViewDemo }: Ha
         </div>
 
         <div className="max-w-[1320px] mx-auto pt-14 mt-14 border-t border-white/[0.08] flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-[#777777]">
-          <span>© {new Date().getFullYear()} FounderOS Inc. All rights reserved.</span>
-          <span>Awwwards-Grade Interactive Design System.</span>
+          <span>© {new Date().getFullYear()} FounderOS Inc.</span>
+          <span>Built for founders who ship.</span>
         </div>
       </footer>
 

@@ -61,3 +61,226 @@ body {
   animation-play-state: paused;
 }
 
+/* Premium auth page animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
+  50% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.1); }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Premium input focus states */
+input:focus {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 20px rgba(255, 255, 255, 0.03);
+}
+
+/* Premium button hover effect */
+.premium-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.premium-button:hover::before {
+  left: 100%;
+}
+
+/* Glassmorphism card effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Smooth scrollbar for auth pages */
+.auth-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.auth-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.auth-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+
+/* ============================================
+   Clerk Auth Form Premium Overrides
+   Targets Clerk's internal Shadow DOM elements
+   ============================================ */
+
+/* Ensure Clerk card is full-width and transparent */
+.clerk-card,
+.clerk-root-box,
+.clerk-card-box {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Form container alignment */
+.clerk-card [class*="cl-formField"] {
+  margin-bottom: 0.75rem !important;
+  width: 100% !important;
+}
+
+.clerk-card [class*="cl-formFieldRow"] {
+  gap: 0.75rem !important;
+  width: 100% !important;
+}
+
+/* Input field alignment and sizing */
+.clerk-card input[type="text"],
+.clerk-card input[type="email"],
+.clerk-card input[type="password"],
+.clerk-card input[type="tel"],
+.clerk-card input[type="number"],
+.clerk-card input:not([type]) {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0.6875rem 0.875rem !important;
+  min-height: 44px !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+}
+
+/* Social buttons alignment */
+.clerk-card button[aria-label*="Google"],
+.clerk-card button[aria-label*="GitHub"],
+.clerk-card button[aria-label*="Facebook"],
+.clerk-card button[class*="socialButton"] {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.625rem !important;
+  padding: 0.625rem 0.875rem !important;
+  min-height: 44px !important;
+  box-sizing: border-box !important;
+}
+
+/* Submit button full width */
+.clerk-card button[type="submit"],
+.clerk-card [class*="formButtonPrimary"] {
+  width: 100% !important;
+  min-height: 44px !important;
+}
+
+/* Footer links alignment */
+.clerk-card [class*="footerAction"] {
+  text-align: center !important;
+  margin-top: 1.25rem !important;
+  padding-top: 1.25rem !important;
+  border-top: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+/* OTP code inputs alignment */
+.clerk-card input[type="tel"][inputmode="numeric"],
+.clerk-card [class*="otpCodeField"] input {
+  width: 48px !important;
+  height: 56px !important;
+  text-align: center !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.15em !important;
+  font-family: "JetBrains Mono", monospace !important;
+}
+
+/* Divider alignment */
+.clerk-card [class*="dividerLine"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Identity preview (email shown after entering) */
+.clerk-card [class*="identityPreview"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 0.625rem 0.875rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Remove default Clerk padding/margins that cause misalignment */
+.clerk-card > div {
+  width: 100% !important;
+}
+
+/* Ensure form headers are properly spaced */
+.clerk-card [class*="header"] {
+  text-align: left !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Checkbox alignment */
+.clerk-card [class*="checkbox"] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+/* Alert/message boxes */
+.clerk-card [class*="alert"] {
+  border-radius: 0.75rem !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 0.8125rem !important;
+}
+
+/* Password requirements list */
+.clerk-card [class*="passwordRequirements"] {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.375rem 0.75rem !important;
+  margin-top: 0.5rem !important;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .clerk-card input[type="text"],
+  .clerk-card input[type="email"],
+  .clerk-card input[type="password"],
+  .clerk-card input:not([type]) {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+}
+
