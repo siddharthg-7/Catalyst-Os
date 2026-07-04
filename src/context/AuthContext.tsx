@@ -75,7 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers['Authorization'] = `Bearer mock_demo_bearer_token`;
     }
 
-    return fetch(url, { ...options, headers });
+    // Only route RAG-specific endpoints to the Python FastAPI backend
+    const isPythonEndpoint = url.startsWith('/api/chat') || url.startsWith('/api/rag');
+    const finalUrl = isPythonEndpoint ? `http://127.0.0.1:8000${url}` : url;
+
+    return fetch(finalUrl, { ...options, headers });
   };
 
   return (

@@ -1,6 +1,6 @@
-# 🚀 FounderOS — Executive Multi-Agent AI Operating System
+# 🚀 Catalyst OS — Executive Multi-Agent AI Operating System
 
-FounderOS is a production-ready AI Operating System designed for startup founders, bringing together an **Executive AI Council** (CEO, CFO, Talent, Growth, Operations, Legal, ConflictResolver, ApprovalManager) to automate startup workflows, simulate strategic decisions, and manage corporate growth.
+Catalyst OS is a production-ready AI Operating System designed for startup founders, bringing together an **Executive AI Council** (CEO, CFO, Talent, Growth, Operations, Legal, ConflictResolver, ApprovalManager) to automate startup workflows, simulate strategic decisions, and manage corporate growth.
 
 ---
 
@@ -14,7 +14,7 @@ FounderOS is a production-ready AI Operating System designed for startup founder
 
 ---
 
-## ⚡ How to Run FounderOS
+## ⚡ How to Run Catalyst OS
 
 ### Option 1: Single-Click Batch Launcher (Windows)
 Double-click `run.bat` or run in PowerShell / CMD:

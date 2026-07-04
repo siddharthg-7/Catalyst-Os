@@ -134,9 +134,9 @@ export default function HackathonLandingPage({ onStartBuilding }: HackathonLandi
 
   const testimonials = [
     {
-      quote: "CatalystOS became our core workspace overnight.",
-      author: "Verified SaaS Founder",
-      role: "CEO",
+      quote: "CatalystOS became our executive team overnight.",
+      author: "Sarah Khan",
+      role: "CEO, TechScale",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
     },
     {
@@ -156,7 +156,7 @@ export default function HackathonLandingPage({ onStartBuilding }: HackathonLandi
   const faqs = [
     {
       question: "What is CatalystOS?",
-      answer: "CatalystOS is an AI Operating System that helps startups plan, execute, hire, operate, and grow from a single intelligent workspace."
+      answer: "An AI-powered platform that gives founders an autonomous executive team to plan, execute, and scale."
     },
     {
       question: "Which AI advisors are included?",

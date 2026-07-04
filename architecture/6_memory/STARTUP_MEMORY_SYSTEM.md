@@ -1,4 +1,4 @@
-# FounderOS Architecture: Startup Memory System
+# Catalyst OS Architecture: Startup Memory System
 
 This document outlines the architecture, data structures, storage schemas, and semantic search integration for the **Startup Memory System**. This system provides persistent, context-aware memory to the CEO and specialized executive agents, tracking past decisions, commands, meeting notes, strategies, and recommendations using a hybrid relational/vector architecture.
 

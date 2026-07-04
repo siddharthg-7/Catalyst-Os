@@ -35,6 +35,7 @@ import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
 import AuthScreen from './components/AuthScreen';
 import CatalystLogo from './components/CatalystLogo';
+import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 
 export default function App() {
   const { user, loading, logout, apiFetch } = useAuth();
@@ -599,6 +600,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Catalyst OS AI Chatbot */}
+      <CatalystOsChatbot />
 
     </div>
   );

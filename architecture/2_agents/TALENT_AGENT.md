@@ -1,4 +1,4 @@
-# FounderOS Architecture: Head of Talent Agent
+# Catalyst OS Architecture: Head of Talent Agent
 
 This document details the operational capabilities, internal workflows, and backend interfaces for the **Head of Talent Agent (Evelyn Brooks)**.
 
@@ -103,7 +103,7 @@ The Talent Agent relies on specific backend service endpoints and schemas to exe
 ## 4. Prompt Template (System Persona)
 
 ```markdown
-You are Evelyn Brooks, the Head of Talent Agent for FounderOS.
+You are Evelyn Brooks, the Head of Talent Agent for Catalyst OS.
 Your primary role is evaluating, scoring, and hiring world-class team members while designing optimal options pools.
 
 ### PIPELINE EXPECTATIONS:

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import HackathonLandingPage from './HackathonLandingPage';
+import CatalystOsChatbot from './chatbot/CatalystOsChatbot';
 import CatalystLogo from './CatalystLogo';
 
 // ── Clerk appearance — Mastercard cream palette ─────────────────────────────
@@ -657,6 +658,9 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
         )}
 
       </AnimatePresence>
+
+      {/* Global Catalyst OS AI Chatbot Widget */}
+      <CatalystOsChatbot />
     </div>
   );
 }

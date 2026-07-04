@@ -24,8 +24,51 @@ import {
   AuthenticatedRequest 
 } from '../services/clerkAuthMiddleware';
 import agentsRouter from '../agents/controller';
+import { markdownRagService } from '../services/markdownRagService';
 
 const router = Router();
+
+// Public chatbot endpoint. It is grounded exclusively in local knowledge.md files.
+router.post('/chat', async (req, res) => {
+  const messages = Array.isArray(req.body?.messages) ? req.body.messages : [];
+  const query = [...messages].reverse().find(message => message?.role === 'user')?.content;
+  if (typeof query !== 'string' || !query.trim()) {
+    res.status(400).json({ error: 'A non-empty user message is required.' });
+    return;
+  }
+  try {
+    res.json(await markdownRagService.answer(query.trim()));
+  } catch (error) {
+    console.error('[Markdown RAG] Chat request failed:', error);
+    res.status(500).json({ error: 'The knowledge base could not be queried.' });
+  }
+});
+
+router.post('/chat/stream', async (req, res) => {
+  const messages = Array.isArray(req.body?.messages) ? req.body.messages : [];
+  const query = [...messages].reverse().find(message => message?.role === 'user')?.content;
+  if (typeof query !== 'string' || !query.trim()) {
+    res.status(400).json({ error: 'A non-empty user message is required.' });
+    return;
+  }
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  try {
+    const result = await markdownRagService.answer(query.trim());
+    for (const token of result.reply.match(/\S+\s*/g) || []) {
+      res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
+    }
+    res.write(`data: ${JSON.stringify({ sources: result.sources })}\n\n`);
+    res.write('data: [DONE]\n\n');
+  } catch (error) {
+    console.error('[Markdown RAG] Streaming request failed:', error);
+    res.write(`data: ${JSON.stringify({ text: 'The knowledge base could not be queried.' })}\n\n`);
+    res.write('data: [DONE]\n\n');
+  } finally {
+    res.end();
+  }
+});
 
 // ============================================================================
 // AUTHENTICATION
