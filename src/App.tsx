@@ -39,6 +39,7 @@ import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
 import AuthScreen from './components/AuthScreen';
 import CatalystLogo from './components/CatalystLogo';
+import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 
 export default function App() {
   const { user, loading, logout, apiFetch } = useAuth();
@@ -263,7 +264,7 @@ export default function App() {
       <div className="flex h-screen w-screen items-center justify-center bg-[#09090b] text-zinc-400">
         <div className="text-center space-y-3">
           <RefreshCw className="w-8 h-8 text-[#6366F1] animate-spin mx-auto" />
-          <p className="text-xs font-mono">Initializing FounderOS Executive Council...</p>
+          <p className="text-xs font-mono">Initializing Catalyst OS Executive Council...</p>
         </div>
       </div>
     );
@@ -682,12 +683,15 @@ export default function App() {
 
             </div>
 
-            <div className="pt-6 border-t border-zinc-900 text-center text-[10px] text-zinc-500 font-mono uppercase">
+            <div className="pt-6 border-t border-[#27272A] text-center text-[10px] text-zinc-500 font-mono uppercase">
               Dual Core AI Council
             </div>
           </div>
         </div>
       )}
+
+      {/* Catalyst OS AI Chatbot */}
+      <CatalystOsChatbot />
 
     </div>
   );

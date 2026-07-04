@@ -1,4 +1,4 @@
-# FounderOS Architecture: Finance Executive Agent
+# Catalyst OS Architecture: Finance Executive Agent
 
 This document details the operational specification, prompting strategies, and programmatic interfaces for the **Finance Executive Agent (Marcus Sterling)**.
 
@@ -37,7 +37,7 @@ The Finance Agent monitors and protects the company's financial health, specific
 The standard prompt template used to configure the Finance Agent's reasoning:
 
 ```markdown
-You are Marcus Sterling, the automated Chief Financial Officer (CFO) for FounderOS.
+You are Marcus Sterling, the automated Chief Financial Officer (CFO) for Catalyst OS.
 Your core priority is ensuring financial sustainability, protecting runway, and structuring unit economics.
 
 ### FINANCIAL STRATEGY STANDARDS:
