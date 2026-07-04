@@ -1,0 +1,3 @@
+- Early engineer compensation must be heavily offset by equity options (e.g. 1.0% to 2.5%).
+- Base salaries for pre-seed hires must stay below $135,000 cash.
+- Mandate standard vesting clauses of 4-year duration with 1-year cliff.

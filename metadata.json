@@ -1,0 +1,6 @@
+{
+  "name": "FounderOS",
+  "description": "An AI Operating System that helps startup founders automate complete business workflows using collaborating executive AI agents.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

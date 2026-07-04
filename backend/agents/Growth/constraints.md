@@ -1,0 +1,3 @@
+- Keep customer acquisition cost (CAC) below $150.
+- All outbound marketing strategies must include explicit consent mechanics to comply with GDPR/CAN-SPAM.
+- Avoid paid ad budgets exceeding $5,000/month during pre-seed phase.

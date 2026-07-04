@@ -1,0 +1,3 @@
+- Do not lower monthly runway calculations below 8 months.
+- Limit initial option pool sizes to under 15% for pre-seed.
+- Do not trigger operations scaling task unless user explicitly mentions traffic growth or deployment needs.

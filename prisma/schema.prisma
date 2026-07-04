@@ -1,0 +1,201 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("founder")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startups  Startup[]
+}
+
+model Startup {
+  id           String             @id @default(uuid())
+  name         String
+  industry     String
+  description  String
+  fundingStage String             @default("pre-seed")
+  cashBalance  Float              @default(250000)
+  burnRate     Float              @default(15000)
+  healthScore  Int                @default(78)
+  ownerId      String
+  owner        User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  documents    StartupDocument[]
+  agents       ExecutiveAgent[]
+  commands     Command[]
+  plans        Plan[]
+  notifications Notification[]
+  healthScores HealthScore[]
+  timeline     TimelineItem[]
+  decisions    DecisionLog[]
+  memories     Memory[]
+}
+
+model StartupDocument {
+  id          String           @id @default(uuid())
+  name        String
+  type        String
+  size        String
+  summary     String
+  insights    String[]
+  startupId   String
+  startup     Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  chunks      KnowledgeChunk[]
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(uuid())
+  content    String
+  documentId String
+  document   StartupDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  embedding  Embedding?
+  createdAt  DateTime          @default(now())
+}
+
+model Embedding {
+  id        String         @id @default(uuid())
+  vector    Float[]
+  chunkId   String         @unique
+  chunk     KnowledgeChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+}
+
+model ExecutiveAgent {
+  id          String   @id @default(uuid())
+  role        String
+  name        String
+  avatar      String
+  status      String   @default("idle")
+  currentTask String?
+  startupId   String
+  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Command {
+  id         String   @id @default(uuid())
+  content    String
+  status     String   @default("pending")
+  startupId  String
+  startup    Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Plan {
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  status      String      @default("planning")
+  startupId   String
+  startup     Startup     @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  approvals   Approval[]
+  executions  Execution[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Task {
+  id         String   @id @default(uuid())
+  title      String
+  assignedTo String
+  status     String   @default("pending")
+  result     String?
+  planId     String
+  plan       Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Approval {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  type            String
+  status          String   @default("pending_review")
+  content         String
+  impact          String
+  financialChange Float    @default(0)
+  metricChanges   Json
+  planId          String
+  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  startupId String
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model HealthScore {
+  id        String   @id @default(uuid())
+  score     Int
+  metrics   Json
+  startupId String
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model TimelineItem {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  type      String   @default("milestone")
+  startupId String
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model DecisionLog {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  category        String
+  impactText      String
+  financialImpact Float    @default(0)
+  status          String   @default("approved")
+  startupId       String
+  startup         Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+}
+
+model Memory {
+  id          String   @id @default(uuid())
+  category    String
+  title       String
+  description String
+  startupId   String
+  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Execution {
+  id        String   @id @default(uuid())
+  action    String
+  payload   Json
+  status    String   @default("completed")
+  planId    String
+  plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
