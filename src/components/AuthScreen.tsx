@@ -778,9 +778,9 @@ export default function AuthScreen() {
                     </div>
 
                     <div className="space-y-2 max-w-xs mx-auto text-left">
-                      {(['ceo', 'cfo', 'talent', 'growth', 'ops'] as const).map((agent, i) => {
-                        const labels = { ceo: 'CEO Orchestrator', cfo: 'CFO (Treasury)', talent: 'Head of Talent', growth: 'Head of Growth', ops: 'Operations Executive' };
-                        const prevDone = i === 0 || agentProgress[['ceo', 'cfo', 'talent', 'growth', 'ops'][i - 1] as keyof typeof agentProgress];
+                      {(['ceo', 'cfo', 'talent', 'growth', 'legal'] as const).map((agent, i) => {
+                        const labels = { ceo: 'CEO Orchestrator', cfo: 'CFO (Treasury)', talent: 'Head of Talent', growth: 'Head of Growth', legal: 'General Counsel' };
+                        const prevDone = i === 0 || agentProgress[['ceo', 'cfo', 'talent', 'growth', 'legal'][i - 1] as keyof typeof agentProgress];
                         return (
                           <motion.div
                             key={agent}

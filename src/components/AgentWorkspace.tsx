@@ -21,6 +21,7 @@ export default function AgentWorkspace({ agents, startup, onUpdateStartup }: Age
   const [industry, setIndustry] = useState(startup.industry);
   const [description, setDescription] = useState(startup.description);
   const [fundingStage, setFundingStage] = useState(startup.fundingStage);
+  const [strategy, setStrategy] = useState(startup.strategy || 'Hyper-Growth');
   const [cashBalance, setCashBalance] = useState(startup.cashBalance);
   const [burnRate, setBurnRate] = useState(startup.burnRate);
   
@@ -41,6 +42,7 @@ export default function AgentWorkspace({ agents, startup, onUpdateStartup }: Age
           industry,
           description,
           fundingStage,
+          strategy,
           cashBalance: Number(cashBalance),
           burnRate: Number(burnRate)
         }),
@@ -219,6 +221,23 @@ export default function AgentWorkspace({ agents, startup, onUpdateStartup }: Age
               </div>
 
               <div>
+                <label className="block text-xs font-medium text-zinc-300 mb-1.5 flex items-center justify-between">
+                  Global AI Strategy 
+                  <span className="text-[9px] bg-[#6366F1]/20 text-[#6366F1] px-1.5 py-0.5 rounded uppercase">New</span>
+                </label>
+                <select
+                  value={strategy}
+                  onChange={(e) => setStrategy(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-lg bg-zinc-950/80 border border-[#27272A] text-sm text-white focus:outline-none focus:border-[#6366F1]"
+                >
+                  <option value="Hyper-Growth">Hyper-Growth (Aggressive)</option>
+                  <option value="Bootstrapped">Bootstrapped (Survival)</option>
+                  <option value="Profitability">Profitability (Sustainable)</option>
+                </select>
+              </div>
+            </div>
+
+              <div>
                 <label className="block text-xs font-medium text-zinc-300 mb-1.5">Current Cash Balance ($)</label>
                 <input
                   type="number"
@@ -228,7 +247,6 @@ export default function AgentWorkspace({ agents, startup, onUpdateStartup }: Age
                   className="w-full px-3.5 py-2 rounded-lg bg-zinc-950/80 border border-[#27272A] text-sm text-white focus:outline-none focus:border-[#6366F1] font-mono"
                 />
               </div>
-            </div>
 
             <div>
               <label className="block text-xs font-medium text-zinc-300 mb-1.5">Target Monthly Burn Rate ($)</label>

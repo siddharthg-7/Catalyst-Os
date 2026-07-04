@@ -115,17 +115,7 @@ export const agentsList: Agent[] = [
     metricValue: '+45% MoM',
     color: 'amber',
   },
-  {
-    id: 'operations',
-    name: 'Kaelen Finch',
-    role: 'Operations',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    description: 'AI Infrastructure and System Integrator. Automates engineering sprints, cloud deployments, third-party vendor management, and internal tooling efficiency.',
-    status: 'idle',
-    keyMetric: 'Ops Efficiency',
-    metricValue: '70%',
-    color: 'sky',
-  },
+
   {
     id: 'legal',
     name: 'Helena Vance, Esq.',

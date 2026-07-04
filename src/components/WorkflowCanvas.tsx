@@ -58,7 +58,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
     { role: 'Finance', x: 80, y: 150, name: 'Marcus Sterling', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150' },
     { role: 'Talent', x: 420, y: 150, name: 'Evelyn Brooks', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150' },
     { role: 'Growth', x: 80, y: 290, name: 'Dax Ramirez', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
-    { role: 'Operations', x: 420, y: 290, name: 'Kaelen Finch', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
+
     { role: 'Legal', x: 250, y: 390, name: 'Helena Vance, Esq.', avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150' },
     { role: 'ConflictResolver', x: 250, y: 220, name: 'Pax-9 Synthesis', avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150' },
     { role: 'ApprovalManager', x: 250, y: 490, name: 'Loom-V Director', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150' }
@@ -71,7 +71,6 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
     { from: 'Finance', to: 'ConflictResolver' },
     { from: 'Talent', to: 'ConflictResolver' },
     { from: 'Growth', to: 'ConflictResolver' },
-    { from: 'Operations', to: 'ConflictResolver' },
     { from: 'ConflictResolver', to: 'Legal' },
     { from: 'Legal', to: 'ApprovalManager' },
   ];
@@ -86,7 +85,6 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
       { agent: 'Finance' as const, msg: 'Marcus Sterling reviewing financial constraints and treasury margins...' },
       { agent: 'Talent' as const, msg: 'Evelyn Brooks modeling recruiting options pool configurations...' },
       { agent: 'Growth' as const, msg: 'Dax Ramirez sketching growth campaign parameters and outreach copies...' },
-      { agent: 'Operations' as const, msg: 'Kaelen Finch deploying micro-services clusters and reviewing SOC-2 boundaries...' },
       { agent: 'Legal' as const, msg: 'Helena Vance auditing compliance disclosures and contract liabilities...' },
       { agent: 'ConflictResolver' as const, msg: 'Pax-9 Corporate Engine establishing compromise on clashing boundaries...' },
       { agent: 'ApprovalManager' as const, msg: 'Approval Manager compiling high-fidelity markdown deliverables for reviewed queues...' }

@@ -13,6 +13,8 @@ import ApprovalQueue from './components/ApprovalQueue';
 import KnowledgeBase from './components/KnowledgeBase';
 import DecisionLog from './components/DecisionLog';
 import GodmodeTest from './components/GodmodeTest';
+import IntegrationsHub from './components/IntegrationsHub';
+import NotificationPanel from './components/NotificationPanel';
 import { 
   Rocket, 
   Terminal, 
@@ -29,7 +31,9 @@ import {
   RefreshCw,
   Search,
   Shield,
-  LogOut
+  LogOut,
+  Bell,
+  Puzzle
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -39,9 +43,10 @@ import CatalystLogo from './components/CatalystLogo';
 export default function App() {
   const { user, loading, logout, apiFetch } = useAuth();
   
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'agents' | 'workflows' | 'approvals' | 'knowledge' | 'ledger' | 'godmode'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'agents' | 'workflows' | 'approvals' | 'knowledge' | 'ledger' | 'godmode' | 'integrations'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   // Keyboard shortcut listener for CMD/CTRL+K
   useEffect(() => {
@@ -364,6 +369,18 @@ export default function App() {
             </button>
 
             <button
+              onClick={() => setActiveTab('integrations')}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                activeTab === 'integrations' 
+                  ? 'bg-[#18181B] border-[#27272A] text-white shadow-sm' 
+                  : 'text-zinc-400 hover:text-white hover:bg-[#18181B]/50 border-transparent'
+              }`}
+            >
+              <Puzzle className="w-4 h-4 text-[#6366F1]" />
+              Integrations Hub
+            </button>
+
+            <button
               onClick={() => setActiveTab('ledger')}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
                 activeTab === 'ledger' 
@@ -557,7 +574,17 @@ export default function App() {
             <GodmodeTest />
           )}
 
+          {activeTab === 'integrations' && (
+            <IntegrationsHub />
+          )}
+
         </main>
+
+      {/* Notification Panel */}
+      <NotificationPanel 
+        isOpen={notificationsOpen} 
+        onClose={() => setNotificationsOpen(false)} 
+      />
 
       {/* Floating Custom Toast Alerts */}
       {toast && (

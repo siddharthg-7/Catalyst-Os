@@ -21,11 +21,17 @@ export default function GodmodeTest() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestData)
       });
+      
       const data = await response.json();
-      return data.choices[0].message.content;
-    } catch (err) {
+      
+      if (!response.ok) {
+          return `Server Error: ${data.error?.message || JSON.stringify(data.error) || 'Unknown error'}`;
+      }
+      
+      return data.choices?.[0]?.message?.content || "No answer returned.";
+    } catch (err: any) {
       console.error(err);
-      return "Error: Could not reach the API. Is your Hugging Face Space running?";
+      return `Error: ${err.message || 'Could not reach the API.'}`;
     }
   }
 

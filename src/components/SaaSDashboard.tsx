@@ -894,89 +894,6 @@ ADJUSTED COMPLIANCE PARAMETERS:
             )}
           </div>
 
-          {/* SCENARIO SIMULATOR ⭐⭐⭐⭐⭐ (Blueprint Stretch Feature #1) */}
-          <div className="bg-[#09090b] border border-indigo-900/40 p-5 rounded-xl space-y-4 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Scenario Simulator</h2>
-                <span className="text-[9px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded">
-                  WHAT IF?
-                </span>
-              </div>
-              <span className="text-[10px] font-mono text-zinc-500">REAL-TIME RECALCULATION</span>
-            </div>
-
-            <p className="text-[11px] text-zinc-400">
-              Simulate strategic decisions live. Recalculate runway, SaaS health score, launch dates, hiring plans, and marketing timelines before committing budget.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Sliders */}
-              <div className="space-y-4 p-3 bg-zinc-950 rounded-xl border border-zinc-900">
-                <div>
-                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                    <span className="text-zinc-400">Add Engineers:</span>
-                    <span className="text-indigo-400 font-bold">+{extraEngineers} Senior Devs</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="6"
-                    step="1"
-                    value={extraEngineers}
-                    onChange={(e) => setExtraEngineers(parseInt(e.target.value))}
-                    className="w-full accent-indigo-500 cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[8px] font-mono text-zinc-600 mt-1">
-                    <span>+$0</span>
-                    <span>+${(extraEngineers * 11).toFixed(0)}k/mo</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                    <span className="text-zinc-400">Extra Marketing Budget:</span>
-                    <span className="text-emerald-400 font-bold">+${extraGrowthBudget.toLocaleString()}/mo</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20000"
-                    step="1000"
-                    value={extraGrowthBudget}
-                    onChange={(e) => setExtraGrowthBudget(parseInt(e.target.value))}
-                    className="w-full accent-emerald-500 cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              {/* Dynamic Live Outputs */}
-              <div className="p-3.5 bg-zinc-950 rounded-xl border border-zinc-900 space-y-2.5 font-mono text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Simulated Runway:</span>
-                  <span className="font-bold text-amber-400">
-                    {(startup.cashBalance / Math.max(1000, startup.burnRate + extraEngineers * 11000 + extraGrowthBudget)).toFixed(1)} Months
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Simulated Health Score:</span>
-                  <span className="font-bold text-[#6366F1]">
-                    {Math.max(40, Math.min(100, Math.round(startup.healthScore + extraEngineers * 3 - (extraGrowthBudget / 4000))))}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500 uppercase">Est. Launch Timeline:</span>
-                  <span className="font-bold text-emerald-400">
-                    {Math.max(12, 30 - extraEngineers * 4)} Days
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-zinc-900 text-[9.5px] text-zinc-400 font-sans italic">
-                  💡 Finance & Growth agents recommend maintaining a minimum 12-month runway buffer.
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* MEETING NOTES -> TASKS EXTRACTOR (Blueprint Stretch Feature #4) */}
           <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
@@ -1553,48 +1470,6 @@ ADJUSTED COMPLIANCE PARAMETERS:
             </div>
           </div>
 
-          {/* RISK PREDICTION ENGINE (Blueprint Stretch Feature #5) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Risk Prediction Engine</h2>
-              </div>
-              <span className="text-[9px] font-mono text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">AI PREDICTIVE</span>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-zinc-300 font-semibold">Launch Delay Risk</span>
-                  <span className="text-amber-400 font-bold">18% Low Risk (92% Conf)</span>
-                </div>
-                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500" style={{ width: '18%' }} />
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-zinc-300 font-semibold">Hiring Bottleneck</span>
-                  <span className="text-rose-400 font-bold">34% Medium (89% Conf)</span>
-                </div>
-                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
-                  <div className="h-full bg-rose-500" style={{ width: '34%' }} />
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 space-y-1">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="text-zinc-300 font-semibold">Burn Rate Threat</span>
-                  <span className="text-emerald-400 font-bold">12% Minimal (96% Conf)</span>
-                </div>
-                <div className="h-1 bg-zinc-950 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: '12%' }} />
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* SMART GOAL TRACKER (Blueprint Stretch Feature #7) */}
           <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
