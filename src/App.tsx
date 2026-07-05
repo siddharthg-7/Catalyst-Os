@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -15,12 +15,11 @@ import DecisionLog from './components/DecisionLog';
 import GodmodeTest from './components/GodmodeTest';
 import { 
   Rocket, 
-  Terminal, 
+  Bell,
   Settings, 
   HelpCircle, 
   CheckSquare, 
   FileText, 
-  Clipboard, 
   TrendingUp, 
   Activity,
   Menu,
@@ -79,7 +78,7 @@ export default function App() {
     setOnboardingCompleted(true);
   };
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'agents' | 'workflows' | 'approvals' | 'knowledge' | 'ledger' | 'godmode'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'approvals' | 'knowledge'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
@@ -315,13 +314,9 @@ export default function App() {
 
   // ── Navigation helpers ─────────────────────────────────────────────────────
   const navItems = [
-    { id: 'dashboard' as const,  label: 'SaaS Dashboard',      Icon: Activity,     badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
-    { id: 'workflows' as const,  label: 'Strategic Sprints',   Icon: Terminal,     badge: initiatives.filter(i => i.status === 'active').length > 0 ? 'ACTIVE' : '', badgeColor: 'text-amber-700' },
-    { id: 'approvals' as const,  label: 'Approval Queue',      Icon: CheckSquare,  badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
-    { id: 'agents' as const,     label: 'Agent Configurator',  Icon: Settings,     badge: '', badgeColor: '' },
-    { id: 'knowledge' as const,  label: 'Knowledge Base',      Icon: FileText,     badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
-    { id: 'ledger' as const,     label: 'Governance Ledger',   Icon: Clipboard,    badge: '', badgeColor: '' },
-    { id: 'godmode' as const,    label: 'G0DM0D3 API Test',    Icon: Rocket,       badge: '', badgeColor: '' },
+    { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
+    { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
+    { id: 'knowledge' as const,  label: 'Knowledge',  Icon: FileText,    badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
   ];
 
   const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
@@ -343,7 +338,6 @@ export default function App() {
 
           {/* Navigation */}
           <nav className="space-y-1">
-            <div className="text-[10px] uppercase tracking-widest text-[#696969] font-bold mb-3 ml-2 font-mono">Core Engine</div>
 
             {navItems.map(({ id, label, Icon, badge, badgeColor }) => {
               const isActive = activeTab === id;
@@ -372,20 +366,7 @@ export default function App() {
           </nav>
         </div>
 
-        {/* Bottom widgets */}
         <div className="space-y-3 pt-4 border-t border-[#141413]/10">
-          {/* Health Score */}
-          <div className="p-4 rounded-[16px] bg-[#F3F0EE] border border-[#141413]/10 space-y-2">
-            <div className="flex justify-between items-center text-[10px] font-bold text-[#696969] uppercase tracking-wider font-mono">
-              <span>Health Score</span>
-              <span className="text-[9px] text-[#141413]/50">Dual Core</span>
-            </div>
-            <div className="text-2xl font-bold text-emerald-700 font-mono">{startup.healthScore}%</div>
-            <div className="h-1.5 w-full bg-[#141413]/10 rounded-full overflow-hidden">
-              <div className="bg-emerald-600 h-full transition-all duration-500" style={{ width: `${startup.healthScore}%` }} />
-            </div>
-          </div>
-
           {/* User profile */}
           <div className="p-3 rounded-[12px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-between gap-2 min-w-0">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -436,34 +417,22 @@ export default function App() {
               className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/20 text-xs transition-colors cursor-pointer font-sans"
             >
               <Search className="w-3.5 h-3.5" />
-              <span>Search console...</span>
+              <span>Search anything...</span>
               <kbd className="text-[9px] font-mono bg-white border border-[#141413]/10 px-1.5 py-0.5 rounded text-[#696969]">⌘K</kbd>
             </button>
 
-            {/* Tech badges */}
-            <div className="hidden xl:flex items-center gap-1.5 text-[9px] font-mono">
-              <span className="px-2 py-1 rounded-full bg-[#F3F0EE] border border-[#141413]/10 text-[#141413] font-semibold">PostgreSQL</span>
-              <span className="px-2 py-1 rounded-full bg-[#F3F0EE] border border-[#141413]/10 text-[#141413] font-semibold">FastAPI</span>
-              <span className="px-2 py-1 rounded-full bg-[#F3F0EE] border border-[#141413]/10 text-[#141413] font-semibold">MCP Tools</span>
-            </div>
+            {/* Notifications bell */}
+            <button className="relative p-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/20 transition-colors cursor-pointer">
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gray-900" />
+            </button>
 
-            {/* Treasury widget */}
-            <div className="px-3.5 py-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center gap-2 text-xs font-sans">
-              <span className="text-[10px] uppercase font-semibold text-[#696969] font-mono">Treasury:</span>
-              <span className="font-mono text-emerald-700 font-bold">
-                ${startup.cashBalance.toLocaleString()}
-              </span>
-            </div>
-            
-            {/* User badge */}
+            {/* Founder profile */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white border border-[#141413]/10 rounded-[10px]">
               <div className="w-5 h-5 rounded-md bg-[#141413] flex items-center justify-center text-[10px] font-bold text-[#F3F0EE] uppercase font-mono">
                 {user?.name?.slice(0, 2)}
               </div>
               <span className="text-xs text-[#141413] font-medium font-sans">{user?.name}</span>
-              <span className="text-[9px] uppercase tracking-wider font-mono px-1.5 py-0.5 rounded-full bg-[#F3F0EE] text-[#696969] border border-[#141413]/10">
-                {user?.role}
-              </span>
             </div>
           </div>
         </header>
