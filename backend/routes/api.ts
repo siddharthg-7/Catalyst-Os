@@ -84,12 +84,31 @@ router.get('/auth/me', authenticateJWT, (req: AuthenticatedRequest, res) => {
 router.use('/', agentsRouter);
 
 // GET startup profile
-router.get('/startup', authenticateJWT, (req: AuthenticatedRequest, res) => {
+router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+  try {
+    const pyRes = await fetch(`${fastApiUrl}/api/startup`);
+    if (pyRes.ok) {
+      const data = await pyRes.json();
+      startupProfile.name = data.company_name;
+      startupProfile.industry = data.industry;
+      startupProfile.description = data.target_icp || '';
+      startupProfile.cashBalance = data.cash_on_hand;
+      startupProfile.burnRate = data.current_monthly_burn;
+      if (startupProfile.burnRate > 0) {
+        startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
+      } else {
+        startupProfile.runwayMonths = 999;
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[FastAPI Sync] Failed to fetch startup context: ${err.message}. Using local memory state.`);
+  }
   res.json(startupProfile);
 });
 
 // POST update startup profile
-router.post('/startup', authenticateJWT, requireRole(['Founder', 'Admin']), (req: AuthenticatedRequest, res) => {
+router.post('/startup', authenticateJWT, requireRole(['Founder', 'Admin']), async (req: AuthenticatedRequest, res) => {
   const { name, industry, description, fundingStage, cashBalance, burnRate } = req.body;
   
   const updates: any = {};
@@ -101,6 +120,24 @@ router.post('/startup', authenticateJWT, requireRole(['Founder', 'Admin']), (req
   if (burnRate !== undefined) updates.burnRate = burnRate;
 
   const updatedProfile = updateStartupProfile(updates);
+
+  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+  try {
+    await fetch(`${fastApiUrl}/api/startup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        company_name: updatedProfile.name,
+        industry: updatedProfile.industry,
+        target_icp: updatedProfile.description,
+        current_monthly_burn: updatedProfile.burnRate,
+        cash_on_hand: updatedProfile.cashBalance
+      })
+    });
+  } catch (err: any) {
+    console.warn(`[FastAPI Sync] Failed to sync startup profile: ${err.message}`);
+  }
+
   res.json(updatedProfile);
 });
 
@@ -257,15 +294,92 @@ router.post('/initiatives/:id/simulate', authenticateJWT, async (req: Authentica
 });
 
 // GET approvals queue
-router.get('/approvals', authenticateJWT, (req: AuthenticatedRequest, res) => {
-  res.json(approvals);
+router.get('/approvals', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+  let mergedApprovals = [...approvals];
+  try {
+    const pyRes = await fetch(`${fastApiUrl}/api/approvals`);
+    if (pyRes.ok) {
+      const dbApprovals = await pyRes.json();
+      const mapped = dbApprovals.map((appr: any) => {
+        const payload = appr.payload || {};
+        const docContent = payload.document_content || payload.email_body || JSON.stringify(payload);
+        const purpose = payload.purpose || appr.action_type;
+        
+        return {
+          id: appr.id,
+          initiativeId: 'init_db_sync',
+          title: payload.email_subject || `Approval: ${appr.action_type}`,
+          description: purpose,
+          type: (payload.contract_type || appr.action_type || 'document').toLowerCase(),
+          content: docContent,
+          impact: `Action type: ${appr.action_type}. Requires founder verification.`,
+          financialChange: payload.financialChange || 0,
+          status: appr.status === 'PENDING' ? 'pending_review' : appr.status.toLowerCase(),
+          metricChanges: payload.metricChanges || { velocity: 0, financialHealth: 0, legalCompliance: 0, growthRate: 0, operationsEfficiency: 0 }
+        };
+      });
+      const pendingDb = mapped.filter((a: any) => a.status === 'pending_review');
+      mergedApprovals = [...pendingDb, ...mergedApprovals];
+    }
+  } catch (err: any) {
+    console.warn(`[FastAPI Sync] Failed to fetch approvals: ${err.message}. Using local memory queue.`);
+  }
+  res.json(mergedApprovals);
 });
 
 // POST review action on approval item
-router.post('/approvals/:id/review', authenticateJWT, requireRole(['Founder', 'Admin']), (req: AuthenticatedRequest, res) => {
+router.post('/approvals/:id/review', authenticateJWT, requireRole(['Founder', 'Admin']), async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { action, feedback } = req.body; // action: 'approve' | 'reject'
 
+  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+
+  // Try checking if this is a database approval item
+  try {
+    if (action === 'approve') {
+      const pyRes = await fetch(`${fastApiUrl}/api/approvals/${id}/execute`, {
+        method: 'PUT'
+      });
+      if (pyRes.ok) {
+        const dbAppr = await pyRes.json();
+        
+        // Write to Decision Log
+        decisionLog.unshift({
+          id: `dec_${Date.now()}`,
+          title: `Approve: ${dbAppr.action_type}`,
+          description: `Executed database transaction approval for ID ${id}`,
+          category: dbAppr.action_type.toUpperCase(),
+          timestamp: new Date().toISOString(),
+          impactText: 'Database transaction completed and signed off.',
+          financialImpact: 0,
+          status: 'approved',
+        });
+
+        // Sync local memory profile from FastAPI
+        const startRes = await fetch(`${fastApiUrl}/api/startup`);
+        if (startRes.ok) {
+          const data = await startRes.json();
+          startupProfile.name = data.company_name;
+          startupProfile.industry = data.industry;
+          startupProfile.description = data.target_icp || '';
+          startupProfile.cashBalance = data.cash_on_hand;
+          startupProfile.burnRate = data.current_monthly_burn;
+          if (startupProfile.burnRate > 0) {
+            startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
+          } else {
+            startupProfile.runwayMonths = 999;
+          }
+        }
+
+        return res.json({ startupProfile, item: { id: dbAppr.id, title: `Database Action: ${dbAppr.action_type}`, status: 'approved' } });
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[FastAPI Sync] Error checking database approvals: ${err.message}`);
+  }
+
+  // Fallback to local memory-based approvals review logic
   const index = approvals.findIndex(a => a.id === id);
   if (index === -1) {
     res.status(404).json({ error: 'Approval deliverable not found.' });
@@ -601,6 +715,52 @@ Provide a brilliant, detailed tactical answer citing specific documents where po
   } catch (error: any) {
     console.error('[Knowledge API] RAG query failed:', error.message);
     res.status(500).json({ error: 'RAG search failed to generate answer.' });
+  }
+});
+
+// POST orchestrate command (Master Planner-Executor Orchestrator)
+router.post('/orchestrate', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const { command } = req.body;
+  if (!command) {
+    res.status(400).json({ error: 'Command is required.' });
+    return;
+  }
+
+  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+  try {
+    const pyResponse = await fetch(`${fastApiUrl}/api/orchestrate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command })
+    });
+
+    if (pyResponse.ok) {
+      const result = await pyResponse.json();
+      
+      // Update startupProfile locally to ensure treasury metrics match database context
+      const startRes = await fetch(`${fastApiUrl}/api/startup`);
+      if (startRes.ok) {
+        const data = await startRes.json();
+        startupProfile.name = data.company_name;
+        startupProfile.industry = data.industry;
+        startupProfile.description = data.target_icp || '';
+        startupProfile.cashBalance = data.cash_on_hand;
+        startupProfile.burnRate = data.current_monthly_burn;
+        if (startupProfile.burnRate > 0) {
+          startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
+        } else {
+          startupProfile.runwayMonths = 999;
+        }
+      }
+
+      return res.json(result);
+    } else {
+      const errText = await pyResponse.text();
+      res.status(pyResponse.status).json({ error: errText });
+    }
+  } catch (err: any) {
+    console.error('[Orchestrate API] Connection to FastAPI orchestrator failed:', err.message);
+    res.status(502).json({ error: 'Failed to communicate with master planning orchestrator.' });
   }
 });
 
