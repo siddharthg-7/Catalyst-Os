@@ -405,23 +405,37 @@ export default function SaaSDashboard({
           });
         }
       } else {
-        // Check if command matches template initiatives to auto-launch sprint
-        const matchedCategory = cmdText.toLowerCase().includes('money') || cmdText.toLowerCase().includes('pitch') || cmdText.toLowerCase().includes('fund') ? 'funding' :
-                               cmdText.toLowerCase().includes('hire') || cmdText.toLowerCase().includes('engineer') || cmdText.toLowerCase().includes('recruit') ? 'hiring' :
-                               cmdText.toLowerCase().includes('soc-2') || cmdText.toLowerCase().includes('security') || cmdText.toLowerCase().includes('compliance') ? 'operations' : 'growth';
-
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Auto-launch sprint
-        await onLaunchInitiative(
-          `Founder Command: ${cmdText.slice(0, 45)}${cmdText.length > 45 ? '...' : ''}`,
-          `Strategic session launched automatically via CLI menu command: "${cmdText}"`,
-          matchedCategory
-        );
-
-        setCommandResponse({
-          text: `Success: Strategic sprint spawned successfully inside 'Strategic Sprints' under category: ${matchedCategory.toUpperCase()}.\n\nClick 'Orchestrate AI Council' on the active sprint to simulate multi-agent debates!`,
-          type: 'success'
+        // Submit command to Master Planner-Executor Orchestrator
+        const res = await fetch('/api/orchestrate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: cmdText }),
         });
+
+        if (res.ok) {
+          const data = await res.json();
+          
+          // Format steps processed info
+          const stepsStr = data.steps_processed
+            .map((s: any) => `• Step ${s.id} [${s.domain}]: ${s.action} -> ${s.outcome}`)
+            .join('\n');
+
+          setCommandResponse({
+            text: `[${data.execution_status}]\n\nSummary: ${data.orchestrator_summary}\n\nExecution Logs:\n${stepsStr}`,
+            type: data.execution_status === 'COMPLETED' ? 'success' : 'info'
+          });
+          
+          // Refresh page state to hydrate updated treasury and approval gates
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+        } else {
+          const errData = await res.json();
+          setCommandResponse({
+            text: `Failure: ${errData.error || 'Unable to execute orchestrator plan.'}`,
+            type: 'error'
+          });
+        }
       }
     } catch (err) {
       console.error(err);

@@ -1,14 +1,20 @@
 import os
-from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-class Settings(BaseModel):
-    app_name: str = "Catalyst OS AI Microservice"
-    environment: str = os.getenv("ENVIRONMENT", "development")
-    port: int = int(os.getenv("PORT", "8000"))
+class Settings(BaseSettings):
+    app_name: str = "Catalyst OS Backend"
+    environment: str = "development"
+    port: int = 8000
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
-    database_url: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/catalyst_os")
-    vault_addr: str = os.getenv("VAULT_ADDR", "http://localhost:8200")
-    vault_token: str = os.getenv("VAULT_TOKEN", "root")
+    database_url: str = os.getenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/db")
+    vault_addr: str = "http://localhost:8200"
+    vault_token: str = "root"
     mcp_enabled: bool = True
+
+    model_config = SettingsConfigDict(
+        env_file=(".env", "../.env", "../../.env"),
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 settings = Settings()
