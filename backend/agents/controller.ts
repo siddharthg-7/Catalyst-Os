@@ -109,7 +109,7 @@ router.get('/growth/campaigns', (req: Request, res: Response) => {
   res.json([
     {
       id: 'camp_1',
-      title: 'AeroFlow Launch Campaign & Viral Referral program',
+      title: 'CatalystOS Launch Campaign & Viral Referral program',
       status: 'active',
       channels: ['LinkedIn', 'Cold Outreach'],
       budgetLimit: 1200,
@@ -128,9 +128,9 @@ router.post('/growth/generate-assets', async (req: Request, res: Response) => {
     targetSegment: targetSegment || 'DevOps Managers',
     channels: ['LinkedIn', 'Direct Cold Outreach'],
     contentDrafts: {
-      linkedinPost: `We are wasting billions annually on idle servers.\n\nToday, we are launching AeroFlow AI: the first autonomous predictive scheduler that automatically failovers and scales cloud nodes to eliminate waste.\n\n🚀 Join our free pilot (limited to 5 teams): [Link]`,
+      linkedinPost: `We are wasting billions annually on idle servers.\n\nToday, we are launching CatalystOS Startup: the first autonomous predictive scheduler that automatically failovers and scales cloud nodes to eliminate waste.\n\n🚀 Join our free pilot (limited to 5 teams): [Link]`,
       emailSubject: 'Save 34% on your hybrid cloud server bills',
-      emailBody: `Hi [First Name],\n\nI noticed you are managing cloud infrastructure. Most teams waste up to 34% of their budgets due to manual scheduling delays.\n\nAeroFlow AI automatically scales and failovers clusters based on predictive usage.\n\nWe are accepting 5 mid-market pilots this month. Would you be open to a 10-minute chat?\n\nBest,\nSophia Vance\nCEO, AeroFlow AI`
+      emailBody: `Hi [First Name],\n\nI noticed you are managing cloud infrastructure. Most teams waste up to 34% of their budgets due to manual scheduling delays.\n\nCatalystOS Startup automatically scales and failovers clusters based on predictive usage.\n\nWe are accepting 5 mid-market pilots this month. Would you be open to a 10-minute chat?\n\nBest,\nSophia Vance\nCEO, CatalystOS Startup`
     }
   };
 

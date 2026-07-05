@@ -8,7 +8,7 @@ export class StartupService {
   async getProfile(startupId: string) {
     return {
       id: startupId,
-      name: 'AeroFlow AI',
+      name: 'CatalystOS Startup',
       industry: 'B2B Cloud SaaS',
       description: 'AI Cloud Orchestrator saving dev-hour overhead.',
       fundingStage: 'Pre-Seed',

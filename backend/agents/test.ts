@@ -8,7 +8,7 @@ async function runTests() {
   console.log('========================================');
 
   const mockStartupState = {
-    name: 'AeroFlow AI',
+    name: 'CatalystOS Startup',
     industry: 'B2B SaaS / Developer Tools',
     fundingStage: 'Pre-Seed',
     cashBalance: 245000,
@@ -25,8 +25,8 @@ async function runTests() {
   const mockKnowledgeFiles = [
     {
       id: 'doc_1',
-      name: 'AeroFlow_Pitch_Deck.md',
-      summary: 'Core fundraising presentation detailing AeroFlow AI Cloud Orchestrator, market size ($22B), product roadmap, and founder experience.',
+      name: 'CatalystOS_Pitch_Deck.md',
+      summary: 'Core fundraising presentation detailing CatalystOS Cloud Orchestrator, market size ($22B), product roadmap, and founder experience.',
       insights: [
         'Targeting $1.5M Seed round at $10M pre-money valuation.',
         'Saves cloud costs by up to 34% using predictive scheduling algorithms.'

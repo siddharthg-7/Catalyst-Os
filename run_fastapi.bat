@@ -1,9 +1,9 @@
 @echo off
-TITLE FounderOS — FastAPI Python AI Microservice
+TITLE CatalystOS — FastAPI Python AI Microservice
 COLOR 0D
 
 echo ===================================================================
-echo   🐍 FounderOS — FastAPI Python LangGraph AI Microservice
+echo   🐍 CatalystOS — FastAPI Python LangGraph AI Microservice
 echo ===================================================================
 echo.
 

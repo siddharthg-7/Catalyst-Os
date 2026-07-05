@@ -13,7 +13,8 @@ import {
   decisionLog, 
   knowledgeFiles,
   setAgentStatuses,
-  resetAgentStatuses
+  resetAgentStatuses,
+  isDbAvailable
 } from '../state';
 import { ai, runMultiAgentCollaboration } from '../services/geminiService';
 import { Initiative, Deliverable, UserRole } from '../../src/types';
@@ -358,6 +359,10 @@ router.get('/decisions', authenticateJWT, (req: AuthenticatedRequest, res) => {
 
 // GET knowledge base documents from Neon PostgreSQL
 router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  if (!isDbAvailable) {
+    res.json(knowledgeFiles);
+    return;
+  }
   try {
     const prismaClient = prisma;
     const activeStartup = await prismaClient.startup.findFirst({
@@ -365,7 +370,7 @@ router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res)
     }) || await prismaClient.startup.findFirst({
       orderBy: { createdAt: 'desc' }
     });
-    const startupId = activeStartup ? activeStartup.id : 'st_aeroflow';
+    const startupId = activeStartup ? activeStartup.id : 'st_catalystos';
 
     const dbDocs = await prismaClient.startupDocument.findMany({
       where: { startupId },
@@ -401,6 +406,25 @@ router.post('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res
     return;
   }
 
+  if (!isDbAvailable) {
+    const sizeStr = fileData ? `${(Buffer.from(fileData, 'base64').length / 1024).toFixed(1)} KB` : `${((content || '').length / 1024).toFixed(1)} KB`;
+    const newFile = {
+      id: `doc_${Date.now()}`,
+      name,
+      type: type as any,
+      size: sizeStr,
+      uploadDate: new Date().toISOString(),
+      summary: `Vetted ${type} document details (Offline Mode).`,
+      insights: [
+        'Validated strategic growth models against pre-seed boundaries (Offline Mode).',
+        'Offline mock mode activated. Database is currently unavailable.',
+      ],
+    };
+    knowledgeFiles.unshift(newFile);
+    res.status(201).json(newFile);
+    return;
+  }
+
   try {
     const prismaClient = prisma;
     const activeStartup = await prismaClient.startup.findFirst({
@@ -408,7 +432,7 @@ router.post('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res
     }) || await prismaClient.startup.findFirst({
       orderBy: { createdAt: 'desc' }
     });
-    const startupId = activeStartup ? activeStartup.id : 'st_aeroflow';
+    const startupId = activeStartup ? activeStartup.id : 'st_catalystos';
 
     let textContent = content || '';
     let sizeStr = '';
@@ -518,6 +542,14 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
     return;
   }
 
+  if (!isDbAvailable) {
+    res.json({
+      answer: `### Knowledge Retrieval Response (Offline Mode)\n\nBased on your query "${query}", we simulated search against local offline knowledge base files.\n\n- No database is connected, showing simulated local insights.`,
+      citations: []
+    });
+    return;
+  }
+
   try {
     const prismaClient = prisma;
     const activeStartup = await prismaClient.startup.findFirst({
@@ -525,7 +557,7 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
     }) || await prismaClient.startup.findFirst({
       orderBy: { createdAt: 'desc' }
     });
-    const startupId = activeStartup ? activeStartup.id : 'st_aeroflow';
+    const startupId = activeStartup ? activeStartup.id : 'st_catalystos';
 
     // 1. Perform Hybrid Search across all document chunks
     const limit = 5;
@@ -543,7 +575,7 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
     const { contextText, citations } = buildContext(retrievedChunks);
 
     if (ai) {
-      const queryPrompt = `You are the Catalyst OS Knowledge Agent. Solve this user query using the attached document context:
+      const queryPrompt = `You are the CatalystOS Knowledge Agent. Solve this user query using the attached document context:
 Query: "${query}"
 
 Corporate Document Base Context:

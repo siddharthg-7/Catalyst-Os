@@ -5,6 +5,7 @@ import SourceCard from './SourceCard';
 import { ChatMessage } from '../../hooks/useChat';
 
 interface MessageBubbleProps {
+  key?: React.Key;
   message: ChatMessage;
   onRegenerate?: () => void;
 }
