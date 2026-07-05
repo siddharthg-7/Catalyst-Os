@@ -121,14 +121,7 @@ async function main() {
       status: 'idle',
       currentTask: null,
     },
-    {
-      id: 'operations',
-      role: 'Operations',
-      name: 'Kaelen Finch',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-      status: 'idle',
-      currentTask: null,
-    },
+
     {
       id: 'legal',
       role: 'Legal',
