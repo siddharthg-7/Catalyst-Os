@@ -7,12 +7,15 @@ import { useAuth } from '../../context/AuthContext';
 export default function CatalystOsChatbot() {
   // Grab apiFetch if available inside AuthProvider
   let apiFetch: ((url: string, options?: RequestInit) => Promise<Response>) | undefined;
+  let userId: string | undefined;
   try {
     const auth = useAuth();
     apiFetch = auth.apiFetch;
+    userId = auth.user?.id;
   } catch (e) {
     // If mounted outside AuthProvider, use standard fetch
     apiFetch = undefined;
+    userId = undefined;
   }
 
   const {
@@ -25,7 +28,7 @@ export default function CatalystOsChatbot() {
     suggestedQuestions,
     sendMessage,
     regenerateLastMessage,
-  } = useChat(apiFetch);
+  } = useChat(apiFetch, userId);
 
   return (
     <>
