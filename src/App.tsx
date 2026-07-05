@@ -13,15 +13,15 @@ import ApprovalQueue from './components/ApprovalQueue';
 import KnowledgeBase from './components/KnowledgeBase';
 import DecisionLog from './components/DecisionLog';
 import GodmodeTest from './components/GodmodeTest';
-import { 
-  Rocket, 
-  Terminal, 
-  Settings, 
-  HelpCircle, 
-  CheckSquare, 
-  FileText, 
-  Clipboard, 
-  TrendingUp, 
+import {
+  Rocket,
+  Terminal,
+  Settings,
+  HelpCircle,
+  CheckSquare,
+  FileText,
+  Clipboard,
+  TrendingUp,
   Activity,
   Menu,
   X,
@@ -39,7 +39,7 @@ import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 
 export default function App() {
   const { user, loading, logout, apiFetch, loginAsDemo } = useAuth();
-  
+
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
 
   useEffect(() => {
@@ -192,7 +192,7 @@ export default function App() {
       if (res.ok) {
         const updatedInit = await res.json();
         setInitiatives(prev => prev.map(i => i.id === id ? updatedInit : i));
-        
+
         const [apprRes, decRes, startRes] = await Promise.all([
           apiFetch('/api/approvals'),
           apiFetch('/api/decisions'),
@@ -229,14 +229,14 @@ export default function App() {
         const data = await res.json();
         setStartup(data.startupProfile);
         setApprovals(prev => prev.filter(item => item.id !== id));
-        
+
         const decRes = await apiFetch('/api/decisions');
         if (decRes.ok) setDecisions(await decRes.json());
 
         showToast(
-          action === 'approve' 
-            ? 'Deliverable signed off. System metrics and ledger adjusted.' 
-            : 'Deliverable rejected and sent back to executive council.', 
+          action === 'approve'
+            ? 'Deliverable signed off. System metrics and ledger adjusted.'
+            : 'Deliverable rejected and sent back to executive council.',
           action === 'approve' ? 'success' : 'info'
         );
       } else {
@@ -315,24 +315,24 @@ export default function App() {
 
   // ── Navigation helpers ─────────────────────────────────────────────────────
   const navItems = [
-    { id: 'dashboard' as const,  label: 'SaaS Dashboard',      Icon: Activity,     badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
-    { id: 'workflows' as const,  label: 'Strategic Sprints',   Icon: Terminal,     badge: initiatives.filter(i => i.status === 'active').length > 0 ? 'ACTIVE' : '', badgeColor: 'text-amber-700' },
-    { id: 'approvals' as const,  label: 'Approval Queue',      Icon: CheckSquare,  badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
-    { id: 'agents' as const,     label: 'Agent Configurator',  Icon: Settings,     badge: '', badgeColor: '' },
-    { id: 'knowledge' as const,  label: 'Knowledge Base',      Icon: FileText,     badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
-    { id: 'ledger' as const,     label: 'Governance Ledger',   Icon: Clipboard,    badge: '', badgeColor: '' },
-    { id: 'godmode' as const,    label: 'G0DM0D3 API Test',    Icon: Rocket,       badge: '', badgeColor: '' },
+    { id: 'dashboard' as const, label: 'SaaS Dashboard', Icon: Activity, badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
+    { id: 'workflows' as const, label: 'Strategic Sprints', Icon: Terminal, badge: initiatives.filter(i => i.status === 'active').length > 0 ? 'ACTIVE' : '', badgeColor: 'text-amber-700' },
+    { id: 'approvals' as const, label: 'Approval Queue', Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
+    { id: 'agents' as const, label: 'Agent Configurator', Icon: Settings, badge: '', badgeColor: '' },
+    { id: 'knowledge' as const, label: 'Knowledge Base', Icon: FileText, badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
+    { id: 'ledger' as const, label: 'Governance Ledger', Icon: Clipboard, badge: '', badgeColor: '' },
+    { id: 'godmode' as const, label: 'G0DM0D3 API Test', Icon: Rocket, badge: '', badgeColor: '' },
   ];
 
   const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
 
   return (
     <div className="flex h-screen bg-[#F3F0EE] text-[#141413] overflow-hidden font-sans">
-      
+
       {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-64 border-r border-[#141413]/10 bg-white p-6 shrink-0 justify-between shadow-[rgba(0,0,0,0.04)_4px_0px_24px_0px]">
         <div className="space-y-8">
-          
+
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#F3F0EE] border border-[#141413]/20 p-1 flex items-center justify-center">
@@ -351,11 +351,10 @@ export default function App() {
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all border font-sans ${
-                    isActive
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all border font-sans ${isActive
                       ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] shadow-sm'
                       : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] border-transparent'
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center gap-2.5">
                     <Icon className={`w-4 h-4 ${isActive ? 'text-[#F3F0EE]' : 'text-[#141413]/50'}`} />
@@ -413,7 +412,7 @@ export default function App() {
 
       {/* ── Main Content ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        
+
         {/* Top Navbar */}
         <header className="h-16 border-b border-[#141413]/10 bg-white/80 backdrop-blur-sm px-6 md:px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4 text-sm text-[#696969]">
@@ -454,7 +453,7 @@ export default function App() {
                 ${startup.cashBalance.toLocaleString()}
               </span>
             </div>
-            
+
             {/* User badge */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white border border-[#141413]/10 rounded-[10px]">
               <div className="w-5 h-5 rounded-md bg-[#141413] flex items-center justify-center text-[10px] font-bold text-[#F3F0EE] uppercase font-mono">
@@ -470,9 +469,9 @@ export default function App() {
 
         {/* View Content */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-[#F3F0EE]">
-          
+
           {activeTab === 'dashboard' && startup && (
-            <SaaSDashboard 
+            <SaaSDashboard
               startup={startup}
               agents={agents}
               initiatives={initiatives}
@@ -486,40 +485,40 @@ export default function App() {
               onUpdateStartup={handleUpdateStartup}
             />
           )}
-          
+
           {activeTab === 'agents' && (
-            <AgentWorkspace 
-              agents={agents} 
-              startup={startup} 
-              onUpdateStartup={handleUpdateStartup} 
+            <AgentWorkspace
+              agents={agents}
+              startup={startup}
+              onUpdateStartup={handleUpdateStartup}
             />
           )}
 
           {activeTab === 'workflows' && (
-            <WorkflowCanvas 
-              initiatives={initiatives} 
-              onLaunchInitiative={handleLaunchInitiative} 
-              onSimulateInitiative={handleSimulateInitiative} 
+            <WorkflowCanvas
+              initiatives={initiatives}
+              onLaunchInitiative={handleLaunchInitiative}
+              onSimulateInitiative={handleSimulateInitiative}
             />
           )}
 
           {activeTab === 'approvals' && (
-            <ApprovalQueue 
-              approvals={approvals} 
-              onReviewItem={handleReviewItem} 
+            <ApprovalQueue
+              approvals={approvals}
+              onReviewItem={handleReviewItem}
             />
           )}
 
           {activeTab === 'knowledge' && (
-            <KnowledgeBase 
-              documents={knowledge} 
-              onUploadDoc={handleUploadDoc} 
+            <KnowledgeBase
+              documents={knowledge}
+              onUploadDoc={handleUploadDoc}
             />
           )}
 
           {activeTab === 'ledger' && (
-            <DecisionLog 
-              decisions={decisions} 
+            <DecisionLog
+              decisions={decisions}
             />
           )}
 
@@ -529,39 +528,38 @@ export default function App() {
 
         </main>
 
-      {/* Toast Alerts */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 p-4 rounded-[16px] border shadow-[rgba(0,0,0,0.12)_0px_16px_32px] flex items-center gap-3.5 min-w-[300px] max-w-sm font-sans ${
-          toast.type === 'success' ? 'bg-white border-emerald-200 text-emerald-800' :
-          toast.type === 'error'   ? 'bg-white border-rose-200 text-rose-800' :
-                                     'bg-white border-[#141413]/10 text-[#141413]'
-        }`}>
-          <Sparkles className="w-4 h-4 shrink-0 opacity-60" />
-          <div className="flex-1">
-            <p className="text-xs font-semibold leading-normal">{toast.message}</p>
+        {/* Toast Alerts */}
+        {toast && (
+          <div className={`fixed bottom-6 right-6 z-50 p-4 rounded-[16px] border shadow-[rgba(0,0,0,0.12)_0px_16px_32px] flex items-center gap-3.5 min-w-[300px] max-w-sm font-sans ${toast.type === 'success' ? 'bg-white border-emerald-200 text-emerald-800' :
+              toast.type === 'error' ? 'bg-white border-rose-200 text-rose-800' :
+                'bg-white border-[#141413]/10 text-[#141413]'
+            }`}>
+            <Sparkles className="w-4 h-4 shrink-0 opacity-60" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold leading-normal">{toast.message}</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-        onNavigate={(tab) => {
-          setActiveTab(tab);
-          showToast(`Switched workspace view to: ${tab.toUpperCase()}`, 'info');
-        }}
-        onRunAction={(actionName) => {
-          if (actionName === 'simulate') {
-            const firstPending = initiatives.find(i => i.status === 'pending');
-            if (firstPending) {
-              handleSimulateInitiative(firstPending.id);
-            } else {
-              showToast('No pending sprints available for simulation. Launch an initiative first!', 'error');
+        {/* Command Palette */}
+        <CommandPalette
+          isOpen={commandPaletteOpen}
+          onClose={() => setCommandPaletteOpen(false)}
+          onNavigate={(tab) => {
+            setActiveTab(tab);
+            showToast(`Switched workspace view to: ${tab.toUpperCase()}`, 'info');
+          }}
+          onRunAction={(actionName) => {
+            if (actionName === 'simulate') {
+              const firstPending = initiatives.find(i => i.status === 'pending');
+              if (firstPending) {
+                handleSimulateInitiative(firstPending.id);
+              } else {
+                showToast('No pending sprints available for simulation. Launch an initiative first!', 'error');
+              }
             }
-          }
-        }}
-      />
+          }}
+        />
 
       </div>
 
@@ -570,7 +568,7 @@ export default function App() {
         <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm md:hidden" id="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
           <div className="w-72 bg-white border-r border-[#141413]/10 h-full p-6 flex flex-col justify-between shadow-[rgba(0,0,0,0.12)_8px_0px_32px]" id="mobile-menu-drawer" onClick={e => e.stopPropagation()}>
             <div className="space-y-6">
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
@@ -591,11 +589,10 @@ export default function App() {
                   <button
                     key={id}
                     onClick={() => { setActiveTab(id); setMobileMenuOpen(false); }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium font-sans transition-all ${
-                      activeTab === id
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium font-sans transition-all ${activeTab === id
                         ? 'bg-[#141413] text-[#F3F0EE]'
                         : 'text-[#696969] hover:bg-[#F3F0EE] hover:text-[#141413]'
-                    }`}
+                      }`}
                   >
                     {label}
                     {badge && <span className={`text-[10px] font-mono font-bold ${activeTab === id ? 'text-[#F3F0EE]/70' : badgeColor}`}>{badge}</span>}

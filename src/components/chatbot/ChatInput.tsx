@@ -136,7 +136,7 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
         </div>
       )}
 
-      <div 
+      <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
         className="relative flex items-center bg-[#111111] border border-white/10 rounded-2xl p-1.5 focus-within:border-white transition-colors shadow-inner gap-1"
@@ -156,9 +156,8 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
           type="button"
           onClick={toggleRecording}
           title={isRecording ? 'Listening... click to stop' : 'Voice Input (Click to speak)'}
-          className={`p-2 transition-colors cursor-pointer ${
-            isRecording ? 'text-red-400 animate-pulse bg-red-950/40 rounded-lg' : 'text-white/40 hover:text-white'
-          }`}
+          className={`p-2 transition-colors cursor-pointer ${isRecording ? 'text-red-400 animate-pulse bg-red-950/40 rounded-lg' : 'text-white/40 hover:text-white'
+            }`}
         >
           {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
         </button>
@@ -177,11 +176,10 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
         <button
           type="submit"
           disabled={!text.trim() || disabled}
-          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shrink-0 cursor-pointer ${
-            text.trim() && !disabled
+          className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shrink-0 cursor-pointer ${text.trim() && !disabled
               ? 'bg-white text-black hover:bg-zinc-200 shadow-[0_0_15px_rgba(255,255,255,0.4)]'
               : 'bg-white/10 text-white/30 cursor-not-allowed'
-          }`}
+            }`}
         >
           <Send className="w-4 h-4" />
         </button>
