@@ -27,6 +27,16 @@ interface SaaSDashboardProps {
   onUpdateStartup: (updated: StartupProfile) => void;
 }
 
+const mrrData = [
+  { date: '1st', mrr: 12400, users: 410 },
+  { date: '5th', mrr: 13100, users: 430 },
+  { date: '10th', mrr: 13800, users: 480 },
+  { date: '15th', mrr: 14500, users: 512 },
+  { date: '20th', mrr: 16200, users: 590 },
+  { date: '25th', mrr: 18400, users: 650 },
+  { date: '30th', mrr: 21500, users: 742 },
+];
+
 export default function SaaSDashboard({
   startup,
   agents,
@@ -40,6 +50,20 @@ export default function SaaSDashboard({
   onSimulateInitiative,
   onUpdateStartup,
 }: SaaSDashboardProps) {
+  // Action Items State
+  const [actionItems, setActionItems] = useState([
+    { id: '1', title: 'Review Q3 Marketing Budget', due: 'In 2 hours', urgency: 'high', completed: false },
+    { id: '2', title: 'Approve new Engineering hires', due: 'Tomorrow', urgency: 'medium', completed: false },
+    { id: '3', title: 'Sign SOC2 Compliance Audit', due: 'Overdue', urgency: 'critical', completed: false },
+    { id: '4', title: 'Update Investor Deck slides', due: 'In 3 days', urgency: 'low', completed: false }
+  ]);
+
+  const toggleActionItem = (id: string) => {
+    setActionItems(items => items.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
+    ));
+  };
+
   // Command Box State
   const [command, setCommand] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -598,13 +622,52 @@ ADJUSTED COMPLIANCE PARAMETERS:
           </button>
         </div>
       </div>
-
       {/* Primary Bento Workspace Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         
-        {/* ==================== LEFT COLUMN: STATUS & ROSTER ==================== */}
-        <div className="space-y-6 lg:col-span-1 xl:col-span-1">
+        {/* ==================== LEFT COLUMN: STATUS, ROSTER & GOALS ==================== */}
+        <div className="space-y-6 lg:col-span-1">
           
+          {/* ==================== COMPACT MRR SPARKLINE ==================== */}
+          <div className="bg-zinc-950 border border-zinc-800/50 p-4 rounded-xl shadow-sm hover:border-zinc-800 transition-all flex flex-col justify-between h-[180px]">
+            <div className="flex items-center justify-between z-10 relative">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-white">MRR Growth</h2>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-[9px] font-mono text-zinc-500 uppercase">Current MRR</span>
+                <span className="text-sm font-bold text-emerald-400 font-mono">$21,500</span>
+              </div>
+            </div>
+
+            <div className="h-[100px] w-full -mx-2 -mb-2 mt-auto relative z-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={mrrData}>
+                  <defs>
+                    <linearGradient id="colorMrrSmall" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#34d399" stopOpacity={0.6}/>
+                      <stop offset="95%" stopColor="#34d399" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', borderRadius: '8px', fontSize: '10px', fontFamily: 'monospace', padding: '4px 8px' }}
+                    itemStyle={{ color: '#e4e4e7' }}
+                    labelStyle={{ display: 'none' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="mrr" 
+                    stroke="#34d399" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorMrrSmall)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
           {/* A. Startup Health Card */}
           <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
             <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
@@ -718,94 +781,104 @@ ADJUSTED COMPLIANCE PARAMETERS:
             </div>
           </div>
 
-          {/* B. Executive AI Cards (Roster) */}
+          {/* SMART GOAL TRACKER (Blueprint Stretch Feature #7) */}
           <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
             <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#6366F1]" />
-                Executive AI Council
-              </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">{agents.length} AGENTS</span>
-            </div>
-
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Vetted specialized executives. Click an officer below to consult their specific departmental directives instantly.
-            </p>
-
-            <div className="space-y-2 max-h-[310px] overflow-y-auto pr-1">
-              {agents.map((agent) => (
-                <button
-                  key={agent.id}
-                  onClick={() => handleConsultAgent(agent)}
-                  className={`w-full p-2.5 rounded-lg border text-left transition-all flex items-center gap-3 cursor-pointer ${
-                    consultingAgent?.id === agent.id
-                      ? 'bg-zinc-900 border-zinc-700 shadow-inner'
-                      : 'bg-zinc-900/20 border-zinc-900 hover:border-zinc-800 hover:bg-zinc-900/40'
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    <img
-                      src={agent.avatar}
-                      alt={agent.name}
-                      referrerPolicy="no-referrer"
-                      className="w-8 h-8 rounded-md object-cover border border-zinc-800 filter grayscale hover:grayscale-0 transition-all"
-                    />
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-zinc-950 ${
-                      agent.status !== 'idle' ? 'bg-emerald-500 animate-ping' : 'bg-zinc-600'
-                    }`} />
-                    <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-zinc-950 ${
-                      agent.status !== 'idle' ? 'bg-emerald-500' : 'bg-zinc-600'
-                    }`} />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono font-semibold text-zinc-300">
-                        {agent.name.split(' ')[0]}
-                      </span>
-                      <span className="text-[9px] font-mono text-zinc-500 font-semibold bg-zinc-900/80 px-1 py-0.5 rounded border border-zinc-800">
-                        {agent.role}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-zinc-500 truncate mt-0.5">
-                      {agent.keyMetric}: <span className="text-zinc-400 font-mono font-semibold">{agent.metricValue}</span>
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Consulting active feedback bubble */}
-            {consultingAgent && (
-              <div className="p-3.5 rounded-xl bg-[#6366F1]/5 border border-[#6366F1]/20 space-y-2 animate-fade-in text-[11px] leading-relaxed">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-semibold text-[#6366F1] uppercase tracking-wider flex items-center gap-1">
-                    <MessageSquare className="w-3 h-3" />
-                    Consulting {consultingAgent.name}
-                  </span>
-                  <button onClick={() => setConsultingAgent(null)} className="text-[9px] text-zinc-500 hover:text-zinc-300">
-                    Dismiss
-                  </button>
-                </div>
-                {isAgentThinking ? (
-                  <div className="flex items-center gap-1.5 text-zinc-500 font-mono">
-                    <RefreshCw className="w-3 h-3 animate-spin text-[#6366F1]" />
-                    Processing advisor transcript...
-                  </div>
-                ) : (
-                  <p className="text-zinc-300 font-sans italic">
-                    "{agentAnswer}"
-                  </p>
-                )}
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Smart Goal Tracker</h2>
               </div>
-            )}
+              <span className="text-[9px] font-mono text-emerald-400">76% COMPLETED</span>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                  <span className="text-zinc-300">Product MVP Launch</span>
+                  <span className="text-indigo-400 font-bold">78%</span>
+                </div>
+                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500" style={{ width: '78%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                  <span className="text-zinc-300">Founding Eng Hiring</span>
+                  <span className="text-pink-400 font-bold">65%</span>
+                </div>
+                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-pink-500" style={{ width: '65%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
+                  <span className="text-zinc-300">Seed Round Fundraising</span>
+                  <span className="text-emerald-400 font-bold">85%</span>
+                </div>
+                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: '85%' }} />
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
 
-        {/* ==================== CENTER COLUMN: CONTROL & SPRINT ==================== */}
-        <div className="space-y-6 lg:col-span-2 xl:col-span-2">
+        {/* ==================== RIGHT COLUMN: CONTROL & SPRINT ==================== */}
+        <div className="space-y-6 lg:col-span-1">
           
+          {/* ACTION ITEMS / TODO LIST */}
+          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
+            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <CheckSquare className="w-4 h-4 text-rose-500" />
+                Priority Action Queue
+              </h2>
+              <span className="text-[10px] font-mono text-zinc-500 font-semibold">{actionItems.filter(i => !i.completed).length} PENDING</span>
+            </div>
+
+            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+              {actionItems.map((item) => (
+                <div 
+                  key={item.id} 
+                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all ${
+                    item.completed ? 'bg-zinc-900/20 border-zinc-900/30 opacity-50' : 'bg-zinc-900/40 border-zinc-800/50 hover:bg-zinc-900'
+                  }`}
+                >
+                  <button 
+                    onClick={() => toggleActionItem(item.id)}
+                    className={`mt-0.5 shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-all cursor-pointer ${
+                      item.completed ? 'bg-emerald-500 border-emerald-500 text-zinc-950' : 'bg-zinc-950 border-zinc-600 text-transparent hover:border-emerald-500'
+                    }`}
+                  >
+                    <Check className="w-3 h-3" />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-semibold truncate ${item.completed ? 'text-zinc-500 line-through' : 'text-zinc-200'}`}>
+                      {item.title}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-bold ${
+                        item.urgency === 'critical' ? 'bg-rose-500/10 text-rose-400' :
+                        item.urgency === 'high' ? 'bg-amber-500/10 text-amber-400' :
+                        item.urgency === 'medium' ? 'bg-sky-500/10 text-sky-400' :
+                        'bg-zinc-800 text-zinc-400'
+                      }`}>
+                        {item.urgency}
+                      </span>
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {item.due}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* C. Founder Command Box (Terminal) */}
           <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
             <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
@@ -890,243 +963,6 @@ ADJUSTED COMPLIANCE PARAMETERS:
                     <span>Verified: SHA-256</span>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
-
-
-          {/* MEETING NOTES -> TASKS EXTRACTOR (Blueprint Stretch Feature #4) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-purple-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Meeting Transcript → Tasks Extractor</h2>
-              </div>
-              <span className="text-[9px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded">AUTO-PARSER</span>
-            </div>
-
-            <p className="text-[11px] text-zinc-400">
-              Paste raw meeting transcripts or founder voice memos. CEO Orchestrator extracts tasks, owners, and deadlines automatically.
-            </p>
-
-            <div className="space-y-3">
-              <textarea
-                placeholder="Paste meeting transcript here e.g.: 'Sophia mentioned we need Kaelen to deploy failover clusters by Friday and Marcus to review the stock option pool...'"
-                value={meetingTranscript}
-                onChange={(e) => setMeetingTranscript(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-purple-500 font-mono resize-none leading-relaxed"
-              />
-
-              <div className="flex justify-end">
-                <button
-                  onClick={handleExtractMeetingNotes}
-                  disabled={isExtractingNotes || !meetingTranscript.trim()}
-                  className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 disabled:opacity-40 cursor-pointer font-mono"
-                >
-                  {isExtractingNotes ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                  Extract Actionable Tasks
-                </button>
-              </div>
-
-              {extractedMeetingTasks && (
-                <div className="space-y-2 pt-2 border-t border-zinc-900">
-                  <span className="text-[9px] font-mono text-purple-400 uppercase tracking-wider block">Extracted Directives:</span>
-                  <div className="space-y-2">
-                    {extractedMeetingTasks.map((t, idx) => (
-                      <div key={idx} className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-850 text-xs flex items-start justify-between gap-3">
-                        <div className="space-y-0.5">
-                          <p className="text-zinc-200 font-semibold">{t.task}</p>
-                          <span className="text-[9px] font-mono text-zinc-400">Assigned: {t.owner}</span>
-                        </div>
-                        <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 border border-zinc-800 shrink-0">
-                          {t.deadline}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* D. Approvals Section (High-risk deliverables) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <CheckSquare className="w-4 h-4 text-[#6366F1]" />
-                Founder Approvals Queue
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
-                {approvals.length} Blocked
-              </span>
-            </div>
-
-            {approvals.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                
-                {/* Left Queue selection */}
-                <div className="md:col-span-1 space-y-2 max-h-[350px] overflow-y-auto pr-1">
-                  {approvals.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedApprovalId(item.id);
-                        setIsModifying(false);
-                        setModifiedAssetContent(null);
-                      }}
-                      className={`w-full p-3 rounded-lg border text-left transition-all flex flex-col gap-1.5 cursor-pointer ${
-                        activeApproval?.id === item.id
-                          ? 'bg-zinc-900 border-zinc-700 shadow-inner'
-                          : 'bg-zinc-900/20 border-zinc-900/60 hover:border-zinc-800 hover:bg-zinc-900/40'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-[8px] font-mono bg-zinc-950/80 px-1 py-0.5 rounded border border-zinc-800 text-zinc-500 uppercase">
-                          {item.type}
-                        </span>
-                        {item.financialChange !== undefined && (
-                          <span className={`text-[9px] font-mono font-bold ${
-                            item.financialChange > 0 ? 'text-emerald-400' : 'text-rose-400'
-                          }`}>
-                            {item.financialChange > 0 ? '+' : ''}${Math.round(item.financialChange / 1000)}k
-                          </span>
-                        )}
-                      </div>
-                      <h5 className="text-xs font-semibold text-zinc-200 line-clamp-1">{item.title}</h5>
-                      <p className="text-[10px] text-zinc-500 line-clamp-1">{item.description}</p>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Right detailed review canvas */}
-                <div className="md:col-span-2 p-4.5 rounded-xl border border-zinc-900 bg-zinc-900/30 space-y-4 flex flex-col justify-between">
-                  {activeApproval && (
-                    <>
-                      <div className="space-y-3.5">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="px-2 py-0.5 text-[8px] font-mono rounded bg-[#6366F1]/10 text-[#6366F1] border border-[#6366F1]/20 uppercase">
-                              HIGH-RISK: {activeApproval.type}
-                            </span>
-                            <h4 className="text-xs font-bold text-white mt-1">{activeApproval.title}</h4>
-                          </div>
-                          
-                          <span className="px-2 py-0.5 text-[9px] rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono flex items-center gap-1 shrink-0 self-start">
-                            <AlertCircle className="w-3 h-3 animate-pulse" />
-                            Awaiting Signature
-                          </span>
-                        </div>
-
-                        {/* Financial and metric preview impacts */}
-                        <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-900 grid grid-cols-2 sm:grid-cols-3 gap-3 text-[10px]">
-                          <div>
-                            <span className="text-zinc-500 block uppercase font-mono tracking-wider">Runway Impact</span>
-                            <span className="font-semibold text-zinc-300">{activeApproval.impact}</span>
-                          </div>
-                          <div>
-                            <span className="text-zinc-500 block uppercase font-mono tracking-wider">Treasury Allocation</span>
-                            <span className={`font-mono font-bold ${
-                              activeApproval.financialChange && activeApproval.financialChange > 0 ? 'text-emerald-400' : 'text-zinc-300'
-                            }`}>
-                              {activeApproval.financialChange ? `${activeApproval.financialChange > 0 ? '+' : ''}$${activeApproval.financialChange.toLocaleString()}` : 'N/A'}
-                            </span>
-                          </div>
-                          <div className="sm:col-span-1 col-span-2">
-                            <span className="text-zinc-500 block uppercase font-mono tracking-wider">Department Adjustments</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {activeApproval.metricChanges && Object.entries(activeApproval.metricChanges).map(([metric, change]) => (
-                                <span key={metric} className={`text-[8px] font-mono font-bold px-1 py-0.2 rounded ${
-                                  (change as number) > 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                }`}>
-                                  {metric.replace('Health', '').toUpperCase()} {(change as number) > 0 ? '+' : ''}{change}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Document display */}
-                        <div className="space-y-1">
-                          <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-semibold font-mono block">Vetted Document Draft</span>
-                          <div className="p-4 rounded-lg border border-zinc-900 bg-zinc-950 max-h-[140px] overflow-y-auto text-[10.5px] text-zinc-400 leading-relaxed font-mono whitespace-pre-wrap">
-                            {modifiedAssetContent || activeApproval.content}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Modify Panel toggles */}
-                      <div className="pt-3 border-t border-zinc-900 space-y-3">
-                        {isModifying ? (
-                          <div className="space-y-2 animate-fade-in">
-                            <label className="block text-[10px] font-mono text-[#6366F1] font-semibold uppercase">LangGraph Synthesis Override Instructions</label>
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                placeholder="e.g. Adjust base salary compensation to $120k and equity cliff to 1 year..."
-                                value={modifyInput}
-                                onChange={(e) => setModifyInput(e.target.value)}
-                                className="flex-1 px-3 py-1.5 rounded bg-zinc-950 border border-zinc-900 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-mono"
-                              />
-                              <button
-                                onClick={executeModifyLoop}
-                                disabled={isReSynthesizing || !modifyInput.trim()}
-                                className="px-3.5 py-1.5 rounded bg-[#6366F1] text-white text-[10px] font-bold hover:bg-[#6366F1]/80 disabled:opacity-50 cursor-pointer flex items-center gap-1 font-mono"
-                              >
-                                {isReSynthesizing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Layers className="w-3 h-3" />}
-                                Re-Synthesize
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <input
-                              type="text"
-                              placeholder="Feedback on rejection..."
-                              value={feedback}
-                              onChange={(e) => setFeedback(e.target.value)}
-                              className="w-full px-3 py-1.5 rounded bg-zinc-950 border border-zinc-900 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-sans mb-3"
-                            />
-                          </div>
-                        )}
-
-                        <div className="flex gap-2.5 justify-end">
-                          <button
-                            onClick={() => setIsModifying(prev => !prev)}
-                            className="px-3.5 py-1.5 rounded-lg border border-zinc-800 text-[10px] font-bold text-zinc-400 hover:text-white transition-all cursor-pointer font-mono"
-                          >
-                            {isModifying ? 'Cancel Override' : 'Modify Draft'}
-                          </button>
-                          
-                          <button
-                            onClick={() => executeReviewAction('reject')}
-                            disabled={isSubmittingReview}
-                            className="px-3.5 py-1.5 rounded-lg border border-rose-950 bg-rose-950/10 hover:bg-rose-950/20 text-[10px] font-bold text-rose-400 transition-all flex items-center gap-1 cursor-pointer"
-                          >
-                            <XCircle className="w-3.5 h-3.5" />
-                            Reject
-                          </button>
-
-                          <button
-                            onClick={() => executeReviewAction('approve')}
-                            disabled={isSubmittingReview}
-                            className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[10px] font-bold text-white transition-all flex items-center gap-1 shadow-md shadow-emerald-950/20 cursor-pointer"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Approve
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-              </div>
-            ) : (
-              <div className="p-8 rounded-xl border border-dashed border-zinc-900 text-center text-xs text-zinc-500 flex flex-col items-center justify-center min-h-[220px]">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2.5" />
-                <h4 className="font-semibold text-zinc-300">All Clear!</h4>
-                <p className="text-zinc-500 mt-0.5 max-w-sm">No high-risk actions are currently blocked for founder reviews.</p>
               </div>
             )}
           </div>
@@ -1247,272 +1083,7 @@ ADJUSTED COMPLIANCE PARAMETERS:
                 No sprint metrics available.
               </div>
             )}
-          </div>
-
         </div>
-
-        {/* ==================== RIGHT COLUMN: KNOWLEDGE & MEMORY ==================== */}
-        <div className="space-y-6 lg:col-span-1 xl:col-span-1">
-          
-          {/* F. Startup Memory System RAG Search */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-[#6366F1]" />
-                Startup Memory System
-              </h2>
-              <span className="text-[9px] font-mono bg-zinc-900 px-1 py-0.5 rounded text-emerald-400 border border-zinc-800">
-                pgvector-RAG
-              </span>
-            </div>
-
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Retrieve immutable historical logs using high-dimensional cosine distance matches.
-            </p>
-
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g. what did we decide about hiring?"
-                  value={memoryQuery}
-                  onChange={(e) => setMemoryQuery(e.target.value)}
-                  className="flex-1 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] text-white focus:outline-none focus:border-[#6366F1]"
-                />
-                <button
-                  onClick={() => handleMemorySearch()}
-                  disabled={isSearchingMemory || !memoryQuery.trim()}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-semibold text-zinc-300 transition-all disabled:opacity-40 cursor-pointer"
-                >
-                  Query
-                </button>
-              </div>
-
-              {/* Scopes filters */}
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block">Scope Indexes</span>
-                <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono text-zinc-400">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedMemoryScopes.decisions}
-                      onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, decisions: e.target.checked }))}
-                      className="accent-[#6366F1]"
-                    />
-                    Decisions
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedMemoryScopes.commands}
-                      onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, commands: e.target.checked }))}
-                      className="accent-[#6366F1]"
-                    />
-                    Commands
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedMemoryScopes.notes}
-                      onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, notes: e.target.checked }))}
-                      className="accent-[#6366F1]"
-                    />
-                    Meeting Notes
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedMemoryScopes.strategies}
-                      onChange={(e) => setSelectedMemoryScopes(p => ({ ...p, strategies: e.target.checked }))}
-                      className="accent-[#6366F1]"
-                    />
-                    Strategies
-                  </label>
-                </div>
-              </div>
-
-              {/* Memory query RAG outputs */}
-              {isSearchingMemory ? (
-                <div className="flex items-center justify-center p-6 text-zinc-500 text-[11px] font-mono gap-1.5">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#6366F1]" />
-                  Executing cosine vector search...
-                </div>
-              ) : memoryResults ? (
-                <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
-                  {memoryResults.map((res, idx) => (
-                    <div key={idx} className="p-3 bg-zinc-900/60 border border-zinc-900 rounded-lg space-y-1.5">
-                      <div className="flex justify-between items-center text-[9px] font-mono border-b border-zinc-900 pb-1">
-                        <span className="text-[#6366F1] font-bold uppercase tracking-wider">{res.category}</span>
-                        <span className="text-emerald-400 font-bold bg-emerald-500/5 px-1 py-0.2 rounded border border-emerald-500/10">
-                          {(res.score * 100).toFixed(1)}% Match
-                        </span>
-                      </div>
-                      <h5 className="text-[10px] font-bold text-zinc-200">{res.title}</h5>
-                      <p className="text-[10px] text-zinc-400 font-sans whitespace-pre-line leading-relaxed">
-                        {res.content}
-                      </p>
-                      <div className="flex justify-between text-[8px] font-mono text-zinc-600">
-                        <span>BY: {res.actor}</span>
-                        <span>DATE: {res.date}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-4 bg-zinc-900/20 border border-dashed border-zinc-900 rounded-lg text-center text-zinc-500 text-[10.5px]">
-                  Submit query to retrieve semantic citations.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* G. Knowledge Base Upload Panel */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <HardDrive className="w-4 h-4 text-[#6366F1]" />
-                Knowledge Base Ingestion
-              </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">{knowledge.length} FILES</span>
-            </div>
-
-            <form onSubmit={handleIngestMaterials} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Filename (e.g. Cap_Table_V1.md)"
-                value={uploadName}
-                onChange={(e) => setUploadName(e.target.value)}
-                required
-                className="w-full px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-sans"
-              />
-              <select
-                value={uploadType}
-                onChange={(e) => setUploadType(e.target.value)}
-                className="w-full px-2 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-300 focus:outline-none focus:border-[#6366F1]"
-              >
-                <option value="pitch_deck">Pitch Deck Outline</option>
-                <option value="business_plan">Business Plan Details</option>
-                <option value="financial_reports">Treasury Strategy</option>
-                <option value="hiring_docs">Hiring Compensation bounds</option>
-                <option value="meeting_notes">Internal Meeting notes</option>
-              </select>
-              <textarea
-                placeholder="Paste corporate rules or strategic text files..."
-                value={uploadContent}
-                onChange={(e) => setUploadContent(e.target.value)}
-                required
-                rows={3}
-                className="w-full px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-[11px] text-white focus:outline-none focus:border-[#6366F1] font-mono resize-none leading-relaxed"
-              />
-              <button
-                type="submit"
-                disabled={isUploading || !uploadName || !uploadContent}
-                className="w-full py-1.5 rounded-lg bg-[#6366F1] text-white hover:bg-[#6366F1]/80 text-[11px] font-bold disabled:opacity-40 cursor-pointer"
-              >
-                {isUploading ? 'Executing Vector Parse...' : 'Ingest to pgvector Base'}
-              </button>
-            </form>
-
-            {/* List of active knowledge files */}
-            <div className="space-y-2 pt-1 border-t border-zinc-900">
-              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider block">Indexed Materials</span>
-              <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                {knowledge.map(k => (
-                  <button
-                    key={k.id}
-                    onClick={() => setSelectedDocId(k.id)}
-                    className={`w-full p-2 text-left rounded text-[10px] border transition-all cursor-pointer flex items-center justify-between ${
-                      selectedDocId === k.id
-                        ? 'bg-zinc-900 border-zinc-700'
-                        : 'bg-zinc-900/10 border-zinc-900/60 hover:border-zinc-800 text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    <span className="truncate max-w-[120px] font-medium">{k.name}</span>
-                    <span className="font-mono text-zinc-600 shrink-0 text-[8.5px] uppercase">{k.type.replace('_', ' ')}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* H. Decision Log / Historic Ledger Section */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-white flex items-center gap-1.5">
-                <ClipboardList className="w-4 h-4 text-[#6366F1]" />
-                Governance Ledger
-              </h2>
-              <span className="text-[10px] font-mono text-zinc-500 font-semibold">{decisions.length} AUDITED</span>
-            </div>
-
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
-              Chronological immutable timeline of approved Human-in-the-Loop operational signs.
-            </p>
-
-            <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
-              {decisions.map((dec) => (
-                <div key={dec.id} className="p-3 rounded-lg border border-zinc-900 bg-zinc-900/20 space-y-1">
-                  <div className="flex justify-between items-center text-[9px] font-mono">
-                    <span className={`font-bold px-1 py-0.2 rounded ${
-                      dec.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                    }`}>
-                      {dec.status.toUpperCase()}
-                    </span>
-                    <span className="text-zinc-600">{new Date(dec.timestamp).toLocaleDateString()}</span>
-                  </div>
-                  <h5 className="text-[10.5px] font-bold text-zinc-200 line-clamp-1">{dec.title}</h5>
-                  <p className="text-[10px] text-zinc-400 leading-normal line-clamp-2">{dec.description}</p>
-                  <p className="text-[9px] text-zinc-500 font-mono italic">
-                    Outcome: {dec.impactText}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-
-          {/* SMART GOAL TRACKER (Blueprint Stretch Feature #7) */}
-          <div className="bg-zinc-950 border border-zinc-800/50 p-5 rounded-xl space-y-4 shadow-sm hover:border-zinc-800 transition-all">
-            <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-emerald-400" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-white">Smart Goal Tracker</h2>
-              </div>
-              <span className="text-[9px] font-mono text-emerald-400">76% COMPLETED</span>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                  <span className="text-zinc-300">Product MVP Launch</span>
-                  <span className="text-indigo-400 font-bold">78%</span>
-                </div>
-                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-indigo-500" style={{ width: '78%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                  <span className="text-zinc-300">Founding Eng Hiring</span>
-                  <span className="text-pink-400 font-bold">65%</span>
-                </div>
-                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-pink-500" style={{ width: '65%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center text-[10px] mb-1 font-mono">
-                  <span className="text-zinc-300">Seed Round Fundraising</span>
-                  <span className="text-emerald-400 font-bold">85%</span>
-                </div>
-                <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: '85%' }} />
-                </div>
-              </div>
-            </div>
-          </div>
 
         </div>
 
