@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Terminal, Activity, CheckSquare, Settings, FileText, Clipboard, Sparkles, Rocket, Loader2 } from 'lucide-react';
+import { Search, Activity, CheckSquare, FileText, Sparkles, Rocket, Loader2 } from 'lucide-react';
 
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (tab: 'dashboard' | 'agents' | 'workflows' | 'approvals' | 'knowledge' | 'ledger') => void;
+  onNavigate: (tab: 'dashboard' | 'approvals' | 'knowledge') => void;
   onRunAction: (actionName: string) => void;
 }
 
@@ -85,13 +85,10 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
   if (!isOpen) return null;
 
   const commands = [
-    { id: 'nav-dash', name: 'Go to SaaS Dashboard', category: 'Navigation', icon: Activity, action: () => onNavigate('dashboard') },
-    { id: 'nav-sprint', name: 'Go to Strategic Sprints', category: 'Navigation', icon: Terminal, action: () => onNavigate('workflows') },
-    { id: 'nav-appr', name: 'Go to Approval Queue', category: 'Navigation', icon: CheckSquare, action: () => onNavigate('approvals') },
-    { id: 'nav-agent', name: 'Go to Agent Configurator', category: 'Navigation', icon: Settings, action: () => onNavigate('agents') },
-    { id: 'nav-know', name: 'Go to Knowledge Base', category: 'Navigation', icon: FileText, action: () => onNavigate('knowledge') },
-    { id: 'nav-gov', name: 'Go to Governance Ledger', category: 'Navigation', icon: Clipboard, action: () => onNavigate('ledger') },
-    { id: 'act-sim', name: 'Simulate Collaboration Cycle', category: 'Actions', icon: Sparkles, action: () => onRunAction('simulate') },
+    { id: 'nav-dash',  name: 'Go to Dashboard',    category: 'Navigation', icon: Activity,    action: () => onNavigate('dashboard') },
+    { id: 'nav-appr',  name: 'Go to Approvals',    category: 'Navigation', icon: CheckSquare, action: () => onNavigate('approvals') },
+    { id: 'nav-know',  name: 'Go to Knowledge',    category: 'Navigation', icon: FileText,    action: () => onNavigate('knowledge') },
+    { id: 'act-sim',   name: 'Simulate Collaboration Cycle', category: 'Actions', icon: Sparkles, action: () => onRunAction('simulate') },
   ];
 
   const filtered = commands.filter(cmd => 

@@ -42,16 +42,17 @@ app = FastAPI(
 # CORS middleware for Node.js API Gateway & React Frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",   # Standard Create-React-App port
-        "http://localhost:5173",   # Standard Vite development port
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173"
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+@app.head("/")
+def root():
+    return {"status": "healthy", "service": settings.app_name}
+
 
 # Mount Agent Routers
 app.include_router(hiring_router)
