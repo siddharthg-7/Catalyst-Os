@@ -3,10 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { StartupProfile } from '../types';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Wallet, Flame, Hourglass, Activity, CheckCircle, TrendingUp, Cpu, Award } from 'lucide-react';
+import { useGsapCountUp } from '../hooks/useGsapAnimations';
+import { gsap } from 'gsap';
+
 
 interface MetricCardsProps {
   startup: StartupProfile;
@@ -14,6 +17,31 @@ interface MetricCardsProps {
 
 export default function MetricCards({ startup }: MetricCardsProps) {
   const { cashBalance, burnRate, runwayMonths, healthScore, metrics } = startup;
+
+  const cashRef = useGsapCountUp(cashBalance, '$', '', 0);
+  const burnRef = useGsapCountUp(burnRate, '$', '', 0);
+  const runwayRef = useGsapCountUp(runwayMonths, '', '', 1);
+  const healthRef = useGsapCountUp(healthScore, '', '', 0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.gsap-metric-card',
+        { opacity: 0, y: 30, scale: 0.95 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.7,
+          stagger: 0.1,
+          ease: 'power3.out',
+        }
+      );
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
   // Format currencies
   const formatCurrency = (val: number) => {
@@ -23,6 +51,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
       maximumFractionDigits: 0,
     }).format(val);
   };
+
 
   // Generate 12-month treasury runway projection chart data
   const chartData = useMemo(() => {
@@ -50,12 +79,12 @@ export default function MetricCards({ startup }: MetricCardsProps) {
   };
 
   return (
-    <div id="metric-cards-container" className="space-y-6">
+    <div id="metric-cards-container" ref={containerRef} className="space-y-6">
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Treasury */}
-        <div id="metric-card-treasury" className="p-5 rounded-[20px] border border-[#141413]/10 bg-white relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
+        <div id="metric-card-treasury" className="gsap-metric-card p-5 rounded-[20px] border border-[#141413]/10 bg-white relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-[#696969]">Cash Reserves</span>
             <div className="p-2 rounded-lg bg-[#141413]/05 text-[#141413]">
@@ -64,7 +93,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-bold tracking-tight text-[#141413] font-mono">
-              {formatCurrency(cashBalance)}
+              <span ref={cashRef}>{formatCurrency(cashBalance)}</span>
             </h3>
             <p className="mt-1 text-xs text-[#696969] flex items-center gap-1">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
@@ -75,7 +104,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
         </div>
 
         {/* Burn Rate */}
-        <div id="metric-card-burn" className="p-5 rounded-[20px] border border-[#141413]/10 bg-white relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
+        <div id="metric-card-burn" className="gsap-metric-card p-5 rounded-[20px] border border-[#141413]/10 bg-white relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-[#696969]">Monthly Burn Rate</span>
             <div className="p-2 rounded-lg bg-rose-500/10 text-rose-700">
@@ -84,7 +113,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-bold tracking-tight text-[#141413] font-mono">
-              {formatCurrency(burnRate)}
+              <span ref={burnRef}>{formatCurrency(burnRate)}</span>
             </h3>
             <p className="mt-1 text-xs text-[#696969]">
               Including operating expenditures
@@ -94,7 +123,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
         </div>
 
         {/* Runway */}
-        <div id="metric-card-runway" className="p-5 rounded-[20px] border border-[#141413]/10 bg-white relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
+        <div id="metric-card-runway" className="gsap-metric-card p-5 rounded-[20px] border border-[#141413]/10 bg-white relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-[#696969]">Active Runway</span>
             <div className="p-2 rounded-lg bg-amber-500/10 text-amber-700">
@@ -103,7 +132,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-bold tracking-tight text-[#141413] font-mono">
-              {runwayMonths} <span className="text-lg font-sans text-[#696969] font-normal">Months</span>
+              <span ref={runwayRef}>{runwayMonths}</span> <span className="text-lg font-sans text-[#696969] font-normal">Months</span>
             </h3>
             <p className="mt-1 text-xs text-[#696969]">
               Until next strategic round is required
@@ -113,7 +142,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
         </div>
 
         {/* Health Score */}
-        <div id="metric-card-health" className={`p-5 rounded-[20px] border relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] ${getHealthColor(healthScore)}`}>
+        <div id="metric-card-health" className={`gsap-metric-card p-5 rounded-[20px] border relative overflow-hidden transition-all hover:border-[#141413]/30 shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px] ${getHealthColor(healthScore)}`}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-[#696969]">SaaS Health Index</span>
             <div className="p-2 rounded-lg bg-[#22C55E]/10 text-emerald-700">
@@ -122,7 +151,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
           </div>
           <div className="mt-4">
             <h3 className="text-3xl font-bold tracking-tight text-[#141413] font-mono">
-              {healthScore} <span className="text-lg font-sans text-[#696969] font-normal">/100</span>
+              <span ref={healthRef}>{healthScore}</span> <span className="text-lg font-sans text-[#696969] font-normal">/100</span>
             </h3>
             <p className="mt-1 text-xs text-[#696969]">
               Average weighted operational capacity
@@ -132,6 +161,7 @@ export default function MetricCards({ startup }: MetricCardsProps) {
         </div>
 
       </div>
+
 
       {/* Main Core Charts & Metrics Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

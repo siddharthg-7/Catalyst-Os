@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
 import { 
   Sparkles, 
   ArrowRight, 
@@ -110,12 +117,86 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  const landingRef = useRef<HTMLDivElement | null>(null);
+
+  // GSAP Entrance & ScrollTrigger Animations
+  useEffect(() => {
+    if (!landingRef.current) return;
+    const ctx = gsap.context(() => {
+      // 1. Kinetic Hero Title & CTA Reveal
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      tl.fromTo(
+        '.gsap-hero-title',
+        { opacity: 0, y: 35, scale: 0.98 },
+        { opacity: 1, y: 0, scale: 1, duration: 1 }
+      )
+      .fromTo(
+        '.gsap-hero-sub',
+        { opacity: 0, y: 25 },
+        { opacity: 1, y: 0, duration: 0.8 },
+        '-=0.6'
+      )
+      .fromTo(
+        '.gsap-hero-cta',
+        { opacity: 0, y: 20, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.7, stagger: 0.15, ease: 'back.out(1.5)' },
+        '-=0.5'
+      )
+      .fromTo(
+        '.gsap-hero-lottie',
+        { opacity: 0, scale: 0.85, rotation: -5 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 1.2, ease: 'elastic.out(1, 0.6)' },
+        '-=1'
+      );
+
+      // 2. Ambient Floating Badges Sine Wave
+      gsap.to('.gsap-float-badge-1', {
+        y: -12,
+        rotation: 2,
+        duration: 3.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+      gsap.to('.gsap-float-badge-2', {
+        y: 12,
+        rotation: -2,
+        duration: 4.2,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        delay: 0.5,
+      });
+
+      // 3. ScrollTrigger for Feature Sections
+      gsap.fromTo(
+        '.gsap-scroll-section',
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.9,
+          stagger: 0.2,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: '#solutions',
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+    }, landingRef);
+
+    return () => ctx.revert();
+  }, []);
+
   // Monitor scroll for floating glass navbar shrinking (84px -> 68px)
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 30);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -183,7 +264,7 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
   ];
 
   return (
-    <div className="min-h-screen bg-[#F3F0EE] text-[#141413] font-sans selection:bg-[#141413]/20 selection:text-[#141413] relative overflow-x-hidden">
+    <div ref={landingRef} className="min-h-screen bg-[#F3F0EE] text-[#141413] font-sans selection:bg-[#141413]/20 selection:text-[#141413] relative overflow-x-hidden">
 
       {/* 1. STICKY FLOATING WHITE PILL NAVBAR */}
       <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-6 flex justify-center pointer-events-none">
@@ -228,32 +309,21 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
           {/* Left Column: Editorial Copy */}
           <div className="lg:col-span-6 space-y-8 text-left z-10 max-w-[560px]">
             
-
-
-            <motion.h1 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-5xl sm:text-7xl lg:text-[80px] font-bold text-[#141413] leading-[0.95] font-sans"
+            <h1 
+              className="gsap-hero-title text-5xl sm:text-7xl lg:text-[80px] font-bold text-[#141413] leading-[0.95] font-sans"
               style={{letterSpacing: '-0.02em'}}
             >
               From Idea to Launch.<br />One AI Operating System.
-            </motion.h1>
+            </h1>
 
-            <motion.p 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-[#696969] text-lg leading-[170%] font-sans"
+            <p 
+              className="gsap-hero-sub text-[#696969] text-lg leading-[170%] font-sans"
             >
               Everything you need to take your startup from idea to launch, with AI by your side.
-            </motion.p>
+            </p>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center gap-4 pt-2"
+            <div 
+              className="gsap-hero-cta flex flex-col sm:flex-row items-center gap-4 pt-2"
             >
               <button
                 onClick={onStartBuilding}
@@ -267,12 +337,13 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
                 <button
                   onMouseEnter={() => setDemoDropdownOpen(true)}
                   onMouseLeave={() => setDemoDropdownOpen(false)}
-                  className="w-full sm:w-auto px-8 py-4 bg-transparent hover:bg-[#F37338]/10 text-[#F37338] border border-[#F37338]/30 font-medium text-[15px] transition-all flex items-center justify-center gap-2 font-sans rounded-[20px]"
+                  className="w-full sm:w-auto px-8 py-4 bg-transparent hover:bg-[#F37338]/10 text-[#F3F0EE] border border-[#F37338]/30 font-medium text-[15px] transition-all flex items-center justify-center gap-2 font-sans rounded-[20px]"
                 >
-                  <Play className="w-4 h-4" />
-                  <span>Interactive Demo</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${demoDropdownOpen ? 'rotate-180' : ''}`} />
+                  <Play className="w-4 h-4 text-[#F37338]" />
+                  <span className="text-[#141413]">Interactive Demo</span>
+                  <ChevronDown className={`w-4 h-4 text-[#141413] transition-transform ${demoDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
+
                 
                 {/* Dropdown Menu */}
                 <AnimatePresence>
@@ -315,9 +386,10 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
                   )}
                 </AnimatePresence>
               </div>
-            </motion.div>
+            </div>
 
           </div>
+
 
           {/* Right Column: PRESERVED HERO LOTTIE ANIMATION */}
           <div className="lg:col-span-6 relative flex items-center justify-center z-20">
@@ -327,10 +399,8 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
             <div className="absolute w-[460px] h-[460px] rounded-full border border-[#F37338]/20 animate-spin pointer-events-none" style={{ animationDuration: '50s', animationDirection: 'reverse' }} />
 
             {/* Freely Floating Lottie Animation (520x520px) */}
-            <motion.div 
-              className="w-[520px] h-[520px] relative flex items-center justify-center"
-              animate={{ y: [0, -12, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            <div 
+              className="gsap-hero-lottie w-[520px] h-[520px] relative flex items-center justify-center"
             >
               {!lottieError ? (
                 <DotLottieReact
@@ -350,10 +420,8 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
               )}
 
               {/* Floating AI Notification Badges — white cards on cream */}
-              <motion.div 
-                className="absolute -top-4 -left-6 p-3.5 rounded-[20px] bg-white shadow-[rgba(0,0,0,0.08)_0px_24px_48px_0px] border border-[#141413]/10 flex items-center gap-3 z-30"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+              <div 
+                className="gsap-float-badge-1 absolute -top-4 -left-6 p-3.5 rounded-[20px] bg-white shadow-[rgba(0,0,0,0.08)_0px_24px_48px_0px] border border-[#141413]/10 flex items-center gap-3 z-30"
               >
                 <div className="w-8 h-8 rounded-xl bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
                   <Bot className="w-4 h-4 text-[#141413]" />
@@ -362,12 +430,10 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
                   <span className="text-[9px] font-mono text-[#696969] uppercase block">CEO AGENT</span>
                   <span className="text-xs font-bold text-[#141413] font-sans">Launch Roadmap Ready</span>
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div 
-                className="absolute -bottom-4 -right-6 p-3.5 rounded-[20px] bg-white shadow-[rgba(0,0,0,0.08)_0px_24px_48px_0px] border border-[#141413]/10 flex items-center gap-3 z-30"
-                animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              <div 
+                className="gsap-float-badge-2 absolute -bottom-4 -right-6 p-3.5 rounded-[20px] bg-white shadow-[rgba(0,0,0,0.08)_0px_24px_48px_0px] border border-[#141413]/10 flex items-center gap-3 z-30"
               >
                 <div className="w-8 h-8 rounded-xl bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
                   <CheckCircle2 className="w-4 h-4 text-[#141413]" />
@@ -376,9 +442,10 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
                   <span className="text-[9px] font-mono text-[#696969] uppercase block">CFO AGENT</span>
                   <span className="text-xs font-bold text-[#141413] font-sans">13.2-Month Runway Verified</span>
                 </div>
-              </motion.div>
+              </div>
 
-            </motion.div>
+            </div>
+
 
           </div>
 
@@ -400,8 +467,9 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
         <div className="max-w-[1280px] mx-auto space-y-16 relative">
 
           {/* Section header */}
-          <div className="text-center space-y-4 max-w-2xl mx-auto">
+          <div className="gsap-scroll-section text-center space-y-4 max-w-2xl mx-auto">
             <span className="text-xs font-mono text-[#696969] uppercase tracking-widest font-bold">• AI WORKSPACE</span>
+
             <h2 className="text-4xl sm:text-5xl font-bold text-[#141413] font-sans" style={{letterSpacing: '-0.02em'}}>
               Meet Your AI Team
             </h2>
