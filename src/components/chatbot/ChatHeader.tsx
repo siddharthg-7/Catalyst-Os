@@ -24,11 +24,11 @@ export default function ChatHeader({
         </div>
         <div>
           <div className="flex items-center gap-1.5">
-            <h3 className="text-xs font-bold text-white tracking-tight font-sans">Catalyst OS AI</h3>
+            <h3 className="text-xs font-bold text-white tracking-tight font-sans">CatalystOS</h3>
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           </div>
           <span className="text-[9px] font-mono text-[#777777] uppercase tracking-wider block">
-            Knowledge Base RAG Engine
+            Building with you from idea to launch
           </span>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 import {
@@ -176,14 +176,14 @@ const clerkAppearance = {
     otpCodeFieldInput__error: { borderColor: '#b91c1c' },
     otpCodeFieldInputSpacing: { marginRight: '0.5rem' },
 
-    footer: { marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(20,20,19,0.08)' },
-    footerAction: { marginTop: '0' },
-    footerActionText: { color: '#696969', fontSize: '0.8125rem' },
-    footerActionLink: { color: '#141413', fontWeight: '600', fontSize: '0.8125rem', transition: 'color 0.2s' },
-    footerActionLink__hover: { color: '#262627' },
-    footerPages: { marginTop: '1rem' },
-    footerPagesLink: { color: '#696969', fontSize: '0.75rem' },
-    footerPagesLink__hover: { color: '#141413' },
+    footer: { display: 'none' },
+    footerAction: { display: 'none' },
+    footerActionText: { display: 'none' },
+    footerActionLink: { display: 'none' },
+    footerActionLink__hover: { display: 'none' },
+    footerPages: { display: 'none' },
+    footerPagesLink: { display: 'none' },
+    footerPagesLink__hover: { display: 'none' },
 
     formResendCodeLink: { color: '#141413', fontSize: '0.75rem', fontWeight: '600', transition: 'color 0.2s' },
     formResendCodeLink__hover: { color: '#262627' },
@@ -290,40 +290,111 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ initialView = 'landing', onOnboardingComplete }: AuthScreenProps) {
-  const { loginAsDemo } = useAuth();
+  const { loginAsDemo, user } = useAuth();
   const [view, setView] = useState<'landing' | 'auth' | 'onboarding'>(initialView);
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [direction, setDirection] = useState(0);
 
   const [onboardingPath, setOnboardingPath] = useState<'existing' | 'new'>('existing');
-  const [buildingAgents, setBuildingAgents] = useState(false);
-  const [agentProgress, setAgentProgress] = useState({
-    ceo: false, cfo: false, talent: false, growth: false, ops: false,
-  });
+  const [currentStep, setCurrentStep] = useState(0); // 0 = Welcome, 1-8 = Questions, 9 = Checklist
+  const [checkmarkProgress, setCheckmarkProgress] = useState(0);
 
-  const [startupName, setStartupName] = useState('CatalystOS Startup');
-  const [industry, setIndustry] = useState('B2B SaaS / Developer Tools');
-  const [burnRate, setBurnRate] = useState('$18,500 / mo');
-  const [runway, setRunway] = useState('13.2 months');
-  const [idea, setIdea] = useState('');
-  const [budget, setBudget] = useState('$50,000');
-  const [timeline, setTimeline] = useState('30 Days');
+  // Existing Startup States
+  const [existingName, setExistingName] = useState('');
+  const [existingDescription, setExistingDescription] = useState('');
+  const [existingIndustry, setExistingIndustry] = useState('SaaS');
+  const [existingStage, setExistingStage] = useState('MVP');
+  const [existingTeamSize, setExistingTeamSize] = useState(1);
+  const [existingChallenge, setExistingChallenge] = useState('Hiring');
+  const [existingMilestone, setExistingMilestone] = useState('90 Days');
+  const [existingAdditional, setExistingAdditional] = useState('');
 
-  const startOnboardingAnimation = async () => {
-    setBuildingAgents(true);
-    const agents = ['ceo', 'cfo', 'talent', 'growth', 'ops'] as const;
-    for (const agent of agents) {
-      await new Promise(r => setTimeout(r, 600));
-      setAgentProgress(p => ({ ...p, [agent]: true }));
+  // New Idea States
+  const [newIdea, setNewIdea] = useState('');
+  const [newProblem, setNewProblem] = useState('');
+  const [newCustomers, setNewCustomers] = useState('');
+  const [newIndustry, setNewIndustry] = useState('SaaS');
+  const [newTeamStyle, setNewTeamStyle] = useState('Solo Founder');
+  const [newChallenge, setNewChallenge] = useState('Building an MVP');
+  const [newTimeline, setNewTimeline] = useState('90 Days');
+  const [newAdditional, setNewAdditional] = useState('');
+
+  const runChecklistAnimation = async () => {
+    setCheckmarkProgress(0);
+    for (let i = 1; i <= 4; i++) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setCheckmarkProgress(i);
     }
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const finalPayload = onboardingPath === 'existing'
+      ? {
+          path: 'existing',
+          startupName: existingName || 'CatalystOS Startup',
+          startupDescription: existingDescription || 'B2B software solutions',
+          industry: existingIndustry,
+          stage: existingStage,
+          teamSize: String(existingTeamSize),
+          biggestChallenge: existingChallenge,
+          timeline: existingMilestone,
+          additionalInfo: existingAdditional
+        }
+      : {
+          path: 'new',
+          startupName: 'My Startup Project',
+          startupDescription: newIdea || 'Scratch startup idea',
+          industry: newIndustry,
+          stage: 'Idea',
+          teamSize: newTeamStyle,
+          biggestChallenge: newChallenge,
+          timeline: newTimeline,
+          additionalInfo: newAdditional
+        };
+
+    if (user?.id) {
+      localStorage.setItem(`catalystos_onboarding_context_${user.id}`, JSON.stringify(finalPayload));
+    }
+
     if (onOnboardingComplete) {
-      onOnboardingComplete({ startupName, industry, burnRate, runway, idea, budget, timeline, path: onboardingPath });
-    } else {
-      setDirection(1);
-      setView('auth');
+      onOnboardingComplete({
+        startupName: finalPayload.startupName,
+        industry: finalPayload.industry,
+        burnRate: onboardingPath === 'existing' ? `$${existingTeamSize * 8000} / mo` : '$0 / mo',
+        runway: '12 months',
+        idea: finalPayload.startupDescription,
+        budget: onboardingPath === 'existing' ? '$100,000' : '$5,000',
+        timeline: finalPayload.timeline,
+        path: onboardingPath
+      });
     }
   };
+
+  const handleNext = () => {
+    if (currentStep < 8) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      setCurrentStep(9);
+      runChecklistAnimation();
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const isNextDisabled = useMemo(() => {
+    if (onboardingPath === 'existing') {
+      if (currentStep === 1 && !existingName.trim()) return true;
+      if (currentStep === 2 && !existingDescription.trim()) return true;
+    } else {
+      if (currentStep === 1 && !newIdea.trim()) return true;
+      if (currentStep === 2 && !newProblem.trim()) return true;
+      if (currentStep === 3 && !newCustomers.trim()) return true;
+    }
+    return false;
+  }, [currentStep, onboardingPath, existingName, existingDescription, newIdea, newProblem, newCustomers]);
 
   const navigateTo = (newView: typeof view) => {
     setDirection(newView === 'landing' ? -1 : 1);
@@ -364,7 +435,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
           </motion.div>
         )}
 
-        {/* ── ONBOARDING VIEW ──────────────────────────────────────────── */}
+        {/* ── ONBOARDING VIEW (Redesigned Conversational Startup Setup) ── */}
         {view === 'onboarding' && (
           <motion.div
             key="onboarding"
@@ -376,180 +447,486 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
             className="min-h-screen flex items-center justify-center p-6 relative z-10"
           >
-            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-0 bg-white border border-[#141413]/10 rounded-[40px] overflow-hidden shadow-[rgba(0,0,0,0.08)_0px_40px_80px]">
+            <div className="w-full max-w-xl bg-white border border-[#141413]/10 rounded-[32px] p-8 md:p-10 shadow-[rgba(0,0,0,0.08)_0px_40px_80px] relative overflow-hidden">
               
-              {/* Left panel — Brand */}
-              <div className="hidden lg:flex flex-col justify-between p-10 bg-[#F3F0EE] border-r border-[#141413]/10 relative overflow-hidden">
-                <div>
+              {/* Step Progress Header */}
+              {currentStep > 0 && currentStep <= 8 && (
+                <div className="flex items-center justify-between border-b border-[#141413]/10 pb-3.5 mb-6">
+                  <span className="text-[10px] font-mono font-bold text-[#696969] uppercase tracking-widest">
+                    Question {currentStep} of 8
+                  </span>
+                  <div className="flex gap-1.5">
+                    {Array.from({ length: 8 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`h-1 rounded-full transition-all duration-300 ${
+                          idx + 1 === currentStep 
+                            ? 'w-6 bg-[#141413]' 
+                            : idx + 1 < currentStep 
+                            ? 'w-2 bg-[#141413]/40' 
+                            : 'w-2 bg-[#141413]/10'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Questionnaire Content Panels */}
+              <AnimatePresence mode="wait">
+                
+                {/* ── Step 0: Welcome Screen ── */}
+                {currentStep === 0 && (
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                    className="flex items-center gap-2.5 mb-12"
+                    key="step-welcome"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-8"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-white border border-[#141413]/10 flex items-center justify-center">
-                      <CatalystLogo className="w-4 h-4 text-[#141413]" />
-                    </div>
-                    <span className="text-sm font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
-                  </motion.div>
-
-                  <motion.h1
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
-                    className="text-3xl font-bold text-[#141413] mb-3 leading-tight font-sans" style={{ letterSpacing: '-0.02em' }}
-                  >
-                    Build your<br />
-                    <span className="text-[#696969]">executive team</span>
-                  </motion.h1>
-
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.6 }}
-                    className="text-sm text-[#696969] leading-relaxed max-w-xs font-sans"
-                  >
-                    Configure AI agents that understand your startup's context, metrics, and strategic goals.
-                  </motion.p>
-                </div>
-
-                <div className="space-y-2.5 mt-8">
-                  <FeatureCard icon={Cpu}    title="AI Executive Agents"   description="5 specialized agents with domain expertise"      delay={0.5} />
-                  <FeatureCard icon={Layers} title="Context-Aware"         description="Agents learn your startup's unique metrics"      delay={0.6} />
-                  <FeatureCard icon={Shield} title="Enterprise Security"   description="End-to-end encryption, SOC2 compliant"          delay={0.7} />
-                </div>
-              </div>
-
-              {/* Right panel — Onboarding form */}
-              <div className="p-8 lg:p-10 bg-white">
-                {!buildingAgents ? (
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                    <div className="flex items-center justify-between mb-8">
-                      <div>
-                        <h2 className="text-lg font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>Smart Onboarding</h2>
-                        <p className="text-[#696969] text-xs mt-0.5 font-sans">Configure your startup parameters</p>
+                    <div className="space-y-3 text-center">
+                      <div className="w-10 h-10 rounded-xl bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center mx-auto mb-2">
+                        <CatalystLogo className="w-5 h-5 text-[#141413]" />
                       </div>
+                      <h2 className="text-2xl font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>
+                        Let's get to know your startup.
+                      </h2>
+                      <p className="text-xs text-[#696969] leading-relaxed max-w-sm mx-auto font-sans">
+                        We'll ask a few quick questions so CatalystOS can personalize your workspace and AI companion.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <button
-                        onClick={() => navigateTo('landing')}
-                        className="w-8 h-8 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center text-[#696969] hover:text-[#141413] hover:bg-white transition-all cursor-pointer"
+                        onClick={() => {
+                          setOnboardingPath('existing');
+                          handleNext();
+                        }}
+                        className="p-5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-left space-y-2.5 transition-all cursor-pointer group"
                       >
-                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <div className="w-8 h-8 rounded-lg bg-white border border-[#141413]/05 flex items-center justify-center group-hover:bg-[#141413] transition-colors">
+                          <Building2 className="w-4 h-4 text-[#141413] group-hover:text-[#F3F0EE] transition-colors" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-[#141413] font-sans">Existing Startup</h4>
+                          <p className="text-[10px] text-[#696969] leading-relaxed font-sans mt-0.5">Continue building an existing company.</p>
+                        </div>
                       </button>
-                    </div>
 
-                    {/* Pathway Selector */}
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                      {[
-                        { id: 'existing' as const, icon: Building2, label: 'Existing Startup', desc: 'Provide metrics & pitch deck' },
-                        { id: 'new' as const,      icon: Rocket,    label: 'New Idea',         desc: 'Define concept & timeline' },
-                      ].map((path) => (
-                        <button
-                          key={path.id}
-                          onClick={() => setOnboardingPath(path.id)}
-                          className={`p-4 rounded-[16px] border text-left space-y-2 transition-all duration-300 cursor-pointer ${
-                            onboardingPath === path.id
-                              ? 'bg-[#141413] border-[#141413] shadow-[rgba(0,0,0,0.15)_0px_4px_12px]'
-                              : 'bg-[#F3F0EE] border-[#141413]/10 hover:border-[#141413]/20 hover:bg-white'
-                          }`}
-                        >
-                          <path.icon className={`w-4 h-4 transition-colors ${onboardingPath === path.id ? 'text-[#F3F0EE]' : 'text-[#141413]/50'}`} />
-                          <h4 className={`text-xs font-semibold font-sans ${onboardingPath === path.id ? 'text-[#F3F0EE]' : 'text-[#141413]'}`}>{path.label}</h4>
-                          <p className={`text-[10px] leading-relaxed font-sans ${onboardingPath === path.id ? 'text-[#F3F0EE]/60' : 'text-[#696969]'}`}>{path.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Form Fields */}
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={onboardingPath}
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-3 mb-6"
+                      <button
+                        onClick={() => {
+                          setOnboardingPath('new');
+                          handleNext();
+                        }}
+                        className="p-5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-left space-y-2.5 transition-all cursor-pointer group"
                       >
-                        {onboardingPath === 'existing' ? (
-                          <div className="grid grid-cols-2 gap-3">
-                            {[
-                              { label: 'Startup Name', value: startupName, onChange: setStartupName },
-                              { label: 'Industry',     value: industry,     onChange: setIndustry     },
-                              { label: 'Monthly Burn', value: burnRate,     onChange: setBurnRate     },
-                              { label: 'Runway',       value: runway,       onChange: setRunway       },
-                            ].map((field) => (
-                              <div key={field.label}>
-                                <label className={labelCls}>{field.label}</label>
-                                <input type="text" value={field.value} onChange={e => field.onChange(e.target.value)} className={inputCls} />
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <div>
-                              <label className={labelCls}>Startup Concept</label>
-                              <input type="text" placeholder="e.g. AI-powered automated code review platform" value={idea} onChange={e => setIdea(e.target.value)} className={inputCls} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <label className={labelCls}>Budget</label>
-                                <input type="text" value={budget} onChange={e => setBudget(e.target.value)} className={inputCls} />
-                              </div>
-                              <div>
-                                <label className={labelCls}>Target Launch</label>
-                                <input type="text" value={timeline} onChange={e => setTimeline(e.target.value)} className={inputCls} />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </motion.div>
-                    </AnimatePresence>
-
-                    <button
-                      onClick={startOnboardingAnimation}
-                      className="w-full py-3.5 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold transition-all duration-300 hover:shadow-[rgba(0,0,0,0.15)_0px_6px_16px] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 font-sans"
-                    >
-                      Deploy Executive Team
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </motion.div>
-                ) : (
-                  /* Building animation */
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="py-8 text-center space-y-6">
-                    <div className="space-y-2">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                        className="w-10 h-10 mx-auto rounded-[12px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center"
-                      >
-                        <Cpu className="w-5 h-5 text-[#141413]/60" />
-                      </motion.div>
-                      <h3 className="text-lg font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>Building Your Team</h3>
-                      <p className="text-xs text-[#696969] font-sans">Synthesizing domain contexts & initializing agent graphs</p>
-                    </div>
-
-                    <div className="space-y-2 max-w-xs mx-auto text-left">
-                      {(['ceo', 'cfo', 'talent', 'growth', 'ops'] as const).map((agent, i) => {
-                        const labels = { ceo: 'CEO Orchestrator', cfo: 'CFO (Treasury)', talent: 'Head of Talent', growth: 'Head of Growth', ops: 'Operations Executive' };
-                        const prevDone = i === 0 || agentProgress[(['ceo', 'cfo', 'talent', 'growth', 'ops'] as const)[i - 1]];
-                        return (
-                          <motion.div
-                            key={agent}
-                            initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                            className={`p-3 rounded-[12px] border flex items-center justify-between transition-all duration-500 font-sans ${
-                              agentProgress[agent]
-                                ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
-                                : prevDone
-                                ? 'bg-[#F3F0EE] border-[#141413]/10 text-[#696969]'
-                                : 'bg-white border-[#141413]/05 text-[#141413]/30'
-                            }`}
-                          >
-                            <span className="text-xs font-medium">{labels[agent]}</span>
-                            {agentProgress[agent] ? (
-                              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300 }}>
-                                <CheckCircle2 className="w-4 h-4 text-[#F3F0EE]" />
-                              </motion.div>
-                            ) : prevDone ? (
-                              <RefreshCw className="w-3.5 h-3.5 text-[#696969] animate-spin" />
-                            ) : null}
-                          </motion.div>
-                        );
-                      })}
+                        <div className="w-8 h-8 rounded-lg bg-white border border-[#141413]/05 flex items-center justify-center group-hover:bg-[#141413] transition-colors">
+                          <Rocket className="w-4 h-4 text-[#141413] group-hover:text-[#F3F0EE] transition-colors" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-[#141413] font-sans">New Startup Idea</h4>
+                          <p className="text-[10px] text-[#696969] leading-relaxed font-sans mt-0.5">I'm starting from scratch.</p>
+                        </div>
+                      </button>
                     </div>
                   </motion.div>
                 )}
-              </div>
+
+                {/* ── Path 1: Existing Startup Questions (1-8) ── */}
+                {onboardingPath === 'existing' && currentStep > 0 && currentStep <= 8 && (
+                  <motion.div
+                    key={`existing-step-${currentStep}`}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6"
+                  >
+                    {currentStep === 1 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">What is your startup called?</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Acme Corp"
+                          value={existingName}
+                          onChange={e => setExistingName(e.target.value)}
+                          className={inputCls}
+                          autoFocus
+                          onKeyDown={e => e.key === 'Enter' && !isNextDisabled && handleNext()}
+                        />
+                      </div>
+                    )}
+
+                    {currentStep === 2 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">What does your startup do?</label>
+                        <textarea
+                          placeholder="Describe your product, service, or business model..."
+                          value={existingDescription}
+                          onChange={e => setExistingDescription(e.target.value)}
+                          className={`${inputCls} min-h-[140px] resize-none`}
+                          autoFocus
+                        />
+                      </div>
+                    )}
+
+                    {currentStep === 3 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">Which industry are you in?</label>
+                        <select
+                          value={existingIndustry}
+                          onChange={e => setExistingIndustry(e.target.value)}
+                          className={inputCls}
+                        >
+                          {['SaaS', 'Healthcare', 'FinTech', 'Education', 'AI', 'E-commerce', 'Other'].map(ind => (
+                            <option key={ind} value={ind}>{ind}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {currentStep === 4 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">What stage is your startup currently in?</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {['Idea', 'MVP', 'Beta', 'Early Revenue', 'Scaling'].map(stg => (
+                            <button
+                              key={stg}
+                              type="button"
+                              onClick={() => setExistingStage(stg)}
+                              className={`p-3.5 rounded-[16px] border text-xs font-bold transition-all cursor-pointer font-sans ${
+                                existingStage === stg
+                                  ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
+                                  : 'bg-[#F3F0EE] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-[#141413]'
+                              }`}
+                            >
+                              {stg}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 5 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">How many people are currently on your team?</label>
+                        <div className="flex items-center gap-4 py-2">
+                          <button
+                            type="button"
+                            onClick={() => setExistingTeamSize(Math.max(1, existingTeamSize - 1))}
+                            className="w-11 h-11 rounded-full border border-[#141413]/10 bg-[#F3F0EE] hover:bg-white text-lg font-bold flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            -
+                          </button>
+                          <span className="text-xl font-bold font-mono min-w-[50px] text-center">{existingTeamSize}</span>
+                          <button
+                            type="button"
+                            onClick={() => setExistingTeamSize(existingTeamSize + 1)}
+                            className="w-11 h-11 rounded-full border border-[#141413]/10 bg-[#F3F0EE] hover:bg-white text-lg font-bold flex items-center justify-center transition-all cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 6 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">What is your biggest challenge right now?</label>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {['Hiring', 'Fundraising', 'Product Development', 'Marketing', 'Finding Customers', 'Operations', 'Other'].map(ch => (
+                            <button
+                              key={ch}
+                              type="button"
+                              onClick={() => setExistingChallenge(ch)}
+                              className={`p-3 rounded-[14px] border text-left text-xs font-bold transition-all cursor-pointer font-sans truncate ${
+                                existingChallenge === ch
+                                  ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
+                                  : 'bg-[#F3F0EE] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-[#141413]'
+                              }`}
+                            >
+                              {ch}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 7 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">When do you want to achieve your next major milestone?</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {['30 Days', '60 Days', '90 Days', '6 Months', 'Custom'].map(tls => (
+                            <button
+                              key={tls}
+                              type="button"
+                              onClick={() => setExistingMilestone(tls)}
+                              className={`p-3.5 rounded-[16px] border text-xs font-bold transition-all cursor-pointer font-sans ${
+                                existingMilestone === tls
+                                  ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
+                                  : 'bg-[#F3F0EE] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-[#141413]'
+                              }`}
+                            >
+                              {tls}
+                            </button>
+                          ))}
+                        </div>
+                        {existingMilestone === 'Custom' && (
+                          <input
+                            type="text"
+                            placeholder="e.g. End of Q3, next month"
+                            value={existingMilestone === 'Custom' ? '' : existingMilestone}
+                            onChange={e => setExistingMilestone(e.target.value)}
+                            className={`${inputCls} mt-2`}
+                            autoFocus
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    {currentStep === 8 && (
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-lg font-bold text-[#141413] font-sans block">Anything else you'd like CatalystOS to know?</label>
+                          <span className="text-[10px] text-[#696969] block">Optional. Share any details or requirements.</span>
+                        </div>
+                        <textarea
+                          placeholder="e.g. Seeking options policy reviews, treasury burn details..."
+                          value={existingAdditional}
+                          onChange={e => setExistingAdditional(e.target.value)}
+                          className={`${inputCls} min-h-[120px] resize-none`}
+                          autoFocus
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* ── Path 2: New Startup Idea Questions (1-8) ── */}
+                {onboardingPath === 'new' && currentStep > 0 && currentStep <= 8 && (
+                  <motion.div
+                    key={`new-step-${currentStep}`}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.35 }}
+                    className="space-y-6"
+                  >
+                    {currentStep === 1 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">What's your startup idea?</label>
+                        <textarea
+                          placeholder="Describe your concept, vision, or product idea..."
+                          value={newIdea}
+                          onChange={e => setNewIdea(e.target.value)}
+                          className={`${inputCls} min-h-[140px] resize-none`}
+                          autoFocus
+                        />
+                      </div>
+                    )}
+
+                    {currentStep === 2 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">What problem are you trying to solve?</label>
+                        <textarea
+                          placeholder="Explain the user pain point or inefficiency you're targetting..."
+                          value={newProblem}
+                          onChange={e => setNewProblem(e.target.value)}
+                          className={`${inputCls} min-h-[140px] resize-none`}
+                          autoFocus
+                        />
+                      </div>
+                    )}
+
+                    {currentStep === 3 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">Who are your target customers?</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Small agencies, freelance developers, retail buyers"
+                          value={newCustomers}
+                          onChange={e => setNewCustomers(e.target.value)}
+                          className={inputCls}
+                          autoFocus
+                          onKeyDown={e => e.key === 'Enter' && !isNextDisabled && handleNext()}
+                        />
+                      </div>
+                    )}
+
+                    {currentStep === 4 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">Which industry best fits your idea?</label>
+                        <select
+                          value={newIndustry}
+                          onChange={e => setNewIndustry(e.target.value)}
+                          className={inputCls}
+                        >
+                          {['SaaS', 'Healthcare', 'FinTech', 'Education', 'AI', 'E-commerce', 'Other'].map(ind => (
+                            <option key={ind} value={ind}>{ind}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {currentStep === 5 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">Are you building alone or with a team?</label>
+                        <div className="grid grid-cols-1 gap-3">
+                          {['Solo Founder', '2–5 Members', '6+ Members'].map(ts => (
+                            <button
+                              key={ts}
+                              type="button"
+                              onClick={() => setNewTeamStyle(ts)}
+                              className={`p-4 rounded-[16px] border text-left text-xs font-bold transition-all cursor-pointer font-sans ${
+                                newTeamStyle === ts
+                                  ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
+                                  : 'bg-[#F3F0EE] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-[#141413]'
+                              }`}
+                            >
+                              {ts}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 6 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">What's your biggest challenge today?</label>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {['Validating my idea', 'Building an MVP', 'Finding Co-founders', 'Funding', 'Marketing', 'Other'].map(ch => (
+                            <button
+                              key={ch}
+                              type="button"
+                              onClick={() => setNewChallenge(ch)}
+                              className={`p-3.5 rounded-[16px] border text-left text-xs font-bold transition-all cursor-pointer font-sans truncate ${
+                                newChallenge === ch
+                                  ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
+                                  : 'bg-[#F3F0EE] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-[#141413]'
+                              }`}
+                            >
+                              {ch}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 7 && (
+                      <div className="space-y-4">
+                        <label className="text-lg font-bold text-[#141413] font-sans">When would you like to launch?</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {['30 Days', '60 Days', '90 Days', '6 Months', 'No Timeline Yet'].map(tl => (
+                            <button
+                              key={tl}
+                              type="button"
+                              onClick={() => setNewTimeline(tl)}
+                              className={`p-3.5 rounded-[16px] border text-xs font-bold transition-all cursor-pointer font-sans ${
+                                newTimeline === tl
+                                  ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
+                                  : 'bg-[#F3F0EE] border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white text-[#141413]'
+                              }`}
+                            >
+                              {tl}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 8 && (
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="text-lg font-bold text-[#141413] font-sans block">Anything else you'd like CatalystOS to know?</label>
+                          <span className="text-[10px] text-[#696969] block">Optional.</span>
+                        </div>
+                        <textarea
+                          placeholder="e.g. Custom requirements or specialized questions for setup..."
+                          value={newAdditional}
+                          onChange={e => setNewAdditional(e.target.value)}
+                          className={`${inputCls} min-h-[120px] resize-none`}
+                          autoFocus
+                        />
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* ── Step 9: Redesigned Checklist Loader ── */}
+                {currentStep === 9 && (
+                  <motion.div
+                    key="step-checklist"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="py-6 text-center space-y-6"
+                  >
+                    <div className="space-y-2">
+                      <h2 className="text-2xl font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>
+                        Perfect!
+                      </h2>
+                      <p className="text-xs text-[#696969] font-sans">
+                        We're setting up your personalized CatalystOS workspace.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2.5 max-w-xs mx-auto text-left">
+                      {[
+                        { label: 'Understanding your startup...', step: 1 },
+                        { label: 'Preparing your AI companion...', step: 2 },
+                        { label: 'Creating your launch roadmap...', step: 3 },
+                        { label: 'Personalizing your dashboard...', step: 4 },
+                      ].map((item) => (
+                        <div
+                          key={item.step}
+                          className={`flex items-center gap-3 p-3.5 rounded-[16px] border transition-all duration-500 font-sans ${
+                            checkmarkProgress >= item.step
+                              ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] shadow-[rgba(0,0,0,0.1)_0px_4px_12px]'
+                              : checkmarkProgress === item.step - 1
+                              ? 'bg-[#F3F0EE] border-[#141413]/15 text-[#696969]'
+                              : 'bg-white border-[#141413]/05 text-[#141413]/20'
+                          }`}
+                        >
+                          {checkmarkProgress >= item.step ? (
+                            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex-shrink-0">
+                              <CheckCircle2 className="w-4 h-4 text-[#F3F0EE]" />
+                            </motion.div>
+                          ) : checkmarkProgress === item.step - 1 ? (
+                            <RefreshCw className="w-3.5 h-3.5 text-[#696969] animate-spin flex-shrink-0" />
+                          ) : (
+                            <div className="w-3.5 h-3.5 rounded-full border border-[#141413]/10 flex-shrink-0" />
+                          )}
+                          <span className="text-xs font-semibold">{item.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Wizard Navigation Footer */}
+              {currentStep > 0 && currentStep <= 8 && (
+                <div className="flex items-center justify-between border-t border-[#141413]/10 pt-4 mt-8">
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    className="flex items-center gap-1 text-xs text-[#696969] hover:text-[#141413] transition-colors cursor-pointer font-sans"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Back
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={isNextDisabled}
+                    className="flex items-center gap-1.5 px-6 py-2.5 bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold transition-all rounded-[20px] disabled:opacity-40 cursor-pointer font-sans animate-fade-in"
+                  >
+                    <span>{currentStep === 8 ? 'Finish Setup' : 'Continue'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

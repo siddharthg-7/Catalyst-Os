@@ -143,7 +143,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          title="Attach document (Markdown / Text)"
+          title="Attach file"
           className="p-2 text-white/40 hover:text-white transition-colors cursor-pointer"
         >
           <Paperclip className="w-4 h-4" />
@@ -166,7 +166,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, 2000))}
           onKeyDown={handleKeyDown}
-          placeholder={isRecording ? 'Listening... speak now...' : 'Ask Catalyst OS AI... (Drag & drop .md supported)'}
+          placeholder={isRecording ? 'Listening... speak now...' : 'Ask me anything about CatalystOS...'}
           disabled={disabled}
           rows={1}
           className="w-full bg-transparent px-2 py-2 text-xs sm:text-sm text-white placeholder:text-[#777777] focus:outline-none resize-none max-h-32 font-sans"

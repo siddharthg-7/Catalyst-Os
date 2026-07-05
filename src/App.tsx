@@ -38,9 +38,20 @@ import CatalystLogo from './components/CatalystLogo';
 import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 
 export default function App() {
-  const { user, loading, logout, apiFetch } = useAuth();
+  const { user, loading, logout, apiFetch, loginAsDemo } = useAuth();
   
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('demo') === 'true') {
+      localStorage.removeItem('catalystos_onboarding_completed_usr_founder_demo');
+      localStorage.removeItem('catalystos_onboarding_context_usr_founder_demo');
+      if (!user) {
+        loginAsDemo();
+      }
+    }
+  }, [loginAsDemo, user]);
 
   useEffect(() => {
     if (user) {

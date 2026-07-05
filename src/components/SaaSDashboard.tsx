@@ -133,6 +133,12 @@ export default function SaaSDashboard({
     }
   }, [knowledge, selectedDocId]);
 
+  useEffect(() => {
+    if (startup && !command) {
+      setCommand(`Startup: ${startup.name} | Industry: ${startup.industry} | Stage: ${startup.fundingStage}`);
+    }
+  }, [startup]);
+
   // Startup Memory Query / RAG System State
   const [memoryQuery, setMemoryQuery] = useState('');
   const [isSearchingMemory, setIsSearchingMemory] = useState(false);
