@@ -17,8 +17,8 @@ export default function SourceCard({ sources }: SourceCardProps) {
 
       <div className="flex flex-wrap gap-2">
         {sources.map((src, i) => (
-          <div 
-            key={i} 
+          <div
+            key={i}
             className="px-2.5 py-1 rounded-lg bg-[#060608] border border-white/10 text-white/70 flex items-center gap-1.5 hover:border-white/30 transition-colors"
           >
             <FileText className="w-3 h-3 text-white" />
