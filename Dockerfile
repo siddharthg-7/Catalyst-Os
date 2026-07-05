@@ -15,8 +15,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/backend ./backend
 COPY --from=builder /app/server.ts ./server.ts
-RUN npx prisma generate
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]
+
 
