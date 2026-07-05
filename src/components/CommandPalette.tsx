@@ -39,11 +39,18 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestData)
       });
+      
       const data = await response.json();
-      setAiResponse(data.choices[0].message.content);
-    } catch (err) {
+      
+      if (!response.ok) {
+          setApiError(`Server Error: ${data.error?.message || JSON.stringify(data.error) || 'Unknown error'}`);
+          return;
+      }
+      
+      setAiResponse(data.choices?.[0]?.message?.content || "No response generated.");
+    } catch (err: any) {
       console.error(err);
-      setApiError("Error: Could not reach the G0DM0D3 API.");
+      setApiError(`Error: ${err.message || 'Could not reach the G0DM0D3 API.'}`);
     } finally {
       setIsFetchingAI(false);
     }
