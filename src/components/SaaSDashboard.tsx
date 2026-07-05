@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord } from '../types';
 import {
   TrendingUp, TrendingDown, Clock, ArrowRight, Calendar,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../hooks/useChat';
+import MarkdownRenderer from './chatbot/MarkdownRenderer';
 
 interface SaaSDashboardProps {
   startup: StartupProfile;
@@ -305,7 +306,7 @@ export default function SaaSDashboard({
 
         {/* Conversation preview — last AI reply if any */}
         {messages.length > 0 && (
-          <div className="px-6 py-4 max-h-48 overflow-y-auto space-y-3 border-b border-gray-50">
+          <div className="px-6 py-4 max-h-[500px] overflow-y-auto space-y-3 border-b border-gray-50">
             {messages.slice(-3).map(msg => (
               <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 {msg.role === 'assistant' && (
@@ -318,7 +319,7 @@ export default function SaaSDashboard({
                     ? 'bg-gray-900 text-white rounded-tr-sm'
                     : 'bg-gray-50 text-gray-800 border border-gray-100 rounded-tl-sm'
                 }`}>
-                  {msg.content}
+                  <MarkdownRenderer content={msg.content} />
                 </div>
               </div>
             ))}

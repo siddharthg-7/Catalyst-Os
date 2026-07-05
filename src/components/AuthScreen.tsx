@@ -322,10 +322,10 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
   const runChecklistAnimation = async () => {
     setCheckmarkProgress(0);
     for (let i = 1; i <= 4; i++) {
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setCheckmarkProgress(i);
     }
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const finalPayload = onboardingPath === 'existing'
       ? {
