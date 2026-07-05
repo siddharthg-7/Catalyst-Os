@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: catalyst-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: catalyst_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: catalyst_secure_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d catalyst_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  fastapi-ai:
+    build:
+      context: .
+      dockerfile: backend/py_service/Dockerfile
+    container_name: catalyst-fastapi
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - ENVIRONMENT=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  node-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: catalyst-node-gateway
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public
+      - FASTAPI_URL=http://fastapi-ai:8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fastapi-ai:
+        condition: service_started
+
+volumes:
+  postgres_data:
