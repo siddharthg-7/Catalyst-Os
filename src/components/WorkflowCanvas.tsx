@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Initiative, AgentRole, AgentMessage, Deliverable } from '../types';
-import { Play, Plus, RefreshCw, AlertTriangle, FileText, CheckCircle2, ChevronRight, User2, MessageSquare, ArrowRight } from 'lucide-react';
+import { Play, Plus, RefreshCw, AlertTriangle, FileText, CheckCircle2, ChevronRight, MessageSquare, ArrowRight } from 'lucide-react';
 
 interface WorkflowCanvasProps {
   initiatives: Initiative[];
@@ -94,7 +94,6 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
       setSimStep(i);
       setActiveAgent(steps[i].agent);
       setSimProgressMessage(steps[i].msg);
-      // Wait for dramatic effect
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
@@ -139,13 +138,13 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
   }, [initiatives, selectedInitId]);
 
   return (
-    <div id="workflow-canvas-container" className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div id="workflow-canvas-container" className="grid grid-cols-1 xl:grid-cols-3 gap-6 font-sans">
       
       {/* Sidebar: Strategic Initiatives List */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-white">Strategic Sprints</h4>
-          <span className="text-xs text-zinc-500 font-mono">{initiatives.length} Logged</span>
+          <h4 className="text-sm font-bold text-[#141413]">Strategic Sprints</h4>
+          <span className="text-xs text-[#696969] font-mono">{initiatives.length} Logged</span>
         </div>
 
         <div className="space-y-2.5 max-h-[450px] overflow-y-auto pr-1">
@@ -153,45 +152,45 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
             <button
               key={init.id}
               onClick={() => setSelectedInitId(init.id)}
-              className={`w-full p-4 rounded-xl border text-left transition-all cursor-pointer ${
+              className={`w-full p-4 rounded-[20px] border text-left transition-all cursor-pointer ${
                 selectedInitId === init.id
-                  ? 'bg-[#18181B] border-[#27272A] shadow-md shadow-[#6366F1]/5'
-                  : 'bg-[#18181B]/30 border-[#27272A]/60 hover:bg-[#18181B]/60 hover:border-[#27272A]'
+                  ? 'bg-white border-[#141413] shadow-[rgba(0,0,0,0.04)_0px_4px_16px_0px]'
+                  : 'bg-[#FCFBFA] border-[#141413]/10 hover:bg-white hover:border-[#141413]/30'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className={`px-2 py-0.5 text-[9px] font-mono font-bold rounded-full uppercase ${
-                  init.category === 'funding' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                  init.category === 'hiring' ? 'bg-pink-500/10 text-pink-400 border-pink-500/20' :
-                  'bg-indigo-500/10 text-[#6366F1] border-indigo-500/20'
+                  init.category === 'funding' ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' :
+                  init.category === 'hiring' ? 'bg-pink-500/10 text-pink-700 border-pink-500/20' :
+                  'bg-indigo-500/10 text-indigo-700 border-indigo-500/20'
                 }`}>
                   {init.category}
                 </span>
                 
-                <span className={`text-[10px] font-medium flex items-center gap-1 ${
-                  init.status === 'completed' ? 'text-emerald-400' :
-                  init.status === 'active' ? 'text-amber-400 animate-pulse' : 'text-zinc-500'
+                <span className={`text-[10px] font-bold flex items-center gap-1 ${
+                  init.status === 'completed' ? 'text-emerald-700' :
+                  init.status === 'active' ? 'text-amber-700 animate-pulse' : 'text-[#696969]'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${
-                    init.status === 'completed' ? 'bg-emerald-500' :
-                    init.status === 'active' ? 'bg-amber-500 animate-ping' : 'bg-zinc-600'
+                    init.status === 'completed' ? 'bg-emerald-600' :
+                    init.status === 'active' ? 'bg-amber-500 animate-ping' : 'bg-[#696969]'
                   }`} />
                   {init.status.toUpperCase()}
                 </span>
               </div>
-              <h5 className="mt-2.5 text-xs font-semibold text-zinc-200 line-clamp-1">{init.title}</h5>
-              <p className="mt-1 text-[11px] text-zinc-500 line-clamp-2 leading-relaxed">{init.description}</p>
+              <h5 className="mt-2 text-xs font-bold text-[#141413] line-clamp-1">{init.title}</h5>
+              <p className="mt-1 text-[11px] text-[#696969] line-clamp-2 leading-relaxed">{init.description}</p>
             </button>
           ))}
         </div>
 
         {/* Start New Initiative Form Card */}
-        <div className="p-4 rounded-xl border border-[#27272A] bg-[#18181B] shadow-sm">
-          <h5 className="text-xs font-semibold text-white flex items-center gap-1.5">
-            <Plus className="w-4 h-4 text-[#6366F1]" />
+        <div className="p-5 rounded-[20px] border border-[#141413]/10 bg-white shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
+          <h5 className="text-xs font-bold text-[#141413] flex items-center gap-1.5 uppercase font-mono tracking-wider">
+            <Plus className="w-4 h-4 text-[#141413]" />
             Initiate Executive Session
           </h5>
-          <p className="text-[11px] text-zinc-400 mt-1">Deploy an active workflow requiring collaborating AI executive signoffs.</p>
+          <p className="text-[11px] text-[#696969] mt-1">Deploy an active workflow requiring collaborating AI executive signoffs.</p>
 
           <form onSubmit={handleLaunchSubmit} className="mt-3.5 space-y-3">
             <div>
@@ -201,7 +200,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 required
-                className="w-full px-3 py-1.5 rounded-lg bg-zinc-950/80 border border-[#27272A] text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#6366F1]"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/15 text-xs text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413]"
               />
             </div>
             <div>
@@ -211,14 +210,14 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                 onChange={(e) => setNewDescription(e.target.value)}
                 required
                 rows={2}
-                className="w-full px-3 py-1.5 rounded-lg bg-zinc-950/80 border border-[#27272A] text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#6366F1] resize-none leading-normal"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/15 text-xs text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413] resize-none leading-normal"
               />
             </div>
             <div className="flex gap-2 items-center justify-between">
               <select
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value as any)}
-                className="px-2.5 py-1 rounded bg-zinc-950 border border-[#27272A] text-[10px] text-zinc-300 focus:outline-none focus:border-[#6366F1]"
+                className="px-2.5 py-1.5 rounded-[8px] bg-[#F3F0EE] border border-[#141413]/15 text-[10px] text-[#141413] focus:outline-none focus:border-[#141413]"
               >
                 <option value="growth">Growth</option>
                 <option value="funding">Funding</option>
@@ -229,7 +228,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               <button
                 type="submit"
                 disabled={isLaunching}
-                className="px-4 py-1.5 rounded-lg bg-[#6366F1] text-[10px] font-bold text-white hover:bg-[#6366F1]/85 transition-all disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-[10px] font-bold text-[#F3F0EE] transition-all disabled:opacity-50 cursor-pointer font-sans"
               >
                 {isLaunching ? 'Spawning...' : 'Spawn Sprint'}
               </button>
@@ -237,17 +236,17 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
           </form>
 
           {/* Quick template triggers */}
-          <div className="mt-4 pt-3.5 border-t border-[#27272A]">
-            <span className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider block mb-2">Enterprise-grade Templates</span>
+          <div className="mt-4 pt-3.5 border-t border-[#141413]/10">
+            <span className="text-[9px] font-bold text-[#696969] uppercase tracking-wider block mb-2 font-mono">Enterprise templates</span>
             <div className="space-y-1.5">
               {templates.map((tpl, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleApplyTemplate(tpl)}
-                  className="w-full p-2 rounded text-left text-[10px] bg-zinc-900/60 border border-[#27272A]/60 hover:border-[#27272A] hover:bg-[#18181B]/50 transition-all flex items-center justify-between cursor-pointer"
+                  className="w-full p-2.5 rounded-[10px] text-left text-[10px] bg-[#FCFBFA] border border-[#141413]/10 hover:border-[#141413]/30 hover:bg-white transition-all flex items-center justify-between cursor-pointer font-sans"
                 >
-                  <span className="text-zinc-300 line-clamp-1 font-medium">{tpl.title}</span>
-                  <ChevronRight className="w-3 h-3 text-zinc-500 shrink-0 ml-1" />
+                  <span className="text-[#696969] line-clamp-1 font-semibold">{tpl.title}</span>
+                  <ChevronRight className="w-3 h-3 text-[#696969] shrink-0 ml-1" />
                 </button>
               ))}
             </div>
@@ -260,19 +259,19 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
       {/* Main Workspace: Visual Graph & Interactive Playback */}
       <div className="xl:col-span-2 space-y-6">
         {activeInit ? (
-          <div className="p-5 rounded-xl border border-[#27272A] bg-[#18181B] space-y-6 relative overflow-hidden shadow-sm">
+          <div className="p-6 rounded-[20px] border border-[#141413]/10 bg-white space-y-6 relative overflow-hidden shadow-[rgba(0,0,0,0.02)_0px_4px_16px_0px]">
             
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#27272A] pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#141413]/10 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 text-[9px] font-mono font-bold rounded-full bg-zinc-800 text-zinc-400 border border-[#27272A]">
+                  <span className="px-2.5 py-0.5 text-[9px] font-mono font-bold rounded-full bg-[#F3F0EE] text-[#696969] border border-[#141413]/10">
                     ID: {activeInit.id}
                   </span>
-                  <span className="text-xs text-zinc-400 capitalize">{activeInit.category} initiative</span>
+                  <span className="text-xs text-[#696969] capitalize font-mono font-bold">{activeInit.category} initiative</span>
                 </div>
-                <h3 className="mt-2 text-base font-bold text-white leading-snug">{activeInit.title}</h3>
-                <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed max-w-xl">{activeInit.description}</p>
+                <h3 className="mt-2 text-base font-bold text-[#141413] leading-snug">{activeInit.title}</h3>
+                <p className="mt-1.5 text-xs text-[#696969] leading-relaxed max-w-xl">{activeInit.description}</p>
               </div>
 
               {/* Action Button */}
@@ -280,9 +279,9 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                 <button
                   onClick={() => handleSimulate(activeInit.id)}
                   disabled={simulatingId !== null}
-                  className="px-5 py-2.5 rounded-lg bg-[#6366F1] hover:bg-[#6366F1]/85 text-xs font-bold text-white transition-all flex items-center gap-2 shrink-0 self-start sm:self-center disabled:opacity-50 group shadow-lg shadow-[#6366F1]/20 cursor-pointer"
+                  className="px-5 py-2.5 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] transition-all flex items-center gap-2 shrink-0 self-start sm:self-center disabled:opacity-50 group cursor-pointer font-sans"
                 >
-                  <Play className="w-4 h-4 text-white group-hover:scale-110 transition-all" />
+                  <Play className="w-4 h-4 text-[#F3F0EE]" />
                   Orchestrate AI Council
                 </button>
               )}
@@ -290,18 +289,18 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
             {/* Live Cinematic Loader State */}
             {simulatingId === activeInit.id && (
-              <div className="p-6 rounded-xl border border-[#27272A]/60 bg-zinc-950/80 space-y-4">
+              <div className="p-6 rounded-[20px] border border-[#141413]/10 bg-[#F3F0EE] space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#6366F1] flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-xs font-bold text-[#141413] flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#141413]" />
                     Multi-Agent Corporate Simulation Playing
                   </span>
-                  <span className="text-[10px] font-mono text-zinc-500">Step {simStep + 1} of 8</span>
+                  <span className="text-[10px] font-mono text-[#696969]">Step {simStep + 1} of 8</span>
                 </div>
-                <p className="text-xs text-zinc-200 leading-normal font-mono">{simProgressMessage}</p>
-                <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                <p className="text-xs text-[#141413] leading-normal font-mono">{simProgressMessage}</p>
+                <div className="w-full h-1.5 bg-[#141413]/10 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#6366F1] to-purple-500 rounded-full transition-all duration-500"
+                    className="h-full bg-[#141413] rounded-full transition-all duration-500"
                     style={{ width: `${((simStep + 1) / 8) * 100}%` }}
                   />
                 </div>
@@ -309,12 +308,11 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
             )}
 
             {/* Visual Agent Collaboration Map (SVG graph) */}
-            <div className="p-3 border border-[#27272A]/60 rounded-xl bg-zinc-950/50 relative">
-              <span className="absolute top-3 left-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Operational Node Topology</span>
+            <div className="p-3 border border-[#141413]/10 rounded-[20px] bg-[#FCFBFA] relative">
+              <span className="absolute top-3 left-3 text-[10px] font-bold text-[#696969] uppercase tracking-wider font-mono">Operational Node Topology</span>
               
               <div className="relative h-[560px] w-full overflow-hidden flex items-center justify-center">
                 <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                  {/* Drawing flowing link paths */}
                   {flowLinks.map((link, idx) => {
                     const fromNode = agentNodes.find(n => n.role === link.from);
                     const toNode = agentNodes.find(n => n.role === link.to);
@@ -326,7 +324,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       <g key={idx}>
                         <path
                           d={`M ${fromNode.x} ${fromNode.y} L ${toNode.x} ${toNode.y}`}
-                          stroke={isFlowing ? '#6366F1' : '#27272A'}
+                          stroke={isFlowing ? '#141413' : '#141413/10'}
                           strokeWidth={isFlowing ? 2.5 : 1.5}
                           strokeDasharray={isFlowing ? '4,4' : undefined}
                           className={isFlowing ? 'animate-[dash_2s_linear_infinite]' : undefined}
@@ -345,12 +343,12 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                     <div
                       key={node.role}
                       style={{ left: `${node.x - 42}px`, top: `${node.y - 42}px` }}
-                      className={`absolute p-1.5 rounded-xl border flex flex-col items-center justify-between w-24 h-24 transition-all duration-300 select-none ${
+                      className={`absolute p-2.5 rounded-[20px] border flex flex-col items-center justify-between w-24 h-24 transition-all duration-300 select-none ${
                         isActive
-                          ? 'bg-zinc-900 border-[#6366F1] ring-2 ring-[#6366F1]/20 scale-105'
+                          ? 'bg-white border-[#141413] ring-4 ring-[#141413]/05 scale-105 shadow-[rgba(0,0,0,0.06)_0px_8px_24px_0px]'
                           : isVetted
-                          ? 'bg-zinc-900/50 border-[#27272A] opacity-80'
-                          : 'bg-zinc-900/20 border-[#27272A]'
+                          ? 'bg-white/80 border-[#141413]/10 opacity-80'
+                          : 'bg-[#FCFBFA] border-[#141413]/10'
                       }`}
                     >
                       <div className="relative">
@@ -358,15 +356,15 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                           src={node.avatar}
                           alt={node.role}
                           referrerPolicy="no-referrer"
-                          className="w-10 h-10 rounded-lg object-cover filter grayscale"
+                          className="w-10 h-10 rounded-full object-cover filter grayscale"
                         />
                         {isActive && (
-                          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#6366F1] animate-ping" />
+                          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-600 animate-ping" />
                         )}
                       </div>
                       <div className="text-center">
-                        <span className="text-[10px] font-bold text-zinc-100 block">{node.role}</span>
-                        <span className="text-[8px] text-zinc-500 block truncate max-w-[80px]">{node.name.split(' ')[0]}</span>
+                        <span className="text-[10px] font-bold text-[#141413] block font-mono">{node.role}</span>
+                        <span className="text-[8px] text-[#696969] block truncate max-w-[80px] font-sans font-semibold">{node.name.split(' ')[0]}</span>
                       </div>
                     </div>
                   );
@@ -374,7 +372,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
                 {/* Micro operational alert */}
                 {simulatingId && (
-                  <div className="absolute bottom-4 right-4 p-2 rounded-lg bg-[#6366F1]/10 border border-[#6366F1]/30 text-[9px] font-mono text-[#6366F1] animate-pulse flex items-center gap-1">
+                  <div className="absolute bottom-4 right-4 p-2.5 rounded-full bg-[#141413]/05 border border-[#141413]/10 text-[9px] font-mono text-[#141413] animate-pulse flex items-center gap-1.5 font-bold uppercase tracking-wider">
                     <RefreshCw className="w-3 h-3 animate-spin" />
                     Simulating AI Debate Threads...
                   </div>
@@ -382,83 +380,56 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               </div>
             </div>
 
-            {/* Results section (Conversations and Deliverables) */}
+            {/* Results section */}
             {activeInit.status === 'completed' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 
                 {/* Agent Conversations Thread */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-[#6366F1]" />
-                    <h4 className="text-xs font-semibold text-white uppercase tracking-wider">AI Debate logs</h4>
+                    <MessageSquare className="w-4 h-4 text-[#141413]" />
+                    <h4 className="text-xs font-bold text-[#141413] uppercase tracking-wider font-mono">AI Debate logs</h4>
                   </div>
 
                   <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
                     {activeInit.messages.map((msg) => (
                       <div
                         key={msg.id}
-                        className={`p-3 rounded-lg border text-xs relative space-y-1 ${
+                        className={`p-3.5 rounded-[16px] border text-xs relative space-y-1 ${
                           msg.isConflict
-                            ? 'bg-amber-950/15 border-amber-900/30'
+                            ? 'bg-amber-50 border-amber-200'
                             : msg.sender === 'ConflictResolver'
-                            ? 'bg-purple-950/15 border-purple-900/30'
-                            : 'bg-zinc-900/50 border-[#27272A]/80'
+                            ? 'bg-indigo-50 border-indigo-200'
+                            : 'bg-[#FCFBFA] border-[#141413]/10'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className={`font-bold uppercase tracking-wider text-[10px] ${
-                            msg.sender === 'CEO' ? 'text-[#6366F1]' :
-                            msg.sender === 'Finance' ? 'text-emerald-400' :
-                            msg.sender === 'ConflictResolver' ? 'text-purple-400' : 'text-zinc-400'
+                          <span className={`font-bold uppercase tracking-wider text-[9px] font-mono ${
+                            msg.sender === 'CEO' ? 'text-indigo-800' :
+                            msg.sender === 'Finance' ? 'text-emerald-800' :
+                            msg.sender === 'ConflictResolver' ? 'text-purple-800' : 'text-[#696969]'
                           }`}>
                             {msg.sender} → {msg.receiver}
                           </span>
                           
                           {msg.isConflict && (
-                            <span className="px-1.5 py-0.5 text-[8px] rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center gap-0.5">
+                            <span className="px-1.5 py-0.5 text-[8px] font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-0.5 uppercase tracking-wider font-mono">
                               <AlertTriangle className="w-2.5 h-2.5" />
                               Conflict
                             </span>
                           )}
                         </div>
-                        <p className="text-zinc-300 leading-relaxed font-sans">{msg.content}</p>
+                        <p className="text-[#141413] leading-relaxed font-sans">{msg.content}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* MCP Tool Calls Telemetry */}
-                {activeInit.mcp_tool_calls && activeInit.mcp_tool_calls.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                        <h4 className="text-xs font-semibold text-white uppercase tracking-wider">MCP Tools Executed</h4>
-                      </div>
-                      <span className="text-[9px] font-mono text-cyan-400/80 px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">Model Context Protocol</span>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      {activeInit.mcp_tool_calls.map((tc, idx) => (
-                        <div key={idx} className="p-3 rounded-lg bg-zinc-950/80 border border-cyan-900/30 text-xs font-mono space-y-1">
-                          <div className="flex items-center justify-between text-cyan-400 font-bold">
-                            <span>🛠️ {tc.tool}</span>
-                            <span className="text-[9px] text-emerald-400">SUCCESS</span>
-                          </div>
-                          <div className="text-[10px] text-zinc-400 truncate">
-                            Output: {JSON.stringify(tc.output)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Deliverables Produced */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-emerald-400" />
-                    <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Assets Produced</h4>
+                    <FileText className="w-4 h-4 text-emerald-700" />
+                    <h4 className="text-xs font-bold text-[#141413] uppercase tracking-wider font-mono">Assets Produced</h4>
                   </div>
 
                   {activeInit.deliverables.length > 0 ? (
@@ -466,22 +437,22 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       {activeInit.deliverables.map((del) => (
                         <div
                           key={del.id}
-                          className="p-4 rounded-xl border border-[#27272A] bg-zinc-900/30 hover:border-[#6366F1]/50 hover:bg-[#18181B] transition-all flex items-start gap-3.5"
+                          className="p-4 rounded-[20px] border border-[#141413]/10 bg-[#FCFBFA] hover:border-[#141413]/30 hover:bg-white transition-all flex items-start gap-3.5"
                         >
-                          <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                          <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-700">
                             <FileText className="w-5 h-5" />
                           </div>
                           <div className="flex-1 space-y-1">
                             <div className="flex items-center justify-between">
-                              <h5 className="text-xs font-semibold text-white">{del.title}</h5>
-                              <span className="px-1.5 py-0.5 text-[8px] rounded uppercase bg-emerald-500/10 text-emerald-400">
+                              <h5 className="text-xs font-bold text-[#141413]">{del.title}</h5>
+                              <span className="px-2 py-0.5 text-[8px] rounded-full uppercase bg-emerald-500/10 text-emerald-700 font-bold tracking-wider font-mono border border-emerald-500/20">
                                 Ready
                               </span>
                             </div>
-                            <p className="text-[11px] text-zinc-400 line-clamp-2">{del.description}</p>
+                            <p className="text-[11px] text-[#696969] line-clamp-2 leading-relaxed">{del.description}</p>
                             <button
                               onClick={() => setPreviewDeliverable(del)}
-                              className="mt-2 text-[10px] text-[#6366F1] hover:text-[#6366F1]/80 font-medium flex items-center gap-1 cursor-pointer"
+                              className="mt-2 text-[10px] text-emerald-800 hover:underline font-bold flex items-center gap-1 cursor-pointer font-sans"
                             >
                               Inspect Asset Draft <ArrowRight className="w-3 h-3" />
                             </button>
@@ -490,7 +461,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       ))}
                     </div>
                   ) : (
-                    <div className="p-6 rounded-xl border border-dashed border-[#27272A] text-center text-xs text-zinc-500">
+                    <div className="p-6 rounded-[20px] border border-dashed border-[#141413]/20 bg-white text-center text-xs text-[#696969]">
                       No deliverables generated yet. Run the simulation.
                     </div>
                   )}
@@ -501,7 +472,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
           </div>
         ) : (
-          <div className="p-12 rounded-xl border border-dashed border-[#27272A] text-center text-zinc-500 text-xs">
+          <div className="p-12 rounded-[20px] border border-dashed border-[#141413]/20 bg-white text-center text-[#696969] text-xs">
             No active strategic sprint selected.
           </div>
         )}
@@ -509,34 +480,34 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
       {/* Deliverable Document Preview Overlay (Modal) */}
       {previewDeliverable && (
-        <div id="deliverable-modal-overlay" className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-zinc-950 border border-[#27272A] rounded-xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+        <div id="deliverable-modal-overlay" className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-white border border-[#141413]/10 rounded-[20px] shadow-[rgba(0,0,0,0.12)_0px_24px_48px_0px] flex flex-col max-h-[85vh] overflow-hidden">
             
             {/* Modal Header */}
-            <div className="p-5 border-b border-[#27272A] flex items-center justify-between">
+            <div className="p-5 border-b border-[#141413]/10 flex items-center justify-between">
               <div>
-                <span className="text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10">
                   {previewDeliverable.type}
                 </span>
-                <h4 className="text-sm font-bold text-white mt-2">{previewDeliverable.title}</h4>
+                <h4 className="text-sm font-bold text-[#141413] mt-2">{previewDeliverable.title}</h4>
               </div>
               <button
                 onClick={() => setPreviewDeliverable(null)}
-                className="px-2.5 py-1 rounded bg-zinc-900 border border-[#27272A] text-xs text-zinc-400 hover:text-white transition-all cursor-pointer"
+                className="px-3.5 py-1.5 rounded-[20px] bg-[#F3F0EE] border border-[#141413]/10 text-xs text-[#696969] hover:text-[#141413] transition-all cursor-pointer font-sans"
               >
                 Close
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-4 prose prose-invert max-w-none text-xs text-zinc-300 leading-relaxed font-mono whitespace-pre-wrap bg-zinc-900/20">
+            <div className="p-6 overflow-y-auto space-y-4 max-w-none text-xs text-[#141413] leading-relaxed font-mono whitespace-pre-wrap bg-[#FCFBFA]">
               {previewDeliverable.content}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-[#27272A] bg-zinc-900/40 flex items-center justify-between text-[11px] text-zinc-500">
+            <div className="p-4 border-t border-[#141413]/10 bg-[#F3F0EE] flex items-center justify-between text-[10px] text-[#696969] font-mono">
               <span>Impact Score: {previewDeliverable.impact}</span>
-              <span className="text-zinc-400 font-mono">Financial: {previewDeliverable.financialChange ? `${previewDeliverable.financialChange > 0 ? '+' : ''}$${previewDeliverable.financialChange.toLocaleString()}` : 'Neutral'}</span>
+              <span className="text-[#141413] font-bold">Financial: {previewDeliverable.financialChange ? `${previewDeliverable.financialChange > 0 ? '+' : ''}$${previewDeliverable.financialChange.toLocaleString()}` : 'Neutral'}</span>
             </div>
 
           </div>

@@ -82,7 +82,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         const content = event.target?.result as string;
         setText(prev => (prev ? `${prev}\n\n${content}` : content));
       };
-      reader.readAsText(file);
+      reader.readAsText(file as Blob);
     }
   };
 
