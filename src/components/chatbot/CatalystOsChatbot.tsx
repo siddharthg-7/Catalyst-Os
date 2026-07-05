@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ChatButton from './ChatButton';
 import ChatWindow from './ChatWindow';
 import { useChat } from '../../hooks/useChat';
@@ -21,14 +21,32 @@ export default function CatalystOsChatbot() {
   const {
     isOpen,
     toggleOpen,
+    openChat,
     closeChat,
     clearChat,
     messages,
     isTyping,
     suggestedQuestions,
+    language,
+    setLanguage,
     sendMessage,
     regenerateLastMessage,
   } = useChat(apiFetch, userId);
+
+  useEffect(() => {
+    const handleDemo = () => {
+      openChat();
+      clearChat();
+      
+      // Give the chat window a moment to animate open
+      setTimeout(() => {
+        sendMessage("Give me a summary of Catalyst OS features and pricing.");
+      }, 800);
+    };
+
+    window.addEventListener('START_CHATBOT_DEMO', handleDemo);
+    return () => window.removeEventListener('START_CHATBOT_DEMO', handleDemo);
+  }, [openChat, clearChat, sendMessage]);
 
   return (
     <>
@@ -37,6 +55,8 @@ export default function CatalystOsChatbot() {
         messages={messages}
         isTyping={isTyping}
         suggestedQuestions={suggestedQuestions}
+        language={language}
+        onLanguageChange={setLanguage}
         onSendMessage={sendMessage}
         onClearChat={clearChat}
         onClose={closeChat}

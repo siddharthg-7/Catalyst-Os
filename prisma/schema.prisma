@@ -1,77 +1,76 @@
-datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  extensions = [pgvector(map: "vector")]
-}
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
 }
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String    @id @default(uuid())
+  email     String    @unique
   name      String?
-  role      String   @default("founder")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  role      String    @default("founder")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   startups  Startup[]
 }
 
 model Startup {
-  id           String             @id @default(uuid())
-  name         String
-  industry     String
-  description  String
-  fundingStage String             @default("pre-seed")
-  cashBalance  Float              @default(250000)
-  burnRate     Float              @default(15000)
-  healthScore  Int                @default(78)
-  ownerId      String
-  owner        User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  documents    StartupDocument[]
-  agents       ExecutiveAgent[]
-  commands     Command[]
-  plans        Plan[]
+  id            String            @id @default(uuid())
+  name          String
+  industry      String
+  description   String
+  fundingStage  String            @default("pre-seed")
+  cashBalance   Float             @default(250000)
+  burnRate      Float             @default(15000)
+  healthScore   Int               @default(78)
+  ownerId       String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  commands      Command[]
+  decisions     DecisionLog[]
+  agents        ExecutiveAgent[]
+  healthScores  HealthScore[]
+  memories      Memory[]
   notifications Notification[]
-  healthScores HealthScore[]
-  timeline     TimelineItem[]
-  decisions    DecisionLog[]
-  memories     Memory[]
+  plans         Plan[]
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  documents     StartupDocument[]
+  timeline      TimelineItem[]
 }
 
 model StartupDocument {
-  id          String           @id @default(uuid())
-  name        String
-  type        String
-  size        String
-  summary     String
-  insights    String[]
-  startupId   String
-  startup     Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  chunks      KnowledgeChunk[]
+  id        String           @id @default(uuid())
+  name      String
+  type      String
+  size      String
+  summary   String
+  insights  String[]
+  startupId String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  chunks    KnowledgeChunk[]
+  startup   Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model KnowledgeChunk {
-  id         String            @id @default(uuid())
+  id         String          @id @default(uuid())
   content    String
   documentId String
-  document   StartupDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime        @default(now())
   embedding  Embedding?
-  createdAt  DateTime          @default(now())
+  document   StartupDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
 
 model Embedding {
   id        String         @id @default(uuid())
   vector    Float[]
   chunkId   String         @unique
-  chunk     KnowledgeChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
   createdAt DateTime       @default(now())
+  chunk     KnowledgeChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
 }
 
 model ExecutiveAgent {
@@ -82,19 +81,19 @@ model ExecutiveAgent {
   status      String   @default("idle")
   currentTask String?
   startupId   String
-  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model Command {
-  id         String   @id @default(uuid())
-  content    String
-  status     String   @default("pending")
-  startupId  String
-  startup    Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(uuid())
+  content   String
+  status    String   @default("pending")
+  startupId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model Plan {
@@ -103,12 +102,12 @@ model Plan {
   description String
   status      String      @default("planning")
   startupId   String
-  startup     Startup     @relation(fields: [startupId], references: [id], onDelete: Cascade)
-  tasks       Task[]
-  approvals   Approval[]
-  executions  Execution[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  approvals   Approval[]
+  executions  Execution[]
+  startup     Startup     @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  tasks       Task[]
 }
 
 model Task {
@@ -118,9 +117,9 @@ model Task {
   status     String   @default("pending")
   result     String?
   planId     String
-  plan       Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  plan       Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model Approval {
@@ -134,9 +133,9 @@ model Approval {
   financialChange Float    @default(0)
   metricChanges   Json
   planId          String
-  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -146,8 +145,8 @@ model Notification {
   type      String   @default("info")
   read      Boolean  @default(false)
   startupId String
-  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model HealthScore {
@@ -155,8 +154,8 @@ model HealthScore {
   score     Int
   metrics   Json
   startupId String
-  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model TimelineItem {
@@ -165,8 +164,8 @@ model TimelineItem {
   content   String
   type      String   @default("milestone")
   startupId String
-  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model DecisionLog {
@@ -178,8 +177,8 @@ model DecisionLog {
   financialImpact Float    @default(0)
   status          String   @default("approved")
   startupId       String
-  startup         Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
+  startup         Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model Memory {
@@ -188,8 +187,8 @@ model Memory {
   title       String
   description String
   startupId   String
-  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
+  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
 }
 
 model Execution {
@@ -198,6 +197,31 @@ model Execution {
   payload   Json
   status    String   @default("completed")
   planId    String
-  plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model approval_gates {
+  id          String  @id @db.VarChar
+  action_type String  @db.VarChar
+  payload     Json    @db.Json
+  status      String? @db.VarChar
+}
+
+model candidates {
+  id              String  @id @db.VarChar
+  name            String  @db.VarChar
+  email           String  @db.VarChar
+  resume_text     String?
+  match_score     Float?
+  analysis_report String?
+}
+
+model startup_contexts {
+  id                   String  @id @db.VarChar
+  company_name         String  @db.VarChar
+  industry             String  @db.VarChar
+  target_icp           String?
+  current_monthly_burn Float?
+  cash_on_hand         Float?
 }

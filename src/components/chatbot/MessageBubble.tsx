@@ -8,9 +8,10 @@ interface MessageBubbleProps {
   key?: React.Key;
   message: ChatMessage;
   onRegenerate?: () => void;
+  speechLanguage?: string;
 }
 
-export default function MessageBubble({ message, onRegenerate }: MessageBubbleProps) {
+export default function MessageBubble({ message, onRegenerate, speechLanguage = 'auto' }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
   const [isPlayingSpeech, setIsPlayingSpeech] = useState(false);
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
@@ -22,7 +23,7 @@ export default function MessageBubble({ message, onRegenerate }: MessageBubblePr
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSpeech = () => {
+  const handleSpeech = async () => {
     if (!('speechSynthesis' in window)) {
       alert('Text-to-speech is not supported in your browser.');
       return;
@@ -44,6 +45,35 @@ export default function MessageBubble({ message, onRegenerate }: MessageBubblePr
     const utterance = new SpeechSynthesisUtterance(plainText);
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
+    const selectedLanguages: Record<string, string> = { en: 'en-US', te: 'te-IN', hi: 'hi-IN', ta: 'ta-IN', kn: 'kn-IN', ml: 'ml-IN', bn: 'bn-IN', ar: 'ar-SA' };
+    if (speechLanguage !== 'auto' && selectedLanguages[speechLanguage]) utterance.lang = selectedLanguages[speechLanguage];
+    else if (/[\u0C00-\u0C7F]/.test(plainText)) utterance.lang = 'te-IN';
+    else if (/[\u0900-\u097F]/.test(plainText)) utterance.lang = 'hi-IN';
+    else if (/[\u0B80-\u0BFF]/.test(plainText)) utterance.lang = 'ta-IN';
+    else if (/[\u0C80-\u0CFF]/.test(plainText)) utterance.lang = 'kn-IN';
+    else utterance.lang = 'en-US';
+
+    const loadVoices = async (): Promise<SpeechSynthesisVoice[]> => {
+      const available = window.speechSynthesis.getVoices();
+      if (available.length > 0) return available;
+      return new Promise(resolve => {
+        const timeout = window.setTimeout(() => resolve(window.speechSynthesis.getVoices()), 2000);
+        window.speechSynthesis.addEventListener('voiceschanged', () => {
+          window.clearTimeout(timeout);
+          resolve(window.speechSynthesis.getVoices());
+        }, { once: true });
+      });
+    };
+
+    const voices = await loadVoices();
+    const languagePrefix = utterance.lang.split('-')[0].toLowerCase();
+    const matchingVoice = voices.find(voice => voice.lang.toLowerCase() === utterance.lang.toLowerCase())
+      || voices.find(voice => voice.lang.toLowerCase().startsWith(languagePrefix));
+    if (matchingVoice) utterance.voice = matchingVoice;
+    else if (languagePrefix !== 'en') {
+      alert(`Telugu text is ready, but this browser has no ${utterance.lang} speech voice. In Windows, open Settings > Time & language > Speech > Manage voices, add Telugu, then restart Chrome or Edge.`);
+      return;
+    }
 
     utterance.onend = () => setIsPlayingSpeech(false);
     utterance.onerror = () => setIsPlayingSpeech(false);

@@ -54,15 +54,17 @@ import { FaDocker, FaStripe, FaGithub, FaAws, FaBrain } from 'react-icons/fa6';
 
 interface HackathonLandingPageProps {
   onStartBuilding: () => void;
+  onDemoLogin?: () => void;
 }
 
-export default function HackathonLandingPage({ onStartBuilding }: HackathonLandingPageProps) {
+export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: HackathonLandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [activeAgent, setActiveAgent] = useState<'hiring' | 'finance' | 'legal' | 'investment' | 'growth'>('hiring');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [lottieError, setLottieError] = useState(false);
+  const [demoDropdownOpen, setDemoDropdownOpen] = useState(false);
 
   // Workspace typing simulation state
   const [typingText, setTypingText] = useState('');
@@ -260,6 +262,59 @@ export default function HackathonLandingPage({ onStartBuilding }: HackathonLandi
                 <span>Start Free Trial</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+
+              <div className="relative">
+                <button
+                  onMouseEnter={() => setDemoDropdownOpen(true)}
+                  onMouseLeave={() => setDemoDropdownOpen(false)}
+                  className="w-full sm:w-auto px-8 py-4 bg-transparent hover:bg-[#F37338]/10 text-[#F37338] border border-[#F37338]/30 font-medium text-[15px] transition-all flex items-center justify-center gap-2 font-sans rounded-[20px]"
+                >
+                  <Play className="w-4 h-4" />
+                  <span>Interactive Demo</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${demoDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {demoDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.15 }}
+                      onMouseEnter={() => setDemoDropdownOpen(true)}
+                      onMouseLeave={() => setDemoDropdownOpen(false)}
+                      className="absolute left-0 mt-2 w-56 bg-white border border-[#141413]/10 rounded-[16px] shadow-[rgba(0,0,0,0.1)_0px_10px_30px] overflow-hidden z-50 p-2"
+                    >
+                      <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('START_CHATBOT_DEMO'))}
+                        className="w-full text-left px-4 py-3 hover:bg-[#F3F0EE] rounded-[10px] transition-colors flex items-center gap-3 cursor-pointer group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#F37338]/10 flex items-center justify-center text-[#F37338] group-hover:scale-110 transition-transform">
+                          <Bot className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-[#141413] font-sans">Chatbot Demo</div>
+                          <div className="text-[10px] text-[#696969] font-sans">See RAG capabilities</div>
+                        </div>
+                      </button>
+                      
+                      <button
+                        onClick={() => onDemoLogin && onDemoLogin()}
+                        className="w-full text-left px-4 py-3 hover:bg-[#F3F0EE] rounded-[10px] transition-colors flex items-center gap-3 cursor-pointer group mt-1"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#141413]/5 flex items-center justify-center text-[#141413] group-hover:scale-110 transition-transform">
+                          <Layers className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-[#141413] font-sans">Dashboard Demo</div>
+                          <div className="text-[10px] text-[#696969] font-sans">Explore the SaaS app</div>
+                        </div>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
 
           </div>

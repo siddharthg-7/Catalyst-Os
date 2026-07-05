@@ -17,6 +17,8 @@ interface ChatWindowProps {
   onClearChat: () => void;
   onClose: () => void;
   onRegenerate?: () => void;
+  language: string;
+  onLanguageChange: (language: string) => void;
 }
 
 export default function ChatWindow({
@@ -28,6 +30,8 @@ export default function ChatWindow({
   onClearChat,
   onClose,
   onRegenerate,
+  language,
+  onLanguageChange,
 }: ChatWindowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +70,8 @@ export default function ChatWindow({
             onMinimize={onClose}
             onClose={onClose}
             onExport={handleExportConversation}
+            language={language}
+            onLanguageChange={onLanguageChange}
           />
 
           {/* Messages & Content Area */}
@@ -88,6 +94,7 @@ export default function ChatWindow({
                     key={msg.id} 
                     message={msg} 
                     onRegenerate={idx === messages.length - 1 && msg.role === 'assistant' ? onRegenerate : undefined} 
+                    speechLanguage={language}
                   />
                 ))}
 
@@ -105,7 +112,7 @@ export default function ChatWindow({
           </div>
 
           {/* Input Box */}
-          <ChatInput onSend={onSendMessage} disabled={isTyping} />
+          <ChatInput onSend={onSendMessage} disabled={isTyping} language={language} />
         </motion.div>
       )}
     </AnimatePresence>

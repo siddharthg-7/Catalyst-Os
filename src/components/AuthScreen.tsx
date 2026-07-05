@@ -290,7 +290,7 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ initialView = 'landing', onOnboardingComplete }: AuthScreenProps) {
-  const { loginAsDemo, user } = useAuth();
+  const { loginAsDemo, user, logout } = useAuth();
   const [view, setView] = useState<'landing' | 'auth' | 'onboarding'>(initialView);
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [direction, setDirection] = useState(0);
@@ -431,6 +431,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
           >
             <HackathonLandingPage
               onStartBuilding={() => navigateTo('auth')}
+              onDemoLogin={loginAsDemo}
             />
           </motion.div>
         )}
@@ -483,8 +484,19 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.3 }}
-                    className="space-y-8"
+                    className="space-y-8 relative"
                   >
+                    <button
+                      onClick={() => {
+                        if (user) logout();
+                        setView('landing');
+                      }}
+                      className="absolute -top-2 -left-2 p-2 text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] rounded-full transition-colors flex items-center justify-center cursor-pointer"
+                      title="Back to Home"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    
                     <div className="space-y-3 text-center">
                       <div className="w-10 h-10 rounded-xl bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center mx-auto mb-2">
                         <CatalystLogo className="w-5 h-5 text-[#141413]" />
