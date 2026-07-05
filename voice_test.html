@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Catalyst-OS Voice Pipeline Test</title>
+  <style>
+    body {
+      background-color: #09090b;
+      color: #fafafa;
+      font-family: monospace;
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 { color: #6366f1; border-bottom: 1px solid #27272a; padding-bottom: 0.5rem; }
+    .card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: #4f46e5; }
+    pre {
+      background: #09090b;
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px solid #27272a;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Catalyst-OS Voice Pipeline Integration Test</h1>
+  
+  <div class="card">
+    <h2>1. Test Speech-to-Text (STT)</h2>
+    <p>Sends a mock audio WAV payload to <code>/api/voice/transcribe</code>.</p>
+    <button id="test-stt">Run STT Test</button>
+    <h3>STT Output:</h3>
+    <pre id="stt-output">Click run to start test...</pre>
+  </div>
+
+  <div class="card">
+    <h2>2. Test Text-to-Speech (TTS)</h2>
+    <p>Sends text to <code>/api/voice/speak</code> and plays the returned audio.</p>
+    <input type="text" id="tts-text" value="Hello, voice pipeline is operational." style="background:#09090b; border:1px solid #27272a; color:white; padding:0.5rem; width:80%; margin-bottom:1rem; border-radius:4px;"><br>
+    <button id="test-tts">Run TTS Test</button>
+    <h3>TTS Output:</h3>
+    <pre id="tts-output">Click run to start test...</pre>
+    <div id="audio-container" style="margin-top: 1rem;"></div>
+  </div>
+
+  <script>
+    // Tiny valid 1-second silent WAV base64
+    const mockWavBase64 = 'UklGRiQAAABXQVZFZm10IBAAAAABAAEARB8AAIA+AAACABAAZGF0YQAAAAA=';
+
+    document.getElementById('test-stt').addEventListener('click', async () => {
+      const output = document.getElementById('stt-output');
+      output.textContent = 'Sending transcription request...';
+      try {
+        const res = await fetch('/api/voice/transcribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileData: mockWavBase64,
+            mimeType: 'audio/wav'
+          })
+        });
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        output.textContent = 'Error: ' + err.message;
+      }
+    });
+
+    document.getElementById('test-tts').addEventListener('click', async () => {
+      const output = document.getElementById('tts-output');
+      const text = document.getElementById('tts-text').value;
+      const audioContainer = document.getElementById('audio-container');
+      audioContainer.innerHTML = '';
+      output.textContent = 'Generating speech audio...';
+      try {
+        const res = await fetch('/api/voice/speak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+        
+        if (data.audioUrl) {
+          const audio = document.createElement('audio');
+          audio.src = data.audioUrl;
+          audio.controls = true;
+          audio.autoplay = true;
+          audioContainer.appendChild(audio);
+        }
+      } catch (err) {
+        output.textContent = 'Error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
