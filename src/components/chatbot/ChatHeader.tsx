@@ -7,6 +7,8 @@ interface ChatHeaderProps {
   onMinimize: () => void;
   onClose: () => void;
   onExport?: () => void;
+  language: string;
+  onLanguageChange: (language: string) => void;
 }
 
 export default function ChatHeader({
@@ -14,6 +16,8 @@ export default function ChatHeader({
   onMinimize,
   onClose,
   onExport,
+  language,
+  onLanguageChange,
 }: ChatHeaderProps) {
   return (
     <div className="px-4 py-3 bg-[#090909] border-b border-white/[0.08] flex items-center justify-between font-sans select-none gap-2">
@@ -35,6 +39,9 @@ export default function ChatHeader({
 
       {/* Control Buttons */}
       <div className="flex items-center gap-1">
+        <select value={language} onChange={(event) => onLanguageChange(event.target.value)} title="Response and voice language" aria-label="Response language" className="max-w-[88px] rounded-lg border border-white/10 bg-[#111111] px-2 py-1.5 text-[10px] text-white/80 outline-none hover:border-white/30">
+          <option value="auto">Auto</option><option value="en">English</option><option value="te">తెలుగు</option><option value="hi">हिन्दी</option><option value="ta">தமிழ்</option><option value="kn">ಕನ್ನಡ</option><option value="ml">മലയാളം</option><option value="bn">বাংলা</option><option value="ar">العربية</option>
+        </select>
         {onExport && (
           <button
             onClick={onExport}

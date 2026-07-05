@@ -37,7 +37,7 @@ router.post('/chat', async (req, res) => {
     return;
   }
   try {
-    res.json(await markdownRagService.answer(query.trim()));
+    res.json(await markdownRagService.answer(query.trim(), req.body?.language || 'auto'));
   } catch (error) {
     console.error('[Markdown RAG] Chat request failed:', error);
     res.status(500).json({ error: 'The knowledge base could not be queried.' });
@@ -55,11 +55,11 @@ router.post('/chat/stream', async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
   try {
-    const result = await markdownRagService.answer(query.trim());
+    const result = await markdownRagService.answer(query.trim(), req.body?.language || 'auto');
     for (const token of result.reply.match(/\S+\s*/g) || []) {
       res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
     }
-    res.write(`data: ${JSON.stringify({ sources: result.sources })}\n\n`);
+    res.write(`data: ${JSON.stringify({ sources: result.sources, debug: result.debug })}\n\n`);
     res.write('data: [DONE]\n\n');
   } catch (error) {
     console.error('[Markdown RAG] Streaming request failed:', error);

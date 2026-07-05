@@ -23,6 +23,11 @@ export function useChat(apiFetch?: (url: string, options?: RequestInit) => Promi
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>(INITIAL_SUGGESTED_QUESTIONS);
+  const [language, setLanguageState] = useState(() => localStorage.getItem('catalystos_chat_language') || 'auto');
+  const setLanguage = useCallback((value: string) => {
+    setLanguageState(value);
+    localStorage.setItem('catalystos_chat_language', value);
+  }, []);
 
   const toggleOpen = useCallback(() => {
     setIsOpen(prev => !prev);
@@ -208,6 +213,7 @@ Here's a summary of what I understand:
             )
           );
         },
+        language,
         apiFetch
       );
     } catch (err) {
@@ -222,7 +228,7 @@ Here's a summary of what I understand:
         )
       );
     }
-  }, [messages, isTyping, apiFetch]);
+  }, [messages, isTyping, apiFetch, language]);
 
   const regenerateLastMessage = useCallback(() => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
@@ -240,6 +246,8 @@ Here's a summary of what I understand:
     messages,
     isTyping,
     suggestedQuestions,
+    language,
+    setLanguage,
     sendMessage,
     regenerateLastMessage,
   };

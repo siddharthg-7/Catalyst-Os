@@ -21,13 +21,14 @@ export interface ChatApiResponse {
  */
 export async function sendChatMessage(
   messages: ChatApiMessage[],
+  language = 'auto',
   _apiFetch?: unknown  // kept for API compatibility, ignored
 ): Promise<ChatApiResponse> {
   try {
     const res = await fetch(CHAT_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, language }),
     });
 
     if (res.ok) {
@@ -56,18 +57,19 @@ export async function streamChatMessage(
   messages: ChatApiMessage[],
   onChunk: (chunk: string) => void,
   onSources: (sources: Array<{ title: string; score: number; snippet?: string }>) => void,
+  language = 'auto',
   _apiFetch?: unknown  // kept for API compatibility, ignored
 ): Promise<void> {
   try {
     const res = await fetch(`${CHAT_API}/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages, language }),
     });
 
     if (!res.ok || !res.body) {
       console.warn('[Chat Stream] Backend returned', res.status, '— falling back to non-stream');
-      const fallback = await sendChatMessage(messages);
+      const fallback = await sendChatMessage(messages, language);
       const words = fallback.reply.split(' ');
       for (const word of words) {
         onChunk(word + ' ');
@@ -108,7 +110,7 @@ export async function streamChatMessage(
   } catch (err) {
     console.error('[Chat Stream] Connection error:', err);
     // Graceful degradation to non-streaming
-    const fallback = await sendChatMessage(messages);
+    const fallback = await sendChatMessage(messages, language);
     const words = fallback.reply.split(' ');
     for (const word of words) {
       onChunk(word + ' ');

@@ -4,9 +4,10 @@ import { Send, Sparkles, Mic, Paperclip, MicOff } from 'lucide-react';
 interface ChatInputProps {
   onSend: (text: string) => void;
   disabled?: boolean;
+  language: string;
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({ onSend, disabled, language }: ChatInputProps) {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -41,7 +42,8 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
       recognitionRef.current = recognition;
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      const recognitionLanguages: Record<string, string> = { en: 'en-US', te: 'te-IN', hi: 'hi-IN', ta: 'ta-IN', kn: 'kn-IN', ml: 'ml-IN', bn: 'bn-IN', ar: 'ar-SA' };
+      recognition.lang = recognitionLanguages[language] || navigator.language || 'en-US';
 
       setIsRecording(true);
       recognition.start();
