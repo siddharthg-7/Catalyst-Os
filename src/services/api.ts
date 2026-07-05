@@ -34,7 +34,7 @@ export async function sendChatMessage(
     if (res.ok) {
       const data = await res.json();
       return {
-        reply: data.reply || data.message || "I couldn't find that information in the Catalyst OS knowledge base.",
+        reply: data.reply || data.message || "I require more information to answer this query. Please upload relevant documents to the Knowledge Center.",
         sources: data.sources || [],
       };
     }
@@ -45,7 +45,7 @@ export async function sendChatMessage(
   }
 
   return {
-    reply: "I couldn't find that information in the Catalyst OS knowledge base.",
+    reply: "I require more information to answer this query. Please upload relevant documents to the Knowledge Center.",
     sources: [],
   };
 }

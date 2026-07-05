@@ -1,4 +1,4 @@
-﻿import time
+import time
 import json
 import logging
 from typing import AsyncGenerator
@@ -14,14 +14,14 @@ from backend.config import settings
 logger = logging.getLogger("chat_router")
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
-NOT_FOUND_MSG = "I couldn't find that information in the Catalyst OS knowledge base."
+NOT_FOUND_MSG = "I require more information to answer this query. Please upload relevant documents to the Knowledge Center."
 
-SYSTEM_PROMPT = """You are Catalyst OS AI â€” an intelligent assistant that answers questions about Catalyst OS using only the retrieved context below.
+SYSTEM_PROMPT = """You are Catalyst OS AI — an intelligent assistant that answers questions about Catalyst OS using only the retrieved context below.
 
 RULES:
 1. Answer ONLY using the supplied retrieved context.
 2. Never use prior knowledge or hallucinate.
-3. If the answer is not in the context, respond exactly with: "I couldn't find that information in the Catalyst OS knowledge base."
+3. If the answer is not in the context, respond exactly with: "I require more information to answer this query. Please upload relevant documents to the Knowledge Center."
 4. Keep responses concise and helpful.
 5. Use Markdown formatting (bold, lists, tables) where appropriate.
 6. Never output fake metrics, personas, or roleplay responses."""
