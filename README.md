@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🚀 Catalyst OS</h1>
+  <h1> Catalyst OS</h1>
   <p><b>Autonomous Startup Operating System & AI Executive Team</b></p>
   <p align="center">
     <img src="https://img.shields.io/badge/Status-MVP--Development-brightgreen?style=for-the-badge" alt="Status" />
@@ -19,73 +19,73 @@
 ---
 
 ## 📑 Table of Contents
-- [🌟 Key Features](#-key-features)
-- [⚙️ Technology Stack](#️-technology-stack)
-- [🏗️ System Architecture](#️-system-architecture)
-- [🔄 User Flow](#-user-flow)
-- [🧠 Hallucination Prevention & AI Safety](#-hallucination-prevention--ai-safety)
-- [🧩 Agent Loading States](#-agent-loading-states)
-- [📂 Project Structure](#-project-structure)
-- [🚀 Getting Started](#-getting-started)
-- [🛠️ Configuration](#️-configuration)
-- [▶️ Run Locally](#️-run-locally)
-- [🔌 API Reference](#-api-reference)
-- [💻 Usage / Examples](#-usage--examples)
-- [📊 Database Design](#-database-design)
-- [📈 Scalability](#-scalability)
-- [🗺️ Roadmap](#️-roadmap)
-- [⚡ Optimizations](#-optimizations)
-- [📚 Lessons Learned](#-lessons-learned)
-- [🧗 Challenges Faced](#-challenges-faced)
-- [🔮 Future Scope](#-future-scope)
-- [🎬 Demo Story](#-demo-story)
-- [💎 Product Philosophy](#-product-philosophy)
-- [👥 Authors](#-authors)
-- [💬 Feedback & ⭐ Support](#-feedback)
+- [ Key Features](#-key-features)
+- [ Technology Stack](#️-technology-stack)
+- [ System Architecture](#️-system-architecture)
+- [ User Flow](#-user-flow)
+- [ Hallucination Prevention & AI Safety](#-hallucination-prevention--ai-safety)
+- [ Agent Loading States](#-agent-loading-states)
+- [ Project Structure](#-project-structure)
+- [ Getting Started](#-getting-started)
+- [ Configuration](#️-configuration)
+- [ Run Locally](#️-run-locally)
+- [ API Reference](#-api-reference)
+- [ Usage / Examples](#-usage--examples)
+- [ Database Design](#-database-design)
+- [ Scalability](#-scalability)
+- [ Roadmap](#️-roadmap)
+- [ Optimizations](#-optimizations)
+- [ Lessons Learned](#-lessons-learned)
+- [ Challenges Faced](#-challenges-faced)
+- [ Future Scope](#-future-scope)
+- [ Demo Story](#-demo-story)
+- [Product Philosophy](#-product-philosophy)
+- [ Authors](#-authors)
+- [ Feedback &  Support](#-feedback)
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 
-### 👋 Smart Founder Onboarding
+###  Smart Founder Onboarding
 * **Two onboarding paths:** Start fresh or import an existing startup.
 * **Startup context capture:** Industry, stage, team size, revenue, burn rate, runway, funding, budget, and timeline.
 * **Document intelligence:** Upload pitch decks, financial statements, roadmaps, hiring documents, policies, contracts, and business plans.
 * **Shared context:** Structured startup data becomes grounded context for relevant AI executives.
 
-### 📊 Executive Dashboard
+### Executive Dashboard
 * **Startup Health Score:** Real-time metrics with Finance, Hiring, Growth, and Operations sub-scores.
 * **Today's Priorities:** Proactive alerts and items needing attention.
 * **Executive Cards:** Real-time visibility into agent tasks, status, and latest recommendations.
 * **Comprehensive Tracking:** Pending Approvals, Activity Timeline, Notifications, and Daily Executive Brief.
 * **Founder Command Box:** Issue objectives via text or voice.
 
-### 🧠 CEO Orchestrator
+###  CEO Orchestrator
 * Understands high-level founder goals and decomposes them into business tasks.
 * Selectively routes work to relevant departments.
 * Coordinates cross-agent consultation and resolves conflicting recommendations.
 * Produces one unified execution plan.
 
-### 💰 Finance / CFO Agent
+###  Finance / CFO Agent
 * Burn-rate and runway calculation.
 * Expense and cash-flow analysis & budget validation.
 * Hiring affordability checks and scenario simulation.
 
-### 👩‍💼 Head of Talent
+### Head of Talent
 * Resume analysis, candidate ranking, and skill matching.
 * Job-description generation and outreach email drafts.
 * Mandatory proactive CFO consultation before advancing budget-sensitive hiring recommendations.
 
-### 📈 Head of Growth
+###  Head of Growth
 * Go-to-market strategy, marketing, and campaign plans.
 * LinkedIn, social content, and customer email drafts.
 * Launch calendar and KPI suggestions.
 
-### ⚖️ Legal Executive
+###  Legal Executive
 * NDA and contract drafting with compliance checklists.
 * Policy review, legal-risk flagging, and launch-readiness validation.
 
-### 🤝 Investment Executive
+###  Investment Executive
 * Fundraising-readiness analysis and KPI reviews.
 * Investor CRM support, updates, and pitch-deck feedback.
 
@@ -93,7 +93,7 @@
 * Roadmaps, sprint planning, and milestone tracking.
 * Deadline, dependency management, and launch-plan adjustment.
 
-### 🔄 Executive Collaboration
+###  Executive Collaboration
 ```text
 Founder: "Hire Developers"
           │
@@ -119,27 +119,27 @@ Founder: "Hire Developers"
  CEO presents unified strategy
 ```
 
-### 🗳️ Board Vote
+###  Board Vote
 ```text
 Finance Agent:
-❌ Reject hiring two engineers
+Reject hiring two engineers
 
 Hiring Agent:
 ✅ Approve hiring
 
 Operations Agent:
-⚠️ Approve one hire only
+ Approve one hire only
 
 CEO Recommendation:
-➡️ Hire one engineer now and review runway next month
+ Hire one engineer now and review runway next month
 ```
 
-### 🛡️ Founder Approval Center
+###  Founder Approval Center
 * High-risk actions (hiring, spending, campaigns, legal documents, external communications) require **explicit human approval**.
 * **Approve, Reject, or Edit** directly within the UI.
 * Rejected actions are logged securely without silently disrupting the startup state.
 
-### 💡 Explainable AI
+###  Explainable AI
 ```text
 Recommendation:
 Hire Rahul
@@ -158,10 +158,10 @@ Sources:
 - hiring_budget_q3.xlsx
 ```
 
-### 📜 Auditable Decision Log
+###  Auditable Decision Log
 * Securely stores timestamp, founder command, executive, recommendation, reason, confidence, evidence, founder decision, and final status.
 
-### 📈 Startup Health Score
+### Startup Health Score
 | Department | Score |
 | :--- | :--- |
 | **Overall** | **83** |
@@ -170,18 +170,18 @@ Sources:
 | Growth | 88 |
 | Operations | 82 |
 
-### 📂 Knowledge Base & RAG
+###  Knowledge Base & RAG
 * Upload pitch decks, financial reports, roadmaps, policies, contracts, business plans, and resumes.
 * Retrieve **only relevant chunks** to ground recommendations in startup-specific evidence.
 * Semantic memory powered by **PostgreSQL** and **pgvector**.
 
-### 🎯 Scenario Simulator
+###  Scenario Simulator
 * Ask *"What if we hire three more engineers?"* and automatically recalculate runway, burn rate, Health Score, hiring plan, launch date, and marketing timeline.
 
-### 🎙️ Voice Interface
+###  Voice Interface
 * Issue founder commands using voice, accurately transcribed via **Whisper / Faster-Whisper**, and routed intuitively through the CEO Orchestrator.
 
-### 🌅 Daily Executive Brief
+###  Daily Executive Brief
 ```text
 Good Morning.
 
@@ -199,7 +199,7 @@ Critical Alert
 
 ---
 
-## ⚙️ Technology Stack
+##  Technology Stack
 
 | Layer | Technology |
 | :--- | :--- |
@@ -216,7 +216,7 @@ Critical Alert
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 ```text
                     Founder UI
@@ -260,7 +260,7 @@ Planner → Finance + Hiring → CEO → Auditor → Approval
 
 ---
 
-## 🔄 User Flow
+##  User Flow
 
 ```text
 Landing Page
@@ -307,7 +307,7 @@ Collaboration Engine Runs
 
 ---
 
-## 🧠 Hallucination Prevention & AI Safety
+##  Hallucination Prevention & AI Safety
 
 ### Structured Outputs
 ```json
@@ -338,7 +338,7 @@ Do not silently extrapolate.
 ### Deterministic Critical Calculations
 Critical calculations use Python functions, SQL queries, validated business logic, and structured source data. The LLM explains results; deterministic tools calculate critical numbers.
 
-### 🔍 Auditor Agent
+###  Auditor Agent
 ```text
 Executive Outputs
        │
@@ -367,7 +367,7 @@ Center    Responsible Agent
 
 ---
 
-## 🧩 Agent Loading States
+##  Agent Loading States
 
 | Department | Loading Examples |
 | :--- | :--- |
@@ -380,7 +380,7 @@ Center    Responsible Agent
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 Catalyst-Os/
@@ -420,7 +420,7 @@ Catalyst-Os/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Node.js v18+
@@ -497,7 +497,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 ---
 
-## ▶️ Run Locally
+##  Run Locally
 
 **Start Frontend**
 ```bash
@@ -521,7 +521,7 @@ API Docs: http://localhost:8000/docs
 
 ---
 
-## 🔌 API Reference
+##  API Reference
 
 ### Create Startup Context
 ```http
@@ -566,7 +566,7 @@ POST /api/v1/voice/transcribe
 
 ---
 
-## 💻 Usage / Examples
+##  Usage / Examples
 
 ### Founder Workflow
 1. Register or log in.
@@ -588,7 +588,7 @@ POST /api/v1/voice/transcribe
 
 ---
 
-## 📊 Database Design
+##  Database Design
 Suggested core entities scoped using `user_id`, `startup_id`, and `workspace_id` to prevent context leakage:
 ```text
 users
@@ -615,7 +615,7 @@ integration_connections
 
 ---
 
-## 📈 Scalability
+##  Scalability
 
 ### Horizontal Agent Scalability
 ```text
@@ -655,7 +655,7 @@ Add Routing Rule
 
 ---
 
-## 🗺️ Roadmap
+##  Roadmap
 
 ### Tier 1 — Core MVP
 - [ ] Founder onboarding
@@ -702,7 +702,7 @@ Add Routing Rule
 
 ---
 
-## ⚡ Optimizations
+##  Optimizations
 * Selective agent execution
 * PostgreSQL for structured persistent state
 * pgvector for semantic retrieval
@@ -718,7 +718,7 @@ Add Routing Rule
 
 ---
 
-## 📚 Lessons Learned
+## Lessons Learned
 * Designing hierarchical multi-agent AI systems
 * Building cross-agent collaboration workflows
 * Implementing task routing with LangGraph and LangChain
@@ -734,7 +734,7 @@ Add Routing Rule
 
 ---
 
-## 🧗 Challenges Faced
+##  Challenges Faced
 * Maintaining consistent shared context across agents
 * Preventing hallucinated financial and hiring metrics
 * Resolving conflicting recommendations
@@ -748,7 +748,7 @@ Add Routing Rule
 
 ---
 
-## 🔮 Future Scope
+##  Future Scope
 * Additional AI departments
 * Multi-startup workspace switching
 * Advanced role-based access
@@ -763,7 +763,7 @@ Add Routing Rule
 
 ---
 
-## 🎬 Demo Story
+##  Demo Story
 ```text
 Founder Logs In
       │
@@ -811,7 +811,7 @@ Scenario Simulation:
 
 ---
 
-## 💎 Product Philosophy
+##  Product Philosophy
 
 > **"Does this reduce the founder's workload by automating an entire workflow, or is it just another AI tool?"**
 
@@ -821,7 +821,7 @@ If it automates an end-to-end workflow such as hiring, launching, budgeting, or 
 
 ---
 
-## 👥 Authors
+##  Authors
 Add your team members here:
 * [@your-github-username](https://github.com/your-github-username)
 * [@team-member-2](https://github.com/team-member-2)
@@ -829,19 +829,19 @@ Add your team members here:
 
 ---
 
-## 💬 Feedback
+##  Feedback
 If you have feedback, suggestions, or feature requests, feel free to open an issue in the repository or connect with the team through GitHub.
 
-## ⭐ Support
+##  Support
 If you found this project useful, consider giving it a STAR on GitHub!
 
-## 📄 License
+##  License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
 
 ---
 
 <div align="center">
-  <h2>🚀 Catalyst OS</h2>
+  <h2> Catalyst OS</h2>
   <p><b>One Founder. One Command. An Entire AI Executive Team.</b></p>
   <i>Today's founders do not need another AI tool. They need an operating system that thinks, collaborates, explains, and executes alongside them.</i>
 </div>
