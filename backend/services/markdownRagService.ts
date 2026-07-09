@@ -141,7 +141,9 @@ function findKnowledgeFiles(root: string): string[] {
       if (entry.isDirectory()) visit(target);
       else {
         const relative = path.relative(root, target).replace(/\\/g, '/');
-        if (/^knowledge\.md$/i.test(entry.name) || /^knowledge\/.*\.md$/i.test(relative)) found.push(target);
+        if (/^(knowledge|architecture)\/.*\.md$/i.test(relative) || /^knowledge\.md$/i.test(entry.name)) {
+          found.push(target);
+        }
       }
     }
   };

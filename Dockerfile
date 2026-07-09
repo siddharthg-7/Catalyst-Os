@@ -17,6 +17,8 @@ COPY --from=builder /app/backend ./backend
 COPY --from=builder /app/server.ts ./server.ts
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/knowledge ./knowledge
+COPY --from=builder /app/architecture ./architecture
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]

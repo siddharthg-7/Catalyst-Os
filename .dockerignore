@@ -6,3 +6,9 @@ build
 *.log
 .env
 .env.local
+.venv
+**/.venv
+**/__pycache__
+backend/.venv
+backend/py_service/.venv
+backend/tools/piper
