@@ -10,6 +10,11 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='repla
 from backend.config import settings
 from backend.routes.chat import router as chat_router
 from backend.routes.rag import router as rag_router
+from backend.routes.audio import router as audio_router
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # Configure Logging
 logging.basicConfig(
@@ -18,11 +23,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger("backend_main")
 
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title=settings.APP_NAME,
     version="2.4.0",
     description="Catalyst OS AI RAG Backend Engine powered by FastAPI, LangChain, Qdrant, & Redis."
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Enable CORS for frontend Vite dev server & production client
 app.add_middleware(
@@ -32,12 +42,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SlowAPIMiddleware)
 
 from backend.retriever import retriever
 
 # Include Routers
 app.include_router(chat_router)
 app.include_router(rag_router)
+app.include_router(audio_router)
 
 @app.on_event("startup")
 async def startup_event():

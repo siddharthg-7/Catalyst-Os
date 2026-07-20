@@ -23,13 +23,8 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     setPermissionError(null);
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setPermissionError('Browser Speech Recognition not supported. Use Chrome, Edge, or Safari.');
-      return;
-    }
 
     if (isRecording && recognitionRef.current) {
       recognitionRef.current.stop();
@@ -38,35 +33,49 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
     }
 
     try {
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      const recognitionLanguages: Record<string, string> = { en: 'en-US', te: 'te-IN', hi: 'hi-IN', ta: 'ta-IN', kn: 'kn-IN', ml: 'ml-IN', bn: 'bn-IN', ar: 'ar-SA' };
-      recognition.lang = recognitionLanguages[language] || navigator.language || 'en-US';
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      recognitionRef.current = mediaRecorder;
+      const audioChunks: BlobPart[] = [];
+
+      mediaRecorder.addEventListener("dataavailable", (event) => {
+        audioChunks.push(event.data);
+      });
+
+      mediaRecorder.addEventListener("stop", async () => {
+        stream.getTracks().forEach(track => track.stop());
+        setIsRecording(false);
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('file', audioBlob, 'recording.webm');
+        const recognitionLanguages: Record<string, string> = { en: 'en', te: 'te', hi: 'hi', ta: 'ta', kn: 'kn', ml: 'ml', bn: 'bn', ar: 'ar' };
+        formData.append('language', recognitionLanguages[language] || 'en');
+
+        try {
+          setText('Transcribing...');
+          const response = await fetch('/api/audio/transcribe', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Transcription failed: ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          setText(data.text || '');
+        } catch (error) {
+          console.error(error);
+          setPermissionError('Failed to transcribe audio.');
+          setText('');
+        }
+      });
 
       setIsRecording(true);
-      recognition.start();
+      mediaRecorder.start();
 
-      recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((res: any) => res[0].transcript)
-          .join('');
-        setText(transcript);
-      };
-
-      recognition.onerror = (event: any) => {
-        setIsRecording(false);
-        if (event.error === 'not-allowed') {
-          setPermissionError('Microphone permission denied. Please allow microphone access.');
-        } else if (event.error === 'no-speech') {
-          setPermissionError('No speech detected.');
-        }
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
     } catch (e: any) {
       console.error(e);
       setIsRecording(false);
