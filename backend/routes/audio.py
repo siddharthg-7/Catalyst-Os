@@ -45,10 +45,14 @@ async def transcribe_audio(request: Request, file: UploadFile = File(...), langu
                 raise HTTPException(status_code=500, detail="Transcription failed with Deepgram API")
                 
             data = response.json()
+            logger.info(f"Deepgram raw response: {data}")
             
         # Parse transcript from Deepgram response
         transcript = data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
         
+        if not transcript:
+            logger.warning("Deepgram returned an empty transcript. Was speech detected?")
+            
         return {"text": transcript}
     except Exception as e:
         logger.error(f"Error during audio transcription: {e}")

@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # LLM API Keys
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY", "")
 
     class Config:
         env_file = ".env"
