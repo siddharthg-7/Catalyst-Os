@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
 import logging
-from deepgram import DeepgramClient, PrerecordedOptions
+import httpx
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -12,35 +12,44 @@ limiter = Limiter(key_func=get_remote_address)
 @router.post("/transcribe")
 @limiter.limit("5/minute")
 async def transcribe_audio(request: Request, file: UploadFile = File(...), language: str = Form("en")):
-    """
-    Receives audio from the frontend and transcribes it using Deepgram STT.
-    Rate limited to 5 requests per minute to prevent abuse.
-    """
     try:
-        deepgram_api_key = os.environ.get("DEEPGRAM_API_KEY")
+        from backend.config import settings
+        
+        deepgram_api_key = settings.DEEPGRAM_API_KEY
         if not deepgram_api_key:
-            raise HTTPException(status_code=500, detail="DEEPGRAM_API_KEY not configured.")
+            raise HTTPException(status_code=500, detail="DEEPGRAM_API_KEY is missing from environment")
+
+        audio_data = await file.read()
         
-        deepgram = DeepgramClient(api_key=deepgram_api_key)
-        
-        content_bytes = await file.read()
-        
-        payload = {
-            "buffer": content_bytes,
+        headers = {
+            "Authorization": f"Token {deepgram_api_key}",
+            "Content-Type": file.content_type or "audio/webm",
         }
         
-        options = PrerecordedOptions(
-            model="nova-2",
-            language=language,
-            smart_format=True,
-        )
+        params = {
+            "model": "nova-2",
+            "language": language,
+            "smart_format": "true"
+        }
         
-        response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
-        
-        transcript = response["results"]["channels"][0]["alternatives"][0]["transcript"]
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                "https://api.deepgram.com/v1/listen",
+                headers=headers,
+                params=params,
+                content=audio_data
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"Deepgram API Error: {response.text}")
+                raise HTTPException(status_code=500, detail="Transcription failed with Deepgram API")
+                
+            data = response.json()
+            
+        # Parse transcript from Deepgram response
+        transcript = data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
         
         return {"text": transcript}
-
     except Exception as e:
-        logger.error(f"Error processing Deepgram transcription: {e}")
+        logger.error(f"Error during audio transcription: {e}")
         raise HTTPException(status_code=500, detail=str(e))
