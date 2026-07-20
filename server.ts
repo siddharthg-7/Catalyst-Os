@@ -9,12 +9,20 @@ import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import apiRouter from './backend/routes/api';
 
+import { createProxyMiddleware } from 'http-proxy-middleware';
+
 dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '10mb' }));
+
+// Proxy /api/audio to FastAPI before parsing it or passing to local apiRouter
+app.use('/api/audio', createProxyMiddleware({
+  target: process.env.FASTAPI_URL || 'http://127.0.0.1:8000',
+  changeOrigin: true
+}));
 
 // Mount modularized backend API routes
 app.use('/api', apiRouter);
