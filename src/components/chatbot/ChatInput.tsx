@@ -65,7 +65,13 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
           }
           
           const data = await response.json();
-          setText(data.text || '');
+          const transcribed = data.text || '';
+          if (transcribed.trim()) {
+            onSend(transcribed);
+            setText('');
+          } else {
+            setText('');
+          }
         } catch (error) {
           console.error(error);
           setPermissionError('Failed to transcribe audio.');
