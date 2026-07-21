@@ -92,7 +92,7 @@ export default function ChatWindow({
                 {messages.map((msg, idx) => {
                   const isLast = idx === messages.length - 1;
                   const isAssistant = msg.role === 'assistant';
-                  const shouldAutoPlay = isLast && isAssistant && !isTyping && msg.isStreaming !== true;
+                  const shouldAutoPlay = isLast && isAssistant && !isTyping && msg.isStreaming !== true && Boolean(msg.autoPlaySpeech);
 
                   return (
                     <MessageBubble 

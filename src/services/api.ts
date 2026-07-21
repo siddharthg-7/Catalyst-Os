@@ -119,3 +119,35 @@ export async function streamChatMessage(
     if (fallback.sources) onSources(fallback.sources);
   }
 }
+
+/**
+ * Synthesizes text to speech audio via backend Deepgram TTS.
+ */
+export async function fetchTTSAudio(text: string): Promise<Blob> {
+  const res = await fetch('/api/audio/speak', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) {
+    // Fallback attempt to Express /api/voice/speak route
+    const fallbackRes = await fetch('/api/voice/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!fallbackRes.ok) {
+      throw new Error(`TTS synthesis request failed with status ${res.status}`);
+    }
+    const data = await fallbackRes.json();
+    if (data.audioUrl) {
+      const audioFileRes = await fetch(data.audioUrl);
+      return await audioFileRes.blob();
+    }
+    throw new Error('Fallback TTS returned no audioUrl');
+  }
+
+  return await res.blob();
+}
+

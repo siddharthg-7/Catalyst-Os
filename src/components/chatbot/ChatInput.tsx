@@ -26,6 +26,14 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
   const toggleRecording = async () => {
     setPermissionError(null);
 
+    // Prime browser audio context during user gesture to grant autoplay permission for TTS
+    try {
+      const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARB8AAIA+AAACABAAZGF0YQAAAAA=');
+      silentAudio.play().catch(() => {});
+    } catch {
+      // Ignore silent audio initialization error
+    }
+
     if (isRecording && recognitionRef.current) {
       recognitionRef.current.stop();
       setIsRecording(false);
@@ -67,13 +75,15 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
           const data = await response.json();
           const transcribed = data.text || '';
           if (transcribed.trim()) {
+            console.log('[STT received]:', transcribed);
             onSend(transcribed, true);
             setText('');
           } else {
+            console.warn('[STT received empty transcript]');
             setText('');
           }
         } catch (error) {
-          console.error(error);
+          console.error('[Voice Pipeline Error]:', error);
           setPermissionError('Failed to transcribe audio.');
           setText('');
         }

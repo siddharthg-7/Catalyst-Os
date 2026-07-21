@@ -90,7 +90,7 @@ Here's a summary of what I understand:
     }
   }, [userId]);
 
-  const simulateAgentSteps = useCallback(async (userText: string, steps: string[]) => {
+  const simulateAgentSteps = useCallback(async (userText: string, steps: string[], isVoice: boolean = false) => {
     const userMsg: ChatMessage = {
       id: `msg_user_${Date.now()}`,
       role: 'user',
@@ -107,7 +107,8 @@ Here's a summary of what I understand:
       content: '',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isStreaming: true,
-      sources: []
+      sources: [],
+      autoPlaySpeech: isVoice
     };
     
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -129,6 +130,7 @@ Here's a summary of what I understand:
     }
 
     setIsTyping(false);
+    console.log('[Chatbot response received]:', currentContent);
     setMessages(prev =>
       prev.map(m =>
         m.id === assistantMsgId
@@ -321,13 +323,18 @@ Here's a summary of what I understand:
       console.error('[useChat Error]:', err);
     } finally {
       setIsTyping(false);
-      setMessages(prev =>
-        prev.map(m =>
+      setMessages(prev => {
+        const updated = prev.map(m =>
           m.id === assistantMsgId
             ? { ...m, isStreaming: false }
             : m
-        )
-      );
+        );
+        const finalMsg = updated.find(m => m.id === assistantMsgId);
+        if (finalMsg && finalMsg.content) {
+          console.log('[Chatbot response received]:', finalMsg.content);
+        }
+        return updated;
+      });
     }
   }, [messages, isTyping, apiFetch, language, simulateAgentSteps]);
 

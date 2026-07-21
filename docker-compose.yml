@@ -31,6 +31,7 @@ services:
       - DATABASE_URL=postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - ENVIRONMENT=production
     depends_on:
       postgres:
@@ -50,6 +51,7 @@ services:
       - DATABASE_URL=postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public
       - FASTAPI_URL=http://fastapi-ai:8000
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
     depends_on:

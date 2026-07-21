@@ -41,15 +41,51 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
   };
 
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleSpeech = async (isAutoPlay = false) => {
+  const fallbackWebSpeech = (plainText: string, isAutoPlay: boolean) => {
     if (!('speechSynthesis' in window)) {
       if (!isAutoPlay) alert('Text-to-speech is not supported in your browser.');
       return;
     }
 
+    console.log('[TTS fallback]: Utilizing browser SpeechSynthesis');
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utteranceRef.current = utterance;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => {
+      setIsPlayingSpeech(true);
+      console.log('[Playback started]');
+    };
+
+    utterance.onend = () => {
+      setIsPlayingSpeech(false);
+      console.log('[Playback ended]');
+    };
+
+    utterance.onerror = (e) => {
+      console.error('[Voice Pipeline Error]: Web Speech fallback error:', e);
+      setIsPlayingSpeech(false);
+    };
+
+    window.speechSynthesis.cancel();
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  };
+
+  const handleSpeech = async (isAutoPlay = false) => {
+    if (activeAudioRef.current) {
+      activeAudioRef.current.pause();
+      activeAudioRef.current = null;
+      setIsPlayingSpeech(false);
+      if (!isAutoPlay) return;
+    }
+
     if (isPlayingSpeech && !isAutoPlay) {
-      window.speechSynthesis.cancel();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       setIsPlayingSpeech(false);
       return;
     }
@@ -58,52 +94,61 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
       .replace(/#+\s+/g, '')
       .replace(/\*+/g, '')
       .replace(/`{1,3}[^`]*`{1,3}/g, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .trim();
 
-    const utterance = new SpeechSynthesisUtterance(plainText);
-    utteranceRef.current = utterance; // Prevent garbage collection
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    const selectedLanguages: Record<string, string> = { en: 'en-US', te: 'te-IN', hi: 'hi-IN', ta: 'ta-IN', kn: 'kn-IN', ml: 'ml-IN', bn: 'bn-IN', ar: 'ar-SA' };
-    if (speechLanguage !== 'auto' && selectedLanguages[speechLanguage]) utterance.lang = selectedLanguages[speechLanguage];
-    else if (/[\u0C00-\u0C7F]/.test(plainText)) utterance.lang = 'te-IN';
-    else if (/[\u0900-\u097F]/.test(plainText)) utterance.lang = 'hi-IN';
-    else if (/[\u0B80-\u0BFF]/.test(plainText)) utterance.lang = 'ta-IN';
-    else if (/[\u0C80-\u0CFF]/.test(plainText)) utterance.lang = 'kn-IN';
-    else utterance.lang = 'en-US';
+    if (!plainText) return;
 
-    const loadVoices = async (): Promise<SpeechSynthesisVoice[]> => {
-      const available = window.speechSynthesis.getVoices();
-      if (available.length > 0) return available;
-      return new Promise(resolve => {
-        const timeout = window.setTimeout(() => resolve(window.speechSynthesis.getVoices()), 2000);
-        window.speechSynthesis.addEventListener('voiceschanged', () => {
-          window.clearTimeout(timeout);
-          resolve(window.speechSynthesis.getVoices());
-        }, { once: true });
-      });
-    };
+    // Stage 3: TTS request started
+    console.log('[TTS request started]:', plainText);
 
-    const voices = await loadVoices();
-    const languagePrefix = utterance.lang.split('-')[0].toLowerCase();
-    const matchingVoice = voices.find(voice => voice.lang.toLowerCase() === utterance.lang.toLowerCase())
-      || voices.find(voice => voice.lang.toLowerCase().startsWith(languagePrefix));
-    if (matchingVoice) utterance.voice = matchingVoice;
-    else if (languagePrefix !== 'en') {
-      alert(`Telugu text is ready, but this browser has no ${utterance.lang} speech voice. In Windows, open Settings > Time & language > Speech > Manage voices, add Telugu, then restart Chrome or Edge.`);
-      return;
+    try {
+      const { fetchTTSAudio } = await import('../../services/api');
+      const audioBlob = await fetchTTSAudio(plainText);
+
+      // Stage 4: TTS response received
+      console.log('[TTS response received]: Audio Blob generated successfully');
+
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Stage 5: Audio element created
+      const audio = new Audio(audioUrl);
+      console.log('[Audio element created]');
+      activeAudioRef.current = audio;
+
+      audio.onplay = () => {
+        setIsPlayingSpeech(true);
+        // Stage 6: Playback started
+        console.log('[Playback started]');
+      };
+
+      audio.onended = () => {
+        setIsPlayingSpeech(false);
+        activeAudioRef.current = null;
+        URL.revokeObjectURL(audioUrl);
+        // Stage 7: Playback ended
+        console.log('[Playback ended]');
+      };
+
+      audio.onerror = (e) => {
+        console.error('[Voice Pipeline Error]: Audio element error:', e);
+        setIsPlayingSpeech(false);
+        activeAudioRef.current = null;
+        URL.revokeObjectURL(audioUrl);
+        fallbackWebSpeech(plainText, isAutoPlay);
+      };
+
+      try {
+        await audio.play();
+      } catch (playErr) {
+        console.warn('[Autoplay policy blocked direct audio play, attempting fallback]:', playErr);
+        fallbackWebSpeech(plainText, isAutoPlay);
+      }
+    } catch (err) {
+      // Stage 8: Any errors
+      console.error('[Voice Pipeline Error]: Deepgram TTS API request failed:', err);
+      fallbackWebSpeech(plainText, isAutoPlay);
     }
-
-    utterance.onend = () => setIsPlayingSpeech(false);
-    utterance.onerror = () => setIsPlayingSpeech(false);
-
-    window.speechSynthesis.cancel();
-    setIsPlayingSpeech(true);
-    
-    // Slight delay before speaking helps prevent queue locks
-    setTimeout(() => {
-      window.speechSynthesis.speak(utterance);
-    }, 50);
   };
 
   const handleFeedback = (rating: 'up' | 'down') => {

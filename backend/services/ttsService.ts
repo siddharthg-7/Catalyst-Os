@@ -25,21 +25,42 @@ export class TTSService {
    * Returns the public URL to retrieve the audio file.
    */
   async speak(text: string): Promise<string> {
-    const filename = `speak_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.wav`;
+    const filename = `speak_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.mp3`;
     const outputPath = path.join(this.tempDir, filename);
 
     try {
-      // 1. Try local Piper execution via python speak script
+      const deepgramApiKey = process.env.DEEPGRAM_API_KEY;
+      if (deepgramApiKey) {
+        const cleanText = text.replace(/#+|\*+|`{1,3}|\[([^\]]+)\]\([^)]+\)/g, '$1').trim();
+        const res = await fetch(`https://api.deepgram.com/v1/speak?model=aura-asteria-en`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Token ${deepgramApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text: cleanText })
+        });
+        if (res.ok) {
+          const buffer = Buffer.from(await res.arrayBuffer());
+          await fs.promises.writeFile(outputPath, buffer);
+          console.log(`[TTSService] Generated Deepgram voice audio: ${filename}`);
+          return `/temp_audio/${filename}`;
+        }
+      }
+
+      // 2. Try local Piper execution via python speak script
       await this.runPiperScript(text, outputPath);
       console.log(`[TTSService] Generated voice audio successfully: ${filename}`);
       return `/temp_audio/${filename}`;
     } catch (err: any) {
-      console.warn('[TTSService] Local Piper text-to-speech failed or was unconfigured. Generating fallback audio.', err.message || err);
+      console.warn('[TTSService] Local text-to-speech failed or was unconfigured. Generating fallback audio.', err.message || err);
       
-      // 2. Generate minimal valid silent/default WAV file so browser player works cleanly
+      // 3. Generate minimal valid silent/default WAV file so browser player works cleanly
       const silentBuffer = this.generateSilentWav();
-      await fs.promises.writeFile(outputPath, silentBuffer);
-      return `/temp_audio/${filename}`;
+      const wavFilename = filename.replace('.mp3', '.wav');
+      const wavPath = path.join(this.tempDir, wavFilename);
+      await fs.promises.writeFile(wavPath, silentBuffer);
+      return `/temp_audio/${wavFilename}`;
     }
   }
 
