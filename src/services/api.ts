@@ -124,30 +124,42 @@ export async function streamChatMessage(
  * Synthesizes text to speech audio via backend Deepgram TTS.
  */
 export async function fetchTTSAudio(text: string): Promise<Blob> {
-  const res = await fetch('/api/audio/speak', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-  if (!res.ok) {
-    // Fallback attempt to Express /api/voice/speak route
+  try {
+    const res = await fetch('/api/audio/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const blob = await res.blob();
+      console.log('[fetchTTSAudio blob size]:', blob.size);
+      return blob;
+    }
+
+    console.warn('[fetchTTSAudio] /api/audio/speak returned status:', res.status);
     const fallbackRes = await fetch('/api/voice/speak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text }),
     });
-    if (!fallbackRes.ok) {
-      throw new Error(`TTS synthesis request failed with status ${res.status}`);
+    if (fallbackRes.ok) {
+      const data = await fallbackRes.json();
+      if (data.audioUrl) {
+        const audioFileRes = await fetch(data.audioUrl);
+        return await audioFileRes.blob();
+      }
     }
-    const data = await fallbackRes.json();
-    if (data.audioUrl) {
-      const audioFileRes = await fetch(data.audioUrl);
-      return await audioFileRes.blob();
-    }
-    throw new Error('Fallback TTS returned no audioUrl');
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    console.warn('[fetchTTSAudio] Fetch error or timeout:', err.message || err);
   }
 
-  return await res.blob();
+  throw new Error('TTS synthesis request failed');
 }
 

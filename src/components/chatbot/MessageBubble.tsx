@@ -16,23 +16,15 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
   const [copied, setCopied] = useState(false);
   const [isPlayingSpeech, setIsPlayingSpeech] = useState(false);
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
-  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const isAssistant = message.role === 'assistant';
+  const hasAutoPlayedRef = useRef(false);
 
   useEffect(() => {
-    let active = true;
-    if (autoPlaySpeech && isAssistant && !hasAutoPlayed) {
-      setHasAutoPlayed(true);
-      setTimeout(() => {
-        if (active) {
-          handleSpeech(true);
-        }
-      }, 100);
+    if (autoPlaySpeech && isAssistant && !hasAutoPlayedRef.current) {
+      hasAutoPlayedRef.current = true;
+      handleSpeech(true);
     }
-    return () => {
-      active = false;
-    };
-  }, [autoPlaySpeech, isAssistant, hasAutoPlayed]);
+  }, [autoPlaySpeech, isAssistant]);
 
   const handleCopyMessage = () => {
     navigator.clipboard.writeText(message.content);
@@ -70,7 +62,11 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
       setIsPlayingSpeech(false);
     };
 
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
     window.speechSynthesis.cancel();
+    setIsPlayingSpeech(true);
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
     }, 50);

@@ -1,21 +1,17 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request, Response
+import os
+import re
 import logging
 import httpx
-import re
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request, Response
+from app.config import settings
 
 logger = logging.getLogger("audio_router")
 router = APIRouter(prefix="/api/audio", tags=["audio"])
-limiter = Limiter(key_func=get_remote_address)
 
 @router.post("/transcribe")
-@limiter.limit("5/minute")
 async def transcribe_audio(request: Request, file: UploadFile = File(...), language: str = Form("en")):
     try:
-        from backend.config import settings
-        
-        deepgram_api_key = settings.DEEPGRAM_API_KEY
+        deepgram_api_key = getattr(settings, "deepgram_api_key", "") or os.getenv("DEEPGRAM_API_KEY", "")
         if not deepgram_api_key:
             raise HTTPException(status_code=500, detail="DEEPGRAM_API_KEY is missing from environment")
 
@@ -47,9 +43,7 @@ async def transcribe_audio(request: Request, file: UploadFile = File(...), langu
             data = response.json()
             logger.info(f"Deepgram raw response: {data}")
             
-        # Parse transcript from Deepgram response
         transcript = data.get("results", {}).get("channels", [{}])[0].get("alternatives", [{}])[0].get("transcript", "")
-        
         if not transcript:
             logger.warning("Deepgram returned an empty transcript. Was speech detected?")
             
@@ -59,25 +53,21 @@ async def transcribe_audio(request: Request, file: UploadFile = File(...), langu
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/speak")
-@limiter.limit("20/minute")
 async def speak_text(request: Request):
     try:
-        from backend.config import settings
         body = await request.json()
         text = body.get("text", "")
         if not text or not text.strip():
             raise HTTPException(status_code=400, detail="Missing required text parameter")
             
-        deepgram_api_key = settings.DEEPGRAM_API_KEY
+        deepgram_api_key = getattr(settings, "deepgram_api_key", "") or os.getenv("DEEPGRAM_API_KEY", "")
         if not deepgram_api_key:
             raise HTTPException(status_code=500, detail="DEEPGRAM_API_KEY is missing from environment")
 
-        # Clean markdown formatting and citations [1], [2] for natural speech output
         clean_text = re.sub(r'\[\d+\]', '', text)
         clean_text = re.sub(r'#+|\*+|`{1,3}|\[([^\]]+)\]\([^)]+\)', r'\1', clean_text)
         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
-        
-        # Limit text length for instant sub-second TTS synthesis
+
         if len(clean_text) > 400:
             truncated = clean_text[:400]
             last_period = max(truncated.rfind('.'), truncated.rfind('!'), truncated.rfind('?'))
@@ -127,4 +117,3 @@ async def speak_text(request: Request):
     except Exception as e:
         logger.exception("TTS Error")
         raise HTTPException(status_code=500, detail="Internal TTS error")
-
