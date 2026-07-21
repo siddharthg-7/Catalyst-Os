@@ -13,7 +13,7 @@ interface ChatWindowProps {
   messages: ChatMessage[];
   isTyping: boolean;
   suggestedQuestions: string[];
-  onSendMessage: (text: string) => void;
+  onSendMessage: (text: string, isVoice?: boolean) => void;
   onClearChat: () => void;
   onClose: () => void;
   onRegenerate?: () => void;
@@ -89,14 +89,21 @@ export default function ChatWindow({
               </div>
             ) : (
               <>
-                {messages.map((msg, idx) => (
-                  <MessageBubble 
-                    key={msg.id} 
-                    message={msg} 
-                    onRegenerate={idx === messages.length - 1 && msg.role === 'assistant' ? onRegenerate : undefined} 
-                    speechLanguage={language}
-                  />
-                ))}
+                {messages.map((msg, idx) => {
+                  const isLast = idx === messages.length - 1;
+                  const isAssistant = msg.role === 'assistant';
+                  const shouldAutoPlay = isLast && isAssistant && !isTyping && msg.isStreaming !== true;
+
+                  return (
+                    <MessageBubble 
+                      key={msg.id} 
+                      message={msg} 
+                      onRegenerate={isLast && isAssistant ? onRegenerate : undefined} 
+                      speechLanguage={language}
+                      autoPlaySpeech={shouldAutoPlay}
+                    />
+                  );
+                })}
 
                 {isTyping && <TypingIndicator />}
 

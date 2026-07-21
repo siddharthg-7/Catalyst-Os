@@ -8,6 +8,7 @@ export interface ChatMessage {
   timestamp: string;
   sources?: Array<{ title: string; score: number }>;
   isStreaming?: boolean;
+  autoPlaySpeech?: boolean;
 }
 
 export const INITIAL_SUGGESTED_QUESTIONS = [
@@ -138,7 +139,7 @@ Here's a summary of what I understand:
     setSuggestedQuestions(INITIAL_SUGGESTED_QUESTIONS);
   }, [setMessages, setIsTyping, setSuggestedQuestions]);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, isVoice: boolean = false) => {
     if (!text.trim() || isTyping) return;
 
     const normalizedText = text.trim().toLowerCase();
@@ -286,7 +287,8 @@ Here's a summary of what I understand:
       content: '',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isStreaming: true,
-      sources: []
+      sources: [],
+      autoPlaySpeech: isVoice
     };
 
     setMessages(prev => [...prev, assistantMsg]);

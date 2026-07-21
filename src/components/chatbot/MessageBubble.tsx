@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, Check, Copy, ThumbsUp, ThumbsDown, Volume2, Square, RotateCw } from 'lucide-react';
 import MarkdownRenderer from './MarkdownRenderer';
 import SourceCard from './SourceCard';
@@ -9,13 +9,30 @@ interface MessageBubbleProps {
   message: ChatMessage;
   onRegenerate?: () => void;
   speechLanguage?: string;
+  autoPlaySpeech?: boolean;
 }
 
-export default function MessageBubble({ message, onRegenerate, speechLanguage = 'auto' }: MessageBubbleProps) {
+export default function MessageBubble({ message, onRegenerate, speechLanguage = 'auto', autoPlaySpeech = false }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
   const [isPlayingSpeech, setIsPlayingSpeech] = useState(false);
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false);
   const isAssistant = message.role === 'assistant';
+
+  useEffect(() => {
+    let active = true;
+    if (autoPlaySpeech && isAssistant && !hasAutoPlayed) {
+      setHasAutoPlayed(true);
+      setTimeout(() => {
+        if (active) {
+          handleSpeech(true);
+        }
+      }, 100);
+    }
+    return () => {
+      active = false;
+    };
+  }, [autoPlaySpeech, isAssistant, hasAutoPlayed]);
 
   const handleCopyMessage = () => {
     navigator.clipboard.writeText(message.content);
@@ -23,19 +40,20 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSpeech = async () => {
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const handleSpeech = async (isAutoPlay = false) => {
     if (!('speechSynthesis' in window)) {
-      alert('Text-to-speech is not supported in your browser.');
+      if (!isAutoPlay) alert('Text-to-speech is not supported in your browser.');
       return;
     }
 
-    if (isPlayingSpeech) {
+    if (isPlayingSpeech && !isAutoPlay) {
       window.speechSynthesis.cancel();
       setIsPlayingSpeech(false);
       return;
     }
 
-    // Clean markdown symbols for cleaner speech
     const plainText = message.content
       .replace(/#+\s+/g, '')
       .replace(/\*+/g, '')
@@ -43,6 +61,7 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 
     const utterance = new SpeechSynthesisUtterance(plainText);
+    utteranceRef.current = utterance; // Prevent garbage collection
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
     const selectedLanguages: Record<string, string> = { en: 'en-US', te: 'te-IN', hi: 'hi-IN', ta: 'ta-IN', kn: 'kn-IN', ml: 'ml-IN', bn: 'bn-IN', ar: 'ar-SA' };
@@ -78,8 +97,13 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
     utterance.onend = () => setIsPlayingSpeech(false);
     utterance.onerror = () => setIsPlayingSpeech(false);
 
+    window.speechSynthesis.cancel();
     setIsPlayingSpeech(true);
-    window.speechSynthesis.speak(utterance);
+    
+    // Slight delay before speaking helps prevent queue locks
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   };
 
   const handleFeedback = (rating: 'up' | 'down') => {
@@ -93,7 +117,6 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
 
   return (
     <div className={`flex items-start gap-3 my-3 font-sans group ${!isAssistant ? 'flex-row-reverse' : ''}`}>
-      {/* Avatar Badge */}
       <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 shadow-md ${
         isAssistant 
           ? 'bg-[#111111] border-white/10 text-white' 
@@ -102,13 +125,11 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
         {isAssistant ? <Bot className="w-4 h-4 text-white" /> : <User className="w-4 h-4 text-black" />}
       </div>
 
-      {/* Bubble Box */}
       <div className={`max-w-[85%] p-4 rounded-2xl border text-sm relative space-y-2 shadow-sm ${
         isAssistant 
           ? 'bg-[#111111] border-white/[0.08] text-[#B8B8B8] rounded-tl-sm' 
           : 'bg-[#181818] border-white/10 text-white rounded-tr-sm'
       }`}>
-        {/* Header Metadata */}
         <div className="flex items-center justify-between gap-4 border-b border-white/[0.05] pb-1.5 text-[10px] font-mono text-[#777777]">
           <span className="font-bold uppercase tracking-wider">
             {isAssistant ? 'Catalyst OS AI' : 'You'}
@@ -125,20 +146,17 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
           </div>
         </div>
 
-        {/* Content Render */}
         <MarkdownRenderer content={message.content} />
 
-        {/* RAG Source Cards */}
         {isAssistant && message.sources && message.sources.length > 0 && (
           <SourceCard sources={message.sources} />
         )}
 
-        {/* Assistant Actions: Speech Output, Regenerate & Feedback */}
         {isAssistant && (
           <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-zinc-500 text-[10px] font-mono">
             <div className="flex items-center gap-2">
               <button
-                onClick={handleSpeech}
+                onClick={() => handleSpeech(false)}
                 title={isPlayingSpeech ? 'Stop Voice Speech' : 'Listen to Voice Speech (TTS)'}
                 className={`flex items-center gap-1 hover:text-white transition-colors cursor-pointer ${
                   isPlayingSpeech ? 'text-emerald-400 font-bold' : ''

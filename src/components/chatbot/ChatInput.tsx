@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Mic, Paperclip, MicOff } from 'lucide-react';
 
 interface ChatInputProps {
-  onSend: (text: string) => void;
+  onSend: (text: string, isVoice?: boolean) => void;
   disabled?: boolean;
   language: string;
 }
@@ -67,7 +67,7 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
           const data = await response.json();
           const transcribed = data.text || '';
           if (transcribed.trim()) {
-            onSend(transcribed);
+            onSend(transcribed, true);
             setText('');
           } else {
             setText('');
