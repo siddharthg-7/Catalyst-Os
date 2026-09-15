@@ -22,6 +22,7 @@ from app.agents.investment.router import router as investment_router
 from app.agents.gtm.router import router as gtm_router
 from app.agents.orchestrator import router as orchestrator_router
 from app.routers.audio import router as audio_router
+from app.routers.adk_router import router as adk_v1_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
@@ -63,6 +64,7 @@ app.include_router(investment_router)
 app.include_router(gtm_router)
 app.include_router(orchestrator_router)
 app.include_router(audio_router)
+app.include_router(adk_v1_router)
 
 # Mount legacy/other routers if exists
 try:

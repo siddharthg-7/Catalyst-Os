@@ -87,7 +87,7 @@ router.use('/', agentsRouter);
 router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) => {
   const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
   try {
-    const pyRes = await fetch(`${fastApiUrl}/api/startup`);
+    const pyRes = await fetch(`${fastApiUrl}/api/startup`, { signal: AbortSignal.timeout(600) });
     if (pyRes.ok) {
       const data = await pyRes.json();
       startupProfile.name = data.company_name;
@@ -298,7 +298,7 @@ router.get('/approvals', authenticateJWT, async (req: AuthenticatedRequest, res)
   const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
   let mergedApprovals = [...approvals];
   try {
-    const pyRes = await fetch(`${fastApiUrl}/api/approvals`);
+    const pyRes = await fetch(`${fastApiUrl}/api/approvals`, { signal: AbortSignal.timeout(600) });
     if (pyRes.ok) {
       const dbApprovals = await pyRes.json();
       const mapped = dbApprovals.map((appr: any) => {

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -93,7 +93,25 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const [startup, setStartup] = useState<StartupProfile | null>(null);
+  const DEFAULT_STARTUP_PROFILE: StartupProfile = {
+    name: 'CatalystOS Startup',
+    industry: 'B2B SaaS / Developer Tools',
+    description: 'Enterprise-grade automated workflow orchestration platform for hybrid cloud environments.',
+    fundingStage: 'Pre-Seed',
+    cashBalance: 245000,
+    burnRate: 18500,
+    runwayMonths: 13.2,
+    healthScore: 78,
+    metrics: {
+      velocity: 65,
+      financialHealth: 72,
+      legalCompliance: 80,
+      growthRate: 45,
+      operationsEfficiency: 70,
+    },
+  };
+
+  const [startup, setStartup] = useState<StartupProfile | null>(DEFAULT_STARTUP_PROFILE);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
   const [approvals, setApprovals] = useState<Deliverable[]>([]);

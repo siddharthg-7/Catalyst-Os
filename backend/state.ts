@@ -323,71 +323,79 @@ async function syncStateWithDatabase() {
   try {
     console.log('🔄 Synchronizing memory state with Neon PostgreSQL...');
     
-    // Sync Users
-    const dbUsers = await prisma.user.findMany();
-    if (dbUsers.length > 0) {
-      users.length = 0; // Clear default array
-      dbUsers.forEach(u => {
-        users.push({
-          id: u.id,
-          email: u.email,
-          name: u.name || '',
-          role: u.role as UserRole,
-          passwordHash: bcrypt.hashSync('password123', 10), // standard map
-          createdAt: u.createdAt.toISOString()
+    const syncOperations = async () => {
+      // Sync Users
+      const dbUsers = await prisma.user.findMany();
+      if (dbUsers.length > 0) {
+        users.length = 0; // Clear default array
+        dbUsers.forEach(u => {
+          users.push({
+            id: u.id,
+            email: u.email,
+            name: u.name || '',
+            role: u.role as UserRole,
+            passwordHash: bcrypt.hashSync('password123', 10), // standard map
+            createdAt: u.createdAt.toISOString()
+          });
         });
-      });
-      console.log(`✅ Synced ${dbUsers.length} users.`);
-    }
+        console.log(`✅ Synced ${dbUsers.length} users.`);
+      }
 
-    // Sync Startup Profile
-    const dbStartup = await prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } });
-    if (dbStartup) {
-      const runway = dbStartup.burnRate > 0 ? parseFloat((dbStartup.cashBalance / dbStartup.burnRate).toFixed(1)) : 999;
-      startupProfile.name = dbStartup.name;
-      startupProfile.industry = dbStartup.industry;
-      startupProfile.description = dbStartup.description;
-      startupProfile.fundingStage = dbStartup.fundingStage;
-      startupProfile.cashBalance = dbStartup.cashBalance;
-      startupProfile.burnRate = dbStartup.burnRate;
-      startupProfile.runwayMonths = runway;
-      startupProfile.healthScore = dbStartup.healthScore;
-      console.log('✅ Synced startup profile.');
-    }
+      // Sync Startup Profile
+      const dbStartup = await prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } });
+      if (dbStartup) {
+        const runway = dbStartup.burnRate > 0 ? parseFloat((dbStartup.cashBalance / dbStartup.burnRate).toFixed(1)) : 999;
+        startupProfile.name = dbStartup.name;
+        startupProfile.industry = dbStartup.industry;
+        startupProfile.description = dbStartup.description;
+        startupProfile.fundingStage = dbStartup.fundingStage;
+        startupProfile.cashBalance = dbStartup.cashBalance;
+        startupProfile.burnRate = dbStartup.burnRate;
+        startupProfile.runwayMonths = runway;
+        startupProfile.healthScore = dbStartup.healthScore;
+        console.log('✅ Synced startup profile.');
+      }
 
-    // Sync Agents
-    const dbAgents = await prisma.executiveAgent.findMany();
-    if (dbAgents.length > 0) {
-      agentsList.forEach(a => {
-        const matchingDb = dbAgents.find(da => da.id === a.id);
-        if (matchingDb) {
-          a.status = matchingDb.status as any;
-        }
-      });
-      console.log('✅ Synced executive agents statuses.');
-    }
-
-    // Sync Knowledge Files
-    const dbDocs = await prisma.startupDocument.findMany({
-      orderBy: { createdAt: 'desc' }
-    });
-    if (dbDocs.length > 0) {
-      knowledgeFiles.length = 0;
-      dbDocs.forEach(d => {
-        knowledgeFiles.push({
-          id: d.id,
-          name: d.name,
-          type: d.type as any,
-          size: d.size,
-          uploadDate: d.createdAt.toISOString(),
-          summary: d.summary,
-          insights: d.insights
+      // Sync Agents
+      const dbAgents = await prisma.executiveAgent.findMany();
+      if (dbAgents.length > 0) {
+        agentsList.forEach(a => {
+          const matchingDb = dbAgents.find(da => da.id === a.id);
+          if (matchingDb) {
+            a.status = matchingDb.status as any;
+          }
         });
-      });
-      console.log(`✅ Synced ${dbDocs.length} knowledge base documents.`);
-    }
+        console.log('✅ Synced executive agents statuses.');
+      }
 
-    console.log('🎉 Neon PostgreSQL state synchronization complete.');
+      // Sync Knowledge Files
+      const dbDocs = await prisma.startupDocument.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      if (dbDocs.length > 0) {
+        knowledgeFiles.length = 0;
+        dbDocs.forEach(d => {
+          knowledgeFiles.push({
+            id: d.id,
+            name: d.name,
+            type: d.type as any,
+            size: d.size,
+            uploadDate: d.createdAt.toISOString(),
+            summary: d.summary,
+            insights: d.insights
+          });
+        });
+        console.log(`✅ Synced ${dbDocs.length} knowledge base documents.`);
+      }
+
+      console.log('🎉 Neon PostgreSQL state synchronization complete.');
+    };
+
+    const timeoutGuard = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Remote database connection timed out (1500ms)')), 1500)
+    );
+
+    await Promise.race([syncOperations(), timeoutGuard]);
   } catch (err: any) {
     isDbAvailable = false;
     console.warn('⚠️ Could not connect to Neon PostgreSQL for startup sync. Falling back to high-fidelity offline default states.');

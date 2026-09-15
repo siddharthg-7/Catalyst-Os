@@ -18,9 +18,9 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
-// Proxy /api/audio to FastAPI before parsing it or passing to local apiRouter
+// Proxy /api/audio and /api/v1 to FastAPI before parsing it or passing to local apiRouter
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/audio')) {
+  if (req.path.startsWith('/api/audio') || req.path.startsWith('/api/v1')) {
     return createProxyMiddleware({
       target: process.env.FASTAPI_URL || 'http://127.0.0.1:8000',
       changeOrigin: true
