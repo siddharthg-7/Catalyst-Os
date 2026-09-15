@@ -20,7 +20,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, getToken, signOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
-  const [demoUser, setDemoUser] = useState<User | null>(null);
+  const [demoUser, setDemoUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('catalystos_demo_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [clerkTimeout, setClerkTimeout] = useState(false);
+
+  // If Clerk remote script is taking more than 800ms, unlock the UI immediately
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setClerkTimeout(true);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Map Clerk user or Demo user to the app's internal User shape
   const user: User | null = demoUser ?? (
@@ -34,18 +50,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       : null
   );
 
-  const loading = !isLoaded && !demoUser;
+  // Fast loading state: unblock immediately if demoUser is cached or timeout has expired
+  const loading = !demoUser && !isLoaded && !clerkTimeout;
 
   const loginAsDemo = () => {
-    setDemoUser({
+    const dUser: User = {
       id: 'usr_founder_demo',
       email: 'founder@founder.os',
       name: 'Founder Demo',
       role: 'Founder',
-    });
+    };
+    try {
+      localStorage.setItem('catalystos_demo_user', JSON.stringify(dUser));
+    } catch {}
+    setDemoUser(dUser);
   };
 
   const logout = async () => {
+    try {
+      localStorage.removeItem('catalystos_demo_user');
+    } catch {}
     setDemoUser(null);
     try {
       await signOut();

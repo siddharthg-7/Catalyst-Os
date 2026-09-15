@@ -46,11 +46,12 @@ export default function App() {
     if (params.get('demo') === 'true') {
       localStorage.removeItem('catalystos_onboarding_completed_usr_founder_demo');
       localStorage.removeItem('catalystos_onboarding_context_usr_founder_demo');
-      if (!user) {
-        loginAsDemo();
-      }
+      loginAsDemo();
+      try {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch {}
     }
-  }, [loginAsDemo, user]);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -111,8 +112,77 @@ export default function App() {
     },
   };
 
+  const DEFAULT_AGENTS: Agent[] = [
+    {
+      id: 'ceo',
+      name: 'Sophia Vance',
+      role: 'CEO',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      description: 'Autonomous corporate strategist. Formulates broad roadmaps and balances high-level vision.',
+      status: 'idle',
+      keyMetric: 'Company Velocity',
+      metricValue: '65%',
+      color: 'indigo',
+    },
+    {
+      id: 'finance',
+      name: 'Marcus Sterling',
+      role: 'Finance',
+      avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+      description: 'Automated Chief Financial Officer. Optimizes unit economics, burn rates, and deterministic runways.',
+      status: 'idle',
+      keyMetric: 'Financial Health',
+      metricValue: '72%',
+      color: 'emerald',
+    },
+    {
+      id: 'talent',
+      name: 'Evelyn Brooks',
+      role: 'Talent',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+      description: 'AI Recruiting and HR Executive. Strategizes resource allocation and compensation structures.',
+      status: 'idle',
+      keyMetric: 'Hiring Speed',
+      metricValue: '58 days',
+      color: 'pink',
+    },
+    {
+      id: 'growth',
+      name: 'Dax Ramirez',
+      role: 'Growth',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      description: 'Autonomous Marketing and Acquisition Officer. Focuses on viral loops and demand generation.',
+      status: 'idle',
+      keyMetric: 'User Growth Rate',
+      metricValue: '+45% MoM',
+      color: 'amber',
+    },
+    {
+      id: 'legal',
+      name: 'Helena Vance, Esq.',
+      role: 'Legal',
+      avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
+      description: 'Automated General Counsel. Drafts contracts, assesses IP protection, and reviews compliance.',
+      status: 'idle',
+      keyMetric: 'Compliance Index',
+      metricValue: '80%',
+      color: 'rose',
+    },
+    {
+      id: 'conflict',
+      name: 'Pax-9 Synthesis',
+      role: 'ConflictResolver',
+      avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
+      description: 'Corporate Compromise Engine. Mediates functional trade-offs between agents.',
+      status: 'idle',
+      keyMetric: 'Resolution Rate',
+      metricValue: '98%',
+      color: 'purple',
+    },
+  ];
+
   const [startup, setStartup] = useState<StartupProfile | null>(DEFAULT_STARTUP_PROFILE);
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>(DEFAULT_AGENTS);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
   const [approvals, setApprovals] = useState<Deliverable[]>([]);
   const [decisions, setDecisions] = useState<DecisionRecord[]>([]);
@@ -128,7 +198,7 @@ export default function App() {
   const hydrateState = async () => {
     if (!user) return;
     try {
-      const [startupRes, agentsRes, initiativesRes, approvalsRes, decisionsRes, knowledgeRes] = await Promise.all([
+      const results = await Promise.allSettled([
         apiFetch('/api/startup'),
         apiFetch('/api/agents'),
         apiFetch('/api/initiatives'),
@@ -137,15 +207,16 @@ export default function App() {
         apiFetch('/api/knowledge'),
       ]);
 
-      if (startupRes.ok) setStartup(await startupRes.json());
-      if (agentsRes.ok) setAgents(await agentsRes.json());
-      if (initiativesRes.ok) setInitiatives(await initiativesRes.json());
-      if (approvalsRes.ok) setApprovals(await approvalsRes.json());
-      if (decisionsRes.ok) setDecisions(await decisionsRes.json());
-      if (knowledgeRes.ok) setKnowledge(await knowledgeRes.json());
+      const [startupRes, agentsRes, initiativesRes, approvalsRes, decisionsRes, knowledgeRes] = results;
+
+      if (startupRes.status === 'fulfilled' && startupRes.value.ok) setStartup(await startupRes.value.json());
+      if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) setAgents(await agentsRes.value.json());
+      if (initiativesRes.status === 'fulfilled' && initiativesRes.value.ok) setInitiatives(await initiativesRes.value.json());
+      if (approvalsRes.status === 'fulfilled' && approvalsRes.value.ok) setApprovals(await approvalsRes.value.json());
+      if (decisionsRes.status === 'fulfilled' && decisionsRes.value.ok) setDecisions(await decisionsRes.value.json());
+      if (knowledgeRes.status === 'fulfilled' && knowledgeRes.value.ok) setKnowledge(await knowledgeRes.value.json());
     } catch (err) {
       console.error('Error hydrating applet state:', err);
-      showToast('Connection to server established. Utilizing sandbox database.', 'info');
     }
   };
 
