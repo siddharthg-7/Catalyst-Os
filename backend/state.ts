@@ -1,8 +1,6 @@
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, User, UserRole } from '../src/types';
 import bcrypt from 'bcryptjs';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './services/dbService';
 export let isDbAvailable = true;
 
 export interface UserDBRecord extends User {
@@ -388,11 +386,12 @@ async function syncStateWithDatabase() {
         console.log(`✅ Synced ${dbDocs.length} knowledge base documents.`);
       }
 
+      isDbAvailable = true;
       console.log('🎉 Neon PostgreSQL state synchronization complete.');
     };
 
     const timeoutGuard = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Remote database connection timed out (1500ms)')), 1500)
+      setTimeout(() => reject(new Error('Remote database connection timed out (15000ms)')), 15000)
     );
 
     await Promise.race([syncOperations(), timeoutGuard]);
