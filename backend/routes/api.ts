@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { prisma } from '../services/dbService';
+import { prisma, safeDbQuery } from '../services/dbService';
 import vaultService from '../services/vaultService';
 import { extractTextFromFile } from '../services/documentParser';
 import { ingestDocument, performHybridSearch, buildContext } from '../services/ragEngine';
@@ -478,17 +478,19 @@ router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res)
     return;
   }
   try {
-    const prismaClient = prisma;
-    const activeStartup = await prismaClient.startup.findFirst({
-      where: { ownerId: req.user?.id }
-    }) || await prismaClient.startup.findFirst({
-      orderBy: { createdAt: 'desc' }
-    });
-    const startupId = activeStartup ? activeStartup.id : 'st_catalystos';
+    const { startupId, dbDocs } = await safeDbQuery(async () => {
+      const activeStartup = await prisma.startup.findFirst({
+        where: { ownerId: req.user?.id }
+      }) || await prisma.startup.findFirst({
+        orderBy: { createdAt: 'desc' }
+      });
+      const sid = activeStartup ? activeStartup.id : 'st_catalystos';
 
-    const dbDocs = await prismaClient.startupDocument.findMany({
-      where: { startupId },
-      orderBy: { createdAt: 'desc' }
+      const docs = await prisma.startupDocument.findMany({
+        where: { startupId: sid },
+        orderBy: { createdAt: 'desc' }
+      });
+      return { startupId: sid, dbDocs: docs };
     });
 
     const docs = dbDocs.map(d => ({
@@ -615,7 +617,7 @@ Format your output exactly as valid JSON with "summary" (string) and "insights" 
     }
 
     const documentId = `doc_${Date.now()}`;
-    const createdDoc = await prismaClient.startupDocument.create({
+    const createdDoc = await safeDbQuery(() => prisma.startupDocument.create({
       data: {
         id: documentId,
         name,
@@ -625,7 +627,7 @@ Format your output exactly as valid JSON with "summary" (string) and "insights" 
         insights,
         startupId
       }
-    });
+    }));
 
     // Delegate overlapping chunking & high-fidelity embeddings generation to the production RAG Engine
     await ingestDocument(documentId, textContent, name, type);

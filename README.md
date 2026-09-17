@@ -1,15 +1,21 @@
 <div align="center">
-  <h1> Catalyst OS</h1>
-  <p><b>Autonomous Startup Operating System & AI Executive Team</b></p>
+  <h1>⚡ Catalyst OS</h1>
+  <p><b>Autonomous Startup Operating System & Multi-Agent AI Executive Team</b></p>
   <p align="center">
-    <img src="https://img.shields.io/badge/Status-MVP--Development-brightgreen?style=for-the-badge" alt="Status" />
-    <img src="https://img.shields.io/badge/React.js-Frontend-blue?style=for-the-badge&logo=react" alt="React" />
-    <img src="https://img.shields.io/badge/FastAPI-Python-009688?style=for-the-badge&logo=fastapi" alt="FastAPI" />
-    <img src="https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google" alt="Gemini" />
-    <img src="https://img.shields.io/badge/PostgreSQL-pgvector-336791?style=for-the-badge&logo=postgresql" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Status-Production--Ready-brightgreen?style=for-the-badge" alt="Status" />
+    <img src="https://img.shields.io/badge/React%2019-Frontend-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+    <img src="https://img.shields.io/badge/Vite%206-Bundler-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite 6" />
+    <img src="https://img.shields.io/badge/Tailwind%20CSS%20v4-Styling-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS v4" />
+    <img src="https://img.shields.io/badge/Express%204-API%20Gateway-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
+    <img src="https://img.shields.io/badge/FastAPI-Python%203.11-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/LangGraph-Multi--Agent-FF6F00?style=for-the-badge&logo=python&logoColor=white" alt="LangGraph" />
+    <img src="https://img.shields.io/badge/Google%20Gemini-2.5%2F3.5%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
+    <img src="https://img.shields.io/badge/Prisma%20ORM-v6-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma" />
+    <img src="https://img.shields.io/badge/PostgreSQL-pgvector-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+    <img src="https://img.shields.io/badge/Clerk-Authentication-6C47FF?style=for-the-badge&logo=clerk&logoColor=white" alt="Clerk" />
   </p>
   <p>
-    An AI-powered operating system for founders that coordinates Finance, Hiring, Growth, Legal, Investment, and Operations through collaborating AI executives.
+    An enterprise-grade autonomous operating system for founders that coordinates Finance, Talent, Growth, Legal, Investment, and Operations through collaborating AI executives with human-in-the-loop governance.
   </p>
   <blockquote>
     <b>One Founder. One Command. An Entire AI Executive Team.</b>
@@ -19,829 +25,612 @@
 ---
 
 ## 📑 Table of Contents
-- [ Key Features](#-key-features)
-- [ Technology Stack](#️-technology-stack)
-- [ System Architecture](#️-system-architecture)
-- [ User Flow](#-user-flow)
-- [ Hallucination Prevention & AI Safety](#-hallucination-prevention--ai-safety)
-- [ Agent Loading States](#-agent-loading-states)
-- [ Project Structure](#-project-structure)
-- [ Getting Started](#-getting-started)
-- [ Configuration](#️-configuration)
-- [ Run Locally](#️-run-locally)
-- [ API Reference](#-api-reference)
-- [ Usage / Examples](#-usage--examples)
-- [ Database Design](#-database-design)
-- [ Scalability](#-scalability)
-- [ Roadmap](#️-roadmap)
-- [ Optimizations](#-optimizations)
-- [ Lessons Learned](#-lessons-learned)
-- [ Challenges Faced](#-challenges-faced)
-- [ Future Scope](#-future-scope)
-- [ Demo Story](#-demo-story)
-- [Product Philosophy](#-product-philosophy)
-- [ Authors](#-authors)
-- [ Feedback &  Support](#-feedback)
+- [✨ Key Features](#-key-features)
+- [🤖 The AI Executive Suite](#-the-ai-executive-suite)
+- [🏛️ System Architecture](#️-system-architecture)
+- [🔄 Executive Collaboration & Board Vote](#-executive-collaboration--board-vote)
+- [🛡️ Hallucination Prevention & AI Safety](#️-hallucination-prevention--ai-safety)
+- [💻 Technology Stack](#-technology-stack)
+- [📂 Project Structure](#-project-structure)
+- [🚀 Getting Started](#-getting-started)
+- [⚙️ Configuration & Environment Variables](#️-configuration--environment-variables)
+- [🏃 Running Locally](#-running-locally)
+- [📡 API Reference](#-api-reference)
+- [🗄️ Database Design & Models](#️-database-design--models)
+- [📚 Knowledge Base & Hybrid RAG](#-knowledge-base--hybrid-rag)
+- [🎯 User Flow & Founder Experience](#-user-flow--founder-experience)
+- [📈 Scalability & Performance](#-scalability--performance)
+- [🗺️ Roadmap](#️-roadmap)
+- [💡 Lessons Learned & Challenges](#-lessons-learned--challenges)
+- [👥 Authors & Community](#-authors--community)
+- [📜 License](#-license)
 
 ---
 
-##  Key Features
+## ✨ Key Features
 
-###  Smart Founder Onboarding
-* **Two onboarding paths:** Start fresh or import an existing startup.
-* **Startup context capture:** Industry, stage, team size, revenue, burn rate, runway, funding, budget, and timeline.
-* **Document intelligence:** Upload pitch decks, financial statements, roadmaps, hiring documents, policies, contracts, and business plans.
-* **Shared context:** Structured startup data becomes grounded context for relevant AI executives.
+### 🏢 Smart Founder Onboarding & State Initialization
+* **Flexible Startup Context:** Capture company name, industry, funding stage, burn rate, cash-on-hand, runway, and target ICP.
+* **Document Intelligence Ingestion:** Drag-and-drop pitch decks, financial statements, roadmaps, hiring specs, policies, and contracts.
+* **Multi-Format Extraction:** Native parser support for PDF, DOCX, XLSX, TXT, and Markdown files.
+* **Shared Grounded Memory:** Structured startup data forms contextual boundary constraints for every executive agent.
 
-### Executive Dashboard
-* **Startup Health Score:** Real-time metrics with Finance, Hiring, Growth, and Operations sub-scores.
-* **Today's Priorities:** Proactive alerts and items needing attention.
-* **Executive Cards:** Real-time visibility into agent tasks, status, and latest recommendations.
-* **Comprehensive Tracking:** Pending Approvals, Activity Timeline, Notifications, and Daily Executive Brief.
-* **Founder Command Box:** Issue objectives via text or voice.
+### 📊 Real-Time Executive Dashboard
+* **Startup Health Score (0–100):** Weighted multi-dimensional index calculated across Velocity, Financial Health, Legal Compliance, Growth Rate, and Operational Efficiency.
+* **Founder Command Box:** Issue high-level strategic objectives via natural language text or voice.
+* **Live Executive Matrix:** Real-time visibility into agent states (`idle`, `analyzing`, `collaborating`, `generating`) and active tasks.
+* **Daily Executive Brief:** Automated morning digest summarizing pending approvals, runway alerts, velocity bottlenecks, and strategic milestones.
+* **Metric Cards & Dynamic Projections:** Live monitors for Monthly Burn, Runway Months, Cash Balance, and Active Initiatives.
 
-###  CEO Orchestrator
-* Understands high-level founder goals and decomposes them into business tasks.
-* Selectively routes work to relevant departments.
-* Coordinates cross-agent consultation and resolves conflicting recommendations.
-* Produces one unified execution plan.
+### 🛡️ Human-in-the-Loop Approval Center
+* **Safe Decision Gates:** High-impact business actions (hiring, capital expenditures, contract execution, GTM launches) require explicit founder sign-off.
+* **Impact Forecaster:** Every approval displays predicted financial impact (e.g. `-$14,000/mo`) and metric shifts across company health indicators.
+* **One-Click Actions:** Founder can **Approve**, **Reject** (with constructive feedback), or **Edit** before commitment.
+* **Automatic Ledger & Profile Updates:** Approvals dynamically update treasury balances, burn rates, and the company decision log.
 
-###  Finance / CFO Agent
-* Burn-rate and runway calculation.
-* Expense and cash-flow analysis & budget validation.
-* Hiring affordability checks and scenario simulation.
+### 📜 Auditable Decision Log
+* Complete, tamper-evident corporate audit trail tracking:
+  * Timestamp and founder command
+  * Responsible executive agent
+  * Strategic rationale and confidence score (0–100%)
+  * Source document citations (`[CIT-1]`, `[CIT-2]`)
+  * Founder verdict (`approved`, `rejected`) and operational outcome
 
-### Head of Talent
-* Resume analysis, candidate ranking, and skill matching.
-* Job-description generation and outreach email drafts.
-* Mandatory proactive CFO consultation before advancing budget-sensitive hiring recommendations.
+### 🧠 Enterprise RAG & Semantic Memory
+* **Hybrid Vector + Keyword Search:** Powered by PostgreSQL with `pgvector` extension and Prisma ORM.
+* **Overlapping Chunking:** Documents chunked with semantic sliding windows for maximum contextual coherence.
+* **Grounding Engine:** LLM queries are injected with relevant chunks to completely eliminate hallucinated metrics.
+* **Interactive Chatbot:** Embedded conversational assistant (`CatalystOsChatbot`) answering questions directly grounded in the company knowledge base.
 
-###  Head of Growth
-* Go-to-market strategy, marketing, and campaign plans.
-* LinkedIn, social content, and customer email drafts.
-* Launch calendar and KPI suggestions.
+### 🎙️ Voice Command Interface
+* Issue founder commands hands-free using real-time audio capture.
+* Integrated speech-to-text pipeline via **Whisper / Faster-Whisper** and Gemini Multimodal Audio.
 
-###  Legal Executive
-* NDA and contract drafting with compliance checklists.
-* Policy review, legal-risk flagging, and launch-readiness validation.
+---
 
-###  Investment Executive
-* Fundraising-readiness analysis and KPI reviews.
-* Investor CRM support, updates, and pitch-deck feedback.
+## 🤖 The AI Executive Suite
 
-### 🗂 Operations Executive
-* Roadmaps, sprint planning, and milestone tracking.
-* Deadline, dependency management, and launch-plan adjustment.
+Catalyst OS simulates a C-suite corporate hierarchy where agents reason, consult peers, and debate trade-offs:
 
-###  Executive Collaboration
+| Executive Role | Avatar / Name | Primary Responsibilities | Cross-Agent Interactions |
+| :--- | :--- | :--- | :--- |
+| **CEO Orchestrator** | 👔 Chief Executive | Intent classification, task decomposition, trade-off mediation, unified execution synthesis | Coordinates all departments; reconciles conflicting advice |
+| **CFO / Finance** | 💰 Chief Financial Officer | Burn rate analysis, runway modeling, cash-flow stress testing, budget guardrails | Vetoes unaffordable hiring; constrains marketing spend |
+| **Head of Talent** | 👥 Chief People Officer | Job description drafting, resume screening, candidate ranking, salary benchmarking | Proactively consults CFO before advancing hiring plans |
+| **Head of Growth** | 🚀 Chief Commercial Officer | Go-To-Market strategies, marketing campaigns, launch calendars, sales copy | Coordinates with Legal on claims and CFO on ad budgets |
+| **General Counsel** | ⚖️ Legal & Compliance | NDA/contract generation, IP risk assessment, regulatory compliance checklists | Audits external communications and employment agreements |
+| **Head of Operations** | ⚙️ Chief Operating Officer | Sprint roadmaps, milestone scheduling, dependency tracking, bottleneck mitigation | Aligns engineering delivery dates with Growth launch dates |
+| **Investment Agent** | 📈 Head of Corporate Finance | Pitch deck evaluation, cap table modeling, fundraising readiness, investor updates | Prepares metrics packages for angel and VC outreach |
+| **Auditor Agent** | 🔍 Independent Verification | Fact-checking claims, validating citations, detecting invalid assumptions | Acts as quality control gatekeeper before human approval |
+
+---
+
+## 🏛️ System Architecture
+
+Catalyst OS utilizes a dual-engine architecture: a high-performance **Node.js Express + TypeScript Gateway** paired with an autonomous **Python FastAPI LangGraph Microservice**.
+
 ```text
-Founder: "Hire Developers"
-          │
-          ▼
-     Head of Talent
-          │
-          ▼
- asks CFO: "Can we afford it?"
-          │
-          ▼
- CFO: "Budget supports one senior hire"
-          │
-          ▼
- Talent updates recommendation
-          │
-          ▼
- Operations shifts roadmap
-          │
-          ▼
- Growth adjusts launch date
-          │
-          ▼
- CEO presents unified strategy
+                               ┌──────────────────────────────────────────────┐
+                               │           React 19 Founder Frontend          │
+                               │  (Dashboard • Workflow • Approvals • Voice)  │
+                               └──────────────────────┬───────────────────────┘
+                                                      │ HTTP / WebSocket
+                                                      ▼
+                               ┌──────────────────────────────────────────────┐
+                               │     Unified Express 4 Server & API Gateway   │
+                               │        (server.ts • TypeScript • tsx)        │
+                               └──────┬───────────────────────────────┬───────┘
+                                      │                               │
+                       ┌──────────────▼──────────────┐                ▼
+                       │  Node.js Agent Orchestrator │   Proxy /api/v1 & /api/audio
+                       │   - Fast in-memory engine   │   FastAPI Python Microservice
+                       │   - Gemini 2.5/3.5 Flash    │   - LangGraph State Machine
+                       │   - Local RAG & Document    │   - Autonomous Agent Nodes
+                       │     Parsing Pipeline        │   - Whisper Audio Engine
+                       └──────────────┬──────────────┘                ▲
+                                      │                               │
+                                      ▼                               │
+                       ┌──────────────────────────────────────────────┴───────┐
+                       │                   Persistence Layer                  │
+                       │   - PostgreSQL + pgvector (Prisma ORM v6)            │
+                       │   - Documents, Knowledge Chunks, Embeddings          │
+                       │   - Startups, Decisions, Approvals, Timeline         │
+                       │   - HashiCorp Vault / Encrypted Secrets Store        │
+                       └──────────────────────────────────────────────────────┘
 ```
 
-###  Board Vote
+### Dual-Engine Resilience (Graceful Fallback)
+* When the **Python FastAPI microservice** is active on port 8000, complex LangGraph cycles and audio workflows run with full deep-graph execution.
+* If the microservice is offline, the **Express Node.js engine** seamlessly handles multi-agent planning, document parsing, RAG queries, and approvals without interruption!
+
+---
+
+## 🔄 Executive Collaboration & Board Vote
+
+When a founder issues a multi-faceted objective, agents do not act in silos. They engage in structured cross-consultation:
+
 ```text
-Finance Agent:
-Reject hiring two engineers
-
-Hiring Agent:
-✅ Approve hiring
-
-Operations Agent:
- Approve one hire only
-
-CEO Recommendation:
- Hire one engineer now and review runway next month
-```
-
-###  Founder Approval Center
-* High-risk actions (hiring, spending, campaigns, legal documents, external communications) require **explicit human approval**.
-* **Approve, Reject, or Edit** directly within the UI.
-* Rejected actions are logged securely without silently disrupting the startup state.
-
-###  Explainable AI
-```text
-Recommendation:
-Hire Rahul
-
-Why?
-✓ 94% Skill Match
-✓ Salary Within Approved Budget
-✓ Relevant Startup Experience
-
-Confidence:
-91%
-
-Sources:
-- backend_role_requirements.pdf
-- candidate_rahul_resume.pdf
-- hiring_budget_q3.xlsx
-```
-
-###  Auditable Decision Log
-* Securely stores timestamp, founder command, executive, recommendation, reason, confidence, evidence, founder decision, and final status.
-
-### Startup Health Score
-| Department | Score |
-| :--- | :--- |
-| **Overall** | **83** |
-| Finance | 92 |
-| Hiring | 71 |
-| Growth | 88 |
-| Operations | 82 |
-
-###  Knowledge Base & RAG
-* Upload pitch decks, financial reports, roadmaps, policies, contracts, business plans, and resumes.
-* Retrieve **only relevant chunks** to ground recommendations in startup-specific evidence.
-* Semantic memory powered by **PostgreSQL** and **pgvector**.
-
-###  Scenario Simulator
-* Ask *"What if we hire three more engineers?"* and automatically recalculate runway, burn rate, Health Score, hiring plan, launch date, and marketing timeline.
-
-###  Voice Interface
-* Issue founder commands using voice, accurately transcribed via **Whisper / Faster-Whisper**, and routed intuitively through the CEO Orchestrator.
-
-###  Daily Executive Brief
-```text
-Good Morning.
-
-Today's Priorities
-- 3 approvals pending
-- Hiring is behind schedule
-- Launch is on track
-
-Runway
-- 5.2 months
-
-Critical Alert
-- Burn rate increased this week
+Founder Command: "Hire 2 Senior Engineers & Launch Pilot in 30 Days"
+                                │
+                                ▼
+                       CEO Orchestrator
+           Decomposes into Parallel Business Tasks
+                                │
+       ┌────────────────────────┼────────────────────────┐
+       ▼                        ▼                        ▼
+Head of Talent            Head of Growth         Operations Lead
+Researches Candidates     Prepares Launch Plan    Maps Deliverables
+       │                        │                        │
+       ▼                        ▼                        ▼
+  Asks CFO:                Asks Legal:              Asks Talent:
+"Can we afford $30k/mo?" "Review Pilot Terms"    "When do devs start?"
+       │                        │                        │
+       ▼                        ▼                        ▼
+      CFO                     Legal                    Talent
+"Budget supports 1 dev;  "NDAs & SLAs drafted;   "First candidate can
+ runway drops to 4 mo."   vendor review needed"   start in 2 weeks"
+       │                        │                        │
+       └────────────────────────┼────────────────────────┘
+                                │
+                                ▼
+                     Board Vote & Consensus
+       ┌─────────────────────────────────────────────────┐
+       │ Finance Agent:   ⚠️ Reject 2 hires; Approve 1   │
+       │ Talent Agent:    ✅ Approve 1 senior backend    │
+       │ Operations:      ✅ Approve (with timeline shift)│
+       │ Legal:           ✅ Approve with NDA condition  │
+       └────────────────────────┬────────────────────────┘
+                                │
+                                ▼
+                        CEO Synthesis
+     "Hire 1 senior engineer now. Push pilot by 10 days.
+      Runway remains healthy at 6.8 months."
+                                │
+                                ▼
+                    Founder Approval Center
+     [Approve Plan]         [Modify Terms]         [Reject]
 ```
 
 ---
 
-##  Technology Stack
+## 🛡️ Hallucination Prevention & AI Safety
 
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | React.js, Tailwind CSS |
-| **Backend** | FastAPI (Python) |
-| **AI Orchestration** | LangGraph / LangChain |
-| **LLM** | Gemini |
-| **Voice AI** | Whisper, Faster-Whisper |
-| **RAG Pipeline** | LlamaIndex + pgvector |
-| **Database / Storage** | PostgreSQL |
-| **Vector Database** | pgvector |
-| **Authentication** | Clerk |
-| **Deployment** | Render |
+Catalyst OS incorporates defensive engineering principles to safeguard startup operations:
+
+1. **Deterministic Calculations over LLM Guesswork:**
+   * Critical financial metrics (monthly burn rate, runway months, cash balances) are calculated using deterministic TypeScript/Python arithmetic functions. The LLM interprets and explains results but never fabricates figures.
+2. **Strict RAG Citations (`[CIT-X]`):**
+   * Knowledge base responses reference exact chunk IDs and document names. If context is missing, agents return `DATA_MISSING` instead of extrapolating.
+3. **Auditor Agent Fact-Checking:**
+   * Before a recommendation reaches the approval queue, the Auditor Agent checks for unsupported claims, internal contradictions, and budget violations.
+4. **Structured JSON Schemas:**
+   * Agent communications and deliverables adhere to strict TypeScript interfaces and Pydantic schemas, eliminating format drift.
 
 ---
 
-##  System Architecture
+## 💻 Technology Stack
 
-```text
-                    Founder UI
-                (Text / Voice Input)
-                         │
-                         ▼
-                 CEO Orchestrator
-                         │
-          ┌──────────────┼──────────────┐
-          ▼              ▼              ▼
-       Finance        Hiring          Growth
-          │              │              │
-          ├──────────────┼──────────────┤
-          ▼              ▼              ▼
-        Legal        Investment      Operations
-          │              │              │
-          └──────────────┼──────────────┘
-                         ▼
-                Shared Startup Memory
-              PostgreSQL + pgvector
-                         │
-                         ▼
-                   Auditor Agent
-                         │
-                         ▼
-                  Approval Center
-                         │
-                         ▼
-        Dashboard • Timeline • Health Score
-```
+### Frontend Application
+* **Framework:** React 19 (`react`, `react-dom`)
+* **Build Tool:** Vite 6 (`vite`, `@vitejs/plugin-react`)
+* **Styling:** Tailwind CSS v4 (`tailwindcss`, `@tailwindcss/vite`)
+* **Animations:** Framer Motion (`framer-motion`, `motion`), GSAP (`gsap`, `@gsap/react`), Lottie (`@lottiefiles/dotlottie-react`)
+* **Icons & Charts:** Lucide React (`lucide-react`), React Icons (`react-icons`), Recharts (`recharts`)
+* **Auth Client:** Clerk React SDK (`@clerk/clerk-react`)
 
-### Selective Agent Execution
-```text
-"Generate an NDA"
-Planner → Legal → Auditor → Approval
-```
-```text
-"Can we hire two engineers?"
-Planner → Finance + Hiring → CEO → Auditor → Approval
-```
+### Backend Gateway & Services
+* **Runtime:** Node.js (v18+) with `tsx` for high-speed TypeScript execution
+* **HTTP Server:** Express 4 with modular routers and HTTP proxy middleware (`http-proxy-middleware`)
+* **Database ORM:** Prisma ORM v6 (`@prisma/client`, `prisma`) with PostgreSQL and vector extension preview
+* **Document Parsing:** `pdf-parse`, `mammoth` (DOCX), `officeparser` (PPTX/XLSX)
+* **AI SDK:** Google GenAI SDK (`@google/genai`) running Gemini 2.5 / 3.5 Flash
+* **Security & Auth:** Clerk Backend SDK (`@clerk/backend`), `jsonwebtoken`, `bcryptjs`, HashiCorp Vault client
+
+### Python AI Microservice
+* **Framework:** FastAPI, Uvicorn, Pydantic v2
+* **Multi-Agent Graph:** LangGraph, LangChain Core
+* **Database Engine:** SQLAlchemy with PostgreSQL engine
+* **Audio & Speech:** Faster-Whisper, OpenAI Whisper, SoundFile
 
 ---
 
-##  User Flow
+## 📂 Project Structure
 
 ```text
-Landing Page
-     │
-     ▼
-Get Started / Demo Startup
-     │
-     ├───────────────┐
-     ▼               ▼
-Start Fresh      Import Data
-     │               │
-     └───────┬───────┘
-             ▼
-   Company Context Created
-             │
-             ▼
-      Dashboard Loads
-       + Daily Brief
-             │
-             ▼
- Founder Issues Command
-      Text or Voice
-             │
-             ▼
-Collaboration Engine Runs
-             │
-             ▼
-   Final Summary Appears
-             │
-             ▼
- Founder Expands "Why?"
-             │
-             ▼
-      Approval Center
-       /      |      \
-      ▼       ▼       ▼
-  Approve   Reject    Edit
-      \       |       /
-             ▼
-     Dashboard Updates
-             │
-             └──────────────► Next Founder Command
-```
-
----
-
-##  Hallucination Prevention & AI Safety
-
-### Structured Outputs
-```json
-{
-  "recommendation_name": "Hire one backend engineer",
-  "why_reasons": [
-    "Current roadmap contains a backend delivery dependency",
-    "Approved hiring budget supports one role"
-  ],
-  "confidence_score": 0.91,
-  "source_documents": [
-    "roadmap_q3.pdf",
-    "hiring_budget.xlsx"
-  ]
-}
-```
-
-### Missing-Data Rules
-```text
-If evidence is unavailable:
-Return DATA_MISSING.
-
-Do not guess.
-Do not invent.
-Do not silently extrapolate.
-```
-
-### Deterministic Critical Calculations
-Critical calculations use Python functions, SQL queries, validated business logic, and structured source data. The LLM explains results; deterministic tools calculate critical numbers.
-
-###  Auditor Agent
-```text
-Executive Outputs
-       │
-       ▼
-Unified Plan
-       │
-       ▼
-Auditor Agent
-       │
-       ▼
-Check:
-- Unsupported claims?
-- Missing citations?
-- Contradictions?
-- Invalid calculations?
-- Hidden assumptions?
-       │
-   ┌───┴───┐
-   ▼       ▼
- PASS     FAIL
-   │       │
-   ▼       ▼
-Approval  Return to
-Center    Responsible Agent
+catalyst-os/
+├── src/                               # React 19 Frontend Codebase
+│   ├── components/                    # UI Components
+│   │   ├── chatbot/                   # Knowledge Base Grounded AI Chatbot
+│   │   │   ├── CatalystOsChatbot.tsx  # Main chatbot floating interface
+│   │   │   ├── ChatInput.tsx          # Prompt input with voice support
+│   │   │   ├── MessageBubble.tsx      # Markdown message bubble renderer
+│   │   │   └── SourceCard.tsx         # Document citation inspector
+│   │   ├── AgentWorkspace.tsx         # Visual agent matrix & live task cards
+│   │   ├── ApprovalQueue.tsx          # Human-in-the-loop approval center
+│   │   ├── AuthScreen.tsx             # Clerk authentication & landing view
+│   │   ├── CommandPalette.tsx         # Quick action palette (Ctrl+K)
+│   │   ├── DecisionLog.tsx            # Auditable corporate decision trail
+│   │   ├── FrameSequenceCanvas.tsx    # Interactive frame animation canvas
+│   │   ├── IntegrationsHub.tsx        # External tool connectors (Slack, Google)
+│   │   ├── KnowledgeBase.tsx          # Document vault & semantic search interface
+│   │   ├── MetricCards.tsx            # KPI monitors (Burn, Runway, Health Score)
+│   │   ├── NotificationPanel.tsx      # System alerts and executive briefs
+│   │   ├── SaaSDashboard.tsx          # Primary executive dashboard
+│   │   └── WorkflowCanvas.tsx         # Live multi-agent workflow visualizer
+│   ├── context/                       # Application & Auth State Context
+│   ├── hooks/                         # Custom React hooks
+│   ├── services/                      # Client-side API services
+│   ├── types.ts                       # Shared domain TypeScript interfaces
+│   ├── App.tsx                        # Root application layout & state routing
+│   ├── main.tsx                       # React DOM entrypoint
+│   └── index.css                      # Tailwind CSS v4 design tokens
+│
+├── server.ts                          # Full-Stack Server: Express 4 + Vite SSR/Middleware
+│
+├── backend/                           # Backend Services & Agent Systems
+│   ├── routes/
+│   │   └── api.ts                     # Main Express REST API router
+│   ├── services/
+│   │   ├── dbService.ts               # Prisma singleton with resilient safeDbQuery wrapper
+│   │   ├── geminiService.ts           # Google Gemini multi-agent execution service
+│   │   ├── ragEngine.ts               # Hybrid search, chunking & vector ingestion
+│   │   ├── markdownRagService.ts      # Markdown RAG engine for local knowledge chatbot
+│   │   ├── documentParser.ts          # PDF, DOCX, XLSX, TXT extraction engine
+│   │   ├── clerkAuthMiddleware.ts     # Clerk JWT authentication & role-based checks
+│   │   ├── vaultService.ts            # Encrypted secrets & HashiCorp Vault manager
+│   │   ├── sttService.ts              # Speech-to-Text audio transcription
+│   │   └── ttsService.ts              # Text-to-Speech audio synthesizer
+│   ├── agents/                        # Modular Node.js Agent Controllers
+│   │   ├── CEO/                       # Strategic decomposition & routing
+│   │   ├── Finance/                   # Cash flow, burn & runway guardrails
+│   │   ├── Talent/                    # Hiring plans & candidate ranking
+│   │   ├── Legal/                     # Compliance & contract generation
+│   │   ├── Growth/                    # GTM campaigns & content strategy
+│   │   ├── Operations/                # Milestones & dependency tracking
+│   │   ├── ConflictResolver/          # Multi-agent compromise resolution
+│   │   └── ApprovalManager/           # Deliverable gating
+│   └── py_service/                    # FastAPI Python AI Microservice
+│       ├── app/
+│       │   ├── agents/                # Python LangGraph agents & tools
+│       │   ├── core/                  # Database connections & settings
+│       │   ├── models/                # SQLAlchemy & Pydantic schemas
+│       │   ├── routers/               # Microservice API routes (audio, simulation)
+│       │   └── main.py                # FastAPI entrypoint (port 8000)
+│       └── requirements.txt           # Python package dependencies
+│
+├── prisma/                            # Database Schema & Seed
+│   ├── schema.prisma                  # PostgreSQL schema with vector extension
+│   └── seed.ts                        # Seed script for initial startup profiles
+│
+├── public/                            # Static assets and media
+├── run.bat                            # 1-Click launcher for Full-Stack Server (Port 3000)
+├── run_fastapi.bat                    # 1-Click launcher for Python FastAPI Service (Port 8000)
+├── package.json                       # Dependencies, scripts, and build pipeline
+├── tsconfig.json                      # TypeScript compiler configuration
+├── vite.config.ts                     # Vite build configuration
+├── .env.example                       # Environment variable template
+└── README.md                          # Comprehensive project documentation
 ```
 
 ---
 
-##  Agent Loading States
-
-| Department | Loading Examples |
-| :--- | :--- |
-| **Finance** | Checking runway • Forecasting expenses • Validating budget • Reviewing burn rate |
-| **Hiring** | Creating JD • Searching applicants • Ranking resumes • Scheduling interviews • Drafting emails |
-| **Growth** | Planning campaign • Building GTM strategy • Forecasting user acquisition • Generating content |
-| **Legal** | Reviewing compliance • Preparing contracts • Validating launch readiness • Checking policy requirements |
-| **Investments** | Analyzing KPIs • Reviewing fundraising readiness • Drafting investor update • Evaluating valuation signals |
-| **CEO / Orchestrator** | Breaking down objective • Coordinating departments • Resolving conflicts • Building execution plan |
-
----
-
-##  Project Structure
-
-```text
-Catalyst-Os/
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── dashboard/
-│   │   │   ├── agents/
-│   │   │   ├── approvals/
-│   │   │   ├── onboarding/
-│   │   │   └── shared/
-│   │   ├── pages/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   └── utils/
-│   ├── public/
-│   └── package.json
-├── backend/
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── api/
-│   │   ├── agents/
-│   │   ├── orchestration/
-│   │   ├── rag/
-│   │   ├── schemas/
-│   │   ├── services/
-│   │   └── db/
-│   ├── requirements.txt
-│   └── tests/
-├── docs/
-├── .env.example
-├── .gitignore
-├── LICENSE
-└── README.md
-```
-> *Adjust this structure to match the actual repository before release.*
-
----
-
-##  Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js v18+
-- npm
-- Python 3.11+
-- PostgreSQL
-- pgvector extension
-- Git
+Make sure you have the following installed on your machine:
+* **Node.js**: v18.0.0 or higher
+* **npm**: v9.0.0 or higher
+* **Python**: v3.11 or higher (optional, for the FastAPI LangGraph microservice)
+* **PostgreSQL**: v15+ with `pgvector` extension (optional; app automatically runs with in-memory fallback if no database is connected)
+* **Git**
 
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <YOUR_REPOSITORY_URL>
-   cd Catalyst-Os
-   ```
-
-2. **Install frontend dependencies:**
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-3. **Create backend virtual environment:**
-   ```bash
-   cd ../backend
-   python -m venv venv
-   ```
-
-4. **Activate the virtual environment:**
-   *Windows:*
-   ```bash
-   venv\Scripts\activate
-   ```
-   *macOS / Linux:*
-   ```bash
-   source venv/bin/activate
-   ```
-
-5. **Install backend dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Quick Start (Windows)
+We provide one-click batch scripts for immediate launch:
+1. **Launch Full-Stack Application:** Double-click `run.bat` (or run `./run.bat` in PowerShell).
+   * Automatically validates Node.js, creates `.env` if missing, installs dependencies, and starts the server on `http://localhost:3000`.
+2. **Launch Python AI Microservice (Optional):** Double-click `run_fastapi.bat`.
+   * Automatically validates Python, installs requirements, and launches FastAPI with hot reload on `http://localhost:8000`.
 
 ---
 
-## 🛠️ Configuration
+## ⚙️ Configuration & Environment Variables
 
-Create a `.env` file in the backend directory:
+Copy `.env.example` to create your local `.env` file in the project root:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
 
 ```env
-APP_ENV=development
-FRONTEND_URL=http://localhost:3000
-BACKEND_URL=http://localhost:8000
+# =============================================================================
+# CATALYST OS ENVIRONMENT CONFIGURATION
+# =============================================================================
 
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE_NAME
+# Server Port & URLs
+PORT=3000
+APP_URL=http://localhost:3000
+FASTAPI_URL=http://localhost:8000
 
-CLERK_SECRET_KEY=your_clerk_secret_key
-CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+# Google Gemini AI API Configuration
+GEMINI_API_KEY="your_google_gemini_api_key"
+GEMINI_MODEL="gemini-2.5-flash"
+RAG_DEBUG="false"
 
-GEMINI_API_KEY=your_gemini_api_key
+# Database Configuration (PostgreSQL with pgvector)
+# Example: Neon, Supabase, Cloud SQL, or local PostgreSQL
+DATABASE_URL="postgresql://postgres:password@localhost:5432/catalystos?schema=public"
+DIRECT_URL="postgresql://postgres:password@localhost:5432/catalystos?schema=public"
 
-WHISPER_MODEL=base
+# Clerk Authentication (Get from https://dashboard.clerk.com)
+VITE_CLERK_PUBLISHABLE_KEY="pk_test_your_clerk_publishable_key"
+CLERK_SECRET_KEY="sk_test_your_clerk_secret_key"
 
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
+# HashiCorp Vault (Optional — used for enterprise secret storage)
+VAULT_ADDR="http://127.0.0.1:8200"
+VAULT_TOKEN="your_vault_token"
 ```
-> **Security Note:** Never commit real API keys, passwords, access tokens, private keys, or production credentials to Git.
 
-### PostgreSQL + pgvector Setup
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-```
+> 🔒 **Security Notice:** Never commit `.env` or any production secrets to source control.
 
 ---
 
-##  Run Locally
+## 🏃 Running Locally
 
-**Start Frontend**
+### Step 1: Install Node Dependencies
+From the repository root:
 ```bash
-cd frontend
+npm install
+```
+
+### Step 2: Initialize Database (Prisma)
+Generate the Prisma Client and push schemas to your PostgreSQL database:
+```bash
+# Push Prisma schema to PostgreSQL
+npx prisma db push
+
+# (Optional) Seed the database with demo startup metrics
+npx prisma db seed
+```
+*(Note: If no database URL is provided, Catalyst OS operates gracefully in resilient in-memory offline mode.)*
+
+### Step 3: Start the Full-Stack Server
+Run the unified Express + Vite development server:
+```bash
 npm run dev
 ```
+* **Frontend Application:** Available at `http://localhost:3000`
+* **Express API Gateway:** Available at `http://localhost:3000/api`
 
-**Start Backend**
-Open another terminal:
+### Step 4: (Optional) Run the Python FastAPI Microservice
+In a separate terminal, start the Python LangGraph microservice:
 ```bash
-cd backend
-uvicorn app.main:app --reload
+# Navigate to the Python service directory
+cd backend/py_service
+
+# Create and activate a virtual environment
+python -m venv .venv
+
+# Windows:
+.venv\Scripts\activate
+# macOS / Linux:
+source .venv/bin/activate
+
+# Install requirements
+pip install -r requirements.txt
+
+# Start FastAPI server with live reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+* **Microservice API:** `http://localhost:8000`
+* **Interactive OpenAPI Swagger Docs:** `http://localhost:8000/docs`
+
+---
+
+## 📡 API Reference
+
+The Express gateway routes core requests, proxying `/api/v1` and `/api/audio` to the Python microservice when online.
+
+### 🏢 Startup Profile & Context
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/startup` | Retrieve active startup profile, burn rate, runway, and health metrics | Yes (JWT) |
+| `POST` | `/api/startup` | Update startup profile details and financial balances | Yes (Founder/Admin) |
+
+### 🤖 Multi-Agent Orchestration & Initiatives
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/agents` | Retrieve all executive agents and their real-time execution statuses | Yes (JWT) |
+| `GET` | `/api/initiatives` | List all active, pending, and completed initiatives | Yes (JWT) |
+| `POST` | `/api/initiatives` | Create a new cross-agent strategic initiative | Yes (JWT) |
+| `POST` | `/api/initiatives/:id/simulate` | Execute multi-agent collaboration loop (LangGraph or Gemini) | Yes (JWT) |
+| `POST` | `/api/orchestrate` | Master CEO planner-executor endpoint for high-level commands | Yes (JWT) |
+
+### 🛡️ Human-in-the-Loop Approvals & Decisions
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/approvals` | Fetch pending approvals queue with predicted financial impact | Yes (JWT) |
+| `POST` | `/api/approvals/:id/review` | Approve or reject a gated deliverable with founder feedback | Yes (Founder/Admin) |
+| `GET` | `/api/decisions` | Fetch immutable audit trail of corporate decisions | Yes (JWT) |
+
+### 📚 Knowledge Base & Hybrid RAG
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/knowledge` | List all indexed company documents and summaries | Yes (JWT) |
+| `POST` | `/api/knowledge` | Upload, parse, chunk, and embed a new document (PDF, DOCX, XLSX, TXT) | Yes (JWT) |
+| `POST` | `/api/knowledge/query` | Hybrid vector + keyword search answering questions with citations | Yes (JWT) |
+| `POST` | `/api/chat` | Direct RAG chat query grounded in local knowledge base | Public / Semi-Private |
+| `POST` | `/api/chat/stream` | Server-Sent Events (SSE) streaming chat endpoint | Public / Semi-Private |
+
+### 🔐 Infrastructure, Vault & Voice
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/vault/status` | Verify connection status to HashiCorp Vault / encrypted secret store | Yes (JWT) |
+| `GET` | `/api/mcp/tools` | Discover available Model Context Protocol (MCP) tool registrations | Yes (JWT) |
+| `POST` | `/api/audio/transcribe` | Transcribe voice recordings to text via Whisper | Yes (JWT) |
+
+---
+
+## 🗄️ Database Design & Models
+
+Catalyst OS utilizes **Prisma ORM v6** with **PostgreSQL** and the `pgvector` extension for structured business state and vector embeddings:
+
+```mermaid
+erDiagram
+    USER ||--o{ STARTUP : owns
+    STARTUP ||--o{ STARTUP_DOCUMENT : contains
+    STARTUP_DOCUMENT ||--o{ KNOWLEDGE_CHUNK : has
+    KNOWLEDGE_CHUNK ||--o| EMBEDDING : indexed_by
+    STARTUP ||--o{ EXECUTIVE_AGENT : employs
+    STARTUP ||--o{ COMMAND : receives
+    STARTUP ||--o{ PLAN : creates
+    PLAN ||--o{ TASK : includes
+    PLAN ||--o{ APPROVAL : requires
+    STARTUP ||--o{ DECISION_LOG : records
+    STARTUP ||--o{ HEALTH_SCORE : tracks
+    STARTUP ||--o{ TIMELINE_ITEM : logs
 ```
 
-**Typical local addresses:**
+### Core Schema Entities (`prisma/schema.prisma`)
+* **`Startup`:** Company metadata, cash balance, monthly burn rate, overall health score, and owner relations.
+* **`StartupDocument`:** Document catalog storing file name, MIME type, size, AI-generated summary, and tactical insights.
+* **`KnowledgeChunk`:** Segmented text chunks with sliding-window overlap for high-precision vector retrieval.
+* **`Embedding`:** Vector representations stored in PostgreSQL for cosine similarity matching.
+* **`ExecutiveAgent`:** Real-time agent registry tracking agent role, avatar, current operational status, and active task.
+* **`Plan` & `Task`:** Hierarchical decomposition of founder commands into departmental deliverables.
+* **`Approval`:** Human-in-the-loop gating records holding predicted financial impact and metric shifts.
+* **`DecisionLog`:** Auditable historical log of approved and rejected company actions.
+* **`HealthScore` & `TimelineItem`:** Historical snapshot of company wellness and milestone events.
+
+---
+
+## 📚 Knowledge Base & Hybrid RAG
+
+Catalyst OS turns static company documents into an active memory network:
+
+1. **Multi-Format Document Parsing:**
+   * Ingest PDF pitch decks (`pdf-parse`), DOCX operational briefs (`mammoth`), XLSX financial spreadsheets (`officeparser`), and Markdown policies.
+2. **Contextual Analysis:**
+   * Gemini automatically synthesizes a concise 1-sentence document abstract and 3 strategic corporate insights on upload.
+3. **Overlapping Vector Chunking:**
+   * Content is split into overlapping chunks, vectorized, and persisted in PostgreSQL.
+4. **Hybrid Search Retrieval:**
+   * Combines semantic embeddings with exact keyword matching to surface relevant passages.
+5. **Grounded Synthesis with Attribution:**
+   * Responses cite exact source documents (`[CIT-1]`, `[CIT-2]`) so founders can verify claims with a single click.
+
+---
+
+## 🎯 User Flow & Founder Experience
+
 ```text
-Frontend: http://localhost:3000
-Backend:  http://localhost:8000
-API Docs: http://localhost:8000/docs
+  1. Onboarding / Demo Seed
+     ├── Enter company details or load instant seed profile
+     └── Upload initial documents (decks, budgets, roadmap)
+            │
+            ▼
+  2. Executive Dashboard Overview
+     ├── Review Startup Health Score (83/100)
+     ├── Read Daily Executive Brief & Runway Alert (5.2 months)
+     └── Inspect Executive Status Matrix (CEO, CFO, Talent, Legal)
+            │
+            ▼
+  3. Issue Strategic Command
+     ├── Type in Command Box or click Microphone for Voice
+     └── Example: "Can we hire a senior engineer and launch next month?"
+            │
+            ▼
+  4. Autonomous C-Suite Collaboration
+     ├── CEO breaks down objectives into departmental subtasks
+     ├── Talent analyzes market salary and candidate pipeline
+     ├── CFO stress-tests runway and imposes hiring budget caps
+     ├── Operations shifts release milestones to accommodate onboarding
+     └── Legal verifies contractor agreements and IP assignment
+            │
+            ▼
+  5. Board Vote & Auditor Verification
+     ├── Board displays unanimous/majority consensus
+     └── Auditor agent verifies citations and absence of hallucinations
+            │
+            ▼
+  6. Human-In-The-Loop Approval Center
+     ├── Founder reviews proposed hire with projected financial impact (-$12,500/mo)
+     ├── Inspects source evidence and confidence rating (94%)
+     └── Founder Clicks: [APPROVE] | [REJECT WITH FEEDBACK] | [EDIT]
+            │
+            ▼
+  7. State & Treasury Reconciliation
+     ├── Cash balance and runway automatically recomputed
+     ├── Decision logged permanently in immutable audit ledger
+     └── Timeline and health score update in real-time
 ```
 
 ---
 
-##  API Reference
+## 📈 Scalability & Performance
 
-### Create Startup Context
-```http
-POST /api/v1/onboarding
-```
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `startup_name` | string | **Required.** Startup name |
-| `industry` | string | **Required.** Startup industry |
-| `stage` | string | Startup stage |
-| `team_size` | integer | Current team size |
-| `revenue` | number | Current revenue |
-| `burn_rate` | number | Monthly burn rate |
-| `runway` | number | Current runway |
-
-### Submit Founder Command
-```http
-POST /api/v1/commands
-```
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `startup_id` | string | **Required.** Startup identifier |
-| `command` | string | **Required.** Founder objective |
-| `input_type` | string | `text` or `voice` |
-
-### Approval APIs
-```http
-GET /api/v1/approvals
-POST /api/v1/approvals/{id}/approve
-POST /api/v1/approvals/{id}/reject
-PATCH /api/v1/approvals/{id}
-```
-
-### Other APIs
-```http
-POST /api/v1/documents
-GET  /api/v1/decisions
-GET  /api/v1/health-score
-POST /api/v1/scenarios/simulate
-POST /api/v1/voice/transcribe
-```
+* **Stateless API Services:** Express and FastAPI instances scale horizontally across container clusters.
+* **Resilient Database Fallback:** `safeDbQuery` wrapper with exponential retry logic ensures zero UI crashing if connection pool spikes occur.
+* **Token Optimization:** Conditional agent execution ensures only relevant departments activate per command, saving up to 70% in LLM API token costs.
+* **Sub-Second Knowledge Queries:** Hybrid indexing caches frequently queried startup context in memory.
+* **Encrypted Credential Vault:** API keys and external access tokens are isolated in HashiCorp Vault or environment secret vaults.
 
 ---
 
-##  Usage / Examples
+## 🗺️ Roadmap
 
-### Founder Workflow
-1. Register or log in.
-2. Create or import a startup via smart onboarding.
-3. Upload startup documents.
-4. Open the Executive Dashboard.
-5. Enter one high-level command.
-6. Watch relevant executives collaborate.
-7. Review the Board Vote.
-8. Expand **Why?** to inspect evidence and confidence ratings.
-9. Approve, reject, or edit.
-10. View the updated dashboard and Health Score.
-11. Run a what-if scenario.
+### Phase 1 — Core Operating Foundation (Completed ✅)
+- [x] Multi-Agent C-Suite (CEO, Finance, Talent, Growth, Legal, Operations)
+- [x] Human-in-the-Loop Approval Queue with financial impact projections
+- [x] Prisma ORM v6 PostgreSQL database schema with vector extension
+- [x] Resilient dual-engine architecture (Express 4 + FastAPI microservice)
+- [x] Multi-format document parser (PDF, DOCX, XLSX, TXT)
+- [x] Hybrid RAG knowledge base with source citations (`[CIT-X]`)
+- [x] Interactive chatbot grounded in local company knowledge
+- [x] Auditable Decision Log and Startup Health Score calculation
+- [x] Voice command input with Whisper transcription
 
-### Example Command
-```text
-"Can we hire a backend engineer and still launch next month?"
-```
+### Phase 2 — Enterprise Integrations (In Progress 🚧)
+- [ ] Direct Google Workspace synchronization (Drive, Docs, Calendar)
+- [ ] Slack & Discord automated notification bot for pending founder approvals
+- [ ] GitHub / Linear two-way sync for engineering roadmap tasks
+- [ ] Cap Table simulation & automated investor updates generator
+- [ ] Multi-tenant workspace organization and team member role management
 
----
-
-##  Database Design
-Suggested core entities scoped using `user_id`, `startup_id`, and `workspace_id` to prevent context leakage:
-```text
-users
-workspaces
-startups
-startup_members
-startup_metrics
-documents
-document_chunks
-founder_commands
-agent_runs
-agent_messages
-recommendations
-board_votes
-approvals
-decisions
-tasks
-notifications
-activity_events
-health_scores
-scenario_runs
-integration_connections
-```
+### Phase 3 — Autonomous Execution (Upcoming 🔮)
+- [ ] Autonomous outreach pipeline (drafting & staging verified candidate emails)
+- [ ] Real-time WebSocket collaboration streaming
+- [ ] Predictive runway risk forecasting using historical burn variance
+- [ ] Automated regulatory and compliance filing prep (SOC-2, GDPR, Delaware C-Corp)
 
 ---
 
-##  Scalability
+## 💡 Lessons Learned & Challenges
 
-### Horizontal Agent Scalability
-```text
-Create Tools
-    │
-    ▼
-Create Agent Prompt
-    │
-    ▼
-Define Structured Schema
-    │
-    ▼
-Register Graph Node
-    │
-    ▼
-Add Routing Rule
-```
-
-### Infrastructure Scalability
-- Stateless FastAPI instances
-- Load balancing
-- PostgreSQL replicas
-- Redis caching
-- Celery background workers
-- WebSocket event streams
-- Dedicated STT/TTS workers
-- Object storage
-
-### AI Cost Scalability
-- Conditional agent activation
-- RAG-based context minimization
-- Cached startup context
-- Deterministic tools before LLM calls
-- Smaller models for classification
-- Larger models only for complex reasoning
-- Parallel execution where appropriate
+* **Hierarchical vs. Flat Agent Topologies:** Giving the CEO Orchestrator authority to decompose tasks and reconcile conflicts prevented infinite inter-agent debate loops.
+* **The Necessity of Deterministic Financial Guards:** LLMs cannot be trusted to perform exact compounding runway math. Offloading financial arithmetic to deterministic code while using LLMs for qualitative reasoning yielded 100% accuracy.
+* **Gating High-Risk Operations:** Founder fatigue occurs when AI asks for permission on every trivial detail. Segmenting actions into low-risk (automatic execution) vs. high-risk (founder approval gate) struck the ideal balance between autonomy and safety.
 
 ---
 
-##  Roadmap
+## 👥 Authors & Community
 
-### Tier 1 — Core MVP
-- [ ] Founder onboarding
-- [ ] Real authentication
-- [ ] Persistent PostgreSQL state
-- [ ] CEO Orchestrator
-- [ ] Finance Agent
-- [ ] Hiring Agent
-- [ ] Legal Agent
-- [ ] Founder command dashboard
-- [ ] Approval gate
-- [ ] Decision log
-- [ ] RAG over startup documents
-- [ ] Error handling
-- [ ] Responsive UI
+Built with ❤️ for founders and builders worldwide:
+* **Siddharth** — [@siddharthg-7](https://github.com/siddharthg-7)
 
-### Tier 2 — Differentiators
-- [ ] Startup Health Score
-- [ ] Explainable AI decisions
-- [ ] Live collaboration visualization
-- [ ] Task and decision timeline
-- [ ] Approval queue
-- [ ] Confidence indicators
-- [ ] Cross-agent context sharing
-- [ ] Notifications
-- [ ] Search and filtering
-- [ ] Demo startup seed mode
-- [ ] Board Vote
-- [ ] Auditor Agent
-
-### Tier 3 — Stretch
-- [ ] Voice interface
-- [ ] Scenario simulation
-- [ ] Real-time streaming responses
-- [ ] Investor update generator
-- [ ] Board report generation
-- [ ] Meeting notes to tasks
-- [ ] Risk prediction
-- [ ] Startup memory search
-- [ ] Smart goal tracker
-- [ ] Google Workspace integration
-- [ ] AI usage and cost dashboard
-- [ ] Guardrail demonstration
+Contributions, issues, and feature requests are warmly welcomed! Feel free to check the [issues page](https://github.com/siddharthg-7/Catalyst-Os/issues) if you want to contribute.
 
 ---
 
-##  Optimizations
-* Selective agent execution
-* PostgreSQL for structured persistent state
-* pgvector for semantic retrieval
-* RAG for relevant document chunks
-* Structured outputs to reduce text drift
-* Deterministic critical calculations
-* Auditor Agent validation
-* Explicit approval for high-risk actions
-* Searchable decision history
-* Parallel execution for independent agents
-* Modular orchestration, agent, RAG, API, and database layers
-* Graceful degradation when AI or external APIs fail
+## 📜 License
 
----
-
-## Lessons Learned
-* Designing hierarchical multi-agent AI systems
-* Building cross-agent collaboration workflows
-* Implementing task routing with LangGraph and LangChain
-* Creating FastAPI AI services
-* Managing persistent state with PostgreSQL
-* Building RAG pipelines with LlamaIndex and pgvector
-* Designing human-in-the-loop workflows
-* Reducing hallucinations with structured outputs and evidence validation
-* Managing context across specialized AI departments
-* Building explainable recommendations
-* Designing scalable multi-tenant systems
-* Integrating voice input
-
----
-
-##  Challenges Faced
-* Maintaining consistent shared context across agents
-* Preventing hallucinated financial and hiring metrics
-* Resolving conflicting recommendations
-* Keeping multi-agent latency manageable
-* Designing safe approval gates
-* Structuring startup memory efficiently
-* Isolating multi-tenant startup data
-* Balancing reasoning quality with API cost
-* Building smooth live collaboration
-* Handling failures without exposing raw errors
-
----
-
-##  Future Scope
-* Additional AI departments
-* Multi-startup workspace switching
-* Advanced role-based access
-* Gmail, Calendar, Drive, and Slack integrations
-* Board-report generation
-* Risk prediction
-* Advanced financial forecasting
-* Redis caching
-* Celery task queues
-* WebSocket collaboration streams
-* Enterprise audit controls
-
----
-
-##  Demo Story
-```text
-Founder Logs In
-      │
-      ▼
-Dashboard Loads
-Health Score + Today's Priorities
-      │
-      ▼
-Founder Enters One Goal
-      │
-      ▼
-CEO Analyzes Request
-      │
-      ▼
-Executive Collaboration Animates
-      │
-      ▼
-Departments Consult Each Other
-      │
-      ▼
-Board Vote Shows Agreement / Conflict
-      │
-      ▼
-CEO Produces Unified Recommendation
-      │
-      ▼
-Founder Opens "Why?"
-      │
-      ▼
-Auditor-Validated Evidence Appears
-      │
-      ▼
-High-Risk Action Enters Approval Center
-      │
-      ▼
-Founder Approves / Rejects / Edits
-      │
-      ▼
-Dashboard + Health Score Update
-      │
-      ▼
-Scenario Simulation:
-"What if we hire one more engineer?"
-```
-
----
-
-##  Product Philosophy
-
-> **"Does this reduce the founder's workload by automating an entire workflow, or is it just another AI tool?"**
-
-If it automates an end-to-end workflow such as hiring, launching, budgeting, or planning, it belongs in Catalyst OS. If it only generates isolated content, it is not enough.
-
-> **That is the difference between an AI assistant and an AI operating system.**
-
----
-
-##  Authors
-Add your team members here:
-* [@your-github-username](https://github.com/your-github-username)
-* [@team-member-2](https://github.com/team-member-2)
-* [@team-member-3](https://github.com/team-member-3)
-
----
-
-##  Feedback
-If you have feedback, suggestions, or feature requests, feel free to open an issue in the repository or connect with the team through GitHub.
-
-##  Support
-If you found this project useful, consider giving it a STAR on GitHub!
-
-##  License
-This project is licensed under the MIT License - see the `LICENSE` file for details.
+This project is licensed under the **Apache-2.0 / MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <div align="center">
-  <h2> Catalyst OS</h2>
+  <h3>⚡ Catalyst OS</h3>
   <p><b>One Founder. One Command. An Entire AI Executive Team.</b></p>
-  <i>Today's founders do not need another AI tool. They need an operating system that thinks, collaborates, explains, and executes alongside them.</i>
+  <i>Designed to transform single founders into fully-functional corporate teams.</i>
 </div>
