@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>⚡ Catalyst OS</h1>
+  <h1>Catalyst OS</h1>
   <p><b>Autonomous Startup Operating System & Multi-Agent AI Executive Team</b></p>
   <p align="center">
     <img src="https://img.shields.io/badge/Status-Production--Ready-brightgreen?style=for-the-badge" alt="Status" />
