@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
-import dotenv from 'dotenv';
 import { createServer as createViteServer } from 'vite';
 import apiRouter from './backend/routes/api';
 
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
-dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;

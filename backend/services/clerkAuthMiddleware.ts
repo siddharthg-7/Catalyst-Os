@@ -10,12 +10,14 @@ const secretKey = process.env.CLERK_SECRET_KEY || '';
 
 const clerk = secretKey ? createClerkClient({ secretKey }) : null;
 
+import { verifyNeonAuthToken } from './neonAuthService';
+
 /**
- * Express middleware that validates a Clerk session token sent as a
- * Bearer token in the Authorization header.
- *
- * On success it populates req.user with { id, email, name, role }.
- * Falls back to local Founder demo session if token verification fails or in demo mode.
+ * Express middleware that validates authentication tokens.
+ * Supports:
+ * 1. Clerk session tokens (via Clerk Secret Key)
+ * 2. Neon Auth JWTs (verified against Neon Auth JWKS via Ed25519)
+ * 3. Graceful fallback to local demo session in dev/demo mode.
  */
 export async function authenticateJWT(
   req: AuthenticatedRequest,
@@ -37,6 +39,18 @@ export async function authenticateJWT(
 
   const token = authHeader.split(' ')[1];
 
+  // 1. Try Neon Auth JWKS token verification first
+  try {
+    const neonUser = await verifyNeonAuthToken(token);
+    if (neonUser) {
+      req.user = neonUser;
+      return next();
+    }
+  } catch (neonErr) {
+    // Continue to Clerk check
+  }
+
+  // 2. Try Clerk session token verification
   try {
     if (!secretKey || secretKey.startsWith('sk_test_mock')) {
       throw new Error('Clerk secret key unconfigured or mock.');

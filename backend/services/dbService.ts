@@ -1,4 +1,6 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+
 
 /**
  * Singleton instance of PrismaClient for Catalyst OS backend.

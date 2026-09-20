@@ -1,4 +1,6 @@
+import 'dotenv/config';
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, User, UserRole } from '../src/types';
+
 import bcrypt from 'bcryptjs';
 import { prisma } from './services/dbService';
 export let isDbAvailable = true;
@@ -317,7 +319,7 @@ export function setAgentStatuses(status: 'idle' | 'analyzing' | 'collaborating' 
 }
 
 // Automatically sync memory state with Neon PostgreSQL on load
-async function syncStateWithDatabase() {
+export async function syncStateWithDatabase() {
   try {
     console.log('🔄 Synchronizing memory state with Neon PostgreSQL...');
     
@@ -397,8 +399,9 @@ async function syncStateWithDatabase() {
     await Promise.race([syncOperations(), timeoutGuard]);
   } catch (err: any) {
     isDbAvailable = false;
-    console.warn('⚠️ Could not connect to Neon PostgreSQL for startup sync. Falling back to high-fidelity offline default states.');
+    console.warn(`⚠️ Could not connect to Neon PostgreSQL for startup sync (${err?.message || err}). Falling back to high-fidelity offline default states.`);
   }
+
 }
 
 // Trigger background synchronization

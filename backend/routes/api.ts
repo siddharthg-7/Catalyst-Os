@@ -25,6 +25,13 @@ import {
 } from '../services/clerkAuthMiddleware';
 import agentsRouter from '../agents/controller';
 import { markdownRagService } from '../services/markdownRagService';
+import { 
+  uploadToS3, 
+  isS3Configured, 
+  checkS3Health, 
+  getPresignedDownloadUrl 
+} from '../services/s3Service';
+
 
 const router = Router();
 
@@ -558,10 +565,29 @@ router.post('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res
       const buffer = Buffer.from(fileData, 'base64');
       sizeStr = `${(buffer.length / 1024).toFixed(1)} KB`;
       console.log(`[Knowledge API] Processing file upload: ${name} (${sizeStr}) with mimeType: ${mimeType}`);
+      
+      // Upload raw file to S3-compatible storage if configured
+      if (isS3Configured()) {
+        try {
+          const sanitized = name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const s3Key = `documents/${Date.now()}_${sanitized}`;
+          await uploadToS3({
+            key: s3Key,
+            body: buffer,
+            contentType: mimeType || 'application/octet-stream',
+            metadata: { originalName: name, documentType: type },
+          });
+          console.log(`[Knowledge API] Document persisted to Neon S3 Object Storage: ${s3Key}`);
+        } catch (s3Err: any) {
+          console.warn('[Knowledge API] S3 upload warning (non-fatal):', s3Err.message);
+        }
+      }
+
       textContent = await extractTextFromFile(buffer, name, mimeType || '');
     } else {
       sizeStr = `${((content || '').length / 1024).toFixed(1)} KB`;
     }
+
 
     if (!textContent || textContent.trim().length === 0) {
       res.status(400).json({ error: 'Extracted text content from the file is empty.' });
@@ -647,6 +673,40 @@ Format your output exactly as valid JSON with "summary" (string) and "insights" 
   } catch (error: any) {
     console.error('[Knowledge API] Critical ingestion error:', error.message);
     res.status(500).json({ error: `File ingestion failed: ${error.message}` });
+  }
+});
+
+// GET Neon S3 Object Storage status and health
+router.get('/storage/status', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const status = await checkS3Health();
+    res.json(status);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET presigned download URL for an uploaded document
+router.get('/knowledge/:id/download', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { id } = req.params;
+    const doc = knowledgeFiles.find((d) => d.id === id);
+    if (!doc) {
+      res.status(404).json({ error: 'Document not found.' });
+      return;
+    }
+
+    if (!isS3Configured()) {
+      res.status(400).json({ error: 'Neon S3 storage is not configured.' });
+      return;
+    }
+
+    // Try finding by name or document key
+    const sanitized = doc.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const downloadUrl = await getPresignedDownloadUrl(`documents/${sanitized}`);
+    res.json({ downloadUrl, filename: doc.name });
+  } catch (err: any) {
+    res.status(500).json({ error: `Could not generate download URL: ${err.message}` });
   }
 });
 
