@@ -25,50 +25,50 @@
 ---
 
 ## 📑 Table of Contents
-- [✨ Key Features](#-key-features)
-- [🤖 The AI Executive Suite](#-the-ai-executive-suite)
-- [🏛️ System Architecture](#️-system-architecture)
-- [🔄 Executive Collaboration & Board Vote](#-executive-collaboration--board-vote)
-- [🛡️ Hallucination Prevention & AI Safety](#️-hallucination-prevention--ai-safety)
-- [💻 Technology Stack](#-technology-stack)
-- [📂 Project Structure](#-project-structure)
-- [🚀 Getting Started](#-getting-started)
-- [⚙️ Configuration & Environment Variables](#️-configuration--environment-variables)
-- [🏃 Running Locally](#-running-locally)
-- [📡 API Reference](#-api-reference)
-- [🗄️ Database Design & Models](#️-database-design--models)
-- [📚 Knowledge Base & Hybrid RAG](#-knowledge-base--hybrid-rag)
-- [🎯 User Flow & Founder Experience](#-user-flow--founder-experience)
-- [📈 Scalability & Performance](#-scalability--performance)
-- [🗺️ Roadmap](#️-roadmap)
-- [💡 Lessons Learned & Challenges](#-lessons-learned--challenges)
-- [👥 Authors & Community](#-authors--community)
-- [📜 License](#-license)
+- [ Key Features](#-key-features)
+- [ The AI Executive Suite](#-the-ai-executive-suite)
+- [ System Architecture](#️-system-architecture)
+- [ Executive Collaboration & Board Vote](#-executive-collaboration--board-vote)
+- [ Hallucination Prevention & AI Safety](#️-hallucination-prevention--ai-safety)
+- [ Technology Stack](#-technology-stack)
+- [ Project Structure](#-project-structure)
+- [ Getting Started](#-getting-started)
+- [ Configuration & Environment Variables](#️-configuration--environment-variables)
+- [ Running Locally](#-running-locally)
+- [ API Reference](#-api-reference)
+- [ Database Design & Models](#️-database-design--models)
+- [ Knowledge Base & Hybrid RAG](#-knowledge-base--hybrid-rag)
+- [ User Flow & Founder Experience](#-user-flow--founder-experience)
+- [ Scalability & Performance](#-scalability--performance)
+- [ Roadmap](#️-roadmap)
+- [ Lessons Learned & Challenges](#-lessons-learned--challenges)
+- [ Authors & Community](#-authors--community)
+- [ License](#-license)
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
-### 🏢 Smart Founder Onboarding & State Initialization
+###  Smart Founder Onboarding & State Initialization
 * **Flexible Startup Context:** Capture company name, industry, funding stage, burn rate, cash-on-hand, runway, and target ICP.
 * **Document Intelligence Ingestion:** Drag-and-drop pitch decks, financial statements, roadmaps, hiring specs, policies, and contracts.
 * **Multi-Format Extraction:** Native parser support for PDF, DOCX, XLSX, TXT, and Markdown files.
 * **Shared Grounded Memory:** Structured startup data forms contextual boundary constraints for every executive agent.
 
-### 📊 Real-Time Executive Dashboard
+###  Real-Time Executive Dashboard
 * **Startup Health Score (0–100):** Weighted multi-dimensional index calculated across Velocity, Financial Health, Legal Compliance, Growth Rate, and Operational Efficiency.
 * **Founder Command Box:** Issue high-level strategic objectives via natural language text or voice.
 * **Live Executive Matrix:** Real-time visibility into agent states (`idle`, `analyzing`, `collaborating`, `generating`) and active tasks.
 * **Daily Executive Brief:** Automated morning digest summarizing pending approvals, runway alerts, velocity bottlenecks, and strategic milestones.
 * **Metric Cards & Dynamic Projections:** Live monitors for Monthly Burn, Runway Months, Cash Balance, and Active Initiatives.
 
-### 🛡️ Human-in-the-Loop Approval Center
+###  Human-in-the-Loop Approval Center
 * **Safe Decision Gates:** High-impact business actions (hiring, capital expenditures, contract execution, GTM launches) require explicit founder sign-off.
 * **Impact Forecaster:** Every approval displays predicted financial impact (e.g. `-$14,000/mo`) and metric shifts across company health indicators.
 * **One-Click Actions:** Founder can **Approve**, **Reject** (with constructive feedback), or **Edit** before commitment.
 * **Automatic Ledger & Profile Updates:** Approvals dynamically update treasury balances, burn rates, and the company decision log.
 
-### 📜 Auditable Decision Log
+###  Auditable Decision Log
 * Complete, tamper-evident corporate audit trail tracking:
   * Timestamp and founder command
   * Responsible executive agent
@@ -76,32 +76,32 @@
   * Source document citations (`[CIT-1]`, `[CIT-2]`)
   * Founder verdict (`approved`, `rejected`) and operational outcome
 
-### 🧠 Enterprise RAG & Semantic Memory
+###  Enterprise RAG & Semantic Memory
 * **Hybrid Vector + Keyword Search:** Powered by PostgreSQL with `pgvector` extension and Prisma ORM.
 * **Overlapping Chunking:** Documents chunked with semantic sliding windows for maximum contextual coherence.
 * **Grounding Engine:** LLM queries are injected with relevant chunks to completely eliminate hallucinated metrics.
 * **Interactive Chatbot:** Embedded conversational assistant (`CatalystOsChatbot`) answering questions directly grounded in the company knowledge base.
 
-### 🎙️ Voice Command Interface
+###  Voice Command Interface
 * Issue founder commands hands-free using real-time audio capture.
 * Integrated speech-to-text pipeline via **Whisper / Faster-Whisper** and Gemini Multimodal Audio.
 
 ---
 
-## 🤖 The AI Executive Suite
+##  The AI Executive Suite
 
 Catalyst OS simulates a C-suite corporate hierarchy where agents reason, consult peers, and debate trade-offs:
 
 | Executive Role | Avatar / Name | Primary Responsibilities | Cross-Agent Interactions |
 | :--- | :--- | :--- | :--- |
-| **CEO Orchestrator** | 👔 Chief Executive | Intent classification, task decomposition, trade-off mediation, unified execution synthesis | Coordinates all departments; reconciles conflicting advice |
-| **CFO / Finance** | 💰 Chief Financial Officer | Burn rate analysis, runway modeling, cash-flow stress testing, budget guardrails | Vetoes unaffordable hiring; constrains marketing spend |
-| **Head of Talent** | 👥 Chief People Officer | Job description drafting, resume screening, candidate ranking, salary benchmarking | Proactively consults CFO before advancing hiring plans |
-| **Head of Growth** | 🚀 Chief Commercial Officer | Go-To-Market strategies, marketing campaigns, launch calendars, sales copy | Coordinates with Legal on claims and CFO on ad budgets |
-| **General Counsel** | ⚖️ Legal & Compliance | NDA/contract generation, IP risk assessment, regulatory compliance checklists | Audits external communications and employment agreements |
-| **Head of Operations** | ⚙️ Chief Operating Officer | Sprint roadmaps, milestone scheduling, dependency tracking, bottleneck mitigation | Aligns engineering delivery dates with Growth launch dates |
-| **Investment Agent** | 📈 Head of Corporate Finance | Pitch deck evaluation, cap table modeling, fundraising readiness, investor updates | Prepares metrics packages for angel and VC outreach |
-| **Auditor Agent** | 🔍 Independent Verification | Fact-checking claims, validating citations, detecting invalid assumptions | Acts as quality control gatekeeper before human approval |
+| **CEO Orchestrator** |  Chief Executive | Intent classification, task decomposition, trade-off mediation, unified execution synthesis | Coordinates all departments; reconciles conflicting advice |
+| **CFO / Finance** |  Chief Financial Officer | Burn rate analysis, runway modeling, cash-flow stress testing, budget guardrails | Vetoes unaffordable hiring; constrains marketing spend |
+| **Head of Talent** |  Chief People Officer | Job description drafting, resume screening, candidate ranking, salary benchmarking | Proactively consults CFO before advancing hiring plans |
+| **Head of Growth** |  Chief Commercial Officer | Go-To-Market strategies, marketing campaigns, launch calendars, sales copy | Coordinates with Legal on claims and CFO on ad budgets |
+| **General Counsel** |  Legal & Compliance | NDA/contract generation, IP risk assessment, regulatory compliance checklists | Audits external communications and employment agreements |
+| **Head of Operations** |  Chief Operating Officer | Sprint roadmaps, milestone scheduling, dependency tracking, bottleneck mitigation | Aligns engineering delivery dates with Growth launch dates |
+| **Investment Agent** |  Head of Corporate Finance | Pitch deck evaluation, cap table modeling, fundraising readiness, investor updates | Prepares metrics packages for angel and VC outreach |
+| **Auditor Agent** |  Independent Verification | Fact-checking claims, validating citations, detecting invalid assumptions | Acts as quality control gatekeeper before human approval |
 
 ---
 
