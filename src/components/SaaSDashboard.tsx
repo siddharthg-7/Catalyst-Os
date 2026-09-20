@@ -350,36 +350,45 @@ export default function SaaSDashboard({
                     </div>
                   )}
 
-                  {/* Deterministic Calculations Pill Strip */}
-                  {msg.role === 'assistant' && msg.calculations && msg.calculations.length > 0 && (
-                    <div className="mb-3 p-2.5 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-                      <div className="text-[10px] font-mono font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1 mb-1.5">
-                        <Calculator className="w-3 h-3 text-gray-800" />
-                        <span>Deterministic Application Metrics</span>
+                  {/* LAYER 1: SUPPORTING DATA CARD (Section 15 of PROMPT.MD) */}
+                  {msg.role === 'assistant' && ((msg.supportingData && msg.supportingData.length > 0) || (msg.calculations && msg.calculations.length > 0)) && (
+                    <div className="mb-3 p-3 rounded-xl bg-white border border-gray-200 shadow-2xs">
+                      <div className="text-[10px] font-mono font-bold text-gray-700 uppercase tracking-wider flex items-center justify-between border-b border-gray-100 pb-1.5 mb-2">
+                        <div className="flex items-center gap-1.5 text-gray-900 font-bold">
+                          <Calculator className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>SUPPORTING DATA</span>
+                        </div>
+                        <span className="text-[9px] text-gray-400 font-mono">VERIFIED AUDIT EVIDENCE</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                        {msg.calculations.map((calc, idx) => (
-                          <div key={idx} className="text-[11px] bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200/60 flex justify-between items-center gap-2">
-                            <span className="text-gray-500 font-medium truncate">{calc.metric}:</span>
-                            <span className="font-bold text-gray-900 font-mono shrink-0">{calc.value}</span>
+                        {(msg.supportingData && msg.supportingData.length > 0 ? msg.supportingData : (msg.calculations || []).map(c => ({ label: c.metric, value: String(c.value), source: c.source }))).map((sd, idx) => (
+                          <div key={idx} className="text-xs bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200/60 flex justify-between items-center gap-2">
+                            <div>
+                              <span className="text-gray-600 font-medium block text-[11px]">{sd.label}</span>
+                              <span className="text-[9px] text-gray-400 font-mono">Source: {sd.source}</span>
+                            </div>
+                            <span className="font-bold text-gray-900 font-mono shrink-0 text-xs">{sd.value}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  <MarkdownRenderer content={msg.content} />
+                  {/* LAYER 2: EXECUTIVE AI SYNTHESIS (Section 16 of PROMPT.MD) */}
+                  <div className="space-y-1">
+                    <MarkdownRenderer content={msg.content} />
+                  </div>
 
-                  {/* Document Citations & Evidence */}
-                  {msg.role === 'assistant' && msg.evidence && msg.evidence.length > 0 && (
+                  {/* Document Citations & Sources (Section 18 of PROMPT.MD) */}
+                  {msg.role === 'assistant' && ((msg.citations && msg.citations.length > 0) || (msg.evidence && msg.evidence.length > 0)) && (
                     <div className="mt-3 pt-2.5 border-t border-gray-200/60 flex flex-wrap items-center gap-1.5 text-[10px]">
                       <span className="font-bold text-gray-700 font-mono flex items-center gap-1">
                         <FileText className="w-3 h-3 text-gray-600" />
                         Grounded In:
                       </span>
-                      {msg.evidence.map(ev => (
-                        <span key={ev.citationId} className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-800 font-mono shadow-2xs">
-                          {ev.citationId} {ev.documentName || 'Document'}
+                      {(msg.citations && msg.citations.length > 0 ? msg.citations.map(c => ({ citationId: c.id, documentName: c.title })) : (msg.evidence || [])).map((ev, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-800 font-mono shadow-2xs">
+                          [{ev.citationId}] {ev.documentName || 'Document'}
                         </span>
                       ))}
                     </div>

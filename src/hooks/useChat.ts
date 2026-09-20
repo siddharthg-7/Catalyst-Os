@@ -18,9 +18,11 @@ export interface ChatMessage {
   // Dynamic AI Orchestration metadata
   activeAgents?: OrchestrationAgentActivity[];
   calculations?: OrchestrationCalculation[];
+  supportingData?: Array<{ label: string; value: string; source: string }>;
+  citations?: Array<{ id: string; title: string; source: string; relevance: string }>;
   evidence?: OrchestrationEvidence[];
   approval?: OrchestrationApprovalRequirement;
-  status?: 'completed' | 'needs_approval' | 'needs_information' | 'failed';
+  status?: 'completed' | 'needs_approval' | 'needs_information' | 'failed' | 'provider_unavailable';
   commandId?: string;
   intent?: string;
   objective?: string;
@@ -192,6 +194,8 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
                     content: formattedContent,
                     activeAgents: res.agents,
                     calculations: res.calculations,
+                    supportingData: res.supportingData,
+                    citations: res.citations,
                     evidence: res.evidence,
                     approval: res.approval,
                     status: res.status,
@@ -244,6 +248,8 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
           content: formattedContent,
           activeAgents: resData.agents,
           calculations: resData.calculations,
+          supportingData: resData.supportingData,
+          citations: resData.citations,
           evidence: resData.evidence,
           approval: resData.approval,
           status: resData.status,

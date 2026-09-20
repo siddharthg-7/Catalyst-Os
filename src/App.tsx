@@ -28,13 +28,16 @@ import {
   RefreshCw,
   Search,
   Shield,
-  LogOut
+  LogOut,
+  ChevronDown,
+  Users
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
 import AuthScreen from './components/AuthScreen';
 import CatalystLogo from './components/CatalystLogo';
 import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
+import NotificationPanel from './components/NotificationPanel';
 
 export default function App() {
   const { user, loading, logout, apiFetch, loginAsDemo } = useAuth();
@@ -55,31 +58,71 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
-      setOnboardingCompleted(
-        localStorage.getItem(`catalystos_onboarding_completed_${user.id}`) === 'true'
-      );
+      apiFetch('/api/startup/context')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.onboarded) {
+            setOnboardingCompleted(true);
+            if (data.context?.startup) {
+              setStartup({
+                name: data.context.startup.name,
+                industry: data.context.startup.industry,
+                description: data.context.startup.description,
+                fundingStage: data.context.startup.stage || 'Pre-Seed',
+                cashBalance: data.context.financials?.cashBalance || 245000,
+                burnRate: data.context.financials?.monthlyBurn || 18500,
+                runwayMonths: data.context.financials?.activeRunwayMonths || 13.2,
+                healthScore: 80,
+                metrics: {
+                  velocity: 70,
+                  financialHealth: 80,
+                  legalCompliance: 85,
+                  growthRate: 60,
+                  operationsEfficiency: 75,
+                }
+              });
+            }
+          } else {
+            setOnboardingCompleted(false);
+          }
+        })
+        .catch(() => {
+          setOnboardingCompleted(
+            localStorage.getItem(`catalystos_onboarding_completed_${user.id}`) === 'true'
+          );
+        });
     } else {
       setOnboardingCompleted(false);
     }
   }, [user]);
 
   const handleOnboardingComplete = async (onboardingData: any) => {
-    if (startup) {
-      await handleUpdateStartup({
-        ...startup,
-        name: onboardingData.startupName,
-        industry: onboardingData.industry,
-        description: onboardingData.path === 'new'
-          ? `Concept: ${onboardingData.idea} | Budget: ${onboardingData.budget} | Launch Timeline: ${onboardingData.timeline}`
-          : startup.description,
-        burnRate: parseFloat(onboardingData.burnRate.replace(/[^0-9.]/g, '')) || startup.burnRate,
+    try {
+      const res = await apiFetch('/api/startup/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(onboardingData)
       });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.startup) {
+          setStartup(result.startup);
+        }
+      }
+    } catch (err) {
+      console.error('[Onboarding] Error submitting onboarding data:', err);
     }
-    localStorage.setItem(`catalystos_onboarding_completed_${user?.id}`, 'true');
+    if (user?.id) {
+      localStorage.setItem(`catalystos_onboarding_completed_${user.id}`, 'true');
+    }
     setOnboardingCompleted(true);
+    await hydrateState();
   };
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'approvals' | 'knowledge'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'approvals' | 'knowledge' | 'agents' | 'workflows'>('dashboard');
+  const [selectedAgentId, setSelectedAgentId] = useState<string>('ceo');
+  const [agentsExpanded, setAgentsExpanded] = useState<boolean>(true);
+  const [notificationsOpen, setNotificationsOpen] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
@@ -115,69 +158,91 @@ export default function App() {
   const DEFAULT_AGENTS: Agent[] = [
     {
       id: 'ceo',
-      name: 'Sophia Vance',
+      name: 'Sophia Vance (Atlas)',
       role: 'CEO',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-      description: 'Autonomous corporate strategist. Formulates broad roadmaps and balances high-level vision.',
+      description: 'Autonomous corporate strategist. Formulates broad roadmaps and coordinates specialist executives.',
       status: 'idle',
       keyMetric: 'Company Velocity',
-      metricValue: '65%',
+      metricValue: '78%',
       color: 'indigo',
     },
     {
       id: 'finance',
-      name: 'Marcus Sterling',
+      name: 'Marcus Sterling (Aura)',
       role: 'Finance',
       avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
       description: 'Automated Chief Financial Officer. Optimizes unit economics, burn rates, and deterministic runways.',
       status: 'idle',
       keyMetric: 'Financial Health',
-      metricValue: '72%',
+      metricValue: '85%',
       color: 'emerald',
     },
     {
       id: 'talent',
-      name: 'Evelyn Brooks',
+      name: 'Evelyn Brooks (Echo)',
       role: 'Talent',
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
       description: 'AI Recruiting and HR Executive. Strategizes resource allocation and compensation structures.',
       status: 'idle',
       keyMetric: 'Hiring Speed',
-      metricValue: '58 days',
+      metricValue: '28 days',
       color: 'pink',
     },
     {
       id: 'growth',
-      name: 'Dax Ramirez',
+      name: 'Dax Ramirez (Vector)',
       role: 'Growth',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      description: 'Autonomous Marketing and Acquisition Officer. Focuses on viral loops and demand generation.',
+      description: 'Autonomous Marketing and Acquisition Officer. Focuses on customer acquisition and GTM loops.',
       status: 'idle',
-      keyMetric: 'User Growth Rate',
-      metricValue: '+45% MoM',
+      keyMetric: 'Growth Index',
+      metricValue: '82%',
       color: 'amber',
     },
     {
       id: 'legal',
-      name: 'Helena Vance, Esq.',
+      name: 'Helena Vance, Esq. (Nexus)',
       role: 'Legal',
       avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
       description: 'Automated General Counsel. Drafts contracts, assesses IP protection, and reviews compliance.',
       status: 'idle',
       keyMetric: 'Compliance Index',
-      metricValue: '80%',
+      metricValue: '92%',
       color: 'rose',
     },
     {
-      id: 'conflict',
-      name: 'Pax-9 Synthesis',
-      role: 'ConflictResolver',
-      avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
-      description: 'Corporate Compromise Engine. Mediates functional trade-offs between agents.',
+      id: 'operations',
+      name: 'Felix Torres (Helix)',
+      role: 'Operations',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      description: 'Chief Operating Officer. Orchestrates milestone deliveries, sprint cadences, and systems reliability.',
       status: 'idle',
-      keyMetric: 'Resolution Rate',
-      metricValue: '98%',
+      keyMetric: 'Ops Efficiency',
+      metricValue: '88%',
+      color: 'sky',
+    },
+    {
+      id: 'investment',
+      name: 'Sarah Chen (Apex)',
+      role: 'Investment',
+      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150',
+      description: 'Investor Relations & Capital Executive. Formulates cap table simulations and fundraising models.',
+      status: 'idle',
+      keyMetric: 'Capital Readiness',
+      metricValue: 'Pre-Seed',
       color: 'purple',
+    },
+    {
+      id: 'auditor',
+      name: 'Sentry Core (Auditor)',
+      role: 'Auditor',
+      avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
+      description: 'Governance & Verification Officer. Audits calculations, checks evidence grounding, and enforces gates.',
+      status: 'idle',
+      keyMetric: 'Verification Pass',
+      metricValue: '100%',
+      color: 'blue',
     },
   ];
 
@@ -434,7 +499,7 @@ export default function App() {
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all border font-sans ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all border font-sans cursor-pointer ${
                     isActive
                       ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] shadow-sm'
                       : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] border-transparent'
@@ -452,6 +517,50 @@ export default function App() {
                 </button>
               );
             })}
+
+            {/* ── Collapsible Executive Agents Navbar (Section 24 of PROMPT.MD) ── */}
+            <div className="pt-4 border-t border-[#141413]/08 mt-3">
+              <button
+                onClick={() => setAgentsExpanded(prev => !prev)}
+                className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider font-bold text-[#696969] hover:text-[#141413] transition-colors cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-[#141413]/60" />
+                  <span>Executive Agents</span>
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${agentsExpanded ? 'rotate-180' : ''}`} />
+              </button>
+
+              {agentsExpanded && (
+                <div className="mt-1 space-y-0.5">
+                  {agents.map(ag => {
+                    const isSelected = activeTab === 'agents' && selectedAgentId === ag.id;
+                    return (
+                      <button
+                        key={ag.id}
+                        onClick={() => {
+                          setSelectedAgentId(ag.id);
+                          setActiveTab('agents');
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-[10px] text-xs transition-all border font-sans cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] font-medium shadow-2xs'
+                            : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] border-transparent'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2 truncate">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${ag.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300'}`} />
+                          <span className="truncate">{ag.name.split(' ')[0]}</span>
+                        </span>
+                        <span className={`text-[10px] font-mono shrink-0 px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                          {ag.role}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 
@@ -511,9 +620,13 @@ export default function App() {
             </button>
 
             {/* Notifications bell */}
-            <button className="relative p-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/20 transition-colors cursor-pointer">
+            <button 
+              onClick={() => setNotificationsOpen(true)}
+              className="relative p-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/20 transition-colors cursor-pointer"
+              title="Open Operational Alerts"
+            >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-gray-900" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
             </button>
 
             {/* Founder profile */}
@@ -550,7 +663,11 @@ export default function App() {
             <AgentWorkspace 
               agents={agents} 
               startup={startup} 
+              decisions={decisions}
+              knowledge={knowledge}
               onUpdateStartup={handleUpdateStartup} 
+              selectedAgentId={selectedAgentId}
+              onSelectAgent={setSelectedAgentId}
             />
           )}
 
@@ -673,6 +790,13 @@ export default function App() {
 
       {/* Catalyst OS AI Chatbot */}
       <CatalystOsChatbot />
+
+      {/* Real-time Operational Notifications Drawer (Section 21 of PROMPT.MD) */}
+      <NotificationPanel 
+        isOpen={notificationsOpen} 
+        onClose={() => setNotificationsOpen(false)} 
+        onNavigate={setActiveTab} 
+      />
 
     </div>
   );

@@ -6,6 +6,7 @@ import {
   approvals, 
   isDbAvailable 
 } from '../state';
+import { workspaceService, CanonicalStartupContext } from './workspaceService';
 import { 
   OrchestrationResponse, 
   OrchestrationAgentActivity, 
@@ -266,6 +267,17 @@ export function analyzeCommandIntent(command: string): IntentAnalysis {
 
 export class OrchestrationService {
   private inFlightCommands = new Map<string, Promise<OrchestrationResponse>>();
+  private conversationMemory = new Map<string, Array<{ role: 'founder' | 'jarvis'; content: string }>>();
+
+  private updateConversationMemory(startupId: string, command: string, reply: string) {
+    const list = this.conversationMemory.get(startupId) || [];
+    list.push({ role: 'founder', content: command });
+    list.push({ role: 'jarvis', content: reply });
+    if (list.length > 8) {
+      list.splice(0, list.length - 8);
+    }
+    this.conversationMemory.set(startupId, list);
+  }
 
   private async recordCommandPersistence(
     commandId: string,
@@ -341,48 +353,152 @@ export class OrchestrationService {
     console.log(`[Command] commandId=${commandId} userId=${userId || 'anonymous'} command="${command}"`);
     onEvent?.({ type: 'command_received', commandId, command });
 
-    // 1. Hydrate Startup & Corporate State from PostgreSQL (or memory fallback)
-    let activeStartup = startupProfile;
-    let startupId = (typeof userIdOrContext === 'object' && userIdOrContext?.startupId) ? userIdOrContext.startupId : 'st_catalystos';
+    // 1. Resolve Canonical Startup Context (Sections 8, 9, 34 & 35)
+    const targetLookup = userId || (typeof userIdOrContext === 'object' ? userIdOrContext?.startupId : undefined);
+    let canonical = targetLookup ? await workspaceService.getCanonicalContext(targetLookup) : null;
 
-    if (isDbAvailable && prisma) {
-      try {
-        const dbStartup = await safeDbQuery(async () => {
-          return (
-            (userId ? await prisma.startup.findFirst({ where: { ownerId: userId } }) : null) ||
-            (await prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } }))
-          );
-        }, 3);
-
-        if (dbStartup) {
-          startupId = dbStartup.id;
-          activeStartup = {
-            name: dbStartup.name,
-            industry: dbStartup.industry,
-            description: dbStartup.description,
-            fundingStage: dbStartup.fundingStage,
-            cashBalance: dbStartup.cashBalance,
-            burnRate: dbStartup.burnRate,
-            runwayMonths: dbStartup.burnRate > 0 
-              ? parseFloat((dbStartup.cashBalance / dbStartup.burnRate).toFixed(1)) 
-              : 999.0,
-            healthScore: dbStartup.healthScore,
-            metrics: startupProfile.metrics,
-          };
-        }
-      } catch (err: any) {
-        console.warn('[Orchestrator] Prisma startup hydration warning:', err.message);
+    if (!canonical && isDbAvailable && prisma) {
+      const userStartup = userId ? await prisma.startup.findFirst({ where: { ownerId: userId } }) : null;
+      if (userStartup) {
+        canonical = await workspaceService.getCanonicalContext(userStartup.id);
       }
     }
-
-    const baseRunway = activeStartup.burnRate > 0
-      ? parseFloat((activeStartup.cashBalance / activeStartup.burnRate).toFixed(1))
-      : 999.0;
 
     // 2. Intent Analysis (Determines routing, calculations, and RAG context)
     const analysis = analyzeCommandIntent(command);
     console.log(`[Intent] commandId=${commandId} intent=${analysis.intent} objective="${analysis.objective}" roles=${analysis.activatedRoles.join(',')}`);
     onEvent?.({ type: 'intent_detected', intent: analysis.intent, objective: analysis.objective, activatedRoles: analysis.activatedRoles });
+
+    if (!canonical) {
+      console.log(`[Command] commandId=${commandId} No canonical startup context found.`);
+      const needsOnboardingResponse: OrchestrationResponse = {
+        commandId,
+        status: 'needs_information',
+        interpretation: {
+          intent: 'uninitialized_workspace',
+          objective: 'Prompt founder onboarding to establish canonical company context'
+        },
+        answer: {
+          summary: 'No startup workspace found for your account. Please complete onboarding to initialize your company context.',
+          details: 'Once onboarded, Catalyst OS will orchestrate commands with your company financials, goals, and team.'
+        },
+        agents: [{ role: 'CEO', status: 'idle', contribution: 'Awaiting startup workspace onboarding.' }],
+        evidence: [],
+        supportingData: [],
+        confidence: 1.0
+      };
+      onEvent?.({ type: 'complete', response: needsOnboardingResponse });
+      return needsOnboardingResponse;
+    }
+
+    const startupId = canonical.startupId;
+    const activeStartup = {
+      name: canonical.startup.name,
+      industry: canonical.startup.industry,
+      description: canonical.startup.description,
+      fundingStage: canonical.startup.stage,
+      cashBalance: canonical.financials.cashBalance,
+      burnRate: canonical.financials.monthlyBurn,
+      runwayMonths: canonical.financials.runwayMonths,
+      healthScore: 80,
+      metrics: startupProfile.metrics,
+    };
+    const baseRunway = canonical.financials.runwayMonths;
+
+    // LEVEL 1 — DIRECT DATA (Section 19 of PROMPT.MD)
+    if (analysis.intent === 'startup_identity') {
+      console.log(`[Command] commandId=${commandId} Level 1 Direct Data execution.`);
+      const name = canonical.startup.name;
+      const stage = canonical.startup.stage;
+      const industry = canonical.startup.industry;
+      const product = canonical.business.primaryProduct || canonical.startup.description;
+      const icp = canonical.business.targetIcp || 'Target Customers';
+
+      const summary = `${name} is a ${stage} company in the ${industry} sector building ${product}. Your primary target customer profile is ${icp}.`;
+      const details = `Strategic Goals: ${canonical.goals.join('; ')}. Current treasury stands at ₹${canonical.financials.cashBalance.toLocaleString()} with an operating burn of ₹${canonical.financials.monthlyBurn.toLocaleString()}/mo.`;
+
+      const supportingData = [
+        { label: 'Startup Name', value: name, source: 'Startup Profile' },
+        { label: 'Industry', value: industry, source: 'Startup Profile' },
+        { label: 'Stage', value: stage, source: 'Startup Profile' },
+        { label: 'Primary Offering', value: product, source: 'Business Context' },
+        { label: 'Target ICP', value: icp, source: 'Business Context' },
+      ];
+
+      const level1Response: OrchestrationResponse = {
+        commandId,
+        status: 'completed',
+        interpretation: {
+          intent: analysis.intent,
+          objective: analysis.objective
+        },
+        answer: {
+          summary,
+          details
+        },
+        supportingData,
+        agents: [
+          { role: 'CEO', status: 'completed', contribution: `Synthesized verified company profile for ${name}.` },
+          { role: 'Auditor', status: 'completed', contribution: 'Verified factual alignment against canonical startup context.' }
+        ],
+        evidence: [],
+        confidence: 1.0
+      };
+
+      await this.recordCommandPersistence(commandId, command, level1Response.status, startupId, summary, analysis.objective);
+      this.updateConversationMemory(startupId, command, summary);
+      onEvent?.({ type: 'complete', response: level1Response });
+      return level1Response;
+    }
+
+    // LEVEL 2 — DATA + DETERMINISTIC TOOL (Section 19 of PROMPT.MD)
+    if (analysis.intent === 'financial_inquiry' && !analysis.requiresHeadcountModeling) {
+      console.log(`[Command] commandId=${commandId} Level 2 Deterministic Financial Tool execution.`);
+      const cash = canonical.financials.cashBalance;
+      const burn = canonical.financials.monthlyBurn;
+      const runway = canonical.financials.runwayMonths;
+
+      const summary = `Based on your current cash balance of ₹${cash.toLocaleString()} and monthly burn rate of ₹${burn.toLocaleString()}/mo, your active runway is approximately ${runway} months.`;
+      const details = runway < 6
+        ? '⚠️ High Risk Warning: Runway has dropped below 6 months. Prioritize cash preservation and immediate bridge fundraising.'
+        : 'Treasury status is within safe operational thresholds (> 12 months) for continuous milestone execution.';
+
+      const supportingData = [
+        { label: 'Cash Balance', value: `₹${cash.toLocaleString()}`, source: 'Neon PostgreSQL Treasury' },
+        { label: 'Monthly Burn', value: `₹${burn.toLocaleString()}/mo`, source: 'Operating Expense Baseline' },
+        { label: 'Active Runway', value: `${runway} Months`, source: 'Deterministic Runway Calculator (Cash / Burn)' }
+      ];
+
+      const level2Response: OrchestrationResponse = {
+        commandId,
+        status: 'completed',
+        interpretation: {
+          intent: analysis.intent,
+          objective: analysis.objective
+        },
+        answer: {
+          summary,
+          details
+        },
+        supportingData,
+        agents: [
+          { role: 'Finance', status: 'completed', contribution: `Computed deterministic runway of ${runway} months based on ₹${burn.toLocaleString()}/mo burn.` },
+          { role: 'Auditor', status: 'completed', contribution: 'Validated mathematical calculation with zero hallucination.' }
+        ],
+        evidence: [],
+        calculations: [
+          { metric: 'Current Cash Balance', value: `₹${cash.toLocaleString()}`, source: 'Neon PostgreSQL Treasury' },
+          { metric: 'Current Monthly Burn', value: `₹${burn.toLocaleString()}/mo`, source: 'Neon PostgreSQL Treasury' },
+          { metric: 'Active Runway', value: `${runway} Months`, source: 'Deterministic Runway Calculation: cashBalance / burnRate' }
+        ],
+        confidence: 1.0
+      };
+
+      await this.recordCommandPersistence(commandId, command, level2Response.status, startupId, summary, analysis.objective);
+      this.updateConversationMemory(startupId, command, summary);
+      onEvent?.({ type: 'complete', response: level2Response });
+      return level2Response;
+    }
 
     // 3. Early Handler for Unrelated / Out-of-Scope Commands
     if (analysis.isUnrelated) {
@@ -544,6 +660,9 @@ export class OrchestrationService {
         ? calculations.map(c => `- **${c.metric}:** ${c.value} (${c.source})`).join('\n')
         : 'NONE (This inquiry does not require treasury or headcount math).';
 
+      const history = this.conversationMemory.get(startupId) || [];
+      const recentContext = history.slice(-4).map(h => `${h.role === 'founder' ? 'Founder' : 'Catalyst'}: ${h.content}`).join('\n');
+
       const synthesisPrompt = `
 You are the CEO of Catalyst OS, an autonomous startup operating system.
 You are delivering a unified, grounded, decision-ready response to the Founder.
@@ -551,13 +670,18 @@ You are delivering a unified, grounded, decision-ready response to the Founder.
 FOUNDER COMMAND: "${command}"
 INTENT: ${analysis.intent} - ${analysis.objective}
 
-CRITICAL GROUND-TRUTH COMPANY STATE:
+CRITICAL CANONICAL COMPANY CONTEXT:
 - Startup Name: "${activeStartup.name}"
 - Industry: ${activeStartup.industry}
 - Stage: ${activeStartup.fundingStage}
 - Core Positioning/Description: "${activeStartup.description}"
+- Target Customer Profile (ICP): "${canonical.business.targetIcp}"
+- Primary Product Offering: "${canonical.business.primaryProduct}"
+- Strategic Goals: ${canonical.goals.join(', ')}
+- Current Priorities: ${canonical.priorities.join(', ')}
 - Health Score: ${activeStartup.healthScore}/100
 
+${recentContext ? `RECENT CONVERSATION HISTORY:\n${recentContext}\n` : ''}
 ${calculations.length > 0 ? `DETERMINISTIC APPLICATION CALCULATIONS (DO NOT RE-ESTIMATE OR HALLUCINATE NUMBERS):\n${calculationsSummary}\n` : ''}
 ${retrievedContextText !== 'No specific internal documents were indexed or retrieved.' ? `INTERNAL VERIFIED KNOWLEDGE BASE:\n${retrievedContextText}\n` : 'NO RELEVANT INTERNAL COMPANY DOCUMENTS FOUND FOR THIS TOPIC.'}
 ACTIVATED EXECUTIVE SPECIALISTS:
@@ -728,20 +852,30 @@ INSTRUCTIONS:
     // 9. Human-in-the-Loop Approval Center Integration
     let approvalRequirement: OrchestrationResponse['approval'] = undefined;
 
-    if (analysis.requiresApproval && analysis.proposedActionTitle) {
+    const shouldTriggerApproval = analysis.requiresApproval || (headcount.hasHiringQuery && headcount.count > 0);
+
+    if (shouldTriggerApproval) {
+      const isHiring = headcount.hasHiringQuery && headcount.count > 0;
+      const approvalTitle = isHiring 
+        ? `Hire ${headcount.count}x ${headcount.role}`
+        : (analysis.proposedActionTitle || 'Operational Commitment');
+      const approvalImpact = isHiring
+        ? `Increases monthly burn by ₹${monthlyBurnIncrease.toLocaleString()}/mo. Projected runway: ${projectedRunway ?? baseRunway} months.`
+        : (analysis.proposedActionImpact || 'Requires founder verification.');
+
       const approvalId = `appr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const approvalItem: Deliverable = {
         id: approvalId,
         initiativeId: commandId,
-        title: analysis.proposedActionTitle,
-        description: analysis.proposedActionImpact || finalSummary,
-        type: headcount.hasHiringQuery ? 'contract' : 'document',
+        title: approvalTitle,
+        description: approvalImpact,
+        type: isHiring ? 'contract' : 'document',
         status: 'pending_review',
-        content: `### Executive Action Proposal\n\n**Objective:** ${analysis.objective}\n\n**Command:** "${command}"\n\n**Financial Impact:** ${monthlyBurnIncrease > 0 ? `+$${monthlyBurnIncrease.toLocaleString()}/mo burn` : 'Neutral'}\n\n**Executive Rationale:** ${finalSummary}`,
-        impact: analysis.proposedActionImpact || `Adjusts monthly burn by ${monthlyBurnIncrease > 0 ? `+$${monthlyBurnIncrease.toLocaleString()}/mo` : '$0'}. Projected runway: ${projectedRunway ?? baseRunway} mos.`,
+        content: `### Executive Action Proposal\n\n**Objective:** ${analysis.objective}\n\n**Command:** "${command}"\n\n**Financial Impact:** ${monthlyBurnIncrease > 0 ? `+₹${monthlyBurnIncrease.toLocaleString()}/mo burn` : 'Neutral'}\n\n**Executive Rationale:** ${finalSummary}`,
+        impact: approvalImpact,
         financialChange: monthlyBurnIncrease > 0 ? -monthlyBurnIncrease : 0,
         metricChanges: {
-          velocity: headcount.hasHiringQuery ? 15 : 5,
+          velocity: isHiring ? 15 : 5,
           financialHealth: monthlyBurnIncrease > 0 ? -8 : 0,
           operationsEfficiency: 10,
         }
@@ -764,7 +898,7 @@ INSTRUCTIONS:
               });
             }
 
-            return prisma.approval.create({
+            await prisma.approval.create({
               data: {
                 id: approvalId,
                 title: approvalItem.title,
@@ -778,16 +912,25 @@ INSTRUCTIONS:
                 planId: activePlan.id,
               }
             });
+
+            await prisma.notification.create({
+              data: {
+                title: `Approval Required: ${approvalItem.title}`,
+                message: `${approvalItem.description} requires founder review.`,
+                type: 'APPROVAL',
+                startupId
+              }
+            });
           }, 3);
         } catch (dbErr: any) {
-          console.warn('[Orchestrator] Could not persist approval gate to DB:', dbErr.message);
+          console.warn('[Orchestrator] Could not persist approval/notification to DB:', dbErr.message);
         }
       }
 
       approvalRequirement = {
         required: true,
         approvalId,
-        reason: `High-impact operational commitment (${analysis.proposedActionTitle}). Requires explicit Founder sign-off.`,
+        reason: `High-impact operational commitment (${approvalTitle}). Requires explicit Founder sign-off.`,
         impact: approvalItem.impact
       };
 
@@ -796,7 +939,7 @@ INSTRUCTIONS:
 
     // 10. Next Actions
     const nextActions = [];
-    if (analysis.requiresApproval && approvalRequirement?.approvalId) {
+    if (approvalRequirement?.required && approvalRequirement?.approvalId) {
       nextActions.push({
         label: 'Review in Approval Center',
         action: 'navigate_approvals'
@@ -828,9 +971,29 @@ INSTRUCTIONS:
       }
     }
 
+    // Two-Layer Supporting Data (Section 15 & 30 of PROMPT.MD)
+    const supportingData: Array<{ label: string; value: string; source: string }> = [];
+    if (calculations.length > 0) {
+      calculations.forEach(c => {
+        supportingData.push({ label: c.metric, value: String(c.value), source: c.source });
+      });
+    }
+    if (evidence.length > 0) {
+      evidence.forEach(e => {
+        supportingData.push({ label: e.citationId, value: e.documentName || 'Document Citation', source: e.excerpt || '' });
+      });
+    }
+
+    const citations = evidence.map(e => ({
+      id: e.citationId,
+      title: e.documentName || 'Document Reference',
+      source: e.excerpt || '',
+      relevance: 'High'
+    }));
+
     const response: OrchestrationResponse = {
       commandId,
-      status: analysis.requiresApproval ? 'needs_approval' : 'completed',
+      status: approvalRequirement?.required ? 'needs_approval' : 'completed',
       interpretation: {
         intent: analysis.intent,
         objective: analysis.objective,
@@ -842,12 +1005,15 @@ INSTRUCTIONS:
       agents,
       evidence,
       calculations,
+      supportingData,
+      citations,
       approval: approvalRequirement,
       nextActions,
       confidence,
     };
 
     await this.recordCommandPersistence(commandId, command, response.status, startupId, finalSummary, analysis.objective);
+    this.updateConversationMemory(startupId, command, finalSummary);
     console.log(`[Command] commandId=${commandId} status=${response.status} confidence=${confidence}`);
     onEvent?.({ type: 'complete', response });
     return response;

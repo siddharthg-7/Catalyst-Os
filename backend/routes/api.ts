@@ -32,6 +32,8 @@ import {
   getPresignedDownloadUrl 
 } from '../services/s3Service';
 import { orchestrationService } from '../services/orchestrationService';
+import { workspaceService, DEFAULT_EXECUTIVE_ROLES } from '../services/workspaceService';
+import { performDevReset } from '../scripts/devReset';
 
 const router = Router();
 
@@ -90,110 +92,273 @@ router.get('/auth/me', authenticateJWT, (req: AuthenticatedRequest, res) => {
 // Mount specialty agent controllers
 router.use('/', agentsRouter);
 
-// GET startup profile
+// ============================================================================
+// DEVELOPMENT RESET ENDPOINT (Sections 1 & 2 of PROMPT.MD)
+// ============================================================================
+router.post('/dev/reset', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(403).json({ error: 'Development reset is strictly forbidden in production mode.' });
+    return;
+  }
+  try {
+    const result = await performDevReset();
+    res.json(result);
+  } catch (err: any) {
+    console.error('[DevReset API] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================================
+// WORKSPACE & CANONICAL STARTUP CONTEXT (Sections 3, 4, 5, 8, 9, 34 & 35)
+// ============================================================================
+
+// POST complete startup onboarding
+router.post('/startup/onboarding', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required for onboarding.' });
+    return;
+  }
+
+  try {
+    const canonicalContext = await workspaceService.saveOnboardingData(userId, req.body);
+    res.json({ success: true, context: canonicalContext });
+  } catch (err: any) {
+    console.error('[Startup Onboarding API] Error:', err.message);
+    res.status(500).json({ error: `Onboarding failed: ${err.message}` });
+  }
+});
+
+// POST initialize a blank workspace with 8 default agents
+router.post('/startup/initialize', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
+  }
+
+  try {
+    const defaultData = {
+      startupName: req.body?.startupName || 'New Startup',
+      industry: req.body?.industry || 'Technology',
+      description: req.body?.description || 'Early-stage venture',
+      cashBalance: req.body?.cashBalance || 0,
+      monthlyBurn: req.body?.monthlyBurn || 0,
+    };
+    const canonicalContext = await workspaceService.saveOnboardingData(userId, defaultData);
+    res.json({ success: true, context: canonicalContext });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET canonical startup context (Structured Source of Truth)
+router.get('/startup/context', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
+  }
+
+  try {
+    const canonical = await workspaceService.getCanonicalContext(userId);
+    if (!canonical) {
+      res.status(404).json({ error: 'No startup workspace found for authenticated user.' });
+      return;
+    }
+    res.json(canonical);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET startup profile (Scoping strictly per authenticated user workspace)
 router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) => {
-  // 1. Direct persistent query from Neon PostgreSQL via Prisma
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
+  }
+
   if (isDbAvailable && prisma) {
     try {
-      const dbStartup = await safeDbQuery(async () => {
-        return (
-          (req.user?.id ? await prisma.startup.findFirst({ where: { ownerId: req.user.id } }) : null) ||
-          (await prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } }))
-        );
-      }, 3);
-
-      if (dbStartup) {
-        startupProfile.name = dbStartup.name;
-        startupProfile.industry = dbStartup.industry;
-        startupProfile.description = dbStartup.description;
-        startupProfile.fundingStage = dbStartup.fundingStage;
-        startupProfile.cashBalance = dbStartup.cashBalance;
-        startupProfile.burnRate = dbStartup.burnRate;
-        startupProfile.runwayMonths = dbStartup.burnRate > 0 
-          ? parseFloat((dbStartup.cashBalance / dbStartup.burnRate).toFixed(1)) 
-          : 999;
-        startupProfile.healthScore = dbStartup.healthScore;
-        return res.json(startupProfile);
+      const canonical = await workspaceService.getCanonicalContext(userId);
+      if (canonical) {
+        return res.json({
+          id: canonical.startupId,
+          name: canonical.startup.name,
+          industry: canonical.startup.industry,
+          description: canonical.startup.description,
+          fundingStage: canonical.startup.stage,
+          cashBalance: canonical.financials.cashBalance,
+          burnRate: canonical.financials.monthlyBurn,
+          runwayMonths: canonical.financials.runwayMonths,
+          healthScore: 80,
+          metrics: {
+            velocity: 85,
+            financialHealth: 90,
+            legalCompliance: 95,
+            growthRate: 45,
+            operationsEfficiency: 88,
+          },
+          targetIcp: canonical.business.targetIcp,
+          primaryProduct: canonical.business.primaryProduct,
+          goals: canonical.goals,
+          priorities: canonical.priorities,
+          onboarded: true
+        });
       }
     } catch (dbErr: any) {
       console.warn('[Startup API] Database query warning:', dbErr.message);
     }
   }
 
-  // 2. Fallback to FastAPI service with 5000ms timeout
-  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
-  try {
-    const pyRes = await fetch(`${fastApiUrl}/api/startup`, { signal: AbortSignal.timeout(5000) });
-    if (pyRes.ok) {
-      const data = await pyRes.json();
-      startupProfile.name = data.company_name || startupProfile.name;
-      startupProfile.industry = data.industry || startupProfile.industry;
-      startupProfile.description = data.target_icp || startupProfile.description;
-      startupProfile.cashBalance = data.cash_on_hand ?? startupProfile.cashBalance;
-      startupProfile.burnRate = data.current_monthly_burn ?? startupProfile.burnRate;
-      if (startupProfile.burnRate > 0) {
-        startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
-      } else {
-        startupProfile.runwayMonths = 999;
-      }
-    }
-  } catch (err: any) {
-    if (err.name !== 'AbortError') {
-      console.warn(`[FastAPI Sync] Failed to fetch startup context: ${err.message}. Using persistent state.`);
-    }
-  }
-  res.json(startupProfile);
+  // Not onboarded yet
+  res.json({
+    name: '',
+    industry: '',
+    description: '',
+    fundingStage: 'Pre-Seed',
+    cashBalance: 0,
+    burnRate: 0,
+    runwayMonths: 0,
+    healthScore: 0,
+    metrics: {
+      velocity: 0,
+      financialHealth: 0,
+      legalCompliance: 0,
+      growthRate: 0,
+      operationsEfficiency: 0,
+    },
+    onboarded: false
+  });
 });
 
 // POST update startup profile
 router.post('/startup', authenticateJWT, requireRole(['Founder', 'Admin']), async (req: AuthenticatedRequest, res) => {
-  const { name, industry, description, fundingStage, cashBalance, burnRate } = req.body;
-  
-  const updates: any = {};
-  if (name) updates.name = name;
-  if (industry) updates.industry = industry;
-  if (description) updates.description = description;
-  if (fundingStage) updates.fundingStage = fundingStage;
-  if (cashBalance !== undefined) updates.cashBalance = cashBalance;
-  if (burnRate !== undefined) updates.burnRate = burnRate;
-
-  const updatedProfile = updateStartupProfile(updates);
-
-  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
-  try {
-    await fetch(`${fastApiUrl}/api/startup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        company_name: updatedProfile.name,
-        industry: updatedProfile.industry,
-        target_icp: updatedProfile.description,
-        current_monthly_burn: updatedProfile.burnRate,
-        cash_on_hand: updatedProfile.cashBalance
-      })
-    });
-  } catch (err: any) {
-    console.warn(`[FastAPI Sync] Failed to sync startup profile: ${err.message}`);
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
   }
 
-  res.json(updatedProfile);
+  const { name, industry, description, fundingStage, cashBalance, burnRate } = req.body;
+  try {
+    const canonical = await workspaceService.saveOnboardingData(userId, {
+      startupName: name || 'Startup',
+      industry: industry || 'Technology',
+      description: description || '',
+      fundingStage,
+      cashBalance: cashBalance !== undefined ? cashBalance : 0,
+      monthlyBurn: burnRate !== undefined ? burnRate : 0,
+    });
+    res.json(canonical);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// GET agents list
-router.get('/agents', authenticateJWT, (req: AuthenticatedRequest, res) => {
-  const withLiveStatuses = agentsList.map(a => {
-    if (a.status === 'analyzing') {
-      a.currentTask = 'Analyzing strategic trade-offs...';
-    } else if (a.status === 'collaborating') {
-      a.currentTask = 'Exchanging messages in corporate matrix...';
-    } else if (a.status === 'generating') {
-      a.currentTask = 'Synthesizing final Markdown deliverables...';
-    } else {
-      a.currentTask = undefined;
+// GET agents list (Live status from user's executive agents in DB)
+router.get('/agents', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (userId && isDbAvailable && prisma) {
+    try {
+      const canonical = await workspaceService.getCanonicalContext(userId);
+      if (canonical && canonical.agents.length > 0) {
+        const mapped = canonical.agents.map(da => {
+          const roleDef = DEFAULT_EXECUTIVE_ROLES.find(r => r.role.toLowerCase() === da.role.toLowerCase());
+          return {
+            id: da.role.toLowerCase(),
+            name: da.name,
+            role: da.role as any,
+            avatar: roleDef?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+            description: roleDef?.description || `${da.role} Executive`,
+            status: da.status as any,
+            currentTask: da.currentTask || undefined,
+            keyMetric: da.role === 'CEO' ? 'Company Velocity' : da.role === 'Finance' ? 'Financial Health' : da.role === 'Talent' ? 'Hiring Velocity' : da.role === 'Growth' ? 'Growth Rate' : da.role === 'Legal' ? 'Compliance Index' : da.role === 'Operations' ? 'Ops Efficiency' : da.role === 'Investment' ? 'Capital Readiness' : 'Audit Accuracy',
+            metricValue: 'Active',
+            color: da.role === 'CEO' ? 'indigo' : da.role === 'Finance' ? 'emerald' : da.role === 'Talent' ? 'pink' : da.role === 'Growth' ? 'amber' : da.role === 'Legal' ? 'rose' : da.role === 'Operations' ? 'teal' : da.role === 'Investment' ? 'purple' : 'blue'
+          };
+        });
+        return res.json(mapped);
+      }
+    } catch (e: any) {
+      console.warn('[Agents API] DB fetch warning:', e.message);
     }
-    return a;
-  });
-  res.json(withLiveStatuses);
+  }
+
+  res.json(agentsList);
+});
+
+// ============================================================================
+// OPERATIONAL NOTIFICATIONS (Sections 21, 22 & 23 of PROMPT.MD)
+// ============================================================================
+
+// GET notifications for authenticated startup
+router.get('/notifications', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId || !prisma) {
+    res.json([]);
+    return;
+  }
+
+  try {
+    const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+    if (!startup) {
+      return res.json([]);
+    }
+
+    const notifs = await prisma.notification.findMany({
+      where: { startupId: startup.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+
+    res.json(notifs);
+  } catch (err: any) {
+    console.error('[Notifications API] Fetch error:', err.message);
+    res.json([]);
+  }
+});
+
+// POST mark notification as read
+router.post('/notifications/:id/read', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const { id } = req.params;
+  if (!prisma) {
+    res.json({ success: true });
+    return;
+  }
+  try {
+    await prisma.notification.update({
+      where: { id },
+      data: { read: true }
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST mark all notifications as read
+router.post('/notifications/read-all', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId || !prisma) {
+    res.json({ success: true });
+    return;
+  }
+  try {
+    const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+    if (startup) {
+      await prisma.notification.updateMany({
+        where: { startupId: startup.id, read: false },
+        data: { read: true }
+      });
+    }
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET list of initiatives
@@ -550,19 +715,18 @@ router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res)
     return;
   }
   try {
-    const { startupId, dbDocs } = await safeDbQuery(async () => {
-      const activeStartup = await prisma.startup.findFirst({
-        where: { ownerId: req.user?.id }
-      }) || await prisma.startup.findFirst({
-        orderBy: { createdAt: 'desc' }
-      });
-      const sid = activeStartup ? activeStartup.id : 'st_catalystos';
+    const activeStartup = req.user?.id
+      ? await prisma.startup.findFirst({ where: { ownerId: req.user.id } })
+      : null;
 
-      const docs = await prisma.startupDocument.findMany({
-        where: { startupId: sid },
-        orderBy: { createdAt: 'desc' }
-      });
-      return { startupId: sid, dbDocs: docs };
+    if (!activeStartup) {
+      res.json([]);
+      return;
+    }
+
+    const dbDocs = await prisma.startupDocument.findMany({
+      where: { startupId: activeStartup.id },
+      orderBy: { createdAt: 'desc' }
     });
 
     const docs = dbDocs.map(d => ({
@@ -575,14 +739,10 @@ router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res)
       insights: d.insights
     }));
 
-    // Keep memory cache in sync
-    knowledgeFiles.length = 0;
-    docs.forEach(doc => knowledgeFiles.push(doc));
-
     res.json(docs);
   } catch (err: any) {
     console.error('[Knowledge API] Error fetching documents from DB:', err.message);
-    res.json(knowledgeFiles); // Fallback to memory
+    res.json([]);
   }
 });
 
@@ -615,12 +775,15 @@ router.post('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res
 
   try {
     const prismaClient = prisma;
-    const activeStartup = await prismaClient.startup.findFirst({
-      where: { ownerId: req.user?.id }
-    }) || await prismaClient.startup.findFirst({
-      orderBy: { createdAt: 'desc' }
-    });
-    const startupId = activeStartup ? activeStartup.id : 'st_catalystos';
+    const activeStartup = req.user?.id
+      ? await prismaClient.startup.findFirst({ where: { ownerId: req.user.id } })
+      : null;
+
+    if (!activeStartup) {
+      res.status(400).json({ error: 'No active startup found. Please complete onboarding first.' });
+      return;
+    }
+    const startupId = activeStartup.id;
 
     let textContent = content || '';
     let sizeStr = '';
@@ -723,6 +886,21 @@ Format your output exactly as valid JSON with "summary" (string) and "insights" 
     // Delegate overlapping chunking & high-fidelity embeddings generation to the production RAG Engine
     await ingestDocument(documentId, textContent, name, type);
 
+    // Create real operational notification
+    try {
+      await prisma.notification.create({
+        data: {
+          startupId: activeStartup.id,
+          type: 'DOCUMENT',
+          title: 'Document Ready',
+          message: `"${name}" (${type}) was parsed, embedded, and indexed into the knowledge base.`,
+          read: false
+        }
+      });
+    } catch (notifErr: any) {
+      console.warn('[Knowledge API] Failed to create document notification:', notifErr.message);
+    }
+
     const newFile = {
       id: createdDoc.id,
       name: createdDoc.name,
@@ -793,12 +971,18 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
 
   try {
     const prismaClient = prisma;
-    const activeStartup = await prismaClient.startup.findFirst({
-      where: { ownerId: req.user?.id }
-    }) || await prismaClient.startup.findFirst({
-      orderBy: { createdAt: 'desc' }
-    });
-    const startupId = activeStartup ? activeStartup.id : 'st_catalystos';
+    const activeStartup = req.user?.id
+      ? await prismaClient.startup.findFirst({ where: { ownerId: req.user.id } })
+      : null;
+
+    if (!activeStartup) {
+      res.json({
+        answer: 'No corporate files matching your query have been indexed yet. Please upload relevant strategic documents (PDF, DOCX, PPTX, CSV) to feed the knowledge base!',
+        citations: []
+      });
+      return;
+    }
+    const startupId = activeStartup.id;
 
     // 1. Perform Hybrid Search across all document chunks
     const limit = 5;

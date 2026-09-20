@@ -29,6 +29,8 @@ export type AgentRole =
   | 'Growth'
   | 'Operations'
   | 'Legal'
+  | 'Investment'
+  | 'Auditor'
   | 'ConflictResolver'
   | 'ApprovalManager';
 
@@ -191,7 +193,24 @@ export interface OrchestrationResponse {
   agents: OrchestrationAgentActivity[];
   evidence: OrchestrationEvidence[];
   calculations?: OrchestrationCalculation[];
+  supportingData?: Array<{
+    label: string;
+    value: string;
+    source: string;
+  }>;
+  citations?: Array<{
+    id: string;
+    title: string;
+    source: string;
+    relevance: string;
+  }>;
   approval?: OrchestrationApprovalRequirement;
+  notifications?: Array<{
+    id: string;
+    title: string;
+    message: string;
+    type: string;
+  }>;
   nextActions?: Array<{
     label: string;
     action: string;

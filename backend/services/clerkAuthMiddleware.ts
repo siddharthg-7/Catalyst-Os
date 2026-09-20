@@ -12,6 +12,30 @@ const clerk = secretKey ? createClerkClient({ secretKey }) : null;
 
 import { verifyNeonAuthToken } from './neonAuthService';
 
+import { prisma } from './dbService';
+
+export async function ensureUserInDatabase(user: User): Promise<void> {
+  if (!prisma) return;
+  try {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {
+        email: user.email,
+        name: user.name || 'Founder',
+        role: user.role || 'Founder'
+      },
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.name || 'Founder',
+        role: user.role || 'Founder'
+      }
+    });
+  } catch (err: any) {
+    console.warn('[clerkAuthMiddleware] User DB sync warning:', err.message);
+  }
+}
+
 /**
  * Express middleware that validates authentication tokens.
  * Supports:
@@ -34,6 +58,7 @@ export async function authenticateJWT(
       name: 'Founder Demo',
       role: 'Founder',
     };
+    await ensureUserInDatabase(req.user);
     return next();
   }
 
@@ -58,6 +83,7 @@ export async function authenticateJWT(
       const neonUser = await verifyNeonAuthToken(token);
       if (neonUser) {
         req.user = neonUser;
+        await ensureUserInDatabase(req.user);
         return next();
       }
     } catch (neonErr) {
@@ -100,6 +126,7 @@ export async function authenticateJWT(
       };
     }
 
+    await ensureUserInDatabase(req.user);
     next();
   } catch (err: any) {
     // Graceful fallback to demo user for seamless UX
@@ -109,6 +136,7 @@ export async function authenticateJWT(
       name: 'Founder Demo',
       role: 'Founder',
     };
+    await ensureUserInDatabase(req.user);
     next();
   }
 }

@@ -9,36 +9,11 @@ export interface UserDBRecord extends User {
   passwordHash: string;
 }
 
-export const users: UserDBRecord[] = [
-  {
-    id: 'usr_founder',
-    email: 'founder@founder.os',
-    name: 'Sophia Vance',
-    role: 'Founder',
-    passwordHash: bcrypt.hashSync('password123', 10),
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'usr_executive',
-    email: 'exec@founder.os',
-    name: 'Marcus Sterling',
-    role: 'Executive',
-    passwordHash: bcrypt.hashSync('password123', 10),
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'usr_admin',
-    email: 'admin@founder.os',
-    name: 'CatalystOS Admin',
-    role: 'Admin',
-    passwordHash: bcrypt.hashSync('password123', 10),
-    createdAt: new Date().toISOString()
-  }
-];
+export const users: UserDBRecord[] = [];
 
 export function addUser(user: UserDBRecord) {
   users.push(user);
-  if (!isDbAvailable) return;
+  if (!isDbAvailable || !prisma) return;
   prisma.user.create({
     data: {
       id: user.id,
@@ -53,203 +28,119 @@ export function addUser(user: UserDBRecord) {
   });
 }
 
-
 export let startupProfile: StartupProfile = {
-  name: 'CatalystOS Startup',
-  industry: 'B2B SaaS / Developer Tools',
-  description: 'Enterprise-grade automated workflow orchestration platform for hybrid cloud environments, optimizing resource usage and cloud spend.',
+  name: '',
+  industry: '',
+  description: '',
   fundingStage: 'Pre-Seed',
-  cashBalance: 245000,
-  burnRate: 18500,
-  runwayMonths: 13.2,
-  healthScore: 78,
+  cashBalance: 0,
+  burnRate: 0,
+  runwayMonths: 0,
+  healthScore: 0,
   metrics: {
-    velocity: 65,
-    financialHealth: 72,
-    legalCompliance: 80,
-    growthRate: 45,
-    operationsEfficiency: 70,
+    velocity: 0,
+    financialHealth: 0,
+    legalCompliance: 0,
+    growthRate: 0,
+    operationsEfficiency: 0,
   },
 };
 
 export const agentsList: Agent[] = [
   {
     id: 'ceo',
-    name: 'Sophia Vance',
+    name: 'Atlas',
     role: 'CEO',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    description: 'Autonomous corporate strategist. Formulates broad roadmaps, delegates operational objectives, and balances high-level vision with resource constraints.',
+    description: 'Autonomous corporate strategist & CEO orchestrator. Decomposes goals, routes executive delegation, and synthesizes final briefs.',
     status: 'idle',
     keyMetric: 'Company Velocity',
-    metricValue: '65%',
+    metricValue: '85%',
     color: 'indigo',
   },
   {
     id: 'finance',
-    name: 'Marcus Sterling',
+    name: 'Aura',
     role: 'Finance',
     avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
-    description: 'Automated Chief Financial Officer. Optimizes unit economics, monitors cash burn rates, ensures cost compliance, and models long-term cap tables.',
+    description: 'Chief Financial Officer. Monitors cash burn rate, executes deterministic runway calculations, and enforces capital governance.',
     status: 'idle',
     keyMetric: 'Financial Health',
-    metricValue: '72%',
+    metricValue: '90%',
     color: 'emerald',
   },
   {
     id: 'talent',
-    name: 'Evelyn Brooks',
+    name: 'Echo',
     role: 'Talent',
     avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
-    description: 'AI Recruiting and HR Executive. Strategizes resource allocation, drafts compensation structures (base & equity), and sources top industry contributors.',
+    description: 'Head of People & Recruiting. Plans headcount growth, structures equity options pools, and vets engineering candidates.',
     status: 'idle',
-    keyMetric: 'Hiring Speed',
-    metricValue: '58 days',
+    keyMetric: 'Hiring Velocity',
+    metricValue: '45 days',
     color: 'pink',
   },
   {
     id: 'growth',
-    name: 'Dax Ramirez',
+    name: 'Vector',
     role: 'Growth',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    description: 'Autonomous Marketing and User Acquisition Officer. Focuses on viral loops, product positioning, content engines, and demand generation optimization.',
+    description: 'VP of Growth & Marketing. Focuses on customer acquisition, GTM strategies, ICP positioning, and marketing loops.',
     status: 'idle',
-    keyMetric: 'User Growth Rate',
-    metricValue: '+45% MoM',
+    keyMetric: 'Growth Rate',
+    metricValue: '+35% MoM',
     color: 'amber',
   },
-
   {
     id: 'legal',
-    name: 'Helena Vance, Esq.',
+    name: 'Nexus',
     role: 'Legal',
     avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
-    description: 'Automated General Counsel. Drafts binding commercial contracts, reviews multi-jurisdictional compliance, assesses IP protection, and flags structural liabilities.',
+    description: 'General Counsel. Drafts binding commercial contracts, reviews compliance, assesses IP protection, and flags structural liabilities.',
     status: 'idle',
     keyMetric: 'Compliance Index',
-    metricValue: '80%',
+    metricValue: '95%',
     color: 'rose',
   },
   {
-    id: 'conflict',
-    name: 'Pax-9 Synthesis',
-    role: 'ConflictResolver',
-    avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
-    description: 'Corporate Compromise Engine. Mediates functional trade-offs between agents (e.g., Growth budget vs. Finance burn, Talent speed vs. Legal safety) to deliver optimized compromises.',
+    id: 'operations',
+    name: 'Helix',
+    role: 'Operations',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+    description: 'VP of Operations. Tracks sprint milestones, coordinates cross-functional delivery, and manages operational infrastructure.',
     status: 'idle',
-    keyMetric: 'Resolution Rate',
-    metricValue: '98%',
+    keyMetric: 'Ops Efficiency',
+    metricValue: '88%',
+    color: 'teal',
+  },
+  {
+    id: 'investment',
+    name: 'Apex',
+    role: 'Investment',
+    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150',
+    description: 'Head of Capital & Investor Relations. Models cap tables, prepares fundraising collateral, and coordinates pitch materials.',
+    status: 'idle',
+    keyMetric: 'Capital Readiness',
+    metricValue: 'Ready',
     color: 'purple',
   },
   {
-    id: 'approval',
-    name: 'Loom-V Director',
-    role: 'ApprovalManager',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-    description: 'Executive Presentation Engine. Packages active multi-agent deliverables, runs compliance audits, and coordinates high-fidelity feedback loops with the Human Founder.',
+    id: 'auditor',
+    name: 'Sentry',
+    role: 'Auditor',
+    avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
+    description: 'Compliance & Verification Auditor. Verifies mathematical determinism, validates document citations, and eliminates hallucinations.',
     status: 'idle',
-    keyMetric: 'Ready Deliverables',
-    metricValue: '0 Pending',
-    color: 'teal',
+    keyMetric: 'Audit Accuracy',
+    metricValue: '100%',
+    color: 'blue',
   },
 ];
 
-export let initiatives: Initiative[] = [
-  {
-    id: 'init_1',
-    title: 'Founding Engineer Talent Acquisition & Options Pool',
-    description: 'Structure and deploy a recruiting workflow to hire the lead cloud engineer. Requires Talent options setup, Finance budget approval, and Legal contract auditing.',
-    status: 'completed',
-    category: 'hiring',
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    currentTaskIndex: 3,
-    tasks: [
-      { id: 't1', title: 'Define job descriptions and equity allocation range', assignedTo: 'Talent', status: 'completed', result: 'Structured 1.2% options pool and $140k base salary.' },
-      { id: 't2', title: 'Audit budget impact and cash flow models', assignedTo: 'Finance', status: 'completed', result: 'Verified burn rate increase of $11.6k/mo.' },
-      { id: 't3', title: 'Draft standard IP assignment and employment agreements', assignedTo: 'Legal', status: 'completed', result: 'Drafted complete Employee Agreement with proprietary information protection.' }
-    ],
-    messages: [
-      { id: 'm1', sender: 'CEO', receiver: 'All', content: 'We need to bring on a World Class Founding Engineer to accelerate our cloud infrastructure orchestrator.', timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: 'm2', sender: 'Talent', receiver: 'Finance', content: 'Drafted requirements. Proposing $140,000 base + 1.2% options pool for founder-level engineering commitment.', timestamp: new Date(Date.now() - 2.9 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: 'm3', sender: 'Finance', receiver: 'Talent', content: 'This base is aligned with our current pre-seed treasury but pushes runway below 11 months if product launches late. Proposing 1.4% equity + $125k base to preserve cash.', timestamp: new Date(Date.now() - 2.8 * 24 * 60 * 60 * 1000).toISOString(), isConflict: true },
-      { id: 'm4', sender: 'ConflictResolver', receiver: 'All', content: 'Compromise structured: $132,000 base + 1.3% equity, vesting quarterly with a 1-year cliff. Keeps runway at safe 12.1 months.', timestamp: new Date(Date.now() - 2.7 * 24 * 60 * 60 * 1000).toISOString() },
-      { id: 'm5', sender: 'Legal', receiver: 'All', content: 'Vesting structure incorporated. Drafted employment contract & IP assignment agreements. Safe to deploy.', timestamp: new Date(Date.now() - 2.6 * 24 * 60 * 60 * 1000).toISOString() }
-    ],
-    deliverables: [
-      {
-        id: 'del_1',
-        initiativeId: 'init_1',
-        title: 'Founding Engineer Employment Package & IP Assignment',
-        description: 'Complete recruitment documents including employment offer, stock vesting terms (1-year cliff), and standard IP assignment clause.',
-        type: 'contract',
-        status: 'approved',
-        content: '# FOUNDING ENGINEER EMPLOYMENT OFFER\n\n**Position:** Lead Platform Architect\n**Base Compensation:** $132,000 USD / Year\n**Equity Compensation:** 1.3% Stock Options Pool\n\n### Vesting & Clauses:\n1. **Vesting Schedule:** 4-year monthly vesting with a standard 12-month cliff.\n2. **IP Assignment:** All work and IP created during employment is fully assigned to CatalystOS Startup.\n3. **Non-Disclosure:** Multi-year strict proprietary data protection clause included.',
-        impact: 'Increases team velocity by 18 points, decreases runway by 1.1 months, increases operations efficiency.',
-        financialChange: -11000,
-        metricChanges: { velocity: 18, operationsEfficiency: 12, financialHealth: -5 }
-      }
-    ],
-  },
-  {
-    id: 'init_2',
-    title: 'Enterprise Pilot Program Outreach & Compliance',
-    description: 'Deploy a lead acquisition workflow targeting 5 mid-market companies. Draft pilot terms, pricing options, service level agreements (SLAs), and landing copy.',
-    status: 'pending',
-    category: 'growth',
-    createdAt: new Date().toISOString(),
-    currentTaskIndex: 0,
-    tasks: [
-      { id: 't4', title: 'Target segment lead scoring and landing page messaging', assignedTo: 'Growth', status: 'pending' },
-      { id: 't5', title: 'Draft enterprise service levels (SLAs) and trial contracts', assignedTo: 'Legal', status: 'pending' },
-      { id: 't6', title: 'Model pilot pricing economics and cloud support cost margins', assignedTo: 'Finance', status: 'pending' }
-    ],
-    messages: [],
-    deliverables: [],
-  }
-];
-
-export let approvals: Deliverable[] = [
-  {
-    id: 'del_2',
-    initiativeId: 'init_1',
-    title: 'Q3 Enterprise Pilot Terms & SLA Draft',
-    description: 'Enterprise agreement template for upcoming pilots with $15,000 pilot fee structures, 99.9% uptime commitments, and data privacy clauses.',
-    type: 'contract',
-    status: 'pending_review',
-    content: '# CATALYSTOS PILOT AGREEMENT\n\nThis pilot program contract sets out the trial terms with mid-market testers.\n\n### Key Terms:\n- **Pilot Duration:** 90 Days\n- **Service Fee:** $15,000 USD flat fee\n- **Uptime Commitment:** 99.9% availability, standard support desk SLA.\n- **Data Privacy:** Full SOC-2 compliance compliance guarantees included.\n\n### Business Outcome:\n- Unlocks pilot pipeline value, validates SaaS pricing framework.',
-    impact: 'Unlocks +$15,000 pilot revenue, increases growth metrics (+10 points) and customer confidence.',
-    financialChange: 15000,
-    metricChanges: { growthRate: 10, financialHealth: 6, operationsEfficiency: -2 }
-  }
-];
-
-export let decisionLog: DecisionRecord[] = [
-  {
-    id: 'dec_1',
-    title: 'Deploy Founding Engineer Offer Package',
-    description: 'Officially extended the vetted Lead Platform Architect offer with compromise compensation.',
-    category: 'Talent Acquisition',
-    timestamp: new Date(Date.now() - 2.5 * 24 * 60 * 60 * 1000).toISOString(),
-    impactText: 'Increased company execution capacity +18 points, adjusted runway.',
-    financialImpact: -11000,
-    status: 'approved',
-  }
-];
-
-export let knowledgeFiles: KnowledgeFile[] = [
-  {
-    id: 'doc_1',
-    name: 'CatalystOS_Pitch_Deck.md',
-    type: 'pitch_deck',
-    size: '14 KB',
-    uploadDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    summary: 'Core fundraising presentation detailing CatalystOS Cloud Orchestrator, market size ($22B), product roadmap, and founder experience.',
-    insights: [
-      'Targeting $1.5M Seed round at $10M pre-money valuation.',
-      'Saves cloud costs by up to 34% using predictive scheduling algorithms.',
-      'Differentiator: True autonomous scheduling with multi-cloud failover support.'
-    ]
-  }
-];
+export let initiatives: Initiative[] = [];
+export let approvals: Deliverable[] = [];
+export let decisionLog: DecisionRecord[] = [];
+export let knowledgeFiles: KnowledgeFile[] = [];
 
 // Mutators and helpers to keep state synchronized
 export function updateStartupProfile(updater: Partial<StartupProfile>) {
