@@ -17,17 +17,33 @@ class VaultClient:
         self._init_client()
 
     def _init_client(self):
+        # 1. Local development fallback when Vault is disabled
+        if not settings.vault_enabled:
+            logger.info("Using local environment secrets; Vault disabled for local development.")
+            self.client = None
+            return
+
+        # 2. When Vault is enabled, attempt connection
         try:
             import hvac
             self.client = hvac.Client(url=self.vault_addr, token=self.vault_token)
             if self.client.is_authenticated():
                 logger.info(f"Successfully authenticated with Vault at {self.vault_addr}")
             else:
-                logger.warning("Vault authentication failed. Operating in fallback mode.")
-                self.client = None
+                self._handle_vault_failure("Vault authentication failed (token invalid or revoked)")
         except Exception as e:
-            logger.warning(f"Could not connect to Vault instance ({str(e)}). Using local environment fallback.")
-            self.client = None
+            self._handle_vault_failure(f"Could not connect to Vault at {self.vault_addr}: {str(e)}")
+
+    def _handle_vault_failure(self, reason: str):
+        self.client = None
+        # In production or when strictly required, refuse to run with insecure fallback
+        if settings.environment == "production" or settings.vault_required:
+            raise RuntimeError(
+                f"[SECURITY ERROR] HashiCorp Vault is required in production, but failed to connect: {reason}. "
+                f"Refusing to fall back to unmanaged local secrets."
+            )
+        logger.warning(f"Vault enabled but unreachable ({reason}). Falling back to local environment secrets.")
+
 
     def get_secret(self, path: str = "secret/data/catalyst-os/config") -> Dict[str, Any]:
         """

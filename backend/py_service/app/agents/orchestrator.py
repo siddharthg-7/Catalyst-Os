@@ -30,13 +30,14 @@ for path in env_locations:
         load_dotenv(dotenv_path=path, override=True)
         break
 
-# Safely extract credentials
-api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+from app.core.ai import get_genai_client
 
-if not api_key:
-    raise ValueError(f"Orchestrator configuration failure: API token missing. Verified paths: {[str(p) for p in env_locations]}")
+def _get_client() -> genai.Client:
+    c = get_genai_client()
+    if not c:
+        raise ValueError(f"Orchestrator configuration failure: API token missing. Verified paths: {[str(p) for p in env_locations]}")
+    return c
 
-client = genai.Client(api_key=api_key)
 
 from app.core.database import get_db
 from app.models.schemas import StartupContext, ApprovalGate
@@ -238,8 +239,9 @@ def orchestrate_command(payload: OrchestrateRequest, db: Session = Depends(get_d
 
     try:
         response = call_gemini_with_retry(
-            client=client,
+            client=_get_client(),
             model="gemini-2.5-flash",
+
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=planner_system_instruction,

@@ -49,9 +49,8 @@ def refine_icp_service(context: StartupContext, db: Session) -> dict:
     Generates a detailed breakdown of B2B buyer personas / target ICP based on the stored industry context.
     Updates the target_icp column in the database and returns the refined profile.
     """
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(GTM_PERSONA, context)
 
     prompt = (
@@ -87,9 +86,8 @@ def generate_marketing_campaign_service(focus: str, context: StartupContext) -> 
     """
     Generates a structured, multi-channel marketing blueprint matching target ICP constraints.
     """
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(GTM_PERSONA, context)
 
     prompt = (

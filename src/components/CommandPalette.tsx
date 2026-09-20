@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Activity, CheckSquare, FileText, Sparkles, Rocket, Loader2, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface ExecutionStep {
 }
 
 export default function CommandPalette({ isOpen, onClose, onNavigate, onRunAction }: CommandPaletteProps) {
+  const { apiFetch } = useAuth();
   const [query, setQuery] = useState('');
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
@@ -23,38 +25,59 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number>(0);
   const [apiError, setApiError] = useState<string | null>(null);
   
+  const [calculations, setCalculations] = useState<any[]>([]);
+  const [evidence, setEvidence] = useState<any[]>([]);
+  const [approval, setApproval] = useState<any | null>(null);
+  
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleExecuteCommand(userCommand: string) {
-    if (!userCommand.trim()) return;
+    if (!userCommand.trim() || isFetchingAI) return;
     setIsFetchingAI(true);
     setAiResponse(null);
     setApiError(null);
+    setCalculations([]);
+    setEvidence([]);
+    setApproval(null);
     setExecutionSteps([
-      { agent: 'chief_of_staff', action: 'Decomposing founder intent & consulting startup context', status: 'running' }
+      { agent: 'CEO Orchestrator', action: 'Analyzing founder intent & routing to executive specialists', status: 'running' }
     ]);
     
     try {
-      const response = await fetch('/api/v1/commands', {
+      const fetchImpl = apiFetch || fetch;
+      const response = await fetchImpl('/api/orchestrate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ command: userCommand })
+        body: JSON.stringify({ command: userCommand, context: { source: 'command_palette' } })
       });
       
       const data = await response.json();
       
       if (!response.ok) {
-        setApiError(`Execution failed: ${data.detail || data.error || 'Unknown error'}`);
+        setApiError(`Execution failed: ${data.error || data.detail || 'Unknown error'}`);
         return;
       }
       
-      setAiResponse(data.orchestrator_summary || 'Command processed.');
-      if (data.steps_processed) {
-        setExecutionSteps(data.steps_processed);
+      setAiResponse(data.answer?.summary || 'Command processed.');
+      if (data.agents && data.agents.length > 0) {
+        setExecutionSteps(data.agents.map((a: any) => ({
+          agent: a.role,
+          action: a.contribution || `Status: ${a.status}`,
+          status: a.status
+        })));
       }
-      if (data.pending_approvals_count) {
-        setPendingApprovalsCount(data.pending_approvals_count);
+      if (data.calculations) {
+        setCalculations(data.calculations);
+      }
+      if (data.evidence) {
+        setEvidence(data.evidence);
+      }
+      if (data.approval?.required) {
+        setApproval(data.approval);
+        setPendingApprovalsCount(1);
+      } else {
+        setPendingApprovalsCount(0);
       }
     } catch (err: any) {
       console.error(err);
@@ -116,7 +139,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
           <input
             ref={inputRef}
             type="text"
-            placeholder="Ask AI Chief of Staff (e.g. Can we hire two backend engineers and launch next month?)..."
+            placeholder="Ask CEO Orchestrator (e.g. Can we afford to hire three engineers?)..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -136,7 +159,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
           {query.trim().length > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-[#141413] uppercase tracking-wider font-mono">
-                <span>AI Executive Team (Google ADK)</span>
+                <span>AI Executive Team (CEO Orchestrator)</span>
                 <span className="text-emerald-600 font-semibold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   Online
@@ -149,7 +172,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
               >
                 <span className="flex items-center gap-2.5">
                   <Rocket className="w-4 h-4 text-gray-900" />
-                  Execute via Chief of Staff: "{query}"
+                  Execute via CEO Orchestrator: "{query}"
                 </span>
                 <span className="text-[10px] font-mono text-[#696969]">↵ Enter</span>
               </button>
@@ -159,24 +182,12 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
                 <div className="mt-2.5 p-3.5 rounded-[12px] bg-white border border-[#141413]/10 text-xs text-[#141413] font-sans space-y-2">
                   <div className="flex items-center gap-2 font-semibold text-gray-900">
                     <Loader2 className="w-4 h-4 animate-spin text-gray-900" />
-                    Chief of Staff Coordinating Executive Specialists...
+                    CEO Orchestrator Coordinating Executive Specialists...
                   </div>
                   <div className="space-y-1.5 pl-6 text-[11px] text-gray-600">
                     <div className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" />
-                      Chief of Staff: Analyzing founder intent & startup context
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                      Finance: Checking runway & hiring budget deterministically
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                      Operations: Checking launch dependencies & blockers
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                      Auditor: Validating claims & risk levels
+                      Analyzing intent, consulting startup memory & RAG context
                     </div>
                   </div>
                 </div>
@@ -185,7 +196,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
               {/* Completed Execution Steps */}
               {!isFetchingAI && executionSteps.length > 0 && (
                 <div className="mt-2.5 p-3 rounded-[12px] bg-white border border-gray-100 text-xs space-y-1.5">
-                  <div className="font-semibold text-[11px] text-gray-500 uppercase tracking-wider">Execution Pathway</div>
+                  <div className="font-semibold text-[11px] text-gray-500 uppercase tracking-wider">Executive Agents Involved</div>
                   {executionSteps.map((step, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-[11px] text-gray-700">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
@@ -194,6 +205,26 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Deterministic Calculations */}
+              {!isFetchingAI && calculations.length > 0 && (
+                <div className="mt-2.5 p-3 rounded-[12px] bg-blue-50/60 border border-blue-200/60 text-xs space-y-1.5">
+                  <div className="font-semibold text-[10px] text-blue-900 uppercase tracking-wider font-mono">
+                    Deterministic Financial Models
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {calculations.map((calc, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded-lg border border-blue-100">
+                        <div className="text-[10px] text-gray-500">{calc.metric}</div>
+                        <div className="text-xs font-bold text-gray-900 font-mono">
+                          {typeof calc.value === 'number' ? calc.value.toLocaleString() : calc.value}
+                        </div>
+                        <div className="text-[9px] text-blue-600">{calc.source}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -207,11 +238,26 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
                   <div className="leading-relaxed whitespace-pre-wrap font-sans text-gray-800">
                     {aiResponse}
                   </div>
-                  {pendingApprovalsCount > 0 && (
+
+                  {/* Evidence Citations */}
+                  {evidence.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-gray-100">
+                      <div className="text-[10px] font-mono text-gray-500 font-semibold mb-1">Grounded Evidence / Sources:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {evidence.map((ev, idx) => (
+                          <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] bg-gray-100 text-gray-700 border border-gray-200 font-mono">
+                            {ev.citationId}: {ev.documentName || 'Startup Record'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {approval && approval.required && (
                     <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/50">
                       <span className="text-[11px] text-amber-800 font-medium flex items-center gap-1.5">
                         <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                        Requires Founder Approval ({pendingApprovalsCount} item)
+                        Requires Founder Approval: {approval.reason || 'High-impact decision'}
                       </span>
                       <button
                         onClick={() => {

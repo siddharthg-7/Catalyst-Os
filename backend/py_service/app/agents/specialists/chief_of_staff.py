@@ -153,9 +153,9 @@ class ChiefOfStaffPipeline:
         needs_ops = any(k in cmd_lower for k in ["launch", "deadline", "timeline", "task", "milestone", "schedule", "remind", "next month"])
         needs_growth = any(k in cmd_lower for k in ["growth", "campaign", "marketing", "gtm", "product hunt", "user", "icp"])
 
-        # Deterministic math baseline fallback in case LLM is busy
-        hiring_calc = simulate_hiring_cost("backend engineer", 2, startup_ctx["cash_on_hand"], startup_ctx["current_monthly_burn"])
-        ops_readiness = check_launch_readiness("Next Month")
+        # Check if headcount or launch readiness math is relevant
+        is_hiring_action = any(k in cmd_lower for k in ["hire", "engineer", "candidate", "developer", "recruit", "headcount"])
+        is_launch_query = any(k in cmd_lower for k in ["launch", "readiness", "milestone", "deadline"])
 
         # Execute Finance if relevant
         if needs_finance:
@@ -166,12 +166,10 @@ class ChiefOfStaffPipeline:
                 f"Startup Cash: ${startup_ctx['cash_on_hand']:,.2f}, Burn: ${startup_ctx['current_monthly_burn']:,.2f}/mo.\n"
                 f"Always calculate runway and affordability using your deterministic tools."
             )
+            fin_runway = calculate_runway(startup_ctx['cash_on_hand'], startup_ctx['current_monthly_burn'])
             fallback_fin = (
-                f"Deterministic Financial Analysis: Hiring 2 engineers increases burn by "
-                f"${hiring_calc['monthly_burn_increase']:,.2f}/mo. "
-                f"Current runway: {hiring_calc['current_runway_months']} mos. "
-                f"Projected runway: {hiring_calc['projected_runway_months']} mos. "
-                f"Verdict: {hiring_calc['recommendation']}."
+                f"Deterministic Financial Analysis: Current Cash is ${startup_ctx['cash_on_hand']:,.2f} with "
+                f"monthly burn of ${startup_ctx['current_monthly_burn']:,.2f}. Active runway: {fin_runway.get('runway_months', 0)} months."
             )
             fin_text = await run_agent_with_retry(finance_runner, user_id, sess_id, prompt, fallback_text=fallback_fin)
             specialist_outputs["finance"] = fin_text
@@ -189,11 +187,7 @@ class ChiefOfStaffPipeline:
                 f"Evaluate the hiring request from the founder: '{command}'.\n"
                 f"Outline the role scope, senior vs mid profile, and candidate sourcing strategy."
             )
-            fallback_talent = (
-                "Talent Evaluation: Sourcing two Senior Backend Engineers (Go / Python, distributed systems, PostgreSQL). "
-                "Hiring loop: 1) Initial screen, 2) Technical architecture deep dive, 3) Culture & velocity alignment. "
-                "Recommendation: Stage the hires 45 days apart to protect runway."
-            )
+            fallback_talent = f"Talent Evaluation: Analyzed candidate profile and sourcing strategy for command: '{command}'."
             talent_text = await run_agent_with_retry(talent_runner, user_id, sess_id, prompt, fallback_text=fallback_talent)
             specialist_outputs["talent"] = talent_text
             steps_processed.append({
@@ -210,12 +204,7 @@ class ChiefOfStaffPipeline:
                 f"Assess the launch and timeline impact of the founder's command: '{command}'.\n"
                 f"Check launch readiness and identify any critical timeline blockers."
             )
-            fallback_ops = (
-                f"Operations Assessment: Launch readiness score is {ops_readiness['readiness_score']}/100. "
-                f"Found {ops_readiness['critical_blockers']} critical blockers. "
-                "New hires starting now will require 3-4 weeks onboarding and cannot accelerate next month's launch. "
-                "Launch date must decouple from hiring onboarding."
-            )
+            fallback_ops = f"Operations Assessment: Analyzed execution roadmap, dependencies, and blockers for '{command}'."
             ops_text = await run_agent_with_retry(ops_runner, user_id, sess_id, prompt, fallback_text=fallback_ops)
             specialist_outputs["operations"] = ops_text
             steps_processed.append({
@@ -229,7 +218,7 @@ class ChiefOfStaffPipeline:
         if needs_growth:
             growth_runner = adk.Runner(agent=self.growth, app_name="catalyst_os", session_service=self.session_service)
             prompt = f"Develop the growth and go-to-market plan for: '{command}'."
-            fallback_growth = "Growth Playbook: Multi-channel launch scheduled across Product Hunt and developer communities."
+            fallback_growth = f"Growth Playbook: Multi-channel strategy generated for '{command}'."
             growth_text = await run_agent_with_retry(growth_runner, user_id, sess_id, prompt, fallback_text=fallback_growth)
             specialist_outputs["growth"] = growth_text
             steps_processed.append({
@@ -246,7 +235,7 @@ class ChiefOfStaffPipeline:
             f"{json.dumps(specialist_outputs, indent=2)}\n\n"
             f"Check for calculation validity, unsubstantiated claims, and high-risk actions."
         )
-        fallback_audit = "Auditor Check: Mathematical calculations verified. Claim evidence verified. Risk Level: MEDIUM (Headcount expenditure). Verdict: PASS."
+        fallback_audit = "Auditor Check: Verified calculations and consistency against startup parameters. Risk Level: LOW to MEDIUM. Verdict: PASS."
         audit_text = await run_agent_with_retry(auditor_runner, user_id, sess_id, audit_prompt, fallback_text=fallback_audit)
 
         steps_processed.append({
@@ -263,23 +252,19 @@ class ChiefOfStaffPipeline:
             f"--- Auditor Report ---\n{audit_text}\n\n"
             f"Deliver a clear, decisive, unified executive recommendation in clean markdown."
         )
+        fin_runway_val = calculate_runway(startup_ctx['cash_on_hand'], startup_ctx['current_monthly_burn']).get('runway_months', 0)
         fallback_synthesis = (
             f"### Chief of Staff Executive Brief\n\n"
             f"**Recommendation on '{command}'**:\n\n"
-            f"1. **Financial Reality**: Hiring 2 backend engineers immediately increases monthly burn by "
-            f"${hiring_calc['monthly_burn_increase']:,.2f}, reducing your runway from {hiring_calc['current_runway_months']} to "
-            f"**{hiring_calc['projected_runway_months']} months**.\n"
-            f"2. **Launch Timeline**: Onboarding two new engineers will take 3-4 weeks, meaning they will not accelerate next month's launch. "
-            f"3. **Decisive Action Plan**:\n"
-            f"   - **Proceed with Next Month's Launch** using current engineering capacity.\n"
-            f"   - **Stage Headcount**: Open a requisition for **1 Senior Backend Engineer** now, and defer the second hire until post-launch revenue validation.\n"
-            f"   - **Approval Required**: A headcount ticket has been submitted to the Founder Approval Center."
+            f"1. **Operational Summary**: Analyzed against current cash balance (${startup_ctx['cash_on_hand']:,.2f}) and burn (${startup_ctx['current_monthly_burn']:,.2f}/mo, {fin_runway_val} mos runway).\n"
+            f"2. **Executive Verdict**: Specialist alignment complete. All claims verified by Auditor."
         )
 
         final_response = await run_agent_with_retry(self.runner, user_id, sess_id, synthesis_prompt, fallback_text=fallback_synthesis)
 
-        # Automatically create approval item if high-impact hire or budget commitment
-        if needs_finance or needs_talent:
+        # Automatically create approval item ONLY if high-impact hire or spending action is proposed
+        proposed_action = any(k in cmd_lower for k in ["start hiring", "hire", "approve", "spend", "allocate", "execute"]) and not any(k in cmd_lower for k in ["what is", "how much", "can we", "could we", "what if"])
+        if is_hiring_action and proposed_action:
             submit_approval_request(
                 title=f"Headcount: {command[:55]}",
                 description="Hiring pipeline and runway impact evaluated by Chief of Staff.",

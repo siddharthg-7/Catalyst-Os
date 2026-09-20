@@ -4,7 +4,8 @@ import {
   TrendingUp, TrendingDown, Clock, ArrowRight, Calendar,
   Mic, MicOff, Send, Sparkles, CheckSquare, Activity,
   Wallet, Hourglass, Flame, ChevronRight, Users, Scale,
-  LineChart, Briefcase, Check
+  LineChart, Briefcase, Check, ShieldCheck, AlertCircle,
+  FileText, ExternalLink, Calculator, Layers, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../hooks/useChat';
@@ -22,6 +23,7 @@ interface SaaSDashboardProps {
   onLaunchInitiative: (title: string, description: string, category: 'funding' | 'hiring' | 'growth' | 'operations' | 'legal') => Promise<void>;
   onSimulateInitiative: (id: string) => Promise<void>;
   onUpdateStartup: (updated: StartupProfile) => void;
+  onNavigate?: (tab: 'dashboard' | 'approvals' | 'knowledge' | 'agents' | 'workflows') => void;
 }
 
 // ── Utility ──────────────────────────────────────────────────────────────────
@@ -121,6 +123,7 @@ export default function SaaSDashboard({
   decisions,
   knowledge,
   onLaunchInitiative,
+  onNavigate,
 }: SaaSDashboardProps) {
   const { user, apiFetch } = useAuth();
   const { sendMessage, messages, isTyping } = useChat(apiFetch, user?.id);
@@ -306,32 +309,122 @@ export default function SaaSDashboard({
 
         {/* Conversation preview — last AI reply if any */}
         {messages.length > 0 && (
-          <div className="px-6 py-4 max-h-[500px] overflow-y-auto space-y-3 border-b border-gray-50">
+          <div className="px-6 py-4 max-h-[500px] overflow-y-auto space-y-4 border-b border-gray-50">
             {messages.slice(-3).map(msg => (
               <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-3.5 h-3.5 text-gray-900" />
+                  <div className="w-8 h-8 rounded-xl bg-gray-900 flex items-center justify-center shrink-0 shadow-xs shadow-gray-200 mt-0.5">
+                    <Sparkles className="w-4 h-4 text-white" />
                   </div>
                 )}
-                <div className={`max-w-[80%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                <div className={`max-w-[85%] px-4 py-3.5 rounded-2xl text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-gray-900 text-white rounded-tr-sm'
-                    : 'bg-gray-50 text-gray-800 border border-gray-100 rounded-tl-sm'
+                    ? 'bg-gray-900 text-white rounded-tr-sm shadow-xs'
+                    : 'bg-gray-50 text-gray-800 border border-gray-100 rounded-tl-sm shadow-xs'
                 }`}>
+                  {/* Provider Unavailable Alert Banner */}
+                  {msg.role === 'assistant' && msg.status === 'provider_unavailable' && (
+                    <div className="mb-2.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800 font-medium flex items-center gap-1.5 font-mono">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>AI Provider Unavailable (Quota Exceeded / Rate Limited)</span>
+                    </div>
+                  )}
+
+                  {/* Dynamic Executive Agent Strip */}
+                  {msg.role === 'assistant' && msg.activeAgents && msg.activeAgents.some(a => a.status !== 'idle') && (
+                    <div className="flex flex-wrap items-center gap-1.5 mb-2.5 pb-2 border-b border-gray-200/60">
+                      <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-gray-500 mr-1">
+                        Executive Matrix:
+                      </span>
+                      {msg.activeAgents.filter(a => a.status !== 'idle').map(ag => (
+                        <span
+                          key={ag.role}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-800 text-[10px] font-medium shadow-2xs font-mono"
+                          title={ag.contribution || `${ag.role}: ${ag.status}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${ag.status === 'completed' ? 'bg-emerald-500' : 'bg-blue-500 animate-pulse'}`} />
+                          <span>{ag.role}</span>
+                          {ag.status === 'completed' && <Check className="w-3 h-3 text-emerald-600 inline" />}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Deterministic Calculations Pill Strip */}
+                  {msg.role === 'assistant' && msg.calculations && msg.calculations.length > 0 && (
+                    <div className="mb-3 p-2.5 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
+                      <div className="text-[10px] font-mono font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1 mb-1.5">
+                        <Calculator className="w-3 h-3 text-gray-800" />
+                        <span>Deterministic Application Metrics</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {msg.calculations.map((calc, idx) => (
+                          <div key={idx} className="text-[11px] bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200/60 flex justify-between items-center gap-2">
+                            <span className="text-gray-500 font-medium truncate">{calc.metric}:</span>
+                            <span className="font-bold text-gray-900 font-mono shrink-0">{calc.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <MarkdownRenderer content={msg.content} />
+
+                  {/* Document Citations & Evidence */}
+                  {msg.role === 'assistant' && msg.evidence && msg.evidence.length > 0 && (
+                    <div className="mt-3 pt-2.5 border-t border-gray-200/60 flex flex-wrap items-center gap-1.5 text-[10px]">
+                      <span className="font-bold text-gray-700 font-mono flex items-center gap-1">
+                        <FileText className="w-3 h-3 text-gray-600" />
+                        Grounded In:
+                      </span>
+                      {msg.evidence.map(ev => (
+                        <span key={ev.citationId} className="px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-800 font-mono shadow-2xs">
+                          {ev.citationId} {ev.documentName || 'Document'}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Human-in-the-Loop Approval Gate */}
+                  {msg.role === 'assistant' && msg.approval?.required && (
+                    <div className="mt-3.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold block text-amber-950">Action Requires Founder Approval</span>
+                          <span className="text-[11px] text-amber-800 leading-snug">
+                            {msg.approval.reason || 'High-stakes execution pending review.'}
+                          </span>
+                        </div>
+                      </div>
+                      {onNavigate && (
+                        <button
+                          onClick={() => onNavigate('approvals')}
+                          className="px-3 py-1.5 rounded-lg bg-gray-900 text-white font-semibold text-[11px] hover:bg-black transition-colors shrink-0 shadow-xs cursor-pointer flex items-center justify-center gap-1 w-fit"
+                        >
+                          <span>Review in Approvals</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
+
             {isTyping && (
-              <div className="flex gap-3">
-                <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-3.5 h-3.5 text-gray-900" />
+              <div className="flex gap-3 animate-fade-in">
+                <div className="w-8 h-8 rounded-xl bg-gray-900 flex items-center justify-center shrink-0 mt-0.5 shadow-xs shadow-gray-200">
+                  <Sparkles className="w-4 h-4 text-white animate-spin" />
                 </div>
-                <div className="px-3.5 py-3 rounded-2xl rounded-tl-sm bg-gray-50 border border-gray-100 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-gray-50 border border-gray-100 shadow-xs space-y-1.5 max-w-[85%]">
+                  <div className="flex items-center gap-2 text-xs font-bold text-gray-900">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-900" />
+                    <span>CEO Orchestrator (Sophia Vance) Coordinating Specialists...</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 font-sans">
+                    Hydrating company treasury, checking deterministic mathematical bounds, and validating with Auditor.
+                  </p>
                 </div>
               </div>
             )}

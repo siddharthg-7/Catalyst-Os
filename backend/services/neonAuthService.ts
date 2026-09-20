@@ -92,7 +92,9 @@ export async function verifyNeonAuthToken(token: string): Promise<User | null> {
   const matchingKey = keys.find((k) => !header.kid || k.kid === header.kid);
 
   if (!matchingKey) {
-    console.warn('[neonAuthService] No matching JWKS key found for token.');
+    if (payload.iss && (payload.iss.includes('neon') || payload.iss.includes(process.env.NEON_AUTH_BASE_URL || ''))) {
+      console.warn('[neonAuthService] No matching JWKS key found for Neon Auth token.');
+    }
     return null;
   }
 

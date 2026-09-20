@@ -22,7 +22,8 @@ class LangGraphEngine:
     """
 
     def __init__(self):
-        logger.info("Initializing Catalyst OS LangGraph Multi-Agent Engine...")
+        logger.info("Catalyst OS LangGraph engine initialized.")
+
 
     def run_simulation(self, initiative: Dict[str, Any]) -> Dict[str, Any]:
         """

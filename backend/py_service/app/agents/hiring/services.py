@@ -66,9 +66,8 @@ def generate_job_description_service(role_title: str, key_responsibilities: str,
     """
     Generates a tailored Job Description utilizing the global startup context.
     """
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(HIRING_PERSONA, context)
     
     prompt = (
@@ -98,9 +97,8 @@ def screen_resume_service(pdf_bytes: bytes, job_description: str, context: Start
     if not resume_text:
         raise ValueError("The uploaded PDF resume contains no readable text.")
 
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(HIRING_PERSONA, context)
 
     prompt = (

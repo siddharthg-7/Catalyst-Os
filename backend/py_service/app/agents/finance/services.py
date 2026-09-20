@@ -82,9 +82,8 @@ def analyze_expenses_service(expenses_data: str, context: StartupContext, db: Se
     Parses unstructured raw expense data into structured items, computes the total monthly burn,
     updates StartupContext, and returns the analysis.
     """
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(FINANCE_PERSONA, context)
 
     prompt = (
@@ -140,9 +139,8 @@ def runway_calculator_service(new_hire_role: Optional[str], context: StartupCont
             "new_hire_proposed": False
         }
 
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(FINANCE_PERSONA, context)
 
     prompt = (

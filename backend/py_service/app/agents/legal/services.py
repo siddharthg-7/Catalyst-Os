@@ -50,9 +50,8 @@ def generate_employee_contract_service(
     """
     Generates a comprehensive employment agreement in Markdown format.
     """
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(LEGAL_PERSONA, context)
 
     prompt = (
@@ -84,9 +83,8 @@ def generate_nda_service(
     Drafts a mutual Non-Disclosure Agreement and writes it directly to the ApprovalGate table
     as a PENDING transaction.
     """
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(LEGAL_PERSONA, context)
 
     prompt = (

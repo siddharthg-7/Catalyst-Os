@@ -56,10 +56,10 @@ def generate_investor_update_service(
     candidate_count = db.query(Candidate).count()
     runway_months = context.cash_on_hand / context.current_monthly_burn if context.current_monthly_burn > 0 else 999.0
 
-    import os
-    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    client = genai.Client(api_key=api_key)
+    from app.core.ai import get_genai_client
+    client = get_genai_client()
     system_instruction = build_system_instruction(INVESTMENT_PERSONA, context)
+
 
     prompt = (
         f"Draft a structured, professional monthly progress update email for our investors. "

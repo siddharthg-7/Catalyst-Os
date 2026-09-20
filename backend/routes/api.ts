@@ -31,7 +31,7 @@ import {
   checkS3Health, 
   getPresignedDownloadUrl 
 } from '../services/s3Service';
-
+import { orchestrationService } from '../services/orchestrationService';
 
 const router = Router();
 
@@ -92,16 +92,45 @@ router.use('/', agentsRouter);
 
 // GET startup profile
 router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  // 1. Direct persistent query from Neon PostgreSQL via Prisma
+  if (isDbAvailable && prisma) {
+    try {
+      const dbStartup = await safeDbQuery(async () => {
+        return (
+          (req.user?.id ? await prisma.startup.findFirst({ where: { ownerId: req.user.id } }) : null) ||
+          (await prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } }))
+        );
+      }, 3);
+
+      if (dbStartup) {
+        startupProfile.name = dbStartup.name;
+        startupProfile.industry = dbStartup.industry;
+        startupProfile.description = dbStartup.description;
+        startupProfile.fundingStage = dbStartup.fundingStage;
+        startupProfile.cashBalance = dbStartup.cashBalance;
+        startupProfile.burnRate = dbStartup.burnRate;
+        startupProfile.runwayMonths = dbStartup.burnRate > 0 
+          ? parseFloat((dbStartup.cashBalance / dbStartup.burnRate).toFixed(1)) 
+          : 999;
+        startupProfile.healthScore = dbStartup.healthScore;
+        return res.json(startupProfile);
+      }
+    } catch (dbErr: any) {
+      console.warn('[Startup API] Database query warning:', dbErr.message);
+    }
+  }
+
+  // 2. Fallback to FastAPI service with 5000ms timeout
   const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
   try {
-    const pyRes = await fetch(`${fastApiUrl}/api/startup`, { signal: AbortSignal.timeout(600) });
+    const pyRes = await fetch(`${fastApiUrl}/api/startup`, { signal: AbortSignal.timeout(5000) });
     if (pyRes.ok) {
       const data = await pyRes.json();
-      startupProfile.name = data.company_name;
-      startupProfile.industry = data.industry;
-      startupProfile.description = data.target_icp || '';
-      startupProfile.cashBalance = data.cash_on_hand;
-      startupProfile.burnRate = data.current_monthly_burn;
+      startupProfile.name = data.company_name || startupProfile.name;
+      startupProfile.industry = data.industry || startupProfile.industry;
+      startupProfile.description = data.target_icp || startupProfile.description;
+      startupProfile.cashBalance = data.cash_on_hand ?? startupProfile.cashBalance;
+      startupProfile.burnRate = data.current_monthly_burn ?? startupProfile.burnRate;
       if (startupProfile.burnRate > 0) {
         startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
       } else {
@@ -109,7 +138,9 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
       }
     }
   } catch (err: any) {
-    console.warn(`[FastAPI Sync] Failed to fetch startup context: ${err.message}. Using local memory state.`);
+    if (err.name !== 'AbortError') {
+      console.warn(`[FastAPI Sync] Failed to fetch startup context: ${err.message}. Using persistent state.`);
+    }
   }
   res.json(startupProfile);
 });
@@ -302,10 +333,42 @@ router.post('/initiatives/:id/simulate', authenticateJWT, async (req: Authentica
 
 // GET approvals queue
 router.get('/approvals', authenticateJWT, async (req: AuthenticatedRequest, res) => {
-  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
   let mergedApprovals = [...approvals];
+
+  // 1. Direct PostgreSQL Prisma query
+  if (isDbAvailable && prisma) {
+    try {
+      const dbApprovals = await safeDbQuery(async () => {
+        return await prisma.approval.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: 50
+        });
+      }, 3);
+
+      if (dbApprovals && dbApprovals.length > 0) {
+        const mapped = dbApprovals.map((appr: any) => ({
+          id: appr.id,
+          initiativeId: appr.startupId || 'init_db_sync',
+          title: `Approval: ${appr.actionType}`,
+          description: appr.description || appr.actionType,
+          type: (appr.actionType || 'action').toLowerCase(),
+          content: appr.description,
+          impact: appr.impact || 'Requires founder verification.',
+          financialChange: appr.financialImpact || 0,
+          status: appr.status === 'PENDING' ? 'pending_review' : appr.status.toLowerCase(),
+          metricChanges: { velocity: 0, financialHealth: 0, legalCompliance: 0, growthRate: 0, operationsEfficiency: 0 }
+        }));
+        mergedApprovals = [...mapped, ...mergedApprovals];
+      }
+    } catch (dbErr: any) {
+      console.warn('[Approvals API] Database query warning:', dbErr.message);
+    }
+  }
+
+  // 2. Python FastAPI check with 5000ms timeout
+  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
   try {
-    const pyRes = await fetch(`${fastApiUrl}/api/approvals`, { signal: AbortSignal.timeout(600) });
+    const pyRes = await fetch(`${fastApiUrl}/api/approvals`, { signal: AbortSignal.timeout(5000) });
     if (pyRes.ok) {
       const dbApprovals = await pyRes.json();
       const mapped = dbApprovals.map((appr: any) => {
@@ -330,7 +393,9 @@ router.get('/approvals', authenticateJWT, async (req: AuthenticatedRequest, res)
       mergedApprovals = [...pendingDb, ...mergedApprovals];
     }
   } catch (err: any) {
-    console.warn(`[FastAPI Sync] Failed to fetch approvals: ${err.message}. Using local memory queue.`);
+    if (err.name !== 'AbortError') {
+      console.warn(`[FastAPI Sync] Failed to fetch approvals: ${err.message}. Using persistent database queue.`);
+    }
   }
   res.json(mergedApprovals);
 });
@@ -760,7 +825,7 @@ ${contextText}
 Provide a brilliant, detailed tactical answer citing specific documents where possible using the citation IDs (like [CIT-1], [CIT-2]) provided in the context. Use clean Markdown styling.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
+        model: 'gemini-2.5-flash',
         contents: queryPrompt,
       });
 
@@ -770,7 +835,7 @@ Provide a brilliant, detailed tactical answer citing specific documents where po
       });
     } else {
       res.json({
-        answer: `### Knowledge Retrieval Response (Local DB Mode)\n\nBased on your documents, here is the executive synthesis from our hybrid search index:\n\n1. **Core Strategy:** The documents validate cloud optimization parameters, focusing on saving up to 34% on cloud-spend budgets.\n2. **Runway Alignment:** Treasury plans require securing $1.5M Seed funding to safely sustain current engineering bandwidth.\n3. **Action Recommendation:** Proceed with structuring SOC-2 compliance frameworks during pilot trials.`,
+        answer: `I cannot generate dynamic document synthesis because the AI service is currently unavailable. Showing ${citations.length} retrieved document references.`,
         citations: citations
       });
     }
@@ -780,49 +845,62 @@ Provide a brilliant, detailed tactical answer citing specific documents where po
   }
 });
 
-// POST orchestrate command (Master Planner-Executor Orchestrator)
+// POST orchestrate command (Master Planner-Executor Canonical Endpoint)
 router.post('/orchestrate', authenticateJWT, async (req: AuthenticatedRequest, res) => {
-  const { command } = req.body;
-  if (!command) {
-    res.status(400).json({ error: 'Command is required.' });
+  const { command, commandId, context } = req.body;
+  if (!command || typeof command !== 'string' || !command.trim()) {
+    res.status(400).json({ error: 'A non-empty founder command is required.' });
     return;
   }
 
-  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
   try {
-    const pyResponse = await fetch(`${fastApiUrl}/api/orchestrate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ command })
-    });
-
-    if (pyResponse.ok) {
-      const result = await pyResponse.json();
-      
-      // Update startupProfile locally to ensure treasury metrics match database context
-      const startRes = await fetch(`${fastApiUrl}/api/startup`);
-      if (startRes.ok) {
-        const data = await startRes.json();
-        startupProfile.name = data.company_name;
-        startupProfile.industry = data.industry;
-        startupProfile.description = data.target_icp || '';
-        startupProfile.cashBalance = data.cash_on_hand;
-        startupProfile.burnRate = data.current_monthly_burn;
-        if (startupProfile.burnRate > 0) {
-          startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
-        } else {
-          startupProfile.runwayMonths = 999;
-        }
-      }
-
-      return res.json(result);
-    } else {
-      const errText = await pyResponse.text();
-      res.status(pyResponse.status).json({ error: errText });
-    }
+    const result = await orchestrationService.executeCommand(
+      command.trim(),
+      { userId: req.user?.id, startupId: context?.startupId, commandId }
+    );
+    res.json(result);
   } catch (err: any) {
-    console.error('[Orchestrate API] Connection to FastAPI orchestrator failed:', err.message);
-    res.status(502).json({ error: 'Failed to communicate with master planning orchestrator.' });
+    console.error('[Orchestrate API] Execution failure:', err.message);
+    res.status(500).json({
+      error: 'I could not complete the executive analysis right now. Reason: AI orchestration pipeline encountered an error. Please try again.',
+      details: err.message
+    });
+  }
+});
+
+// POST orchestrate stream endpoint (Real-time SSE event stream for JARVIS Dashboard)
+router.post('/orchestrate/stream', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const { command, commandId, context } = req.body;
+  if (!command || typeof command !== 'string' || !command.trim()) {
+    res.status(400).json({ error: 'A non-empty founder command is required.' });
+    return;
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  try {
+    const result = await orchestrationService.executeCommand(
+      command.trim(),
+      { userId: req.user?.id, startupId: context?.startupId, commandId },
+      (event) => {
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      }
+    );
+
+    res.write(`data: ${JSON.stringify({ type: 'final_response', result })}\n\n`);
+    res.write('data: [DONE]\n\n');
+    res.end();
+  } catch (err: any) {
+    console.error('[Orchestrate Stream API] Streaming failure:', err.message);
+    res.write(`data: ${JSON.stringify({
+      type: 'error',
+      message: 'I could not complete the executive analysis right now. Reason: AI orchestration pipeline encountered an error. Please try again.'
+    })}\n\n`);
+    res.write('data: [DONE]\n\n');
+    res.end();
   }
 });
 

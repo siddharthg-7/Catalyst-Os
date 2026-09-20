@@ -149,3 +149,57 @@ export interface DecisionRecord {
   financialImpact: number;
   status: 'approved' | 'rejected';
 }
+
+export interface OrchestrationAgentActivity {
+  role: string;
+  status: 'idle' | 'analyzing' | 'collaborating' | 'generating' | 'completed';
+  contribution?: string;
+}
+
+export interface OrchestrationEvidence {
+  citationId: string;
+  documentId?: string;
+  documentName?: string;
+  chunkId?: string;
+  excerpt?: string;
+}
+
+export interface OrchestrationCalculation {
+  metric: string;
+  value: number | string;
+  source: string;
+}
+
+export interface OrchestrationApprovalRequirement {
+  required: boolean;
+  approvalId?: string;
+  reason?: string;
+  impact?: string;
+}
+
+export interface OrchestrationResponse {
+  commandId: string;
+  status: 'completed' | 'needs_approval' | 'needs_information' | 'provider_unavailable' | 'failed';
+  interpretation: {
+    intent: string;
+    objective: string;
+  };
+  answer: {
+    summary: string;
+    details?: string;
+  };
+  agents: OrchestrationAgentActivity[];
+  evidence: OrchestrationEvidence[];
+  calculations?: OrchestrationCalculation[];
+  approval?: OrchestrationApprovalRequirement;
+  nextActions?: Array<{
+    label: string;
+    action: string;
+  }>;
+  confidence?: number;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+

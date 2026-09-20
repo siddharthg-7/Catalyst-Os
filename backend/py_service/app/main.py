@@ -24,22 +24,35 @@ from app.agents.orchestrator import router as orchestrator_router
 from app.routers.audio import router as audio_router
 from app.routers.adk_router import router as adk_v1_router
 
+from contextlib import asynccontextmanager
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("main")
 
-# Auto-create tables on startup
-try:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Database table initialization (runs once per worker process, avoiding reload duplicates)
     logger.info("Initializing database and auto-creating tables...")
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables initialized successfully.")
-except Exception as e:
-    logger.error(f"Error during database initialization: {str(e)}")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error during database initialization: {str(e)}")
+        if settings.environment == "production":
+            raise
+
+    yield
+
+    # Graceful shutdown: release database connection pool
+    engine.dispose()
 
 app = FastAPI(
     title=settings.app_name,
     version="1.0.0",
-    description="Catalyst OS Backend - Autonomous Startup Operating System"
+    description="Catalyst OS Backend - Autonomous Startup Operating System",
+    lifespan=lifespan,
 )
+
 
 # CORS middleware for Node.js API Gateway & React Frontend
 app.add_middleware(

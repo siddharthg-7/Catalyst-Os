@@ -542,6 +542,7 @@ export default function App() {
               onLaunchInitiative={handleLaunchInitiative}
               onSimulateInitiative={handleSimulateInitiative}
               onUpdateStartup={handleUpdateStartup}
+              onNavigate={setActiveTab}
             />
           )}
           

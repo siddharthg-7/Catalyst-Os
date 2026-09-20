@@ -39,15 +39,30 @@ export async function authenticateJWT(
 
   const token = authHeader.split(' ')[1];
 
-  // 1. Try Neon Auth JWKS token verification first
+  let tokenIssuer = '';
   try {
-    const neonUser = await verifyNeonAuthToken(token);
-    if (neonUser) {
-      req.user = neonUser;
-      return next();
+    const parts = token.split('.');
+    if (parts.length >= 2) {
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));
+      tokenIssuer = (payload.iss || '').toLowerCase();
     }
-  } catch (neonErr) {
-    // Continue to Clerk check
+  } catch {
+    // ignore parse error
+  }
+
+  const isClerkToken = tokenIssuer.includes('clerk');
+
+  // 1. If not explicitly a Clerk token, try Neon Auth JWKS verification
+  if (!isClerkToken) {
+    try {
+      const neonUser = await verifyNeonAuthToken(token);
+      if (neonUser) {
+        req.user = neonUser;
+        return next();
+      }
+    } catch (neonErr) {
+      // Continue to Clerk check
+    }
   }
 
   // 2. Try Clerk session token verification
