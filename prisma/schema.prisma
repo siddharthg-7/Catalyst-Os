@@ -10,13 +10,14 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String?
-  role      String    @default("founder")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  startups  Startup[]
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String?
+  role         String    @default("founder")
+  passwordHash String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  startups     Startup[]
 }
 
 model Startup {

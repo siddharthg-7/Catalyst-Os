@@ -277,16 +277,7 @@ function FeatureCard({ icon: Icon, title, description, delay }: {
 interface AuthScreenProps {
   key?: string;
   initialView?: 'landing' | 'auth' | 'onboarding';
-  onOnboardingComplete?: (onboardingData: {
-    startupName: string;
-    industry: string;
-    burnRate: string;
-    runway: string;
-    idea: string;
-    budget: string;
-    timeline: string;
-    path: 'existing' | 'new';
-  }) => void;
+  onOnboardingComplete?: (onboardingData: any) => void;
 }
 
 export default function AuthScreen({ initialView = 'landing', onOnboardingComplete }: AuthScreenProps) {
@@ -310,6 +301,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
   const [existingAdditional, setExistingAdditional] = useState('');
 
   // New Idea States
+  const [newName, setNewName] = useState('');
   const [newIdea, setNewIdea] = useState('');
   const [newProblem, setNewProblem] = useState('');
   const [newCustomers, setNewCustomers] = useState('');
@@ -329,26 +321,43 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
 
     const finalPayload = onboardingPath === 'existing'
       ? {
-          path: 'existing',
-          startupName: existingName || 'CatalystOS Startup',
-          startupDescription: existingDescription || 'B2B software solutions',
+          path: 'existing' as const,
+          startupName: existingName.trim() || 'Catalyst Venture',
+          description: existingDescription.trim() || 'B2B software solutions',
           industry: existingIndustry,
           stage: existingStage,
+          fundingStage: existingStage,
           teamSize: String(existingTeamSize),
           biggestChallenge: existingChallenge,
           timeline: existingMilestone,
-          additionalInfo: existingAdditional
+          additionalInfo: existingAdditional,
+          cashBalance: 250000,
+          monthlyBurn: existingTeamSize * 8000,
+          budget: 250000,
+          burnRate: existingTeamSize * 8000,
+          targetIcp: existingIndustry === 'SaaS' ? 'Mid-market SaaS teams' : `${existingIndustry} businesses`,
+          primaryProduct: existingDescription || 'Core Software Solution'
         }
       : {
-          path: 'new',
-          startupName: 'My Startup Project',
-          startupDescription: newIdea || 'Scratch startup idea',
+          path: 'new' as const,
+          startupName: newName.trim() || 'Catalyst Project',
+          description: newIdea.trim() || 'New venture concept',
+          idea: newIdea.trim(),
+          problem: newProblem.trim(),
+          targetIcp: newCustomers.trim() || 'Early adopters',
+          newCustomers: newCustomers.trim(),
           industry: newIndustry,
           stage: 'Idea',
+          fundingStage: 'Pre-Seed',
           teamSize: newTeamStyle,
           biggestChallenge: newChallenge,
           timeline: newTimeline,
-          additionalInfo: newAdditional
+          additionalInfo: newAdditional,
+          cashBalance: 50000,
+          monthlyBurn: newTeamStyle === 'Solo Founder' ? 3000 : 8000,
+          budget: 50000,
+          burnRate: newTeamStyle === 'Solo Founder' ? 3000 : 8000,
+          primaryProduct: newIdea || 'MVP Prototype'
         };
 
     if (user?.id) {
@@ -356,16 +365,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
     }
 
     if (onOnboardingComplete) {
-      onOnboardingComplete({
-        startupName: finalPayload.startupName,
-        industry: finalPayload.industry,
-        burnRate: onboardingPath === 'existing' ? `$${existingTeamSize * 8000} / mo` : '$0 / mo',
-        runway: '12 months',
-        idea: finalPayload.startupDescription,
-        budget: onboardingPath === 'existing' ? '$100,000' : '$5,000',
-        timeline: finalPayload.timeline,
-        path: onboardingPath
-      });
+      onOnboardingComplete(finalPayload);
     }
   };
 
@@ -389,12 +389,12 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
       if (currentStep === 1 && !existingName.trim()) return true;
       if (currentStep === 2 && !existingDescription.trim()) return true;
     } else {
-      if (currentStep === 1 && !newIdea.trim()) return true;
+      if (currentStep === 1 && (!newName.trim() || !newIdea.trim())) return true;
       if (currentStep === 2 && !newProblem.trim()) return true;
       if (currentStep === 3 && !newCustomers.trim()) return true;
     }
     return false;
-  }, [currentStep, onboardingPath, existingName, existingDescription, newIdea, newProblem, newCustomers]);
+  }, [currentStep, onboardingPath, existingName, existingDescription, newName, newIdea, newProblem, newCustomers]);
 
   const navigateTo = (newView: typeof view) => {
     setDirection(newView === 'landing' ? -1 : 1);
@@ -727,14 +727,26 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
                   >
                     {currentStep === 1 && (
                       <div className="space-y-4">
-                        <label className="text-lg font-bold text-[#141413] font-sans">What's your startup idea?</label>
-                        <textarea
-                          placeholder="Describe your concept, vision, or product idea..."
-                          value={newIdea}
-                          onChange={e => setNewIdea(e.target.value)}
-                          className={`${inputCls} min-h-[140px] resize-none`}
-                          autoFocus
-                        />
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-bold text-[#141413] font-sans">Project / Startup Name</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. ApexAI, NovaCloud, Pulse..."
+                            value={newName}
+                            onChange={e => setNewName(e.target.value)}
+                            className={inputCls}
+                            autoFocus
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-sm font-bold text-[#141413] font-sans">What's your startup idea?</label>
+                          <textarea
+                            placeholder="Describe your concept, vision, or product idea..."
+                            value={newIdea}
+                            onChange={e => setNewIdea(e.target.value)}
+                            className={`${inputCls} min-h-[110px] resize-none`}
+                          />
+                        </div>
                       </div>
                     )}
 

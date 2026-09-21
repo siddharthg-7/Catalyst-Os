@@ -21,8 +21,10 @@ import { Initiative, Deliverable, UserRole } from '../../src/types';
 import { 
   authenticateJWT, 
   requireRole, 
-  AuthenticatedRequest 
+  AuthenticatedRequest,
+  JWT_SECRET 
 } from '../services/clerkAuthMiddleware';
+import jwt from 'jsonwebtoken';
 import agentsRouter from '../agents/controller';
 import { markdownRagService } from '../services/markdownRagService';
 import { 
@@ -80,13 +82,133 @@ router.post('/chat/stream', async (req, res) => {
 });
 
 // ============================================================================
-// AUTHENTICATION
-// Handled entirely by Clerk on the frontend.
-// The backend only verifies Clerk session tokens via clerkAuthMiddleware.
+// NATIVE NEON POSTGRESQL AUTHENTICATION
+// Secure database authentication with bcrypt password hashing and JWT sessions
 // ============================================================================
 
+// POST register/signup new user
+router.post('/auth/signup', async (req, res) => {
+  const { email, password, name, role } = req.body || {};
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    res.status(400).json({ error: 'A valid email address is required.' });
+    return;
+  }
+  if (!password || typeof password !== 'string' || password.length < 6) {
+    res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    return;
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanName = (name || cleanEmail.split('@')[0] || 'Founder').trim();
+  const userRole: UserRole = role === 'Executive' ? 'Executive' : 'Founder';
+
+  try {
+    const existing = await safeDbQuery(() => prisma.user.findUnique({
+      where: { email: cleanEmail }
+    }));
+
+    if (existing) {
+      res.status(409).json({ error: 'An account with this email address already exists. Please sign in.' });
+      return;
+    }
+
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const newUser = await safeDbQuery(() => prisma.user.create({
+      data: {
+        email: cleanEmail,
+        name: cleanName,
+        role: userRole,
+        passwordHash
+      }
+    }));
+
+    const token = jwt.sign(
+      { sub: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name || 'Founder',
+        role: newUser.role as UserRole
+      }
+    });
+  } catch (err: any) {
+    console.error('[Auth API] Signup error:', err.message);
+    res.status(500).json({ error: `Registration failed: ${err.message}` });
+  }
+});
+
+// POST signin/login existing user
+router.post('/auth/signin', async (req, res) => {
+  const { email, password } = req.body || {};
+  if (!email || !password) {
+    res.status(400).json({ error: 'Email and password are required.' });
+    return;
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    const user = await safeDbQuery(() => prisma.user.findUnique({
+      where: { email: cleanEmail }
+    }));
+
+    if (!user) {
+      res.status(401).json({ error: 'Invalid email or password.' });
+      return;
+    }
+
+    if (user.passwordHash) {
+      const isValid = bcrypt.compareSync(password, user.passwordHash);
+      if (!isValid) {
+        res.status(401).json({ error: 'Invalid email or password.' });
+        return;
+      }
+    } else {
+      // If legacy or demo account without password, upgrade password
+      const newHash = bcrypt.hashSync(password, 10);
+      await safeDbQuery(() => prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newHash }
+      }));
+    }
+
+    const token = jwt.sign(
+      { sub: user.id, email: user.email, name: user.name, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name || 'Founder',
+        role: user.role as UserRole
+      }
+    });
+  } catch (err: any) {
+    console.error('[Auth API] Signin error:', err.message);
+    res.status(500).json({ error: `Authentication failed: ${err.message}` });
+  }
+});
+
+// GET current authenticated user profile
 router.get('/auth/me', authenticateJWT, (req: AuthenticatedRequest, res) => {
   res.json({ user: req.user });
+});
+
+// POST logout
+router.post('/auth/logout', (req, res) => {
+  res.json({ success: true, message: 'Logged out successfully.' });
 });
 
 // Mount specialty agent controllers
@@ -123,7 +245,24 @@ router.post('/startup/onboarding', authenticateJWT, async (req: AuthenticatedReq
 
   try {
     const canonicalContext = await workspaceService.saveOnboardingData(userId, req.body);
-    res.json({ success: true, context: canonicalContext });
+    const profile = {
+      id: canonicalContext?.startupId,
+      name: canonicalContext?.startup.name,
+      industry: canonicalContext?.startup.industry,
+      description: canonicalContext?.startup.description,
+      fundingStage: canonicalContext?.startup.stage,
+      cashBalance: canonicalContext?.financials.cashBalance,
+      burnRate: canonicalContext?.financials.monthlyBurn,
+      runwayMonths: canonicalContext?.financials.runwayMonths,
+      healthScore: startupProfile.healthScore || 80,
+      metrics: startupProfile.metrics,
+      targetIcp: canonicalContext?.business.targetIcp,
+      primaryProduct: canonicalContext?.business.primaryProduct,
+      goals: canonicalContext?.goals,
+      priorities: canonicalContext?.priorities,
+      onboarded: true
+    };
+    res.json({ success: true, context: canonicalContext, startup: profile });
   } catch (err: any) {
     console.error('[Startup Onboarding API] Error:', err.message);
     res.status(500).json({ error: `Onboarding failed: ${err.message}` });
@@ -164,12 +303,12 @@ router.get('/startup/context', authenticateJWT, async (req: AuthenticatedRequest
   try {
     const canonical = await workspaceService.getCanonicalContext(userId);
     if (!canonical) {
-      res.status(404).json({ error: 'No startup workspace found for authenticated user.' });
+      res.status(404).json({ error: 'No startup workspace found for authenticated user.', onboarded: false });
       return;
     }
-    res.json(canonical);
+    res.json({ ...canonical, onboarded: true });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, onboarded: false });
   }
 });
 
@@ -243,17 +382,36 @@ router.post('/startup', authenticateJWT, requireRole(['Founder', 'Admin']), asyn
     return;
   }
 
-  const { name, industry, description, fundingStage, cashBalance, burnRate } = req.body;
+  const { name, industry, description, fundingStage, cashBalance, burnRate, targetIcp, primaryProduct } = req.body;
   try {
     const canonical = await workspaceService.saveOnboardingData(userId, {
       startupName: name || 'Startup',
       industry: industry || 'Technology',
       description: description || '',
       fundingStage,
+      targetIcp,
+      primaryProduct,
       cashBalance: cashBalance !== undefined ? cashBalance : 0,
       monthlyBurn: burnRate !== undefined ? burnRate : 0,
     });
-    res.json(canonical);
+    
+    res.json({
+      id: canonical?.startupId,
+      name: canonical?.startup.name,
+      industry: canonical?.startup.industry,
+      description: canonical?.startup.description,
+      fundingStage: canonical?.startup.stage,
+      cashBalance: canonical?.financials.cashBalance,
+      burnRate: canonical?.financials.monthlyBurn,
+      runwayMonths: canonical?.financials.runwayMonths,
+      healthScore: startupProfile.healthScore || 80,
+      metrics: startupProfile.metrics,
+      targetIcp: canonical?.business.targetIcp,
+      primaryProduct: canonical?.business.primaryProduct,
+      goals: canonical?.goals,
+      priorities: canonical?.priorities,
+      onboarded: true
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

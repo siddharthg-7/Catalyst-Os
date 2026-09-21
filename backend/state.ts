@@ -211,13 +211,23 @@ export function setAgentStatuses(status: 'idle' | 'analyzing' | 'collaborating' 
 
 // Automatically sync memory state with Neon PostgreSQL on load
 export async function syncStateWithDatabase() {
+  let timedOut = false;
   try {
     console.log('🔄 Synchronizing memory state with Neon PostgreSQL...');
     
     const syncOperations = async () => {
+      // Parallelize all startup queries to minimize cold-start latency
+      const [dbUsers, dbStartup, dbAgents, dbDocs] = await Promise.all([
+        prisma.user.findMany(),
+        prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } }),
+        prisma.executiveAgent.findMany(),
+        prisma.startupDocument.findMany({ orderBy: { createdAt: 'desc' } })
+      ]);
+
+      if (timedOut) return;
+
       // Sync Users
-      const dbUsers = await prisma.user.findMany();
-      if (dbUsers.length > 0) {
+      if (dbUsers && dbUsers.length > 0) {
         users.length = 0; // Clear default array
         dbUsers.forEach(u => {
           users.push({
@@ -233,7 +243,6 @@ export async function syncStateWithDatabase() {
       }
 
       // Sync Startup Profile
-      const dbStartup = await prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } });
       if (dbStartup) {
         const runway = dbStartup.burnRate > 0 ? parseFloat((dbStartup.cashBalance / dbStartup.burnRate).toFixed(1)) : 999;
         startupProfile.name = dbStartup.name;
@@ -248,8 +257,7 @@ export async function syncStateWithDatabase() {
       }
 
       // Sync Agents
-      const dbAgents = await prisma.executiveAgent.findMany();
-      if (dbAgents.length > 0) {
+      if (dbAgents && dbAgents.length > 0) {
         agentsList.forEach(a => {
           const matchingDb = dbAgents.find(da => da.id === a.id);
           if (matchingDb) {
@@ -260,10 +268,7 @@ export async function syncStateWithDatabase() {
       }
 
       // Sync Knowledge Files
-      const dbDocs = await prisma.startupDocument.findMany({
-        orderBy: { createdAt: 'desc' }
-      });
-      if (dbDocs.length > 0) {
+      if (dbDocs && dbDocs.length > 0) {
         knowledgeFiles.length = 0;
         dbDocs.forEach(d => {
           knowledgeFiles.push({
@@ -284,7 +289,10 @@ export async function syncStateWithDatabase() {
     };
 
     const timeoutGuard = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Remote database connection timed out (15000ms)')), 15000)
+      setTimeout(() => {
+        timedOut = true;
+        reject(new Error('Remote database connection timed out (30000ms)'));
+      }, 30000)
     );
 
     await Promise.race([syncOperations(), timeoutGuard]);
@@ -292,7 +300,6 @@ export async function syncStateWithDatabase() {
     isDbAvailable = false;
     console.warn(`⚠️ Could not connect to Neon PostgreSQL for startup sync (${err?.message || err}). Falling back to high-fidelity offline default states.`);
   }
-
 }
 
 // Trigger background synchronization

@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { prisma } from '../services/dbService';
-import { knowledgeFiles, approvals, decisionLog, initiatives } from '../state';
+import { knowledgeFiles, approvals, decisionLog, initiatives, users, startupProfile, agentsList } from '../state';
 
 /**
  * Safe Development Reset Mechanism (Sections 1 & 2 of PROMPT.MD)
@@ -17,7 +17,21 @@ export async function performDevReset(): Promise<{ success: boolean; details: Re
   const counts: Record<string, number> = {};
 
   try {
-    // 1. Operational & notification records
+    // 1. Python service and extra tables
+    try {
+      const ag = await (prisma as any).approval_gates.deleteMany({});
+      counts.approval_gates = ag.count;
+    } catch {}
+    try {
+      const c = await (prisma as any).candidates.deleteMany({});
+      counts.candidates = c.count;
+    } catch {}
+    try {
+      const sc = await (prisma as any).startup_contexts.deleteMany({});
+      counts.startup_contexts = sc.count;
+    } catch {}
+
+    // 2. Operational & notification records
     const notifs = await prisma.notification.deleteMany({});
     counts.notifications = notifs.count;
 
@@ -30,7 +44,7 @@ export async function performDevReset(): Promise<{ success: boolean; details: Re
     const health = await prisma.healthScore.deleteMany({});
     counts.healthScores = health.count;
 
-    // 2. Plans, executions, tasks, approvals
+    // 3. Plans, executions, tasks, approvals
     const executions = await prisma.execution.deleteMany({});
     counts.executions = executions.count;
 
@@ -43,11 +57,11 @@ export async function performDevReset(): Promise<{ success: boolean; details: Re
     const plans = await prisma.plan.deleteMany({});
     counts.plans = plans.count;
 
-    // 3. Commands
+    // 4. Commands
     const commands = await prisma.command.deleteMany({});
     counts.commands = commands.count;
 
-    // 4. Knowledge chunks & embeddings
+    // 5. Knowledge chunks & embeddings
     const embeddings = await prisma.embedding.deleteMany({});
     counts.embeddings = embeddings.count;
 
@@ -57,25 +71,51 @@ export async function performDevReset(): Promise<{ success: boolean; details: Re
     const docs = await prisma.startupDocument.deleteMany({});
     counts.startupDocuments = docs.count;
 
-    // 5. Agents & memory
+    // 6. Agents & memory
     const agents = await prisma.executiveAgent.deleteMany({});
     counts.executiveAgents = agents.count;
 
     const memories = await prisma.memory.deleteMany({});
     counts.memories = memories.count;
 
-    // 6. Startups & Users
+    // 7. Startups & Users
     const startups = await prisma.startup.deleteMany({});
     counts.startups = startups.count;
 
     const usersRes = await prisma.user.deleteMany({});
     counts.users = usersRes.count;
 
-    // Clear legacy memory caches
+    // Clear in-memory caches and reset to pristine state
+    users.length = 0;
     knowledgeFiles.length = 0;
     approvals.length = 0;
     decisionLog.length = 0;
     initiatives.length = 0;
+
+    startupProfile.name = '';
+    startupProfile.industry = '';
+    startupProfile.description = '';
+    startupProfile.fundingStage = 'Pre-Seed';
+    startupProfile.cashBalance = 0;
+    startupProfile.burnRate = 0;
+    startupProfile.runwayMonths = 0;
+    startupProfile.healthScore = 0;
+    startupProfile.metrics = {
+      velocity: 0,
+      financialHealth: 0,
+      legalCompliance: 0,
+      growthRate: 0,
+      operationsEfficiency: 0,
+    };
+    delete (startupProfile as any).targetIcp;
+    delete (startupProfile as any).primaryProduct;
+    delete (startupProfile as any).goals;
+    delete (startupProfile as any).priorities;
+
+    agentsList.forEach(a => {
+      a.status = 'idle';
+      (a as any).currentTask = null;
+    });
 
     console.log('[DevReset] Safe data purge completed successfully:', counts);
     return { success: true, details: counts };

@@ -58,38 +58,20 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
-      apiFetch('/api/startup/context')
+      apiFetch('/api/startup')
         .then(res => res.json())
         .then(data => {
-          if (data && data.onboarded) {
+          if (data && data.onboarded && data.name) {
             setOnboardingCompleted(true);
-            if (data.context?.startup) {
-              setStartup({
-                name: data.context.startup.name,
-                industry: data.context.startup.industry,
-                description: data.context.startup.description,
-                fundingStage: data.context.startup.stage || 'Pre-Seed',
-                cashBalance: data.context.financials?.cashBalance || 245000,
-                burnRate: data.context.financials?.monthlyBurn || 18500,
-                runwayMonths: data.context.financials?.activeRunwayMonths || 13.2,
-                healthScore: 80,
-                metrics: {
-                  velocity: 70,
-                  financialHealth: 80,
-                  legalCompliance: 85,
-                  growthRate: 60,
-                  operationsEfficiency: 75,
-                }
-              });
-            }
+            setStartup(data);
           } else {
+            localStorage.removeItem(`catalystos_onboarding_completed_${user.id}`);
             setOnboardingCompleted(false);
           }
         })
         .catch(() => {
-          setOnboardingCompleted(
-            localStorage.getItem(`catalystos_onboarding_completed_${user.id}`) === 'true'
-          );
+          localStorage.removeItem(`catalystos_onboarding_completed_${user.id}`);
+          setOnboardingCompleted(false);
         });
     } else {
       setOnboardingCompleted(false);
@@ -304,7 +286,9 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setStartup(data);
-        showToast('Startup configuration saved successfully to virtual DB.', 'success');
+        showToast('Startup configuration & AI analysis updated successfully.', 'success');
+        const knowRes = await apiFetch('/api/knowledge');
+        if (knowRes.ok) setKnowledge(await knowRes.json());
       } else {
         const errData = await res.json();
         showToast(errData.error || 'Failed to save startup configuration.', 'error');

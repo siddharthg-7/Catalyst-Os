@@ -1,47 +1,44 @@
-import { createClerkClient, verifyToken } from '@clerk/backend';
+import 'dotenv/config';
+import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { User, UserRole } from '../../src/types';
+import { verifyNeonAuthToken } from './neonAuthService';
+import { prisma, safeDbQuery } from './dbService';
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
-const secretKey = process.env.CLERK_SECRET_KEY || '';
-
-const clerk = secretKey ? createClerkClient({ secretKey }) : null;
-
-import { verifyNeonAuthToken } from './neonAuthService';
-
-import { prisma } from './dbService';
+export const JWT_SECRET = process.env.JWT_SECRET || 'catalyst_os_neon_jwt_secret_2026';
 
 export async function ensureUserInDatabase(user: User): Promise<void> {
   if (!prisma) return;
   try {
-    await prisma.user.upsert({
+    await safeDbQuery(() => prisma.user.upsert({
       where: { id: user.id },
       update: {
-        email: user.email,
+        email: user.email.toLowerCase(),
         name: user.name || 'Founder',
         role: user.role || 'Founder'
       },
       create: {
         id: user.id,
-        email: user.email,
+        email: user.email.toLowerCase(),
         name: user.name || 'Founder',
         role: user.role || 'Founder'
       }
-    });
+    }));
   } catch (err: any) {
-    console.warn('[clerkAuthMiddleware] User DB sync warning:', err.message);
+    console.warn('[authMiddleware] User DB sync warning:', err.message);
   }
 }
 
 /**
  * Express middleware that validates authentication tokens.
  * Supports:
- * 1. Clerk session tokens (via Clerk Secret Key)
+ * 1. Native Neon JWTs signed with JWT_SECRET
  * 2. Neon Auth JWTs (verified against Neon Auth JWKS via Ed25519)
- * 3. Graceful fallback to local demo session in dev/demo mode.
+ * 3. Graceful fallback to demo user in dev/demo mode.
  */
 export async function authenticateJWT(
   req: AuthenticatedRequest,
@@ -50,7 +47,7 @@ export async function authenticateJWT(
 ): Promise<void> {
   const authHeader = req.headers.authorization;
 
-  // If no auth header or demo token requested, attach fallback demo user
+  // If no auth header or explicit demo/mock token, attach demo user
   if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.includes('demo') || authHeader.includes('mock')) {
     req.user = {
       id: 'usr_founder_demo',
@@ -64,81 +61,44 @@ export async function authenticateJWT(
 
   const token = authHeader.split(' ')[1];
 
-  let tokenIssuer = '';
+  // 1. Try verifying native JWT signed with JWT_SECRET
   try {
-    const parts = token.split('.');
-    if (parts.length >= 2) {
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'));
-      tokenIssuer = (payload.iss || '').toLowerCase();
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded && decoded.sub) {
+      req.user = {
+        id: decoded.sub,
+        email: decoded.email || `${decoded.sub}@catalyst.os`,
+        name: decoded.name || 'Founder',
+        role: (decoded.role as UserRole) || 'Founder',
+      };
+      await ensureUserInDatabase(req.user);
+      return next();
     }
-  } catch {
-    // ignore parse error
+  } catch (jwtErr) {
+    // Continue to Neon Auth check
   }
 
-  const isClerkToken = tokenIssuer.includes('clerk');
-
-  // 1. If not explicitly a Clerk token, try Neon Auth JWKS verification
-  if (!isClerkToken) {
-    try {
-      const neonUser = await verifyNeonAuthToken(token);
-      if (neonUser) {
-        req.user = neonUser;
-        await ensureUserInDatabase(req.user);
-        return next();
-      }
-    } catch (neonErr) {
-      // Continue to Clerk check
-    }
-  }
-
-  // 2. Try Clerk session token verification
+  // 2. Try verifying against Neon Auth JWKS endpoint
   try {
-    if (!secretKey || secretKey.startsWith('sk_test_mock')) {
-      throw new Error('Clerk secret key unconfigured or mock.');
+    const neonUser = await verifyNeonAuthToken(token);
+    if (neonUser) {
+      req.user = neonUser;
+      await ensureUserInDatabase(req.user);
+      return next();
     }
-
-    // Verify the Clerk session token and extract claims
-    const payload = await verifyToken(token, { secretKey });
-
-    // Resolve a full Clerk user to get email and metadata
-    if (clerk) {
-      const clerkUser = await clerk.users.getUser(payload.sub);
-      const primaryEmail =
-        clerkUser.emailAddresses.find(
-          (e) => e.id === clerkUser.primaryEmailAddressId
-        )?.emailAddress ?? '';
-
-      const role: UserRole =
-        (clerkUser.publicMetadata?.role as UserRole) ?? 'Founder';
-
-      req.user = {
-        id: clerkUser.id,
-        email: primaryEmail,
-        name: `${clerkUser.firstName ?? ''} ${clerkUser.lastName ?? ''}`.trim() || 'Founder',
-        role,
-      };
-    } else {
-      req.user = {
-        id: payload.sub,
-        email: (payload as any).email ?? 'founder@founder.os',
-        name: 'Founder User',
-        role: 'Founder',
-      };
-    }
-
-    await ensureUserInDatabase(req.user);
-    next();
-  } catch (err: any) {
-    // Graceful fallback to demo user for seamless UX
-    req.user = {
-      id: 'usr_founder_demo',
-      email: 'founder@founder.os',
-      name: 'Founder Demo',
-      role: 'Founder',
-    };
-    await ensureUserInDatabase(req.user);
-    next();
+  } catch (neonErr) {
+    // Continue to fallback
   }
+
+  // 3. In dev mode, fallback to demo user for seamless developer ergonomics
+  req.user = {
+    id: 'usr_founder_demo',
+    email: 'founder@founder.os',
+    name: 'Founder Demo',
+    role: 'Founder',
+  };
+  await ensureUserInDatabase(req.user);
+  next();
 }
 
 /**
@@ -167,3 +127,5 @@ export function requireRole(allowedRoles: UserRole[]) {
     next();
   };
 }
+
+export default authenticateJWT;
