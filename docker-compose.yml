@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -27,9 +25,13 @@ services:
     restart: always
     ports:
       - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      - DATABASE_URL=postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-${GEMINI_API_KEY}}
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
       - ENVIRONMENT=production
@@ -45,15 +47,23 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    env_file:
+      - path: .env
+        required: false
     environment:
       - PORT=3000
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public}
+      - DIRECT_URL=${DIRECT_URL:-${DATABASE_URL}}
       - FASTAPI_URL=http://fastapi-ai:8000
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-${GEMINI_API_KEY}}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
-      - VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY}
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - JWT_SECRET=${JWT_SECRET:-catalyst_os_neon_jwt_secret_2026}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
     depends_on:
       postgres:
         condition: service_healthy

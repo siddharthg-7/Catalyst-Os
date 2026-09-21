@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+ENV DATABASE_URL="postgresql://postgres:catalyst_secure_pass@localhost:5432/catalyst_db?schema=public"
+ENV DIRECT_URL="postgresql://postgres:catalyst_secure_pass@localhost:5432/catalyst_db?schema=public"
 RUN npx prisma generate
 RUN npm run build
 
@@ -10,7 +12,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/backend ./backend

@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
         logger.info("Database tables initialized successfully.")
     except Exception as e:
         logger.error(f"Error during database initialization: {str(e)}")
-        if settings.environment == "production":
+        if settings.environment == "production" and os.getenv("STRICT_DB_INIT", "false").lower() in ("true", "1"):
             raise
 
     yield

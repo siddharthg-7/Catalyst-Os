@@ -11,8 +11,7 @@
     <img src="https://img.shields.io/badge/LangGraph-Multi--Agent-FF6F00?style=for-the-badge&logo=python&logoColor=white" alt="LangGraph" />
     <img src="https://img.shields.io/badge/Google%20Gemini-2.5%2F3.5%20Flash-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
     <img src="https://img.shields.io/badge/Prisma%20ORM-v6-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma" />
-    <img src="https://img.shields.io/badge/PostgreSQL-pgvector-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />
-    <img src="https://img.shields.io/badge/Clerk-Authentication-6C47FF?style=for-the-badge&logo=clerk&logoColor=white" alt="Clerk" />
+    <img src="https://img.shields.io/badge/Neon%20PostgreSQL-Database%20%26%20Auth-00E599?style=for-the-badge&logo=postgresql&logoColor=black" alt="Neon Auth" />
   </p>
   <p>
     An enterprise-grade autonomous operating system for founders that coordinates Finance, Talent, Growth, Legal, Investment, and Operations through collaborating AI executives with human-in-the-loop governance.
@@ -323,9 +322,26 @@ Make sure you have the following installed on your machine:
 * **Python**: v3.11 or higher (optional, for the FastAPI LangGraph microservice)
 * **PostgreSQL**: v15+ with `pgvector` extension (optional; app automatically runs with in-memory fallback if no database is connected)
 * **Git**
+* **Docker & Docker Compose** (for containerized deployment)
 
-### Quick Start (Windows)
-We provide one-click batch scripts for immediate launch:
+### Quick Start with Docker (Recommended)
+Run the entire platform (Frontend, Node.js API Gateway, FastAPI AI Service, and PostgreSQL) with a single command or double-click:
+
+- **Windows One-Click Shortcut:** Double-click [`docker-run.bat`](docker-run.bat) (automatically verifies Docker, builds images, starts containers, and opens `http://localhost:3000`).
+- **Stop Containers:** Double-click [`docker-down.bat`](docker-down.bat).
+- **NPM Shortcut:**
+  ```bash
+  npm run docker:up
+  # To stop:
+  npm run docker:down
+  ```
+- **Linux/macOS Shortcut:**
+  ```bash
+  chmod +x docker-run.sh
+  ./docker-run.sh
+  ```
+
+### Quick Start (Native Windows / Local Node)
 1. **Launch Full-Stack Application:** Double-click `run.bat` (or run `./run.bat` in PowerShell).
    * Automatically validates Node.js, creates `.env` if missing, installs dependencies, and starts the server on `http://localhost:3000`.
 2. **Launch Python AI Microservice (Optional):** Double-click `run_fastapi.bat`.
@@ -358,18 +374,12 @@ GEMINI_API_KEY="your_google_gemini_api_key"
 GEMINI_MODEL="gemini-2.5-flash"
 RAG_DEBUG="false"
 
-# Database Configuration (PostgreSQL with pgvector)
-# Example: Neon, Supabase, Cloud SQL, or local PostgreSQL
-DATABASE_URL="postgresql://postgres:password@localhost:5432/catalystos?schema=public"
-DIRECT_URL="postgresql://postgres:password@localhost:5432/catalystos?schema=public"
+# Database Configuration (Neon PostgreSQL with pgvector)
+DATABASE_URL="postgresql://neondb_owner:password@ep-late-mud-b42a9cnw-pooler.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require"
+DIRECT_URL="postgresql://neondb_owner:password@ep-late-mud-b42a9cnw.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require"
 
-# Clerk Authentication (Get from https://dashboard.clerk.com)
-VITE_CLERK_PUBLISHABLE_KEY="pk_test_your_clerk_publishable_key"
-CLERK_SECRET_KEY="sk_test_your_clerk_secret_key"
-
-# HashiCorp Vault (Optional — used for enterprise secret storage)
-VAULT_ADDR="http://127.0.0.1:8200"
-VAULT_TOKEN="your_vault_token"
+# Neon / JWT Authentication Secret
+JWT_SECRET="your_jwt_secret_key"
 ```
 
 > 🔒 **Security Notice:** Never commit `.env` or any production secrets to source control.
