@@ -41,7 +41,7 @@ export class VaultService {
     return {
       GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
       DATABASE_URL: process.env.DATABASE_URL || '',
-      JWT_SECRET: process.env.JWT_SECRET || 'super-secret-key-catalyst',
+      JWT_SECRET: process.env.JWT_SECRET || 'catalyst_os_neon_jwt_secret_2026',
     };
   }
 

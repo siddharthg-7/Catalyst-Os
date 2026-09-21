@@ -5,22 +5,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord } from './types';
-import MetricCards from './components/MetricCards';
 import SaaSDashboard from './components/SaaSDashboard';
 import AgentWorkspace from './components/AgentWorkspace';
 import WorkflowCanvas from './components/WorkflowCanvas';
 import ApprovalQueue from './components/ApprovalQueue';
 import KnowledgeBase from './components/KnowledgeBase';
-import DecisionLog from './components/DecisionLog';
-import GodmodeTest from './components/GodmodeTest';
 import { 
-  Rocket, 
   Bell,
-  Settings, 
-  HelpCircle, 
   CheckSquare, 
   FileText, 
-  TrendingUp, 
   Activity,
   Menu,
   X,
@@ -675,16 +668,6 @@ export default function App() {
               documents={knowledge} 
               onUploadDoc={handleUploadDoc} 
             />
-          )}
-
-          {activeTab === 'ledger' && (
-            <DecisionLog 
-              decisions={decisions} 
-            />
-          )}
-
-          {activeTab === 'godmode' && (
-            <GodmodeTest />
           )}
 
         </main>

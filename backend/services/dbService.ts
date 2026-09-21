@@ -11,7 +11,18 @@ declare global {
   var prismaSingleton: PrismaClient | undefined;
 }
 
+const rawDbUrl = process.env.DATABASE_URL || '';
+// Ensure pool_timeout is at least 30s to allow serverless Neon compute to wake up without premature pool timeouts
+const dbUrl = rawDbUrl
+  ? rawDbUrl.includes('pool_timeout')
+    ? rawDbUrl
+    : rawDbUrl.includes('?')
+      ? `${rawDbUrl}&pool_timeout=30`
+      : `${rawDbUrl}?pool_timeout=30`
+  : undefined;
+
 export const prisma = global.prismaSingleton || new PrismaClient({
+  datasources: dbUrl ? { db: { url: dbUrl } } : undefined,
   log: ['error'],
 });
 
@@ -21,7 +32,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Safe Database Query Wrapper
- * Retries queries automatically if Neon PostgreSQL drops an idle connection (SqlState E57P01).
+ * Retries queries automatically if Neon PostgreSQL drops an idle connection (SqlState E57P01)
+ * or if compute is cold-starting / connection pool is waiting (P2024 / P1001).
  */
 export async function safeDbQuery<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
   let attempt = 0;
@@ -38,9 +50,12 @@ export async function safeDbQuery<T>(fn: () => Promise<T>, retries = 3): Promise
         errMsg.includes('Closed connection') ||
         errMsg.includes('Error in PostgreSQL connection') ||
         errMsg.includes("Can't reach database server") ||
+        errMsg.includes('Timed out fetching a new connection') ||
+        errMsg.includes('connection pool') ||
         err?.code === 'E57P01' ||
         err?.code === 'P1001' ||
-        err?.code === 'P1017';
+        err?.code === 'P1017' ||
+        err?.code === 'P2024';
 
       if (isConnectionError && attempt < retries) {
         console.warn(`[dbService] Retrying database operation (attempt ${attempt}/${retries})...`);
@@ -50,7 +65,7 @@ export async function safeDbQuery<T>(fn: () => Promise<T>, retries = 3): Promise
         } catch (e) {
           // ignore disconnect error
         }
-        await new Promise(res => setTimeout(res, 500 * attempt));
+        await new Promise(res => setTimeout(res, 1000 * attempt));
       } else {
         throw err;
       }

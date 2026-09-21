@@ -2,11 +2,11 @@ import 'dotenv/config';
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, User, UserRole } from '../src/types';
 
 import bcrypt from 'bcryptjs';
-import { prisma } from './services/dbService';
+import { prisma, safeDbQuery } from './services/dbService';
 export let isDbAvailable = true;
 
 export interface UserDBRecord extends User {
-  passwordHash: string;
+  passwordHash?: string;
 }
 
 export const users: UserDBRecord[] = [];
@@ -216,13 +216,16 @@ export async function syncStateWithDatabase() {
     console.log('🔄 Synchronizing memory state with Neon PostgreSQL...');
     
     const syncOperations = async () => {
-      // Parallelize all startup queries to minimize cold-start latency
-      const [dbUsers, dbStartup, dbAgents, dbDocs] = await Promise.all([
+      // Warm up the Neon connection cleanly to wake up serverless compute
+      await safeDbQuery(() => prisma.$executeRawUnsafe('SELECT 1'));
+
+      // Fetch startup queries with automatic retry on pool/connection errors
+      const [dbUsers, dbStartup, dbAgents, dbDocs] = await safeDbQuery(() => Promise.all([
         prisma.user.findMany(),
         prisma.startup.findFirst({ orderBy: { createdAt: 'desc' } }),
         prisma.executiveAgent.findMany(),
         prisma.startupDocument.findMany({ orderBy: { createdAt: 'desc' } })
-      ]);
+      ]));
 
       if (timedOut) return;
 
@@ -235,7 +238,7 @@ export async function syncStateWithDatabase() {
             email: u.email,
             name: u.name || '',
             role: u.role as UserRole,
-            passwordHash: bcrypt.hashSync('password123', 10), // standard map
+            passwordHash: (u as any).passwordHash || undefined,
             createdAt: u.createdAt.toISOString()
           });
         });
@@ -291,8 +294,8 @@ export async function syncStateWithDatabase() {
     const timeoutGuard = new Promise((_, reject) =>
       setTimeout(() => {
         timedOut = true;
-        reject(new Error('Remote database connection timed out (30000ms)'));
-      }, 30000)
+        reject(new Error('Remote database connection timed out (45000ms)'));
+      }, 45000)
     );
 
     await Promise.race([syncOperations(), timeoutGuard]);

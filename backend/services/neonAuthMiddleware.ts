@@ -55,7 +55,7 @@ export async function authenticateJWT(
       name: 'Founder Demo',
       role: 'Founder',
     };
-    await ensureUserInDatabase(req.user);
+    ensureUserInDatabase(req.user).catch(() => {});
     return next();
   }
 
