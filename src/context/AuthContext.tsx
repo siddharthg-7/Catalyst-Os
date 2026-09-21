@@ -1,59 +1,160 @@
-import React, { createContext, useContext, useState } from 'react';
-import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, UserRole } from '../types';
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
+  token: string | null;
   loading: boolean;
+  signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (email: string, password: string, name?: string, role?: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   loginAsDemo: () => void;
-  /**
-   * Performs a fetch with the Clerk session token automatically attached
-   * as a Bearer Authorization header. Drop-in replacement for the old
-   * JWT-based apiFetch used throughout the app.
-   */
   apiFetch: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn, getToken, signOut } = useClerkAuth();
-  const { user: clerkUser } = useUser();
-  const [demoUser, setDemoUser] = useState<User | null>(() => {
+  const [token, setToken] = useState<string | null>(() => {
     try {
-      const saved = localStorage.getItem('catalystos_demo_user');
-      return saved ? JSON.parse(saved) : null;
+      return localStorage.getItem('catalystos_token');
     } catch {
       return null;
     }
   });
-  const [clerkTimeout, setClerkTimeout] = useState(false);
 
-  // If Clerk remote script is taking more than 800ms, unlock the UI immediately
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setClerkTimeout(true);
-    }, 800);
-    return () => clearTimeout(timer);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const demo = localStorage.getItem('catalystos_demo_user');
+      if (demo) return JSON.parse(demo);
+      const savedUser = localStorage.getItem('catalystos_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Validate or refresh session on mount
+  useEffect(() => {
+    let mounted = true;
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('catalystos_token');
+      const storedDemo = localStorage.getItem('catalystos_demo_user');
+
+      if (storedDemo) {
+        try {
+          const parsed = JSON.parse(storedDemo);
+          if (mounted) {
+            setUser(parsed);
+            setToken('mock_demo_bearer_token');
+            setLoading(false);
+          }
+          return;
+        } catch {
+          localStorage.removeItem('catalystos_demo_user');
+        }
+      }
+
+      if (!storedToken) {
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${storedToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted && data.user) {
+            setUser(data.user);
+            setToken(storedToken);
+            localStorage.setItem('catalystos_user', JSON.stringify(data.user));
+          }
+        } else {
+          // Token expired or invalid
+          if (mounted) {
+            localStorage.removeItem('catalystos_token');
+            localStorage.removeItem('catalystos_user');
+            setUser(null);
+            setToken(null);
+          }
+        }
+      } catch (err) {
+        console.warn('[NeonAuth] Verification fallback to local state:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    initAuth();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Map Clerk user or Demo user to the app's internal User shape
-  const user: User | null = demoUser ?? (
-    isSignedIn && clerkUser
-      ? {
-          id: clerkUser.id,
-          email: clerkUser.primaryEmailAddress?.emailAddress ?? '',
-          name: clerkUser.fullName ?? clerkUser.username ?? 'Founder User',
-          role: ((clerkUser.publicMetadata?.role as UserRole) ?? 'Founder'),
-        }
-      : null
-  );
+  const signin = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-  // Fast loading state: unblock immediately if demoUser is cached or timeout has expired
-  const loading = !demoUser && !isLoaded && !clerkTimeout;
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Authentication failed. Please check your credentials.' };
+      }
 
-  const loginAsDemo = () => {
+      localStorage.removeItem('catalystos_demo_user');
+      localStorage.setItem('catalystos_token', data.token);
+      localStorage.setItem('catalystos_user', JSON.stringify(data.user));
+
+      setToken(data.token);
+      setUser(data.user);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error during sign in.' };
+    }
+  };
+
+  const signup = async (
+    email: string,
+    password: string,
+    name: string = 'Founder',
+    role: UserRole = 'Founder'
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name, role })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Registration failed.' };
+      }
+
+      localStorage.removeItem('catalystos_demo_user');
+      localStorage.setItem('catalystos_token', data.token);
+      localStorage.setItem('catalystos_user', JSON.stringify(data.user));
+
+      setToken(data.token);
+      setUser(data.user);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error during sign up.' };
+    }
+  };
+
+  const loginAsDemo = useCallback(() => {
     const dUser: User = {
       id: 'usr_founder_demo',
       email: 'founder@founder.os',
@@ -61,45 +162,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role: 'Founder',
     };
     try {
+      localStorage.removeItem('catalystos_token');
+      localStorage.removeItem('catalystos_user');
       localStorage.setItem('catalystos_demo_user', JSON.stringify(dUser));
     } catch {}
-    setDemoUser(dUser);
-  };
+    setUser(dUser);
+    setToken('mock_demo_bearer_token');
+  }, []);
 
   const logout = async () => {
     try {
+      localStorage.removeItem('catalystos_token');
+      localStorage.removeItem('catalystos_user');
       localStorage.removeItem('catalystos_demo_user');
+      await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     } catch {}
-    setDemoUser(null);
-    try {
-      await signOut();
-    } catch (e) {
-      // Ignore if not signed in via Clerk
-    }
+    setUser(null);
+    setToken(null);
   };
 
   /**
-   * Attaches the session token to every API request.
+   * Performs an authenticated fetch with the Neon JWT or demo token
+   * automatically attached as a Bearer Authorization header.
    */
   const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-    let token: string | null = null;
-    try {
-      token = await getToken();
-    } catch (e) {
-      token = 'mock_demo_bearer_token';
-    }
+    const activeToken = token || localStorage.getItem('catalystos_token') || 'mock_demo_bearer_token';
 
     const headers: Record<string, string> = {
       ...(options.headers as Record<string, string>),
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    } else {
-      headers['Authorization'] = `Bearer mock_demo_bearer_token`;
+    if (activeToken) {
+      headers['Authorization'] = `Bearer ${activeToken}`;
     }
 
-    // Only route RAG-specific endpoints to the Python FastAPI backend
+    // Route RAG-specific endpoints to the Python FastAPI backend if running
     const isPythonEndpoint = url.startsWith('/api/chat') || url.startsWith('/api/rag');
     const finalUrl = isPythonEndpoint ? `http://127.0.0.1:8000${url}` : url;
 
@@ -107,7 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, loginAsDemo, apiFetch }}>
+    <AuthContext.Provider value={{ user, token, loading, signin, signup, logout, loginAsDemo, apiFetch }}>
       {children}
     </AuthContext.Provider>
   );

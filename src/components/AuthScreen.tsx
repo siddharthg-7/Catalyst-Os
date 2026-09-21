@@ -1,228 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SignIn, SignUp } from '@clerk/clerk-react';
 import {
   Shield, Building2, Rocket, CheckCircle2, RefreshCw,
   ArrowRight, Sparkles, Zap, ChevronRight, ArrowLeft,
-  Globe, Lock, Layers, Cpu, BarChart3, Users
+  Globe, Lock, Layers, Cpu, BarChart3, Users, Mail, KeyRound, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { UserRole } from '../types';
 import HackathonLandingPage from './HackathonLandingPage';
 import CatalystOsChatbot from './chatbot/CatalystOsChatbot';
 import CatalystLogo from './CatalystLogo';
 
-// ── Clerk appearance — Mastercard cream palette ─────────────────────────────
-const clerkAppearance = {
-  variables: {
-    colorPrimary: '#141413',
-    colorBackground: 'transparent',
-    colorInputBackground: '#ffffff',
-    colorInputText: '#141413',
-    colorText: '#141413',
-    colorTextSecondary: '#696969',
-    colorDanger: '#b91c1c',
-    colorSuccess: '#15803d',
-    borderRadius: '0.875rem',
-    fontFamily: '"Sofia Sans", Arial, ui-sans-serif, system-ui, sans-serif',
-    fontSize: '0.875rem',
-    spacingUnit: '0.75rem',
-  },
-  elements: {
-    rootBox: { width: '100%' },
-    card: {
-      background: 'transparent',
-      boxShadow: 'none',
-      padding: '0',
-      width: '100%',
-      border: 'none',
-    },
-    cardBox: { boxShadow: 'none', background: 'transparent', width: '100%' },
-
-    header: { display: 'none' },
-    headerTitle: {
-      color: '#141413',
-      fontSize: '1.25rem',
-      fontWeight: '700',
-      letterSpacing: '-0.02em',
-      lineHeight: '1.3',
-    },
-    headerSubtitle: { color: '#696969', fontSize: '0.8125rem', marginTop: '0.5rem' },
-
-    // Social buttons
-    socialButtonsBlockButton: {
-      background: '#ffffff',
-      border: '1px solid rgba(20,20,19,0.12)',
-      color: '#141413',
-      borderRadius: '0.75rem',
-      padding: '0.625rem 0.875rem',
-      fontSize: '0.8125rem',
-      fontWeight: '500',
-      transition: 'all 0.2s',
-      gap: '0.625rem',
-      minHeight: '44px',
-      textAlign: 'left' as const,
-    },
-    socialButtonsBlockButton__hover: {
-      background: '#F3F0EE',
-      borderColor: 'rgba(20,20,19,0.2)',
-    },
-    socialButtonsProviderIcon: { width: '20px', height: '20px' },
-    socialButtonsIconButton: { background: 'transparent', border: 'none', color: '#141413' },
-
-    // Divider
-    dividerLine: { background: 'rgba(20,20,19,0.1)', height: '1px', width: '100%' },
-    dividerText: {
-      color: '#696969',
-      fontSize: '0.6875rem',
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase' as const,
-      fontWeight: '500',
-    },
-    dividerButton: { fontSize: '0.6875rem', color: '#696969' },
-
-    // Form fields
-    formField: { marginBottom: '0', width: '100%' },
-    formFieldRow: { gap: '0.75rem', width: '100%' },
-    formFieldRowInputs: { gap: '0.75rem' },
-    formFieldLabel: {
-      color: '#696969',
-      textTransform: 'uppercase' as const,
-      fontSize: '0.625rem',
-      letterSpacing: '0.1em',
-      fontWeight: '600',
-      marginBottom: '0.375rem',
-      display: 'block',
-    },
-    formFieldInput: {
-      background: '#ffffff',
-      border: '1px solid rgba(20,20,19,0.15)',
-      color: '#141413',
-      borderRadius: '0.75rem',
-      fontSize: '0.875rem',
-      fontFamily: '"Sofia Sans", Arial, ui-sans-serif, system-ui, sans-serif',
-      padding: '0.6875rem 0.875rem',
-      width: '100%',
-      minHeight: '44px',
-      boxSizing: 'border-box' as const,
-      transition: 'all 0.2s',
-      outline: 'none',
-      lineHeight: '1.5',
-    },
-    formFieldInputFocus: {
-      borderColor: '#141413',
-      boxShadow: '0 0 0 3px rgba(20,20,19,0.06)',
-    },
-    formFieldInput__error: { borderColor: '#b91c1c', background: 'rgba(185,28,28,0.03)' },
-    formFieldErrorText: { color: '#b91c1c', fontSize: '0.6875rem', marginTop: '0.375rem', fontWeight: '500' },
-    formFieldWarningText: { color: '#92400e', fontSize: '0.6875rem' },
-
-    // Primary button
-    formButtonPrimary: {
-      background: '#141413',
-      color: '#F3F0EE',
-      fontWeight: '700',
-      borderRadius: '20px',
-      fontSize: '0.8125rem',
-      fontFamily: '"Sofia Sans", Arial, ui-sans-serif, system-ui, sans-serif',
-      letterSpacing: '0.01em',
-      boxShadow: 'rgba(0,0,0,0.15) 0px 4px 12px',
-      transition: 'all 0.2s',
-      minHeight: '44px',
-      padding: '0.625rem 1.25rem',
-      width: '100%',
-      border: 'none',
-      cursor: 'pointer',
-    },
-    formButtonPrimary__hover: {
-      background: '#262627',
-      boxShadow: 'rgba(0,0,0,0.2) 0px 6px 16px',
-      transform: 'translateY(-1px)',
-    },
-    formButtonPrimary__active: { transform: 'translateY(0)' },
-    formButtonSecondary: {
-      background: '#ffffff',
-      color: '#141413',
-      border: '1px solid rgba(20,20,19,0.15)',
-      borderRadius: '20px',
-      fontWeight: '500',
-      fontSize: '0.8125rem',
-      minHeight: '44px',
-    },
-
-    identityPreview: {
-      background: '#F3F0EE',
-      border: '1px solid rgba(20,20,19,0.1)',
-      borderRadius: '0.75rem',
-      padding: '0.625rem 0.875rem',
-      color: '#141413',
-      fontSize: '0.875rem',
-    },
-    identityPreviewEditButton: { color: '#696969', fontSize: '0.75rem', fontWeight: '500', transition: 'color 0.2s' },
-    identityPreviewEditButton__hover: { color: '#141413' },
-
-    otpCodeFieldInput: {
-      background: '#ffffff',
-      border: '1px solid rgba(20,20,19,0.15)',
-      color: '#141413',
-      borderRadius: '0.75rem',
-      fontSize: '1.25rem',
-      fontWeight: '600',
-      fontFamily: '"JetBrains Mono", monospace',
-      letterSpacing: '0.15em',
-      width: '48px',
-      height: '56px',
-      textAlign: 'center' as const,
-    },
-    otpCodeFieldInput__error: { borderColor: '#b91c1c' },
-    otpCodeFieldInputSpacing: { marginRight: '0.5rem' },
-
-    footer: { display: 'none' },
-    footerAction: { display: 'none' },
-    footerActionText: { display: 'none' },
-    footerActionLink: { display: 'none' },
-    footerActionLink__hover: { display: 'none' },
-    footerPages: { display: 'none' },
-    footerPagesLink: { display: 'none' },
-    footerPagesLink__hover: { display: 'none' },
-
-    formResendCodeLink: { color: '#141413', fontSize: '0.75rem', fontWeight: '600', transition: 'color 0.2s' },
-    formResendCodeLink__hover: { color: '#262627' },
-    verificationLinkStatus: { color: '#15803d' },
-
-    alert: { borderRadius: '0.75rem', fontSize: '0.8125rem', padding: '0.75rem 1rem', background: '#F3F0EE', border: '1px solid rgba(20,20,19,0.1)' },
-    alertText: { fontSize: '0.8125rem', color: '#141413' },
-    alertLink: { color: '#141413', fontWeight: '600' },
-
-    formFieldCheckbox: { borderRadius: '0.375rem', borderColor: 'rgba(20,20,19,0.2)' },
-    formFieldCheckboxChecked: { background: '#141413', borderColor: '#141413' },
-    formFieldLabelCheckbox: { color: '#696969', fontSize: '0.8125rem', fontWeight: '400' },
-
-    passwordRequirements: { color: '#696969', fontSize: '0.6875rem' },
-    passwordRequirement: { color: '#696969', fontSize: '0.6875rem' },
-    passwordRequirementText: { color: '#696969', fontSize: '0.6875rem' },
-    passwordRequirementSuccess: { color: '#15803d' },
-    passwordStrengthBar: { borderRadius: '999px', height: '3px' },
-    passwordStrengthBarBackground: { background: 'rgba(20,20,19,0.08)', borderRadius: '999px', height: '3px' },
-
-    modalBackdrop: { background: 'rgba(20,20,19,0.5)', backdropFilter: 'blur(8px)' },
-    modalContent: {
-      background: '#FCFBFA',
-      border: '1px solid rgba(20,20,19,0.1)',
-      borderRadius: '1.5rem',
-      boxShadow: 'rgba(0,0,0,0.12) 0px 40px 80px',
-    },
-    modalCloseButton: { color: '#696969' },
-
-    avatarBox: { width: '40px', height: '40px', borderRadius: '0.75rem', background: '#F3F0EE' },
-    organizationSwitcherTrigger: {
-      borderRadius: '0.75rem',
-      border: '1px solid rgba(20,20,19,0.1)',
-      background: '#ffffff',
-      padding: '0.5rem 0.75rem',
-    },
-    organizationSwitcherTrigger__hover: { background: '#F3F0EE' },
-  },
-};
 
 // ── Warm orbital arc background (replaces dark grid) ──────────────────────
 function WarmBackground() {
@@ -281,10 +69,45 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ initialView = 'landing', onOnboardingComplete }: AuthScreenProps) {
-  const { loginAsDemo, user, logout } = useAuth();
+  const { loginAsDemo, user, logout, signin, signup } = useAuth();
   const [view, setView] = useState<'landing' | 'auth' | 'onboarding'>(initialView);
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [direction, setDirection] = useState(0);
+
+  // Native Neon Auth state
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authFullName, setAuthFullName] = useState('');
+  const [authRole, setAuthRole] = useState<UserRole>('Founder');
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    if (!authEmail.trim() || !authPassword.trim()) {
+      setAuthError('Please enter both email and password.');
+      return;
+    }
+    setAuthSubmitting(true);
+    try {
+      if (authTab === 'signin') {
+        const res = await signin(authEmail, authPassword);
+        if (!res.success) {
+          setAuthError(res.error || 'Invalid credentials.');
+        }
+      } else {
+        const res = await signup(authEmail, authPassword, authFullName.trim() || 'Founder', authRole);
+        if (!res.success) {
+          setAuthError(res.error || 'Registration failed.');
+        }
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'An error occurred during authentication.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
 
   const [onboardingPath, setOnboardingPath] = useState<'existing' | 'new'>('existing');
   const [currentStep, setCurrentStep] = useState(0); // 0 = Welcome, 1-8 = Questions, 9 = Checklist
@@ -1005,45 +828,191 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
                 </div>
               </div>
 
-              {/* Right panel — Clerk auth form */}
-              <div className="p-8 lg:p-10 flex flex-col bg-white">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                  className="flex items-center justify-between mb-8"
-                >
-                  <div className="flex items-center gap-2.5 lg:hidden">
-                    <div className="w-6 h-6 rounded-lg bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center">
-                      <CatalystLogo className="w-3.5 h-3.5 text-[#141413]" />
-                    </div>
-                    <span className="text-xs font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
-                  </div>
-                  <button
-                    onClick={() => navigateTo('landing')}
-                    className="w-8 h-8 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center text-[#696969] hover:text-[#141413] hover:bg-white transition-all cursor-pointer"
+              {/* Right panel — Neon Auth Form */}
+              <div className="p-8 lg:p-10 flex flex-col bg-white justify-between">
+                <div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                    className="flex items-center justify-between mb-8"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                  </button>
-                </motion.div>
+                    <div className="flex items-center gap-2.5 lg:hidden">
+                      <div className="w-6 h-6 rounded-lg bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center">
+                        <CatalystLogo className="w-3.5 h-3.5 text-[#141413]" />
+                      </div>
+                      <span className="text-xs font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
+                    </div>
+                    <button
+                      onClick={() => navigateTo('landing')}
+                      className="w-8 h-8 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center text-[#696969] hover:text-[#141413] hover:bg-white transition-all cursor-pointer"
+                      title="Back to Landing"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                    </button>
+                  </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-6">
-                  <h2 className="text-xl font-bold text-[#141413] mb-1 font-sans" style={{ letterSpacing: '-0.02em' }}>Access CatalystOS</h2>
-                  <p className="text-xs text-[#696969] font-sans">Authenticate your session to continue</p>
-                </motion.div>
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mb-6">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-mono font-semibold border border-emerald-200/60 mb-2.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Neon PostgreSQL Auth
+                    </div>
+                    <h2 className="text-xl font-bold text-[#141413] mb-1 font-sans" style={{ letterSpacing: '-0.02em' }}>
+                      {authTab === 'signin' ? 'Welcome Back' : 'Create CatalystOS Account'}
+                    </h2>
+                    <p className="text-xs text-[#696969] font-sans">
+                      {authTab === 'signin' 
+                        ? 'Sign in to access your startup intelligence dashboard' 
+                        : 'Deploy your autonomous executive council on Neon PostgreSQL'}
+                    </p>
+                  </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="flex-1">
-                  {authTab === 'signin' ? (
-                    <SignIn appearance={clerkAppearance} routing="hash" />
-                  ) : (
-                    <SignUp appearance={clerkAppearance} routing="hash" />
+                  {/* Auth Switch Tabs */}
+                  <div className="flex bg-[#F3F0EE] p-1 rounded-xl mb-5 border border-[#141413]/05">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthTab('signin'); setAuthError(null); }}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        authTab === 'signin'
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#696969] hover:text-[#141413]'
+                      }`}
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAuthTab('signup'); setAuthError(null); }}
+                      className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        authTab === 'signup'
+                          ? 'bg-white text-[#141413] shadow-sm'
+                          : 'text-[#696969] hover:text-[#141413]'
+                      }`}
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+
+                  {authError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start gap-2"
+                    >
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-600" />
+                      <span>{authError}</span>
+                    </motion.div>
                   )}
-                </motion.div>
 
-                <motion.div
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-                  className="mt-6 pt-5 border-t border-[#141413]/08 text-center"
-                >
+                  {/* Form fields */}
+                  <form onSubmit={handleAuthSubmit} className="space-y-3.5">
+                    {authTab === 'signup' && (
+                      <div className="space-y-1">
+                        <label className={labelCls}>
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={authFullName}
+                          onChange={(e) => setAuthFullName(e.target.value)}
+                          placeholder="e.g. Alex Morgan"
+                          className={inputCls}
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <label className={labelCls}>
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        placeholder="founder@venture.com"
+                        className={inputCls}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className={labelCls}>
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className={inputCls}
+                      />
+                    </div>
+
+                    {authTab === 'signup' && (
+                      <div className="space-y-1">
+                        <label className={labelCls}>
+                          Role
+                        </label>
+                        <select
+                          value={authRole}
+                          onChange={(e) => setAuthRole(e.target.value as UserRole)}
+                          className={inputCls}
+                        >
+                          <option value="Founder">Founder (Full Executive Access)</option>
+                          <option value="Executive">Executive</option>
+                          <option value="Investor">Investor</option>
+                          <option value="Admin">Admin</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={authSubmitting}
+                      className="w-full mt-2 py-3 px-4 bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] font-bold text-xs rounded-[20px] transition-all flex items-center justify-center gap-2 shadow-[rgba(0,0,0,0.15)_0px_4px_12px] disabled:opacity-50 cursor-pointer"
+                    >
+                      {authSubmitting ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Authenticating with Neon...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>{authTab === 'signin' ? 'Sign In to CatalystOS' : 'Create Account'}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+
+                  {/* Divider */}
+                  <div className="relative my-5">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-[#141413]/10" />
+                    </div>
+                    <div className="relative flex justify-center text-[10px] uppercase font-mono tracking-widest text-[#696969]">
+                      <span className="bg-white px-2">Instant Sandbox Access</span>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Demo Login */}
                   <button
-                    onClick={() => setAuthTab(authTab === 'signin' ? 'signup' : 'signin')}
+                    type="button"
+                    onClick={() => loginAsDemo()}
+                    className="w-full py-2.5 px-4 bg-[#F3F0EE] hover:bg-[#e7e4e1] border border-[#141413]/10 text-[#141413] font-bold text-xs rounded-[20px] transition-all flex items-center justify-center gap-2 cursor-pointer font-sans"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Launch Demo as Founder (1-Click)</span>
+                  </button>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#141413]/08 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthTab(authTab === 'signin' ? 'signup' : 'signin');
+                      setAuthError(null);
+                    }}
                     className="text-xs text-[#696969] hover:text-[#141413] transition-colors cursor-pointer font-sans"
                   >
                     {authTab === 'signin' ? (
@@ -1052,7 +1021,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
                       <>Already have an account? <span className="text-[#141413] font-semibold">Sign in</span></>
                     )}
                   </button>
-                </motion.div>
+                </div>
               </div>
             </div>
           </motion.div>

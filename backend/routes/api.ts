@@ -21,9 +21,9 @@ import { Initiative, Deliverable, UserRole } from '../../src/types';
 import { 
   authenticateJWT, 
   requireRole, 
-  AuthenticatedRequest,
+  AuthenticatedRequest, 
   JWT_SECRET 
-} from '../services/clerkAuthMiddleware';
+} from '../services/neonAuthMiddleware';
 import jwt from 'jsonwebtoken';
 import agentsRouter from '../agents/controller';
 import { markdownRagService } from '../services/markdownRagService';
@@ -113,13 +113,13 @@ router.post('/auth/signup', async (req, res) => {
     }
 
     const passwordHash = bcrypt.hashSync(password, 10);
-    const newUser = await safeDbQuery(() => prisma.user.create({
+    const newUser: any = await safeDbQuery(() => (prisma as any).user.create({
       data: {
         email: cleanEmail,
         name: cleanName,
         role: userRole,
         passwordHash
-      }
+      } as any
     }));
 
     const token = jwt.sign(
@@ -155,7 +155,7 @@ router.post('/auth/signin', async (req, res) => {
   const cleanEmail = email.trim().toLowerCase();
 
   try {
-    const user = await safeDbQuery(() => prisma.user.findUnique({
+    const user: any = await safeDbQuery(() => prisma.user.findUnique({
       where: { email: cleanEmail }
     }));
 
@@ -173,9 +173,9 @@ router.post('/auth/signin', async (req, res) => {
     } else {
       // If legacy or demo account without password, upgrade password
       const newHash = bcrypt.hashSync(password, 10);
-      await safeDbQuery(() => prisma.user.update({
+      await safeDbQuery(() => (prisma as any).user.update({
         where: { id: user.id },
-        data: { passwordHash: newHash }
+        data: { passwordHash: newHash } as any
       }));
     }
 
