@@ -15,8 +15,6 @@ import { createProxyMiddleware } from 'http-proxy-middleware';
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
-app.use(express.json({ limit: '10mb' }));
-
 // Proxy /api/audio and /api/v1 to FastAPI before parsing it or passing to local apiRouter
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/audio') || req.path.startsWith('/api/v1')) {
@@ -27,6 +25,8 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+app.use(express.json({ limit: '10mb' }));
 
 // Mount modularized backend API routes
 app.use('/api', apiRouter);

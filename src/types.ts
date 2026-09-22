@@ -125,7 +125,7 @@ export interface KnowledgeFile {
   insights: string[];
 }
 
-export type UserRole = 'Founder' | 'Executive' | 'Admin';
+export type UserRole = 'Founder' | 'Executive' | 'Investor' | 'Admin';
 
 export interface User {
   id: string;

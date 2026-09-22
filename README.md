@@ -215,7 +215,7 @@ Catalyst OS incorporates defensive engineering principles to safeguard startup o
 * **Styling:** Tailwind CSS v4 (`tailwindcss`, `@tailwindcss/vite`)
 * **Animations:** Framer Motion (`framer-motion`, `motion`), GSAP (`gsap`, `@gsap/react`), Lottie (`@lottiefiles/dotlottie-react`)
 * **Icons & Charts:** Lucide React (`lucide-react`), React Icons (`react-icons`), Recharts (`recharts`)
-* **Auth Client:** Clerk React SDK (`@clerk/clerk-react`)
+* **Auth Client:** Native Neon Auth Context (`src/context/AuthContext.tsx`)
 
 ### Backend Gateway & Services
 * **Runtime:** Node.js (v18+) with `tsx` for high-speed TypeScript execution
@@ -223,7 +223,7 @@ Catalyst OS incorporates defensive engineering principles to safeguard startup o
 * **Database ORM:** Prisma ORM v6 (`@prisma/client`, `prisma`) with PostgreSQL and vector extension preview
 * **Document Parsing:** `pdf-parse`, `mammoth` (DOCX), `officeparser` (PPTX/XLSX)
 * **AI SDK:** Google GenAI SDK (`@google/genai`) running Gemini 2.5 / 3.5 Flash
-* **Security & Auth:** Clerk Backend SDK (`@clerk/backend`), `jsonwebtoken`, `bcryptjs`, HashiCorp Vault client
+* **Security & Auth:** Neon Auth JWKS & Native JWT (`jsonwebtoken`, `bcryptjs`), HashiCorp Vault client
 
 ### Python AI Microservice
 * **Framework:** FastAPI, Uvicorn, Pydantic v2
@@ -246,7 +246,7 @@ catalyst-os/
 │   │   │   └── SourceCard.tsx         # Document citation inspector
 │   │   ├── AgentWorkspace.tsx         # Visual agent matrix & live task cards
 │   │   ├── ApprovalQueue.tsx          # Human-in-the-loop approval center
-│   │   ├── AuthScreen.tsx             # Clerk authentication & landing view
+│   │   ├── AuthScreen.tsx             # Neon Auth / JWT authentication & landing view
 │   │   ├── CommandPalette.tsx         # Quick action palette (Ctrl+K)
 │   │   ├── DecisionLog.tsx            # Auditable corporate decision trail
 │   │   ├── FrameSequenceCanvas.tsx    # Interactive frame animation canvas
@@ -275,7 +275,7 @@ catalyst-os/
 │   │   ├── ragEngine.ts               # Hybrid search, chunking & vector ingestion
 │   │   ├── markdownRagService.ts      # Markdown RAG engine for local knowledge chatbot
 │   │   ├── documentParser.ts          # PDF, DOCX, XLSX, TXT extraction engine
-│   │   ├── clerkAuthMiddleware.ts     # Clerk JWT authentication & role-based checks
+│   │   ├── neonAuthMiddleware.ts      # Neon Auth JWT authentication & role-based checks
 │   │   ├── vaultService.ts            # Encrypted secrets & HashiCorp Vault manager
 │   │   ├── sttService.ts              # Speech-to-Text audio transcription
 │   │   └── ttsService.ts              # Text-to-Speech audio synthesizer

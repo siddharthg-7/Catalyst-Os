@@ -100,7 +100,8 @@ router.post('/auth/signup', async (req, res) => {
 
   const cleanEmail = email.trim().toLowerCase();
   const cleanName = (name || cleanEmail.split('@')[0] || 'Founder').trim();
-  const userRole: UserRole = role === 'Executive' ? 'Executive' : 'Founder';
+  const allowedRoles: UserRole[] = ['Founder', 'Executive', 'Investor', 'Admin'];
+  const userRole: UserRole = (role && allowedRoles.includes(role)) ? role : 'Founder';
 
   try {
     const existing = await safeDbQuery(() => prisma.user.findUnique({
