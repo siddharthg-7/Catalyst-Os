@@ -1,519 +1,394 @@
-# TASK 01 — CATALYST OS COMPLETE CODEBASE AUDIT
+# TASK 03 — FRONTEND ARCHITECTURE BOUNDARY ANALYSIS
 
-## IMPORTANT
+## PURPOSE
 
-This is an AUDIT ONLY task.
+We have completed the safe structural cleanup.
 
-DO NOT:
+The next goal is to clean the ACTIVE frontend architecture.
 
-* modify any source code
-* rename files
-* move files
-* delete files
-* create new application files
-* refactor code
-* install dependencies
-* change package.json
-* change database schema
-* change environment variables
-* change application behavior
-* "fix" bugs
-* format the entire project
+However, this task is still primarily ANALYSIS.
 
-Your only job is to inspect and document the CURRENT state of the repository.
+DO NOT perform a large refactor.
 
-The project is Catalyst OS.
+DO NOT change application behavior.
 
-Before doing anything, inspect the complete repository structure and understand how the existing system actually works.
+DO NOT move files yet.
 
-Do NOT rely only on README/documentation. Inspect the actual source code.
+DO NOT delete files.
+
+DO NOT create a new state-management library.
+
+DO NOT introduce React Router.
+
+DO NOT change backend APIs.
+
+DO NOT modify database code.
 
 ---
 
-# 1. COMPLETE FILE INVENTORY
+# CURRENT PROBLEM
 
-Generate a complete tree of the relevant project.
+The previous audit identified:
 
-For every directory, identify its purpose.
+* `src/App.tsx` is approximately 771 lines
+* `App.tsx` performs many direct API calls
+* several components directly call APIs
+* `src/services/api.ts` contains only a small subset of API operations
+* significant business/state logic exists inside UI components
 
-Classify files into:
-
-* FRONTEND
-* NODE BACKEND
-* PYTHON BACKEND
-* DATABASE
-* AI / AGENTS
-* RAG / KNOWLEDGE
-* AUTHENTICATION
-* API
-* UI COMPONENTS
-* CONFIGURATION
-* INFRASTRUCTURE
-* TESTS
-* DOCUMENTATION
-* GENERATED FILES
-* TEMPORARY / EXPERIMENTAL
-* UNKNOWN
-
-Do not delete or move anything.
+We now need to design a clean frontend boundary BEFORE making changes.
 
 ---
 
-# 2. ENTRY POINTS
+# 1. TRACE EVERY FRONTEND API CALL
 
-Identify every actual runtime entry point.
+Inspect every `.tsx` and `.ts` file under `src/`.
 
-For each one provide:
+Find:
 
-* file
-* command used to start it
-* technology
-* what it initializes
-* what it connects to
-
-Examples may include:
-
-* React/Vite entry
-* Express server
-* Python/FastAPI server
-* LangGraph
-* database initialization
-* background workers
-
-Trace the startup flow.
-
----
-
-# 3. FRONTEND ARCHITECTURE
-
-Inspect the React application.
-
-Identify:
-
-* App entry
-* routing
-* layouts
-* pages
-* components
-* hooks
-* contexts
-* state management
-* API/service layer
-* types
-* authentication
-* AI/chat UI
-* approval UI
-* dashboard
-* knowledge/RAG UI
-* workflow UI
-
-For each major area, identify its actual file path.
-
-Also identify:
-
-* duplicated components
-* components that appear unused
-* components that directly call APIs
-* components containing business logic that should probably be elsewhere
-
-DO NOT change them.
-
----
-
-# 4. NODE BACKEND ARCHITECTURE
-
-Trace the Express backend.
-
-Identify:
-
-* server entry
-* routes
-* controllers
-* services
-* middleware
-* authentication
-* database access
-* AI services
-* RAG services
-* document parsing
-* voice/STT/TTS
-* agent orchestration
-* approval system
-* external integrations
-
-For every API route provide:
-
-METHOD
-PATH
-FILE
-HANDLER
-SERVICE USED
-DATABASE USED
-EXTERNAL SERVICE USED
-
----
-
-# 5. PYTHON / FASTAPI ARCHITECTURE
-
-Inspect the Python service completely.
-
-Identify:
-
-* FastAPI entry point
-* routers
-* services
-* agents
-* LangGraph graphs
-* nodes
-* tools
-* models
-* database access
-* configuration
-* audio processing
-* simulation
-* external AI providers
-
-Trace the actual execution flow.
-
----
-
-# 6. AI AGENT ARCHITECTURE
-
-Identify every agent currently implemented.
-
-For each agent provide:
-
-* agent name
-* file
-* purpose
-* model/provider
-* tools
-* inputs
-* outputs
-* dependencies
-* whether it is actually called anywhere
-* whether it is documented but not implemented
-
-Then identify the orchestration mechanism.
-
-Show the actual flow:
-
-USER REQUEST
-→ ORCHESTRATOR
-→ AGENT
-→ TOOLS
-→ DATABASE / RAG
-→ RESULT
-→ APPROVAL / RESPONSE
-
-Do not infer this from names. Trace imports and function calls.
-
----
-
-# 7. RAG / KNOWLEDGE SYSTEM
-
-Trace the complete RAG pipeline.
-
-Identify:
-
-DOCUMENT UPLOAD
-→ PARSING
-→ CHUNKING
-→ EMBEDDING
-→ STORAGE
-→ RETRIEVAL
-→ RERANKING (if any)
-→ CONTEXT
-→ LLM
-→ RESPONSE
-
-Identify the actual files implementing each stage.
-
-Also identify duplicate or competing RAG implementations.
-
-Do not modify them.
-
----
-
-# 8. DATABASE
-
-Inspect Prisma schema and all database-related code.
-
-Identify:
-
-* models
-* relationships
-* indexes
-* vector-related fields
-* migrations
-* database services
-* direct SQL
-* Prisma usage
-* duplicate database access patterns
-
-Create a simple relationship diagram.
-
-Example:
-
-USER
-↓
-STARTUP
-↓
-COMMAND
-↓
-PLAN
-↓
-TASK
-↓
-APPROVAL
-
-Only include relationships that actually exist.
-
----
-
-# 9. API DEPENDENCIES
-
-Create a map:
-
-FRONTEND
-↓
-API
-↓
-NODE
-↓
-PYTHON
-↓
-DATABASE / AI / EXTERNAL SERVICE
-
-Identify direct frontend-to-database or frontend-to-AI connections if they exist.
-
----
-
-# 10. ENVIRONMENT VARIABLES
-
-Inspect all configuration references.
+* `fetch(...)`
+* `apiFetch(...)`
+* `sendChatMessage(...)`
+* `streamChatMessage(...)`
+* `fetchTTSAudio(...)`
+* any other HTTP/network call
 
 Create a table:
 
-VARIABLE
-USED BY
-PURPOSE
-REQUIRED/OPTIONAL
-DEFAULT/FALLBACK
-WHERE REFERENCED
+| File | Function/Location | HTTP Method | Endpoint | Purpose | Should Belong In |
 
-DO NOT expose actual secret values.
+The final column should identify the appropriate future service domain.
 
-Never print API keys, tokens, passwords, database passwords, private keys, or credentials.
+Possible domains:
 
-Use:
+* auth
+* startup
+* agents
+* initiatives
+* approvals
+* decisions
+* notifications
+* knowledge
+* chat
+* audio
+* vault
+* simulation
+* orchestration
 
-<REDACTED>
-
-instead.
-
----
-
-# 11. DUPLICATION / TECHNICAL DEBT
-
-Identify:
-
-* duplicate files
-* duplicate services
-* duplicate APIs
-* duplicate agent implementations
-* old implementations
-* abandoned experiments
-* conflicting architectures
-* unused dependencies
-* dead code
-* overly large files
-* mixed responsibilities
-* circular dependencies
-* frontend business logic
-* backend business logic duplicated across Node/Python
-
-Do not fix anything.
+Do NOT create these services yet.
 
 ---
 
-# 12. BUILD / RUN HEALTH
+# 2. ANALYZE APP.TSX
 
-Run ONLY SAFE, NON-MUTATING verification commands if available.
+Inspect `src/App.tsx` completely.
 
-Examples:
+Separate its responsibilities into:
 
-* dependency/type checking
-* build
-* lint
-* tests
+### A. UI rendering
 
-Do NOT install packages.
+### B. Application state
 
-Do NOT automatically modify lockfiles.
+### C. API communication
 
-Report:
+### D. Business logic
 
-COMMAND
-RESULT
-ERROR/WARNING
-LIKELY LOCATION
+### E. Authentication
 
-If a command modifies files, DO NOT run it.
+### F. Notifications
 
----
+### G. Navigation
 
-# 13. CRITICAL: DOCUMENTED VS ACTUAL
+### H. Demo/development logic
 
-Create three categories:
+For every responsibility identify:
 
-### A. DOCUMENTED + IMPLEMENTED
+* exact code location
+* whether it should remain in App.tsx
+* proposed future destination
 
-Features clearly documented and actually implemented.
-
-### B. DOCUMENTED BUT PARTIALLY IMPLEMENTED
-
-Documentation claims something that is incomplete.
-
-### C. DOCUMENTED BUT NOT FOUND
-
-Documentation claims functionality that you cannot locate in the source.
-
-Also create:
-
-### D. IMPLEMENTED BUT NOT DOCUMENTED
-
-Important functionality found in source code but missing from the documentation.
+Do NOT move anything yet.
 
 ---
 
-# 14. ARCHITECTURAL PROBLEMS
+# 3. ANALYZE EACH MAJOR COMPONENT
 
-Identify the TOP 15 structural problems that make this project difficult to maintain.
+Inspect:
 
-For each:
+* SaaSDashboard.tsx
+* ApprovalQueue.tsx
+* AgentWorkspace.tsx
+* WorkflowCanvas.tsx
+* KnowledgeBase.tsx
+* NotificationPanel.tsx
+* AuthScreen.tsx
+* chatbot/*
+* CommandPalette.tsx
 
-PROBLEM
-LOCATION
-EVIDENCE
-WHY IT IS A PROBLEM
-RISK
-SUGGESTED FUTURE DIRECTION
+For each identify:
 
-Do NOT implement the solution.
+* UI responsibilities
+* state responsibilities
+* API responsibilities
+* business logic
+* duplicated logic
+* reusable logic
 
----
-
-# 15. PROPOSED CLEAN ARCHITECTURE
-
-Based ONLY on the existing implementation, propose a cleaner target architecture.
-
-Do NOT modify the repository.
-
-Show:
-
-* frontend structure
-* Node backend structure
-* Python AI structure
-* shared types
-* database layer
-* agent layer
-* RAG layer
-* integration layer
-* configuration
-* tests
-
-Clearly distinguish:
-
-CURRENT
-vs
-PROPOSED
+Do NOT modify them.
 
 ---
 
-# 16. CLEANUP PLAN
+# 4. DETERMINE PAGE VS COMPONENT BOUNDARIES
 
-Create a phased cleanup plan.
+The current application does not use React Router.
+
+Do NOT introduce React Router.
+
+Instead determine which existing components are actually:
+
+### PAGE / VIEW LEVEL
+
+versus
+
+### REUSABLE COMPONENT
+
+Create a proposed structure such as:
+
+src/
+pages/
+components/
+chatbot/
+hooks/
+context/
+services/
+types/
+
+But do NOT implement it.
+
+Use actual current files rather than theoretical examples.
+
+---
+
+# 5. DESIGN THE API SERVICE LAYER
+
+Based on actual calls found in the codebase, propose the future service structure.
 
 Example:
 
-PHASE 1 — Inventory
-PHASE 2 — Remove obvious junk
-PHASE 3 — Organize frontend
-PHASE 4 — Organize Node backend
-PHASE 5 — Organize Python backend
-PHASE 6 — Consolidate AI agents
-PHASE 7 — Consolidate RAG
-PHASE 8 — Database cleanup
-PHASE 9 — Tests
-PHASE 10 — Documentation
+src/services/
+apiClient.ts
+authService.ts
+startupService.ts
+agentService.ts
+initiativeService.ts
+approvalService.ts
+decisionService.ts
+notificationService.ts
+knowledgeService.ts
+chatService.ts
+audioService.ts
 
-But do NOT assume these phases are correct. Adapt them to what you actually discover.
+IMPORTANT:
 
----
+Do not blindly use this exact structure.
 
-# 17. FINAL REPORT FORMAT
+If a different grouping makes more architectural sense based on the actual code, explain why.
 
-Return ONLY a structured report.
+For every proposed service state:
 
-Use this structure:
-
-# CATALYST OS — CODEBASE AUDIT
-
-## 1. Executive Summary
-
-## 2. Repository Tree
-
-## 3. Runtime / Entry Points
-
-## 4. Frontend Architecture
-
-## 5. Node Backend Architecture
-
-## 6. Python Backend Architecture
-
-## 7. AI Agent Architecture
-
-## 8. RAG Architecture
-
-## 9. Database Architecture
-
-## 10. API Map
-
-## 11. Environment / Configuration
-
-## 12. Duplication
-
-## 13. Dead / Experimental Code
-
-## 14. Build / Test Health
-
-## 15. Documented vs Actual
-
-## 16. Top Architectural Problems
-
-## 17. Proposed Target Architecture
-
-## 18. Recommended Cleanup Phases
-
-## 19. Files That Should NOT Be Touched Yet
-
-## 20. Questions / Unknowns
+* functions that should move there
+* current source location
+* endpoint used
+* data returned
 
 ---
 
-# MOST IMPORTANT RULE
+# 6. IDENTIFY FRONTEND TYPES
 
-DO NOT MODIFY THE PROJECT.
+Inspect:
 
-This task is purely reconnaissance.
+src/types.ts
 
-At the end explicitly state:
+and all other frontend type definitions.
 
-AUDIT COMPLETE
+Determine:
+
+* domain types
+* API response types
+* UI-only types
+* duplicated types
+* types that should eventually be separated by domain
+
+Do NOT change them yet.
+
+---
+
+# 7. IDENTIFY STATE OWNERSHIP
+
+For every major state variable in:
+
+* App.tsx
+* AuthContext
+* SaaSDashboard
+* ApprovalQueue
+* AgentWorkspace
+* KnowledgeBase
+* chatbot
+
+identify:
+
+STATE
+CURRENT OWNER
+WHO READS IT
+WHO WRITES IT
+PROPOSED OWNER
+
+Do not introduce Redux, Zustand, React Query, or another state library.
+
+Use existing React state/context patterns for the proposal.
+
+---
+
+# 8. IDENTIFY BUSINESS LOGIC IN UI
+
+Find calculations and decisions currently performed inside UI components.
+
+Examples:
+
+* financial calculations
+* date calculations
+* formatting
+* startup health calculations
+* initiative logic
+* approval logic
+* data transformations
+* API response transformations
+
+Classify each as:
+
+UI LOGIC
+DOMAIN LOGIC
+API MAPPING
+UTILITY
+
+Do not move anything.
+
+---
+
+# 9. IDENTIFY DUPLICATION
+
+Find duplicated:
+
+* API calls
+* types
+* formatting
+* state transformations
+* business calculations
+* endpoint definitions
+* error handling
+* loading handling
+
+Do not fix them.
+
+---
+
+# 10. PROPOSE TARGET FRONTEND STRUCTURE
+
+Based ONLY on what actually exists, propose a clean structure.
+
+Example:
+
+src/
+├── app/
+├── pages/
+├── components/
+├── chatbot/
+├── hooks/
+├── context/
+├── services/
+│   ├── apiClient.ts
+│   └── domains/
+├── types/
+└── utils/
+
+But adapt this to the actual codebase.
+
+For every folder explain its responsibility.
+
+---
+
+# 11. MIGRATION ORDER
+
+Provide the safest sequence for implementing the frontend cleanup.
+
+For example:
+
+1. Create API client
+2. Extract auth API
+3. Extract startup API
+4. Extract approvals API
+5. Extract remaining APIs
+6. Move API calls out of components
+7. Extract hooks
+8. Reduce App.tsx
+9. Move pages/views
+10. Clean types
+
+But do NOT assume this order is correct.
+
+Determine the safest order from the actual dependency graph.
+
+---
+
+# 12. IMPORTANT SAFETY RULE
+
+Do NOT modify the repository.
+
+At the end verify:
+
 FILES MODIFIED: 0
 FILES DELETED: 0
 FILES MOVED: 0
-FILES CREATED: 0
 DEPENDENCIES CHANGED: 0
 DATABASE CHANGED: NO
+API CONTRACTS CHANGED: NO
+
+---
+
+# 13. REQUIRED OUTPUT
+
+Return:
+
+# TASK 03 — FRONTEND ARCHITECTURE ANALYSIS
+
+## 1. Current Frontend Architecture
+
+## 2. Complete API Call Inventory
+
+## 3. App.tsx Responsibility Map
+
+## 4. Component Responsibility Map
+
+## 5. State Ownership Map
+
+## 6. Business Logic Found in UI
+
+## 7. Type Architecture
+
+## 8. Duplication
+
+## 9. Proposed Service Layer
+
+## 10. Proposed Frontend Directory Structure
+
+## 11. Migration Plan
+
+## 12. Risks
+
+## 13. Files That Should NOT Be Touched
+
+## 14. Final Verification
+
+STOP AFTER REPORTING.
+
+Do NOT implement the proposed architecture.
