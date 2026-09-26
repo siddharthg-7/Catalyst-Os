@@ -50,20 +50,28 @@ if not exist .env (
     echo [OK] Initialized .env configuration.
 )
 
-echo [INFO] Services to start:
+echo [INFO] Services starting:
 echo   - Frontend + Node.js Gateway : http://localhost:3000
 echo   - FastAPI Python AI Service   : http://localhost:8000 (Docs: /docs)
 echo   - PostgreSQL (pgvector)       : localhost:5433
 echo.
-echo [INFO] Opening CatalystOS in your default browser...
-start "" http://localhost:3000
 
 echo [INFO] Building and starting containers with Docker Compose...
-echo [TIP] Press Ctrl+C anytime to stop containers.
-echo.
-
-docker compose up --build
+docker compose up -d --build
 
 echo.
-echo [INFO] Containers have stopped.
-pause
+echo [INFO] Waiting for CatalystOS to be responsive at http://localhost:3000...
+:WAIT_HTTP
+timeout /t 3 /nobreak >nul
+curl -s -f -o nul http://localhost:3000
+if %errorlevel% equ 0 goto HTTP_READY
+echo [INFO] Still waiting for services to initialize...
+goto WAIT_HTTP
+
+:HTTP_READY
+echo [OK] CatalystOS is online and ready!
+echo [INFO] Opening CatalystOS in your default browser...
+start "" http://localhost:3000
+echo.
+echo [INFO] Streaming live container logs (Press Ctrl+C to detach without stopping):
+docker compose logs -f

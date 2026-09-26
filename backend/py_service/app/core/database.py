@@ -12,14 +12,25 @@ def sanitize_database_url_for_sqlalchemy(url: str) -> str:
         return url
 
     parsed = urlparse(url)
+    scheme = parsed.scheme
+    if scheme == "postgresql":
+        try:
+            import psycopg  # noqa: F401
+        except ImportError:
+            try:
+                import psycopg2  # noqa: F401
+                scheme = "postgresql+psycopg2"
+            except ImportError:
+                pass
+
     if not parsed.query:
-        return url
+        return urlunparse(parsed._replace(scheme=scheme))
 
     disallowed_params = {"pool_timeout", "connection_limit", "pgbouncer"}
     query_params = parse_qs(parsed.query, keep_blank_values=True)
     filtered = [(k, v) for k, vs in query_params.items() if k not in disallowed_params for v in vs]
 
-    return urlunparse(parsed._replace(query=urlencode(filtered)))
+    return urlunparse(parsed._replace(scheme=scheme, query=urlencode(filtered)))
 
 # Clean connection URL for psycopg2/SQLAlchemy
 DATABASE_URL = sanitize_database_url_for_sqlalchemy(settings.database_url)
