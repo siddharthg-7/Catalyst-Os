@@ -1000,7 +1000,7 @@ Provide a structured analysis containing:
 Format your output exactly as valid JSON with "summary" (string) and "insights" (array of strings). Do NOT include backticks or markdown fences.`;
 
         const analysisResponse = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
+          model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
           contents: analysisPrompt,
           config: {
             responseMimeType: 'application/json',

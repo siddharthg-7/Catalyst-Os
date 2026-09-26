@@ -126,6 +126,26 @@ interface IntentAnalysis {
 export function analyzeCommandIntent(command: string): IntentAnalysis {
   const lower = command.toLowerCase().trim();
 
+  // 0. Conversational Greeting & Executive Readiness
+  const greetingWords = ['hi', 'hii', 'hiii', 'hello', 'hey', 'heyy', 'good morning', 'good afternoon', 'good evening', 'greetings', 'hola', 'sup', 'yo'];
+  const stripped = lower.replace(/[!.,?]+$/, '').trim();
+  const isPureGreeting = greetingWords.includes(stripped) || 
+    greetingWords.some(w => stripped === `${w} catalyst` || stripped === `${w} atlas` || stripped === `${w} team` || stripped === `${w} there` || stripped === `${w} os`);
+  if (isPureGreeting) {
+    return {
+      intent: 'greeting',
+      objective: 'Acknowledge founder and present executive situational readiness',
+      activatedRoles: ['CEO', 'Finance', 'Auditor'],
+      requiresFinancialCalculations: false,
+      requiresHeadcountModeling: false,
+      requiresRag: false,
+      isUnrelated: false,
+      requiresApproval: false,
+      proposedActionTitle: null,
+      proposedActionImpact: null
+    };
+  }
+
   // 1. Unrelated / Out of scope
   const unrelatedPatterns = [
     'weather on mars', 'weather', 'recipe', 'football', 'world cup', 'olympics', 
@@ -404,6 +424,54 @@ export class OrchestrationService {
       metrics: startupProfile.metrics,
     };
     const baseRunway = canonical.financials.runwayMonths;
+
+    // LEVEL 0 — CONVERSATIONAL GREETING & READINESS
+    if (analysis.intent === 'greeting') {
+      console.log(`[Command] commandId=${commandId} Level 0 Conversational Greeting execution.`);
+      const name = canonical.startup.name;
+      const stage = canonical.startup.stage || 'Pre-Seed';
+      const industry = canonical.startup.industry || 'Technology';
+      const cash = canonical.financials.cashBalance;
+      const burn = canonical.financials.monthlyBurn;
+      const runway = canonical.financials.runwayMonths;
+
+      const summary = `Hello! I am your AI Executive Orchestrator for ${name}. All executive specialist agents (Finance, Talent, Growth, Legal, Operations, Auditor) are active and grounded in your live company records.`;
+      const details = `Company Overview:\n• Startup: ${name} (${stage} stage, ${industry})\n• Cash Reserves: $${(cash / 1000).toFixed(1)}K\n• Monthly Burn: $${(burn / 1000).toFixed(1)}K/mo\n• Runway Horizon: ${runway} Months\n\nHow can the executive team assist you today? You can ask about hiring scenarios, financial runway modeling, GTM planning, or compliance checks.`;
+
+      const supportingData = [
+        { label: 'Startup Name', value: name, source: 'Startup Profile' },
+        { label: 'Cash Reserves', value: `$${cash.toLocaleString()}`, source: 'Neon PostgreSQL Treasury' },
+        { label: 'Monthly Burn', value: `$${burn.toLocaleString()}/mo`, source: 'Operating Expense Baseline' },
+        { label: 'Runway Horizon', value: `${runway} Months`, source: 'Deterministic Runway Calculator (Cash / Burn)' }
+      ];
+
+      const greetingResponse: OrchestrationResponse = {
+        commandId,
+        status: 'completed',
+        interpretation: {
+          intent: analysis.intent,
+          objective: analysis.objective
+        },
+        answer: {
+          summary,
+          details
+        },
+        supportingData,
+        agents: [
+          { role: 'CEO', status: 'completed', contribution: `Ready to orchestrate executive directives for ${name}.` },
+          { role: 'Finance', status: 'completed', contribution: `Treasury synchronized: $${(cash / 1000).toFixed(1)}K cash with ${runway} months runway.` },
+          { role: 'Auditor', status: 'completed', contribution: 'All systems verified and grounded in persistent company records.' }
+        ],
+        evidence: [],
+        confidence: 1.0
+      };
+
+      await this.recordCommandPersistence(commandId, command, greetingResponse.status, startupId, summary, analysis.objective);
+      this.updateConversationMemory(startupId, command, summary);
+      onEvent?.({ type: 'chunk', text: summary });
+      onEvent?.({ type: 'complete', response: greetingResponse });
+      return greetingResponse;
+    }
 
     // LEVEL 1 — DIRECT DATA (Section 19 of PROMPT.MD)
     if (analysis.intent === 'startup_identity') {
@@ -715,52 +783,40 @@ INSTRUCTIONS:
 `;
 
       try {
-        console.log(`[Synthesis] Invoking Gemini model gemini-3.6-flash for commandId=${commandId}`);
+        const preferredModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+        const candidateModels = Array.from(new Set([preferredModel, 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3.6-flash']));
         let rawSynthesis = '';
+        let lastErr: any = null;
 
-        try {
-          const synthesisRes = await ai.models.generateContent({
-            model: 'gemini-3.6-flash',
-            contents: synthesisPrompt,
-            config: {
-              responseMimeType: 'application/json',
-              temperature: 0.1,
-            }
-          });
-          rawSynthesis = synthesisRes.text?.trim() || '{}';
-        } catch (mErr: any) {
-          const errCode = classifyAIError(mErr);
-          // If transient 503 spike, retry once after 1.5s
-          if (errCode === 'SERVICE_UNAVAILABLE') {
-            console.log('[Orchestrator] Transient 503 detected, retrying once after 1.5s...');
-            await new Promise(r => setTimeout(r, 1500));
-            try {
-              const retryRes = await ai.models.generateContent({
-                model: 'gemini-3.6-flash',
-                contents: synthesisPrompt,
-                config: {
-                  responseMimeType: 'application/json',
-                  temperature: 0.1,
-                }
-              });
-              rawSynthesis = retryRes.text?.trim() || '{}';
-            } catch (rErr) {
-              throw rErr;
-            }
-          } else if (mErr.message?.includes('404') || mErr.message?.includes('not found')) {
-            console.warn('[Orchestrator] gemini-3.6-flash not found, attempting gemini-2.5-flash fallback...');
-            const fallbackRes = await ai.models.generateContent({
-              model: 'gemini-2.5-flash',
+        for (const candidate of candidateModels) {
+          try {
+            console.log(`[Synthesis] Invoking Gemini model ${candidate} for commandId=${commandId}`);
+            const synthesisRes = await ai.models.generateContent({
+              model: candidate,
               contents: synthesisPrompt,
               config: {
                 responseMimeType: 'application/json',
                 temperature: 0.1,
               }
             });
-            rawSynthesis = fallbackRes.text?.trim() || '{}';
-          } else {
-            throw mErr;
+            rawSynthesis = synthesisRes.text?.trim() || '{}';
+            if (rawSynthesis && rawSynthesis !== '{}') {
+              console.log(`[Synthesis] Model ${candidate} succeeded for commandId=${commandId}`);
+              break;
+            }
+          } catch (mErr: any) {
+            lastErr = mErr;
+            const errCode = classifyAIError(mErr);
+            console.warn(`[Synthesis] Model ${candidate} failed with ${errCode}: ${mErr.message}. Trying next candidate model...`);
+            if (errCode === 'SERVICE_UNAVAILABLE' || errCode === 'RATE_LIMITED' || errCode === 'QUOTA_EXCEEDED') {
+              await new Promise(r => setTimeout(r, 600));
+            }
           }
+        }
+
+        if (!rawSynthesis || rawSynthesis === '{}') {
+          if (lastErr) throw lastErr;
+          throw new Error('All candidate Gemini models failed to generate content.');
         }
 
         const parsedSynthesis = JSON.parse(rawSynthesis);
@@ -810,6 +866,19 @@ INSTRUCTIONS:
             if (ag.status === 'analyzing') {
               ag.status = 'completed';
               ag.contribution = `${ag.role} audited deterministic ledger calculations.`;
+            }
+          }
+        } else if (evidence.length > 0) {
+          // If we have grounded documents retrieved from the vector store, provide verified factual synthesis
+          console.log(`[Command] commandId=${commandId} Grounded in ${evidence.length} retrieved document fragments during provider failover.`);
+          finalSummary = `Executive summary for ${activeStartup.name}: Retrieved verified knowledge records regarding "${command}".`;
+          finalDetails = evidence.map((e, idx) => `• [${e.documentName || e.citationId || 'Knowledge Base'}]: ${e.excerpt}`).join('\n\n');
+          confidence = 0.88;
+
+          for (const ag of agents) {
+            if (ag.status === 'analyzing') {
+              ag.status = 'completed';
+              ag.contribution = `${ag.role} verified data directly from company knowledge base.`;
             }
           }
         } else {

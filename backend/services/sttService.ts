@@ -46,7 +46,7 @@ export class STTService {
           const cleanMimeType = mimeType.split(';')[0].trim() || 'audio/webm';
           
           const response = await ai.models.generateContent({
-            model: 'gemini-3.5-flash',
+            model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
             contents: [
               {
                 inlineData: {

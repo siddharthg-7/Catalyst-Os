@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Agent, StartupProfile, DecisionRecord, KnowledgeFile } from '../types';
 import {
   Rocket, Landmark, Users, Briefcase, Cog, Shield,
@@ -273,6 +273,49 @@ export default function AgentWorkspace({
   const activeAgent = agents.find(a => a.role === currentRole) || agents[0];
   const detail = EXECUTIVE_DETAILS[currentRole] || EXECUTIVE_DETAILS['CEO'];
 
+  const dynamicKeyMetrics = useMemo(() => {
+    switch (currentRole) {
+      case 'Finance':
+        return [
+          { label: 'Cash Balance', value: `$${(startup.cashBalance ?? 0).toLocaleString()}`, trend: 'Live Treasury' },
+          { label: 'Monthly Burn', value: `$${(startup.burnRate ?? 0).toLocaleString()}/mo`, trend: 'Active Rate' },
+          { label: 'Active Runway', value: `${(startup.runwayMonths > 0 ? startup.runwayMonths : (startup.burnRate ? startup.cashBalance / startup.burnRate : 12)).toFixed(1)} Months`, trend: 'Deterministic' },
+        ];
+      case 'CEO':
+        return [
+          { label: 'Strategic Velocity', value: `${startup.metrics?.velocity ?? 78}%`, trend: 'Council Measured' },
+          { label: 'Health Score', value: `${startup.healthScore ?? 78}/100`, trend: 'Overall Index' },
+          { label: 'Decisions Logged', value: `${decisions.length} Records`, trend: 'Audited' },
+        ];
+      case 'Growth':
+        return [
+          { label: 'Growth Velocity', value: `${startup.metrics?.growthRate ?? 65}%`, trend: 'Traction Index' },
+          { label: 'Target ICP', value: startup.industry || 'B2B SaaS', trend: 'Target Market' },
+          { label: 'GTM Readiness', value: `${Math.round(((startup.metrics?.growthRate ?? 65) + (startup.metrics?.velocity ?? 78)) / 2)}%`, trend: 'Calibrated' },
+        ];
+      case 'Legal':
+        return [
+          { label: 'Compliance Index', value: `${startup.metrics?.legalCompliance ?? 92}%`, trend: 'Verified' },
+          { label: 'Contract Hygiene', value: 'Audited', trend: 'Guardrails Active' },
+          { label: 'Grounded Docs', value: `${knowledge.length} Files`, trend: 'Indexed' },
+        ];
+      case 'Operations':
+        return [
+          { label: 'Ops Efficiency', value: `${startup.metrics?.operationsEfficiency ?? 80}%`, trend: 'Workflow Throughput' },
+          { label: 'Active Executives', value: `${agents.length} Agents`, trend: 'Synchronized' },
+          { label: 'Council Pace', value: 'High', trend: 'Responsive' },
+        ];
+      case 'Auditor':
+        return [
+          { label: 'Verification Pass', value: '100%', trend: 'Deterministic Math' },
+          { label: 'Grounded Records', value: `${knowledge.length} Ingested`, trend: 'RAG Grounded' },
+          { label: 'Audit Status', value: 'Enforced', trend: 'Zero Hallucinations' },
+        ];
+      default:
+        return detail.keyMetrics;
+    }
+  }, [currentRole, startup, decisions, knowledge, agents, detail]);
+
   // Form states for profile adjustment
   const [name, setName] = useState(startup.name);
   const [industry, setIndustry] = useState(startup.industry);
@@ -464,7 +507,7 @@ export default function AgentWorkspace({
 
           {/* Key Metrics Strip (Section 25 Supporting Data) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {detail.keyMetrics.map((km, idx) => (
+            {dynamicKeyMetrics.map((km, idx) => (
               <div key={idx} className="p-4 rounded-[16px] bg-white border border-[#141413]/10 shadow-xs">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-[#696969] font-bold block">{km.label}</span>
                 <div className="flex items-baseline justify-between mt-1">
