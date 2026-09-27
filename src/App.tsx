@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord } from './types';
 import SaaSDashboard from './components/SaaSDashboard';
 import AgentWorkspace from './components/AgentWorkspace';
@@ -35,6 +35,7 @@ import NotificationPanel from './components/NotificationPanel';
 
 export default function App() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading, logout, apiFetch, loginAsDemo } = useAuth();
   
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(() => {
@@ -132,12 +133,46 @@ export default function App() {
     await hydrateState();
   };
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'approvals' | 'knowledge' | 'agents' | 'workflows'>('dashboard');
+  // ── Derive activeTab from URL pathname ───────────────────────────────────────
+  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'approvals' | 'knowledge' | 'agents' | 'workflows' => {
+    if (pathname.includes('/approvals')) return 'approvals';
+    if (pathname.includes('/knowledge')) return 'knowledge';
+    if (pathname.includes('/workflows')) return 'workflows';
+    if (pathname.includes('/agents')) return 'agents';
+    return 'dashboard';
+  };
+
+  const activeTab = getActiveTabFromPath(location.pathname);
   const [selectedAgentId, setSelectedAgentId] = useState<string>('ceo');
   const [agentsExpanded, setAgentsExpanded] = useState<boolean>(true);
   const [notificationsOpen, setNotificationsOpen] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  // Sync selected agent with URL if on /dashboard/agents/:agentId
+  useEffect(() => {
+    const match = location.pathname.match(/\/agents\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      setSelectedAgentId(match[1]);
+    }
+  }, [location.pathname]);
+
+  const handleTabChange = (tab: 'dashboard' | 'approvals' | 'knowledge' | 'agents' | 'workflows', agentId?: string) => {
+    if (tab === 'agents') {
+      const targetAgent = agentId || selectedAgentId || 'ceo';
+      setSelectedAgentId(targetAgent);
+      navigate(`/dashboard/agents/${targetAgent}`);
+    } else if (tab === 'dashboard') {
+      navigate('/dashboard');
+    } else {
+      navigate(`/dashboard/${tab}`);
+    }
+  };
+
+  const handleSelectAgent = (agentId: string) => {
+    setSelectedAgentId(agentId);
+    navigate(`/dashboard/agents/${agentId}`);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -497,7 +532,7 @@ export default function App() {
               return (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id)}
+                  onClick={() => handleTabChange(id)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all border font-sans cursor-pointer ${
                     isActive
                       ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] shadow-sm'
@@ -537,10 +572,7 @@ export default function App() {
                     return (
                       <button
                         key={ag.id}
-                        onClick={() => {
-                          setSelectedAgentId(ag.id);
-                          setActiveTab('agents');
-                        }}
+                        onClick={() => handleSelectAgent(ag.id)}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-[10px] text-xs transition-all border font-sans cursor-pointer ${
                           isSelected
                             ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] font-medium shadow-2xs'
@@ -657,7 +689,7 @@ export default function App() {
               onLaunchInitiative={handleLaunchInitiative}
               onSimulateInitiative={handleSimulateInitiative}
               onUpdateStartup={handleUpdateStartup}
-              onNavigate={setActiveTab}
+              onNavigate={(tab) => handleTabChange(tab)}
             />
           )}
           
@@ -669,7 +701,7 @@ export default function App() {
               knowledge={knowledge}
               onUpdateStartup={handleUpdateStartup} 
               selectedAgentId={selectedAgentId}
-              onSelectAgent={setSelectedAgentId}
+              onSelectAgent={handleSelectAgent}
             />
           )}
 
@@ -716,7 +748,7 @@ export default function App() {
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onNavigate={(tab) => {
-          setActiveTab(tab);
+          handleTabChange(tab);
           showToast(`Switched workspace view to: ${tab.toUpperCase()}`, 'info');
         }}
         onRunAction={(actionName) => {
@@ -758,7 +790,7 @@ export default function App() {
                 {navItems.map(({ id, label, badge, badgeColor }) => (
                   <button
                     key={id}
-                    onClick={() => { setActiveTab(id); setMobileMenuOpen(false); }}
+                    onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium font-sans transition-all ${
                       activeTab === id
                         ? 'bg-[#141413] text-[#F3F0EE]'
@@ -787,7 +819,7 @@ export default function App() {
       <NotificationPanel 
         isOpen={notificationsOpen} 
         onClose={() => setNotificationsOpen(false)} 
-        onNavigate={setActiveTab} 
+        onNavigate={(tab) => handleTabChange(tab)} 
       />
 
     </div>
@@ -829,6 +861,13 @@ export default function App() {
           )
         }
       />
+
+      {/* Direct Shortcuts for Workspace Phases */}
+      <Route path="/approvals" element={<Navigate to="/dashboard/approvals" replace />} />
+      <Route path="/knowledge" element={<Navigate to="/dashboard/knowledge" replace />} />
+      <Route path="/workflows" element={<Navigate to="/dashboard/workflows" replace />} />
+      <Route path="/agents" element={<Navigate to="/dashboard/agents" replace />} />
+      <Route path="/agents/:agentId" element={<Navigate to="/dashboard/agents" replace />} />
 
       {/* Executive Workspace Dashboard Phase Route */}
       <Route
