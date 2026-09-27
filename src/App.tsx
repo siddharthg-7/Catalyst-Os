@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord } from './types';
 import SaaSDashboard from './components/SaaSDashboard';
 import AgentWorkspace from './components/AgentWorkspace';
@@ -33,9 +34,23 @@ import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 import NotificationPanel from './components/NotificationPanel';
 
 export default function App() {
+  const navigate = useNavigate();
   const { user, loading, logout, apiFetch, loginAsDemo } = useAuth();
   
-  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean>(() => {
+    try {
+      const savedUserStr = localStorage.getItem('catalystos_user') || localStorage.getItem('catalystos_demo_user');
+      if (savedUserStr) {
+        const u = JSON.parse(savedUserStr);
+        if (u?.id) {
+          return localStorage.getItem(`catalystos_onboarding_completed_${u.id}`) === 'true';
+        }
+      }
+    } catch {}
+    return false;
+  });
+
+  const [isCheckingStartup, setIsCheckingStartup] = useState<boolean>(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -51,23 +66,41 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
+      const isAlreadyMarked = localStorage.getItem(`catalystos_onboarding_completed_${user.id}`) === 'true';
+      if (isAlreadyMarked) {
+        setOnboardingCompleted(true);
+      } else {
+        setIsCheckingStartup(true);
+      }
+
       apiFetch('/api/startup')
         .then(res => res.json())
         .then(data => {
           if (data && data.onboarded && data.name) {
             setOnboardingCompleted(true);
             setStartup(data);
+            try {
+              localStorage.setItem(`catalystos_onboarding_completed_${user.id}`, 'true');
+              localStorage.setItem(`catalystos_startup_${user.id}`, JSON.stringify(data));
+            } catch {}
           } else {
-            localStorage.removeItem(`catalystos_onboarding_completed_${user.id}`);
-            setOnboardingCompleted(false);
+            if (!isAlreadyMarked) {
+              setOnboardingCompleted(false);
+            }
           }
         })
-        .catch(() => {
-          localStorage.removeItem(`catalystos_onboarding_completed_${user.id}`);
-          setOnboardingCompleted(false);
+        .catch((err) => {
+          console.warn('[App] Startup profile fetch warning:', err);
+          if (isAlreadyMarked) {
+            setOnboardingCompleted(true);
+          }
+        })
+        .finally(() => {
+          setIsCheckingStartup(false);
         });
     } else {
       setOnboardingCompleted(false);
+      setIsCheckingStartup(false);
     }
   }, [user]);
 
@@ -82,6 +115,11 @@ export default function App() {
         const result = await res.json();
         if (result.startup) {
           setStartup(result.startup);
+          if (user?.id) {
+            try {
+              localStorage.setItem(`catalystos_startup_${user.id}`, JSON.stringify(result.startup));
+            } catch {}
+          }
         }
       }
     } catch (err) {
@@ -221,7 +259,19 @@ export default function App() {
     },
   ];
 
-  const [startup, setStartup] = useState<StartupProfile | null>(DEFAULT_STARTUP_PROFILE);
+  const [startup, setStartup] = useState<StartupProfile | null>(() => {
+    try {
+      const savedUserStr = localStorage.getItem('catalystos_user') || localStorage.getItem('catalystos_demo_user');
+      if (savedUserStr) {
+        const u = JSON.parse(savedUserStr);
+        if (u?.id) {
+          const cached = localStorage.getItem(`catalystos_startup_${u.id}`);
+          if (cached) return JSON.parse(cached);
+        }
+      }
+    } catch {}
+    return DEFAULT_STARTUP_PROFILE;
+  });
   const [agents, setAgents] = useState<Agent[]>(DEFAULT_AGENTS);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
   const [approvals, setApprovals] = useState<Deliverable[]>([]);
@@ -401,59 +451,31 @@ export default function App() {
     }
   };
 
-  // ── Loading screen ──────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
-        <div className="text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
-            <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+  const renderDashboard = () => {
+    if (!startup) {
+      return (
+        <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+          <div className="text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
+              <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+            </div>
+            <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Initializing CatalystOS Executive Council...</p>
           </div>
-          <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Verifying Active Platform Session...</p>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (!user) {
-    return <AuthScreen key="landing" initialView="landing" />;
-  }
+    // ── Navigation helpers ─────────────────────────────────────────────────────
+    const navItems = [
+      { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
+      { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
+      { id: 'knowledge' as const,  label: 'Knowledge',  Icon: FileText,    badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
+    ];
 
-  if (!onboardingCompleted) {
+    const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
+
     return (
-      <AuthScreen
-        key="onboarding"
-        initialView="onboarding"
-        onOnboardingComplete={handleOnboardingComplete}
-      />
-    );
-  }
-
-  // ── Startup-loading screen ─────────────────────────────────────────────────
-  if (!startup) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
-        <div className="text-center space-y-4">
-          <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
-            <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
-          </div>
-          <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Initializing CatalystOS Executive Council...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Navigation helpers ─────────────────────────────────────────────────────
-  const navItems = [
-    { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
-    { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
-    { id: 'knowledge' as const,  label: 'Knowledge',  Icon: FileText,    badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
-  ];
-
-  const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
-
-  return (
-    <div className="flex h-screen bg-[#F3F0EE] text-[#141413] overflow-hidden font-sans">
+      <div className="flex h-screen bg-[#F3F0EE] text-[#141413] overflow-hidden font-sans">
       
       {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-64 border-r border-[#141413]/10 bg-white p-6 shrink-0 justify-between shadow-[rgba(0,0,0,0.04)_4px_0px_24px_0px]">
@@ -557,7 +579,10 @@ export default function App() {
               </div>
             </div>
             <button
-              onClick={() => { logout(); }}
+              onClick={() => {
+                logout();
+                navigate('/');
+              }}
               title="Sign Out Session"
               className="p-1.5 rounded-lg bg-white hover:bg-[#141413] hover:text-[#F3F0EE] text-[#696969] transition-colors cursor-pointer shrink-0 border border-[#141413]/10"
             >
@@ -766,5 +791,68 @@ export default function App() {
       />
 
     </div>
+    );
+  };
+
+  return (
+    <Routes>
+      {/* Landing Phase Route */}
+      <Route
+        path="/"
+        element={<AuthScreen key="landing" initialView="landing" />}
+      />
+
+      {/* Authentication Phase Route */}
+      <Route
+        path="/auth"
+        element={
+          user ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <AuthScreen key="auth" initialView="auth" />
+          )
+        }
+      />
+
+      {/* Onboarding Phase Route */}
+      <Route
+        path="/onboarding"
+        element={
+          !user && !loading ? (
+            <Navigate to="/auth" replace />
+          ) : (
+            <AuthScreen
+              key="onboarding"
+              initialView="onboarding"
+              onOnboardingComplete={handleOnboardingComplete}
+            />
+          )
+        }
+      />
+
+      {/* Executive Workspace Dashboard Phase Route */}
+      <Route
+        path="/dashboard/*"
+        element={
+          loading || isCheckingStartup ? (
+            <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+              <div className="text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
+                  <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+                </div>
+                <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Verifying Active Platform Session...</p>
+              </div>
+            </div>
+          ) : !user ? (
+            <Navigate to="/auth" replace />
+          ) : (
+            renderDashboard()
+          )
+        }
+      />
+
+      {/* Fallback Catch-all Route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

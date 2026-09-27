@@ -123,6 +123,56 @@ router.post('/auth/signup', async (req, res) => {
       } as any
     }));
 
+    // Auto-initialize standard startup workspace for new user so info is persistently stored immediately
+    let userStartup: any = null;
+    let isOnboarded = false;
+    try {
+      const defaultStartupData = {
+        founderName: cleanName,
+        founderRole: userRole,
+        startupName: `${cleanName}'s Venture`,
+        industry: 'Technology / SaaS',
+        description: 'Autonomous executive intelligence and SaaS operations platform.',
+        stage: 'Pre-Seed',
+        fundingStage: 'Pre-Seed',
+        cashBalance: 250000,
+        monthlyBurn: 15000,
+        budget: 250000,
+        burnRate: 15000,
+        targetIcp: 'Fast-growing software startups',
+        primaryProduct: 'AI Workflow Platform'
+      };
+      const canonical = await workspaceService.saveOnboardingData(newUser.id, defaultStartupData);
+      if (canonical && canonical.startup && canonical.startup.name) {
+        isOnboarded = true;
+        userStartup = {
+          id: canonical.startupId,
+          name: canonical.startup.name,
+          industry: canonical.startup.industry,
+          description: canonical.startup.description,
+          fundingStage: canonical.startup.stage,
+          cashBalance: canonical.financials.cashBalance,
+          burnRate: canonical.financials.monthlyBurn,
+          runwayMonths: canonical.financials.runwayMonths,
+          healthScore: 80,
+          metrics: {
+            velocity: 85,
+            financialHealth: 90,
+            legalCompliance: 95,
+            growthRate: 45,
+            operationsEfficiency: 88,
+          },
+          targetIcp: canonical.business.targetIcp,
+          primaryProduct: canonical.business.primaryProduct,
+          goals: canonical.goals,
+          priorities: canonical.priorities,
+          onboarded: true
+        };
+      }
+    } catch (wsErr: any) {
+      console.warn('[Auth API] Workspace auto-init during signup warning:', wsErr.message);
+    }
+
     const token = jwt.sign(
       { sub: newUser.id, email: newUser.email, name: newUser.name, role: newUser.role },
       JWT_SECRET,
@@ -137,7 +187,9 @@ router.post('/auth/signup', async (req, res) => {
         email: newUser.email,
         name: newUser.name || 'Founder',
         role: newUser.role as UserRole
-      }
+      },
+      onboarded: isOnboarded,
+      startup: userStartup
     });
   } catch (err: any) {
     console.error('[Auth API] Signup error:', err.message);
@@ -180,6 +232,43 @@ router.post('/auth/signin', async (req, res) => {
       }));
     }
 
+    // Check if user already has an onboarded startup workspace
+    let userStartup: any = null;
+    let isOnboarded = false;
+    if (isDbAvailable && prisma) {
+      try {
+        const canonical = await workspaceService.getCanonicalContext(user.id);
+        if (canonical && canonical.startup && canonical.startup.name) {
+          isOnboarded = true;
+          userStartup = {
+            id: canonical.startupId,
+            name: canonical.startup.name,
+            industry: canonical.startup.industry,
+            description: canonical.startup.description,
+            fundingStage: canonical.startup.stage,
+            cashBalance: canonical.financials.cashBalance,
+            burnRate: canonical.financials.monthlyBurn,
+            runwayMonths: canonical.financials.runwayMonths,
+            healthScore: 80,
+            metrics: {
+              velocity: 85,
+              financialHealth: 90,
+              legalCompliance: 95,
+              growthRate: 45,
+              operationsEfficiency: 88,
+            },
+            targetIcp: canonical.business.targetIcp,
+            primaryProduct: canonical.business.primaryProduct,
+            goals: canonical.goals,
+            priorities: canonical.priorities,
+            onboarded: true
+          };
+        }
+      } catch (err: any) {
+        console.warn('[Auth API] Error checking startup during signin:', err.message);
+      }
+    }
+
     const token = jwt.sign(
       { sub: user.id, email: user.email, name: user.name, role: user.role },
       JWT_SECRET,
@@ -194,7 +283,9 @@ router.post('/auth/signin', async (req, res) => {
         email: user.email,
         name: user.name || 'Founder',
         role: user.role as UserRole
-      }
+      },
+      onboarded: isOnboarded,
+      startup: userStartup
     });
   } catch (err: any) {
     console.error('[Auth API] Signin error:', err.message);
@@ -203,8 +294,44 @@ router.post('/auth/signin', async (req, res) => {
 });
 
 // GET current authenticated user profile
-router.get('/auth/me', authenticateJWT, (req: AuthenticatedRequest, res) => {
-  res.json({ user: req.user });
+router.get('/auth/me', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const user = req.user;
+  let userStartup: any = null;
+  let isOnboarded = false;
+  if (user?.id && isDbAvailable && prisma) {
+    try {
+      const canonical = await workspaceService.getCanonicalContext(user.id);
+      if (canonical && canonical.startup && canonical.startup.name) {
+        isOnboarded = true;
+        userStartup = {
+          id: canonical.startupId,
+          name: canonical.startup.name,
+          industry: canonical.startup.industry,
+          description: canonical.startup.description,
+          fundingStage: canonical.startup.stage,
+          cashBalance: canonical.financials.cashBalance,
+          burnRate: canonical.financials.monthlyBurn,
+          runwayMonths: canonical.financials.runwayMonths,
+          healthScore: 80,
+          metrics: {
+            velocity: 85,
+            financialHealth: 90,
+            legalCompliance: 95,
+            growthRate: 45,
+            operationsEfficiency: 88,
+          },
+          targetIcp: canonical.business.targetIcp,
+          primaryProduct: canonical.business.primaryProduct,
+          goals: canonical.goals,
+          priorities: canonical.priorities,
+          onboarded: true
+        };
+      }
+    } catch (err: any) {
+      console.warn('[Auth API] Error checking startup in /auth/me:', err.message);
+    }
+  }
+  res.json({ user, onboarded: isOnboarded, startup: userStartup });
 });
 
 // POST logout
@@ -323,7 +450,27 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
 
   if (isDbAvailable && prisma) {
     try {
-      const canonical = await workspaceService.getCanonicalContext(userId);
+      let canonical = await workspaceService.getCanonicalContext(userId);
+      if (!canonical) {
+        const user = await safeDbQuery(() => prisma.user.findUnique({ where: { id: userId } }));
+        const founderName = user?.name || req.user?.name || 'Founder';
+        const founderRole = (user?.role || req.user?.role || 'Founder') as UserRole;
+        canonical = await workspaceService.saveOnboardingData(userId, {
+          founderName,
+          founderRole,
+          startupName: `${founderName}'s Venture`,
+          industry: 'Technology / SaaS',
+          description: 'Autonomous executive intelligence and SaaS operations platform.',
+          stage: 'Pre-Seed',
+          fundingStage: 'Pre-Seed',
+          cashBalance: 250000,
+          monthlyBurn: 15000,
+          budget: 250000,
+          burnRate: 15000,
+          targetIcp: 'Fast-growing software startups',
+          primaryProduct: 'AI Workflow Platform'
+        });
+      }
       if (canonical) {
         return res.json({
           id: canonical.startupId,

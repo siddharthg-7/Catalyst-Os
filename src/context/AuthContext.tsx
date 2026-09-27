@@ -5,8 +5,8 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  signin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (email: string, password: string, name?: string, role?: UserRole) => Promise<{ success: boolean; error?: string }>;
+  signin: (email: string, password: string) => Promise<{ success: boolean; error?: string; onboarded?: boolean; startup?: any }>;
+  signup: (email: string, password: string, name?: string, role?: UserRole) => Promise<{ success: boolean; error?: string; onboarded?: boolean; startup?: any }>;
   logout: () => Promise<void>;
   loginAsDemo: () => void;
   apiFetch: (url: string, options?: RequestInit) => Promise<Response>;
@@ -76,6 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(data.user);
             setToken(storedToken);
             localStorage.setItem('catalystos_user', JSON.stringify(data.user));
+            if (data.onboarded !== undefined) {
+              localStorage.setItem(`catalystos_onboarding_completed_${data.user.id}`, data.onboarded ? 'true' : 'false');
+            }
+            if (data.startup) {
+              localStorage.setItem(`catalystos_startup_${data.user.id}`, JSON.stringify(data.startup));
+            }
           }
         } else {
           // Token expired or invalid
@@ -99,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signin = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const signin = async (email: string, password: string): Promise<{ success: boolean; error?: string; onboarded?: boolean; startup?: any }> => {
     try {
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
@@ -115,10 +121,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('catalystos_demo_user');
       localStorage.setItem('catalystos_token', data.token);
       localStorage.setItem('catalystos_user', JSON.stringify(data.user));
+      if (data.onboarded !== undefined) {
+        localStorage.setItem(`catalystos_onboarding_completed_${data.user.id}`, data.onboarded ? 'true' : 'false');
+      }
+      if (data.startup) {
+        localStorage.setItem(`catalystos_startup_${data.user.id}`, JSON.stringify(data.startup));
+      }
 
       setToken(data.token);
       setUser(data.user);
-      return { success: true };
+      return { success: true, onboarded: data.onboarded, startup: data.startup };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error during sign in.' };
     }
@@ -129,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     name: string = 'Founder',
     role: UserRole = 'Founder'
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; error?: string; onboarded?: boolean; startup?: any }> => {
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -145,10 +157,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('catalystos_demo_user');
       localStorage.setItem('catalystos_token', data.token);
       localStorage.setItem('catalystos_user', JSON.stringify(data.user));
+      if (data.onboarded !== undefined) {
+        localStorage.setItem(`catalystos_onboarding_completed_${data.user.id}`, data.onboarded ? 'true' : 'false');
+      }
+      if (data.startup) {
+        localStorage.setItem(`catalystos_startup_${data.user.id}`, JSON.stringify(data.startup));
+      }
 
       setToken(data.token);
       setUser(data.user);
-      return { success: true };
+      return { success: true, onboarded: data.onboarded, startup: data.startup };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error during sign up.' };
     }

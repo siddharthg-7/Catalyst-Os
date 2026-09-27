@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Building2, Rocket, CheckCircle2, RefreshCw,
@@ -69,10 +70,15 @@ interface AuthScreenProps {
 }
 
 export default function AuthScreen({ initialView = 'landing', onOnboardingComplete }: AuthScreenProps) {
+  const navigate = useNavigate();
   const { loginAsDemo, user, logout, signin, signup } = useAuth();
   const [view, setView] = useState<'landing' | 'auth' | 'onboarding'>(initialView);
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [direction, setDirection] = useState(0);
+
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
 
   // Native Neon Auth state
   const [authEmail, setAuthEmail] = useState('');
@@ -95,11 +101,15 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
         const res = await signin(authEmail, authPassword);
         if (!res.success) {
           setAuthError(res.error || 'Invalid credentials.');
+        } else {
+          navigate('/dashboard');
         }
       } else {
         const res = await signup(authEmail, authPassword, authFullName.trim() || 'Founder', authRole);
         if (!res.success) {
           setAuthError(res.error || 'Registration failed.');
+        } else {
+          navigate('/dashboard');
         }
       }
     } catch (err: any) {
@@ -190,6 +200,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
     if (onOnboardingComplete) {
       onOnboardingComplete(finalPayload);
     }
+    navigate('/dashboard');
   };
 
   const handleNext = () => {
@@ -222,6 +233,9 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
   const navigateTo = (newView: typeof view) => {
     setDirection(newView === 'landing' ? -1 : 1);
     setView(newView);
+    if (newView === 'landing') navigate('/');
+    else if (newView === 'auth') navigate('/auth');
+    else if (newView === 'onboarding') navigate('/onboarding');
   };
 
   const pageVariants = {
@@ -254,7 +268,10 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
           >
             <HackathonLandingPage
               onStartBuilding={() => navigateTo('auth')}
-              onDemoLogin={loginAsDemo}
+              onDemoLogin={async () => {
+                await loginAsDemo();
+                navigate('/dashboard');
+              }}
             />
           </motion.div>
         )}
@@ -998,7 +1015,10 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
                   {/* 1-Click Demo Login */}
                   <button
                     type="button"
-                    onClick={() => loginAsDemo()}
+                    onClick={async () => {
+                      await loginAsDemo();
+                      navigate('/dashboard');
+                    }}
                     className="w-full py-2.5 px-4 bg-[#F3F0EE] hover:bg-[#e7e4e1] border border-[#141413]/10 text-[#141413] font-bold text-xs rounded-[20px] transition-all flex items-center justify-center gap-2 cursor-pointer font-sans"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-600" />

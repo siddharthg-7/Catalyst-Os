@@ -582,8 +582,9 @@ Return ONLY valid JSON without markdown code blocks.`;
       }
     }));
 
-    // Invalidate memory cache for this startup
+    // Invalidate memory cache for this startup and owner
     workspaceCache.delete(startupId);
+    workspaceCache.delete(userId);
 
     // Return fresh canonical context
     return this.getCanonicalContext(startupId);
@@ -593,6 +594,12 @@ Return ONLY valid JSON without markdown code blocks.`;
    * Retrieves the structured canonical StartupContext from PostgreSQL.
    */
   public async getCanonicalContext(startupIdOrUserId: string): Promise<CanonicalStartupContext | null> {
+    // 0. Check cache first (by startupId or userId)
+    const cached = workspaceCache.get(startupIdOrUserId);
+    if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+      return cached.context;
+    }
+
     // 1. Resolve startup
     let startup = await safeDbQuery(() => prisma.startup.findFirst({
       where: {
@@ -622,10 +629,10 @@ Return ONLY valid JSON without markdown code blocks.`;
 
     const startupId = startup.id;
 
-    // Check cache
-    const cached = workspaceCache.get(startupId);
-    if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
-      return cached.context;
+    // Check cache by resolved startupId as well
+    const cachedByStartupId = workspaceCache.get(startupId);
+    if (cachedByStartupId && Date.now() - cachedByStartupId.cachedAt < CACHE_TTL_MS) {
+      return cachedByStartupId.context;
     }
 
     // Extract memories
@@ -713,14 +720,17 @@ Return ONLY valid JSON without markdown code blocks.`;
     };
 
     workspaceCache.set(startupId, { context: canonical, cachedAt: Date.now() });
+    if (startup.ownerId) {
+      workspaceCache.set(startup.ownerId, { context: canonical, cachedAt: Date.now() });
+    }
     return canonical;
   }
 
   /**
    * Invalidates cached context for a startup.
    */
-  public invalidateCache(startupId: string) {
-    workspaceCache.delete(startupId);
+  public invalidateCache(startupIdOrUserId: string) {
+    workspaceCache.delete(startupIdOrUserId);
   }
 }
 
