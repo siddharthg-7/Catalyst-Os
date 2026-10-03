@@ -2,72 +2,9 @@ import { prisma, safeDbQuery } from './dbService';
 import { ai } from './geminiService';
 import { ingestDocument } from './ragEngine';
 import { knowledgeFiles, startupProfile } from '../state';
+import { companyContextService, CompanyContext } from './companyContextService';
 
-export interface CanonicalStartupContext {
-  startupId: string;
-  ownerId: string;
-  founder: {
-    name: string;
-    role: string;
-    email: string;
-  };
-  startup: {
-    name: string;
-    description: string;
-    industry: string;
-    stage: string;
-  };
-  business: {
-    model: string;
-    targetIcp: string;
-    primaryProduct: string;
-  };
-  financials: {
-    cashBalance: number;
-    monthlyBurn: number;
-    runwayMonths: number;
-  };
-  goals: string[];
-  priorities: string[];
-  milestones: Array<{
-    id: string;
-    title: string;
-    content: string;
-    type: string;
-    createdAt: string;
-  }>;
-  recentDecisions: Array<{
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    financialImpact: number;
-    status: string;
-    createdAt: string;
-  }>;
-  pendingApprovals: Array<{
-    id: string;
-    title: string;
-    description: string;
-    type: string;
-    financialChange: number;
-    status: string;
-  }>;
-  documents: Array<{
-    id: string;
-    name: string;
-    type: string;
-    size: string;
-    summary: string;
-  }>;
-  agents: Array<{
-    id: string;
-    role: string;
-    name: string;
-    status: string;
-    currentTask?: string | null;
-  }>;
-}
+export type CanonicalStartupContext = CompanyContext;
 
 export interface OnboardingPayload {
   founderName?: string;
@@ -143,9 +80,6 @@ export const DEFAULT_EXECUTIVE_ROLES = [
   { role: 'Auditor', name: 'Sentry', avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150', description: 'Compliance & Verification Auditor: math accuracy, evidence grounding, hallucination prevention.' },
 ];
 
-// In-memory cache strictly keyed by startupId (Section 35)
-const workspaceCache = new Map<string, { context: CanonicalStartupContext; cachedAt: number }>();
-const CACHE_TTL_MS = 30000; // 30 seconds
 
 export class WorkspaceService {
   /**
@@ -487,6 +421,39 @@ Return ONLY valid JSON without markdown code blocks.`;
       }
     }
 
+    if (payload.teamSize) {
+      await safeDbQuery(() => prisma.memory.create({
+        data: {
+          category: 'TEAM_SIZE',
+          title: 'Team Size & Operational Scale',
+          description: String(payload.teamSize),
+          startupId
+        }
+      }));
+    }
+
+    if (payload.additionalInfo) {
+      await safeDbQuery(() => prisma.memory.create({
+        data: {
+          category: 'ADDITIONAL_INFO',
+          title: 'Founder Additional Notes',
+          description: payload.additionalInfo,
+          startupId
+        }
+      }));
+    }
+
+    if (payload.businessModel) {
+      await safeDbQuery(() => prisma.memory.create({
+        data: {
+          category: 'BUSINESS_MODEL',
+          title: 'Monetization & Business Model',
+          description: payload.businessModel,
+          startupId
+        }
+      }));
+    }
+
     // 6. Create or update the living Knowledge Base document: [Company Profile]
     const docId = `doc_profile_${startupId}`;
     const docName = `[Company Profile] ${startupName}`;
@@ -583,154 +550,26 @@ Return ONLY valid JSON without markdown code blocks.`;
     }));
 
     // Invalidate memory cache for this startup and owner
-    workspaceCache.delete(startupId);
-    workspaceCache.delete(userId);
+    companyContextService.invalidate(startupId);
+    companyContextService.invalidate(userId);
 
     // Return fresh canonical context
-    return this.getCanonicalContext(startupId);
+    return this.getCanonicalContext(startupId) as Promise<CanonicalStartupContext>;
   }
 
   /**
    * Retrieves the structured canonical StartupContext from PostgreSQL.
+   * Delegates to companyContextService as the single source of truth.
    */
   public async getCanonicalContext(startupIdOrUserId: string): Promise<CanonicalStartupContext | null> {
-    // 0. Check cache first (by startupId or userId)
-    const cached = workspaceCache.get(startupIdOrUserId);
-    if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
-      return cached.context;
-    }
-
-    // 1. Resolve startup
-    let startup = await safeDbQuery(() => prisma.startup.findFirst({
-      where: {
-        OR: [
-          { id: startupIdOrUserId },
-          { ownerId: startupIdOrUserId }
-        ]
-      },
-      include: {
-        owner: true,
-        agents: true,
-        documents: { orderBy: { createdAt: 'desc' } },
-        decisions: { orderBy: { createdAt: 'desc' }, take: 10 },
-        plans: {
-          include: {
-            approvals: { where: { status: 'pending_review' } }
-          }
-        },
-        timeline: { orderBy: { createdAt: 'desc' }, take: 10 },
-        memories: true
-      }
-    }));
-
-    if (!startup) {
-      return null;
-    }
-
-    const startupId = startup.id;
-
-    // Check cache by resolved startupId as well
-    const cachedByStartupId = workspaceCache.get(startupId);
-    if (cachedByStartupId && Date.now() - cachedByStartupId.cachedAt < CACHE_TTL_MS) {
-      return cachedByStartupId.context;
-    }
-
-    // Extract memories
-    const icpMemory = startup.memories.find(m => m.category === 'BUSINESS_ICP')?.description || '';
-    const productMemory = startup.memories.find(m => m.category === 'PRIMARY_PRODUCT')?.description || '';
-    const goals = startup.memories.filter(m => m.category === 'GOAL').map(m => m.description);
-    const priorities = startup.memories.filter(m => m.category === 'PRIORITY').map(m => m.description);
-
-    // Extract pending approvals
-    const pendingApprovals: any[] = [];
-    startup.plans.forEach(p => {
-      p.approvals.forEach(a => {
-        pendingApprovals.push({
-          id: a.id,
-          title: a.title,
-          description: a.description,
-          type: a.type,
-          financialChange: a.financialChange,
-          status: a.status
-        });
-      });
-    });
-
-    const cash = startup.cashBalance;
-    const burn = startup.burnRate;
-    const runway = burn > 0 ? parseFloat((cash / burn).toFixed(1)) : 999;
-
-    const canonical: CanonicalStartupContext = {
-      startupId: startup.id,
-      ownerId: startup.ownerId,
-      founder: {
-        name: startup.owner?.name || 'Founder',
-        role: startup.owner?.role || 'Founder',
-        email: startup.owner?.email || ''
-      },
-      startup: {
-        name: startup.name,
-        description: startup.description,
-        industry: startup.industry,
-        stage: startup.fundingStage
-      },
-      business: {
-        model: 'Subscription SaaS / Transactional',
-        targetIcp: icpMemory || startup.description,
-        primaryProduct: productMemory || startup.description
-      },
-      financials: {
-        cashBalance: cash,
-        monthlyBurn: burn,
-        runwayMonths: runway
-      },
-      goals: goals.length > 0 ? goals : ['Accelerate Product-Market Fit', 'Scale Customer Acquisition'],
-      priorities: priorities.length > 0 ? priorities : ['Core Product Milestones', 'Cash Preservation'],
-      milestones: startup.timeline.map(t => ({
-        id: t.id,
-        title: t.title,
-        content: t.content,
-        type: t.type,
-        createdAt: t.createdAt.toISOString()
-      })),
-      recentDecisions: startup.decisions.map(d => ({
-        id: d.id,
-        title: d.title,
-        description: d.description,
-        category: d.category,
-        financialImpact: d.financialImpact,
-        status: d.status,
-        createdAt: d.createdAt.toISOString()
-      })),
-      pendingApprovals,
-      documents: startup.documents.map(d => ({
-        id: d.id,
-        name: d.name,
-        type: d.type,
-        size: d.size,
-        summary: d.summary
-      })),
-      agents: startup.agents.map(a => ({
-        id: a.id,
-        role: a.role,
-        name: a.name,
-        status: a.status,
-        currentTask: a.currentTask
-      }))
-    };
-
-    workspaceCache.set(startupId, { context: canonical, cachedAt: Date.now() });
-    if (startup.ownerId) {
-      workspaceCache.set(startup.ownerId, { context: canonical, cachedAt: Date.now() });
-    }
-    return canonical;
+    return companyContextService.getContextForStartupOrUser(startupIdOrUserId);
   }
 
   /**
    * Invalidates cached context for a startup.
    */
   public invalidateCache(startupIdOrUserId: string) {
-    workspaceCache.delete(startupIdOrUserId);
+    companyContextService.invalidate(startupIdOrUserId);
   }
 }
 

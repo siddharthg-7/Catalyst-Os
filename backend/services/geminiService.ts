@@ -22,8 +22,9 @@ import { executeCollaborationLoop } from '../agents/collaboration';
 import { runOrchestrationLoop } from '../ai/orchestrator';
 
 // Generates highly contextual agent conversations using Gemini
-export async function runMultiAgentCollaboration(initiative: Initiative): Promise<any> {
-  return runOrchestrationLoop(initiative, startupProfile, knowledgeFiles);
+export async function runMultiAgentCollaboration(initiative: Initiative, customStartupProfile?: any): Promise<any> {
+  const profileToUse = customStartupProfile || startupProfile;
+  return runOrchestrationLoop(initiative, profileToUse, knowledgeFiles);
 }
 
 // Highly realistic simulation generator fallback

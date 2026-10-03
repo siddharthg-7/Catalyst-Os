@@ -35,6 +35,7 @@ import {
 } from '../services/s3Service';
 import { orchestrationService } from '../services/orchestrationService';
 import { workspaceService, DEFAULT_EXECUTIVE_ROLES } from '../services/workspaceService';
+import { companyContextService } from '../services/companyContextService';
 import { performDevReset } from '../scripts/devReset';
 
 const router = Router();
@@ -420,25 +421,56 @@ router.post('/startup/initialize', authenticateJWT, async (req: AuthenticatedReq
   }
 });
 
-// GET canonical startup context (Structured Source of Truth)
-router.get('/startup/context', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+// GET canonical startup context (Single Source of Truth - P1 Task 4)
+const handleGetCompanyContext = async (req: AuthenticatedRequest, res: any) => {
   const userId = req.user?.id;
   if (!userId) {
     res.status(401).json({ error: 'Authentication required.' });
     return;
   }
 
+  const requestedStartupId = (req.query.startupId || req.query.companyId) as string | undefined;
+  const requestedRole = req.query.role as string | undefined;
+
   try {
-    const canonical = await workspaceService.getCanonicalContext(userId);
-    if (!canonical) {
-      res.status(404).json({ error: 'No startup workspace found for authenticated user.', onboarded: false });
-      return;
+    let context;
+    if (requestedStartupId) {
+      context = await companyContextService.getContextForStartup(requestedStartupId, userId);
+      if (!context) {
+        // Verify if startup exists under another owner to return 403 Forbidden
+        const exists = await safeDbQuery(() => prisma.startup.findUnique({ where: { id: requestedStartupId } }));
+        if (exists && exists.ownerId !== userId) {
+          res.status(403).json({ error: 'Access denied: You do not have permission to view this company context.' });
+          return;
+        }
+        res.status(404).json({ error: 'Startup not found.', onboarded: false });
+        return;
+      }
+    } else {
+      context = await companyContextService.getContextForUser(userId);
+      if (!context) {
+        res.status(404).json({ error: 'No startup workspace found for authenticated user.', onboarded: false });
+        return;
+      }
     }
-    res.json({ ...canonical, onboarded: true });
+
+    const responsePayload: any = {
+      ...context,
+      onboarded: true
+    };
+
+    if (requestedRole) {
+      responsePayload.agentScopedContext = companyContextService.getAgentScopedContext(context, requestedRole);
+    }
+
+    res.json(responsePayload);
   } catch (err: any) {
     res.status(500).json({ error: err.message, onboarded: false });
   }
-});
+};
+
+router.get('/startup/context', authenticateJWT, handleGetCompanyContext);
+router.get('/company/context', authenticateJWT, handleGetCompanyContext);
 
 // GET startup profile (Scoping strictly per authenticated user workspace)
 router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) => {
@@ -775,7 +807,8 @@ router.post('/initiatives/:id/simulate', authenticateJWT, async (req: Authentica
     }
 
     if (!simResult) {
-      simResult = await runMultiAgentCollaboration(init);
+      const companyContext = req.user?.id ? await companyContextService.getContextForUser(req.user.id) : null;
+      simResult = await runMultiAgentCollaboration(init, companyContext || startupProfile);
     }
 
     // Apply sim results to initiative

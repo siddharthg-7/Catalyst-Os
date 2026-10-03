@@ -1,40 +1,50 @@
 import { Router, Request, Response } from 'express';
 import { startupProfile, knowledgeFiles } from '../state';
 import { runFinanceAgent, runTalentAgent, runGrowthAgent, runOperationsAgent, runLegalAgent } from './services';
+import { authenticateJWT, AuthenticatedRequest } from '../services/neonAuthMiddleware';
+import { companyContextService } from '../services/companyContextService';
 
 const router = Router();
 
 // 1. FINANCE AGENT CONTROLLERS
 // GET /api/finance/burn-chart - Generates a dynamic projection chart of cash-depletion velocity over time
-router.get('/finance/burn-chart', (req: Request, res: Response) => {
+router.get('/finance/burn-chart', authenticateJWT, async (req: AuthenticatedRequest, res: Response) => {
+  const context = req.user?.id ? await companyContextService.getContextForUser(req.user.id) : null;
+  const cashBalance = context?.financial.cashBalance ?? startupProfile.cashBalance;
+  const burnRate = context?.financial.monthlyBurn ?? startupProfile.burnRate;
+
   const months = 12;
   const projections = [];
-  let currentCash = startupProfile.cashBalance;
+  let currentCash = cashBalance;
   
   for (let i = 0; i <= months; i++) {
     projections.push({
       month: `Month ${i}`,
       cash: Math.round(currentCash),
-      runway: parseFloat((currentCash / startupProfile.burnRate).toFixed(1))
+      runway: burnRate > 0 ? parseFloat((currentCash / burnRate).toFixed(1)) : 999
     });
-    currentCash = Math.max(0, currentCash - startupProfile.burnRate);
+    currentCash = Math.max(0, currentCash - burnRate);
   }
   
   res.json({
-    burnRate: startupProfile.burnRate,
+    burnRate,
     projections
   });
 });
 
 // GET /api/finance/affordability-check - Instantly verify budget availability for a salary package
-router.get('/finance/affordability-check', (req: Request, res: Response) => {
+router.get('/finance/affordability-check', authenticateJWT, async (req: AuthenticatedRequest, res: Response) => {
+  const context = req.user?.id ? await companyContextService.getContextForUser(req.user.id) : null;
+  const cashBalance = context?.financial.cashBalance ?? startupProfile.cashBalance;
+  const burnRate = context?.financial.monthlyBurn ?? startupProfile.burnRate;
+
   const salary = parseFloat(req.query.salary as string) || 120000;
   const equity = parseFloat(req.query.equity as string) || 1.2;
 
   const annualCost = salary;
   const monthlyCost = annualCost / 12;
-  const newBurnRate = startupProfile.burnRate + monthlyCost;
-  const potentialRunway = parseFloat((startupProfile.cashBalance / newBurnRate).toFixed(1));
+  const newBurnRate = burnRate + monthlyCost;
+  const potentialRunway = parseFloat((cashBalance / (newBurnRate > 0 ? newBurnRate : 1)).toFixed(1));
 
   const isAffordable = potentialRunway >= 11; // Buffer rule of 11 months
 
@@ -53,7 +63,7 @@ router.get('/finance/affordability-check', (req: Request, res: Response) => {
 
 // 2. TALENT AGENT CONTROLLERS
 // POST /api/talent/score-candidates - Parses and ranks candidates against a criteria
-router.post('/talent/score-candidates', (req: Request, res: Response) => {
+router.post('/talent/score-candidates', authenticateJWT, (req: AuthenticatedRequest, res: Response) => {
   const { jobDescriptionId, resumes } = req.body;
   if (!resumes || !Array.isArray(resumes)) {
     res.status(400).json({ error: 'Resumes array is required.' });
@@ -89,12 +99,15 @@ router.post('/talent/score-candidates', (req: Request, res: Response) => {
 });
 
 // GET /api/talent/benchmarks - Retrieves compensation benchmarks
-router.get('/talent/benchmarks', (req: Request, res: Response) => {
+router.get('/talent/benchmarks', authenticateJWT, async (req: AuthenticatedRequest, res: Response) => {
+  const context = req.user?.id ? await companyContextService.getContextForUser(req.user.id) : null;
+  const industry = context?.identity.industry ?? startupProfile.industry;
+  const fundingStage = context?.identity.stage ?? startupProfile.fundingStage;
   const role = req.query.role as string || 'Lead Platform Engineer';
   
   res.json({
-    industry: startupProfile.industry,
-    fundingStage: startupProfile.fundingStage,
+    industry,
+    fundingStage,
     role,
     salaryP50: 125000,
     salaryP90: 155000,
@@ -105,7 +118,7 @@ router.get('/talent/benchmarks', (req: Request, res: Response) => {
 
 // 3. GROWTH AGENT CONTROLLERS
 // GET /api/growth/campaigns - Retrieve active campaigns list
-router.get('/growth/campaigns', (req: Request, res: Response) => {
+router.get('/growth/campaigns', authenticateJWT, (req: AuthenticatedRequest, res: Response) => {
   res.json([
     {
       id: 'camp_1',
@@ -120,17 +133,25 @@ router.get('/growth/campaigns', (req: Request, res: Response) => {
 });
 
 // POST /api/growth/generate-assets - Automatically generates copy drafts
-router.post('/growth/generate-assets', async (req: Request, res: Response) => {
+router.post('/growth/generate-assets', authenticateJWT, async (req: AuthenticatedRequest, res: Response) => {
+  const context = req.user?.id ? await companyContextService.getContextForUser(req.user.id) : null;
+  const companyName = context?.identity.name ?? 'CatalystOS Startup';
+  const founderName = context?.founder.name ?? 'Sophia Vance';
+  const founderRole = context?.founder.role ?? 'CEO';
+  const problem = context?.business.problem ?? 'manual scheduling delays';
+  const targetIcp = context?.business.targetIcp ?? 'DevOps Managers';
+
   const { initiativeTitle, targetSegment } = req.body;
+  const segment = targetSegment || targetIcp;
   
   const response = {
-    campaignTitle: initiativeTitle || 'Campaign',
-    targetSegment: targetSegment || 'DevOps Managers',
+    campaignTitle: initiativeTitle || `${companyName} Launch Campaign`,
+    targetSegment: segment,
     channels: ['LinkedIn', 'Direct Cold Outreach'],
     contentDrafts: {
-      linkedinPost: `We are wasting billions annually on idle servers.\n\nToday, we are launching CatalystOS Startup: the first autonomous predictive scheduler that automatically failovers and scales cloud nodes to eliminate waste.\n\n🚀 Join our free pilot (limited to 5 teams): [Link]`,
-      emailSubject: 'Save 34% on your hybrid cloud server bills',
-      emailBody: `Hi [First Name],\n\nI noticed you are managing cloud infrastructure. Most teams waste up to 34% of their budgets due to manual scheduling delays.\n\nCatalystOS Startup automatically scales and failovers clusters based on predictive usage.\n\nWe are accepting 5 mid-market pilots this month. Would you be open to a 10-minute chat?\n\nBest,\nSophia Vance\nCEO, CatalystOS Startup`
+      linkedinPost: `We are wasting billions annually on idle servers.\n\nToday, we are launching ${companyName}: addressing "${problem}".\n\n🚀 Join our free pilot: [Link]`,
+      emailSubject: `Solving ${problem.slice(0, 40)} for ${segment}`,
+      emailBody: `Hi [First Name],\n\nI noticed you are managing infrastructure at your team. ${problem}.\n\n${companyName} is built specifically to solve this for ${segment}.\n\nWould you be open to a brief 10-minute chat?\n\nBest,\n${founderName}\n${founderRole}, ${companyName}`
     }
   };
 

@@ -7,6 +7,7 @@ import {
   isDbAvailable 
 } from '../state';
 import { workspaceService, CanonicalStartupContext } from './workspaceService';
+import { companyContextService, CompanyContext } from './companyContextService';
 import { 
   OrchestrationResponse, 
   OrchestrationAgentActivity, 
@@ -373,14 +374,25 @@ export class OrchestrationService {
     console.log(`[Command] commandId=${commandId} userId=${userId || 'anonymous'} command="${command}"`);
     onEvent?.({ type: 'command_received', commandId, command });
 
-    // 1. Resolve Canonical Startup Context (Sections 8, 9, 34 & 35)
-    const targetLookup = userId || (typeof userIdOrContext === 'object' ? userIdOrContext?.startupId : undefined);
-    let canonical = targetLookup ? await workspaceService.getCanonicalContext(targetLookup) : null;
+    // 1. Resolve Canonical Startup Context (Company Context Layer - P1 Task 4)
+    const targetUserId = userId || (typeof userIdOrContext === 'object' ? userIdOrContext?.userId : undefined);
+    const targetStartupId = typeof userIdOrContext === 'object' ? userIdOrContext?.startupId : undefined;
 
-    if (!canonical && isDbAvailable && prisma) {
-      const userStartup = userId ? await prisma.startup.findFirst({ where: { ownerId: userId } }) : null;
+    let canonical: CompanyContext | null = null;
+    if (targetStartupId && targetUserId) {
+      canonical = await companyContextService.getContextForStartup(targetStartupId, targetUserId);
+    }
+    if (!canonical && targetUserId) {
+      canonical = await companyContextService.getContextForUser(targetUserId);
+    }
+    if (!canonical && targetStartupId && !targetUserId) {
+      // In dev/offline fallback mode
+      canonical = await companyContextService.getContextForStartupOrUser(targetStartupId);
+    }
+    if (!canonical && targetUserId && isDbAvailable && prisma) {
+      const userStartup = await prisma.startup.findFirst({ where: { ownerId: targetUserId } });
       if (userStartup) {
-        canonical = await workspaceService.getCanonicalContext(userStartup.id);
+        canonical = await companyContextService.getContextForStartup(userStartup.id, targetUserId);
       }
     }
 
@@ -738,16 +750,8 @@ You are delivering a unified, grounded, decision-ready response to the Founder.
 FOUNDER COMMAND: "${command}"
 INTENT: ${analysis.intent} - ${analysis.objective}
 
-CRITICAL CANONICAL COMPANY CONTEXT:
-- Startup Name: "${activeStartup.name}"
-- Industry: ${activeStartup.industry}
-- Stage: ${activeStartup.fundingStage}
-- Core Positioning/Description: "${activeStartup.description}"
-- Target Customer Profile (ICP): "${canonical.business.targetIcp}"
-- Primary Product Offering: "${canonical.business.primaryProduct}"
-- Strategic Goals: ${canonical.goals.join(', ')}
-- Current Priorities: ${canonical.priorities.join(', ')}
-- Health Score: ${activeStartup.healthScore}/100
+CANONICAL COMPANY CONTEXT (SINGLE SOURCE OF TRUTH):
+${companyContextService.toPromptContext(canonical, 'CEO')}
 
 ${recentContext ? `RECENT CONVERSATION HISTORY:\n${recentContext}\n` : ''}
 ${calculations.length > 0 ? `DETERMINISTIC APPLICATION CALCULATIONS (DO NOT RE-ESTIMATE OR HALLUCINATE NUMBERS):\n${calculationsSummary}\n` : ''}
