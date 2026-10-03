@@ -994,6 +994,9 @@ INSTRUCTIONS:
                 startupId
               }
             });
+
+            // Invalidate company context so pendingApprovalsCount reflects immediately
+            companyContextService.invalidate(startupId);
           }, 3);
         } catch (dbErr: any) {
           console.warn('[Orchestrator] Could not persist approval/notification to DB:', dbErr.message);

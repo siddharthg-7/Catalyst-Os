@@ -36,6 +36,7 @@ import {
 import { orchestrationService } from '../services/orchestrationService';
 import { workspaceService, DEFAULT_EXECUTIVE_ROLES } from '../services/workspaceService';
 import { companyContextService } from '../services/companyContextService';
+import { approvalService } from '../services/approvalService';
 import { performDevReset } from '../scripts/devReset';
 
 const router = Router();
@@ -837,71 +838,17 @@ router.post('/initiatives/:id/simulate', authenticateJWT, async (req: Authentica
 
 // GET approvals queue
 router.get('/approvals', authenticateJWT, async (req: AuthenticatedRequest, res) => {
-  let mergedApprovals = [...approvals];
-
-  // 1. Direct PostgreSQL Prisma query
-  if (isDbAvailable && prisma) {
-    try {
-      const dbApprovals = await safeDbQuery(async () => {
-        return await prisma.approval.findMany({
-          orderBy: { createdAt: 'desc' },
-          take: 50
-        });
-      }, 3);
-
-      if (dbApprovals && dbApprovals.length > 0) {
-        const mapped = dbApprovals.map((appr: any) => ({
-          id: appr.id,
-          initiativeId: appr.startupId || 'init_db_sync',
-          title: `Approval: ${appr.actionType}`,
-          description: appr.description || appr.actionType,
-          type: (appr.actionType || 'action').toLowerCase(),
-          content: appr.description,
-          impact: appr.impact || 'Requires founder verification.',
-          financialChange: appr.financialImpact || 0,
-          status: appr.status === 'PENDING' ? 'pending_review' : appr.status.toLowerCase(),
-          metricChanges: { velocity: 0, financialHealth: 0, legalCompliance: 0, growthRate: 0, operationsEfficiency: 0 }
-        }));
-        mergedApprovals = [...mapped, ...mergedApprovals];
-      }
-    } catch (dbErr: any) {
-      console.warn('[Approvals API] Database query warning:', dbErr.message);
-    }
-  }
-
-  // 2. Python FastAPI check with 5000ms timeout
-  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
   try {
-    const pyRes = await fetch(`${fastApiUrl}/api/approvals`, { signal: AbortSignal.timeout(5000) });
-    if (pyRes.ok) {
-      const dbApprovals = await pyRes.json();
-      const mapped = dbApprovals.map((appr: any) => {
-        const payload = appr.payload || {};
-        const docContent = payload.document_content || payload.email_body || JSON.stringify(payload);
-        const purpose = payload.purpose || appr.action_type;
-        
-        return {
-          id: appr.id,
-          initiativeId: 'init_db_sync',
-          title: payload.email_subject || `Approval: ${appr.action_type}`,
-          description: purpose,
-          type: (payload.contract_type || appr.action_type || 'document').toLowerCase(),
-          content: docContent,
-          impact: `Action type: ${appr.action_type}. Requires founder verification.`,
-          financialChange: payload.financialChange || 0,
-          status: appr.status === 'PENDING' ? 'pending_review' : appr.status.toLowerCase(),
-          metricChanges: payload.metricChanges || { velocity: 0, financialHealth: 0, legalCompliance: 0, growthRate: 0, operationsEfficiency: 0 }
-        };
-      });
-      const pendingDb = mapped.filter((a: any) => a.status === 'pending_review');
-      mergedApprovals = [...pendingDb, ...mergedApprovals];
+    const userId = req.user?.id;
+    if (userId) {
+      const userApprovals = await approvalService.getApprovalsForUser(userId);
+      return res.json(userApprovals);
     }
+    res.json(approvals);
   } catch (err: any) {
-    if (err.name !== 'AbortError') {
-      console.warn(`[FastAPI Sync] Failed to fetch approvals: ${err.message}. Using persistent database queue.`);
-    }
+    console.error('[Approvals API] Error fetching approvals:', err);
+    res.status(500).json({ error: 'Failed to fetch approvals queue.' });
   }
-  res.json(mergedApprovals);
 });
 
 // POST review action on approval item
@@ -909,142 +856,49 @@ router.post('/approvals/:id/review', authenticateJWT, requireRole(['Founder', 'A
   const { id } = req.params;
   const { action, feedback } = req.body; // action: 'approve' | 'reject'
 
-  const fastApiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+  if (!action || !['approve', 'reject'].includes(action)) {
+    return res.status(400).json({ error: 'Valid action ("approve" | "reject") is required.' });
+  }
 
-  // Try checking if this is a database approval item
   try {
-    if (action === 'approve') {
-      const pyRes = await fetch(`${fastApiUrl}/api/approvals/${id}/execute`, {
-        method: 'PUT'
-      });
-      if (pyRes.ok) {
-        const dbAppr = await pyRes.json();
-        
-        // Write to Decision Log
-        decisionLog.unshift({
-          id: `dec_${Date.now()}`,
-          title: `Approve: ${dbAppr.action_type}`,
-          description: `Executed database transaction approval for ID ${id}`,
-          category: dbAppr.action_type.toUpperCase(),
-          timestamp: new Date().toISOString(),
-          impactText: 'Database transaction completed and signed off.',
-          financialImpact: 0,
-          status: 'approved',
-        });
+    const result = await approvalService.reviewApproval({
+      approvalId: id,
+      userId: req.user!.id,
+      userRole: req.user!.role,
+      action,
+      feedback
+    });
 
-        // Sync local memory profile from FastAPI
-        const startRes = await fetch(`${fastApiUrl}/api/startup`);
-        if (startRes.ok) {
-          const data = await startRes.json();
-          startupProfile.name = data.company_name;
-          startupProfile.industry = data.industry;
-          startupProfile.description = data.target_icp || '';
-          startupProfile.cashBalance = data.cash_on_hand;
-          startupProfile.burnRate = data.current_monthly_burn;
-          if (startupProfile.burnRate > 0) {
-            startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
-          } else {
-            startupProfile.runwayMonths = 999;
-          }
-        }
-
-        return res.json({ startupProfile, item: { id: dbAppr.id, title: `Database Action: ${dbAppr.action_type}`, status: 'approved' } });
-      }
+    if (!result.success) {
+      return res.status(result.statusCode || 500).json({ error: result.error });
     }
+
+    res.json({
+      startupProfile: result.startupProfile,
+      item: result.item,
+      message: result.message,
+      alreadyProcessed: result.alreadyProcessed,
+      stateChangesApplied: result.stateChangesApplied
+    });
   } catch (err: any) {
-    console.warn(`[FastAPI Sync] Error checking database approvals: ${err.message}`);
+    console.error(`[Approvals Review API] Error reviewing approval ${id}:`, err);
+    res.status(500).json({ error: `Internal error processing approval review: ${err.message}` });
   }
-
-  // Fallback to local memory-based approvals review logic
-  const index = approvals.findIndex(a => a.id === id);
-  if (index === -1) {
-    res.status(404).json({ error: 'Approval deliverable not found.' });
-    return;
-  }
-
-  const item = approvals[index];
-
-  if (action === 'approve') {
-    item.status = 'approved';
-
-    // Apply financial changes to startup profile
-    if (item.financialChange) {
-      startupProfile.cashBalance = Math.max(0, startupProfile.cashBalance + item.financialChange);
-    }
-
-    // Apply metric scores (0 to 100)
-    if (item.metricChanges) {
-      const keys = Object.keys(item.metricChanges) as Array<keyof typeof startupProfile.metrics>;
-      keys.forEach(key => {
-        const change = (item.metricChanges as any)[key] || 0;
-        startupProfile.metrics[key] = Math.min(100, Math.max(10, startupProfile.metrics[key] + change));
-      });
-    }
-
-    // Dynamic burn recalculation based on negative impact
-    if (item.financialChange && item.financialChange < 0) {
-      const burnImpact = Math.abs(item.financialChange) / 12; // spread over a year
-      startupProfile.burnRate = Math.round(startupProfile.burnRate + burnImpact);
-    }
-
-    // Recalculate runway
-    if (startupProfile.burnRate > 0) {
-      startupProfile.runwayMonths = parseFloat((startupProfile.cashBalance / startupProfile.burnRate).toFixed(1));
-    } else {
-      startupProfile.runwayMonths = 999;
-    }
-
-    // Recalculate total health score
-    const avgMetrics = Object.values(startupProfile.metrics).reduce((a, b) => a + b, 0) / 5;
-    startupProfile.healthScore = Math.round(avgMetrics);
-
-    // Write to Decision Log
-    decisionLog.unshift({
-      id: `dec_${Date.now()}`,
-      title: `Approve: ${item.title}`,
-      description: item.description,
-      category: item.type.toUpperCase(),
-      timestamp: new Date().toISOString(),
-      impactText: item.impact,
-      financialImpact: item.financialChange || 0,
-      status: 'approved',
-    });
-
-    // Also update deliverable status in original initiative if it exists
-    initiatives.forEach(init => {
-      const del = init.deliverables.find(d => d.id === id);
-      if (del) del.status = 'approved';
-    });
-
-  } else if (action === 'reject') {
-    item.status = 'rejected';
-
-    decisionLog.unshift({
-      id: `dec_${Date.now()}`,
-      title: `Reject: ${item.title}`,
-      description: `Rejected by founder with feedback: "${feedback || 'No feedback provided'}"`,
-      category: item.type.toUpperCase(),
-      timestamp: new Date().toISOString(),
-      impactText: 'No operational metrics modified.',
-      financialImpact: 0,
-      status: 'rejected',
-    });
-
-    initiatives.forEach(init => {
-      const del = init.deliverables.find(d => d.id === id);
-      if (del) del.status = 'rejected';
-    });
-  }
-
-  // Remove from core review queue
-  approvals.splice(index, 1);
-
-  res.json({ startupProfile, item });
 });
 
 // GET decision logs
-router.get('/decisions', authenticateJWT, (req: AuthenticatedRequest, res) => {
-  res.json(decisionLog);
+router.get('/decisions', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const userId = req.user?.id;
+    if (userId) {
+      const decisions = await approvalService.getDecisionsForUser(userId);
+      return res.json(decisions);
+    }
+    res.json(decisionLog);
+  } catch (err: any) {
+    console.error('[Decisions API] Error fetching decision logs:', err);
+    res.status(500).json({ error: 'Failed to retrieve decision log.' });
+  }
 });
 
 // GET knowledge base documents from Neon PostgreSQL

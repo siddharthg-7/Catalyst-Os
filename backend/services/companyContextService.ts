@@ -643,6 +643,15 @@ export class CompanyContextService {
    */
   public invalidate(startupIdOrUserId: string): void {
     if (!startupIdOrUserId) return;
+    const cached = contextCache.get(startupIdOrUserId);
+    if (cached && cached.context?.metadata) {
+      if (cached.context.metadata.startupId) {
+        contextCache.delete(cached.context.metadata.startupId);
+      }
+      if (cached.context.metadata.ownerId) {
+        contextCache.delete(cached.context.metadata.ownerId);
+      }
+    }
     contextCache.delete(startupIdOrUserId);
   }
 
