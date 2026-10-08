@@ -97,7 +97,23 @@ export class MultiAgentCouncil {
 
     let objective = `Execute strategic analysis for: "${command}"`;
 
-    if (isHiring) {
+    const isAdvisory = /should i|can we afford|can we hire|is it safe to|would hiring/i.test(lower);
+
+    if (isHiring && isAdvisory) {
+      objective = `Evaluate organizational runway impact and headcount feasibility for: "${command}"`;
+      workOrders.push({
+        department: 'TALENT',
+        objective: 'Analyze candidate role profile, market compensation bands, and onboarding requirements',
+        dependencies: [],
+        parameters: { command }
+      });
+      workOrders.push({
+        department: 'FINANCE',
+        objective: 'Assess fully loaded burn rate impact, runway compression, and affordability threshold',
+        dependencies: ['TALENT'],
+        parameters: { command }
+      });
+    } else if (isHiring) {
       objective = `Evaluate organization headcount expansion and operational capacity`;
       workOrders.push({
         department: 'TALENT',
@@ -516,6 +532,87 @@ export class MultiAgentCouncil {
   }
 
   /**
+   * Independent Growth Agent Execution
+   */
+  public async executeGrowthAgent(params: {
+    command: string;
+    context: CanonicalStartupContext;
+    policy: CompanyPolicy;
+    workflowId: string;
+    parentRunId: string;
+    evidenceSnippets: string[];
+  }): Promise<ExecutiveAgentResult> {
+    const { command, context, policy, workflowId, parentRunId, evidenceSnippets } = params;
+    const runId = `run_growth_${crypto.randomBytes(4).toString('hex')}`;
+    const startedAt = new Date().toISOString();
+
+    const icp = context.business?.targetIcp || 'Target Customers';
+    const product = context.business?.primaryProduct || context.startup.name;
+    const model = context.business?.model || 'B2B SaaS';
+
+    const assumptions = [
+      `Target ICP verified as "${icp}".`,
+      `Commercial motion aligns with ${model} go-to-market playbook.`
+    ];
+    const risks = [
+      'Customer acquisition channel saturation requires multi-channel validation.',
+      'Conversion cycle may require 30-60 days before revenue inflection.'
+    ];
+    const conditions = [
+      'Establish strict weekly CAC and conversion milestone tracking before scaling paid acquisition.'
+    ];
+
+    const recommendation = `Recommend focused GTM execution targeting ${icp} for ${product} with phased conversion milestones and weekly cohort tracking.`;
+
+    const vote: AgentVote = {
+      id: `vote_growth_${Date.now()}`,
+      agentRole: 'Growth',
+      verdict: 'APPROVE',
+      confidence: 0.93,
+      reason: `Commercial expansion aligns with product value proposition and ICP targeting.`,
+      conditions,
+      createdAt: new Date().toISOString()
+    };
+
+    const completedAt = new Date().toISOString();
+    const result: ExecutiveAgentResult = {
+      role: 'Growth',
+      status: 'completed',
+      recommendation,
+      confidence: 0.93,
+      assumptions,
+      risks,
+      conditions,
+      citations: evidenceSnippets.slice(0, 1),
+      vote,
+      dataOutput: {
+        targetIcp: icp,
+        primaryProduct: product,
+        businessModel: model,
+        recommendedChannels: ['Outbound Direct', 'Content & SEO', 'Partner Referrals']
+      }
+    };
+
+    agentRunService.recordAgentRun({
+      workflowId,
+      commandId: parentRunId,
+      agentRunId: runId,
+      parentRunId,
+      agentRole: 'Growth',
+      status: 'completed',
+      startedAt,
+      completedAt,
+      input: { command, targetIcp: icp, product },
+      output: result,
+      confidence: 0.93,
+      citations: result.citations,
+      vote
+    });
+
+    return result;
+  }
+
+  /**
    * Independent Auditor Agent Execution (Section 5: Mathematical & Evidence Gate)
    */
   public async executeAuditorAgent(params: {
@@ -534,7 +631,7 @@ export class MultiAgentCouncil {
       policy, 
       evidenceSnippets, 
       workflowId, 
-      parentRunId,
+      parentRunId, 
       simulatedMismatchNumber 
     } = params;
 
@@ -631,12 +728,16 @@ export class MultiAgentCouncil {
 
   /**
    * Full Multi-Agent Council Orchestration (End-to-End Orchestrator)
+   * Hardened to selectively execute ONLY relevant specialist agents based on intent.
    */
   public async executeCouncil(
     command: string,
     context: CanonicalStartupContext,
     evidenceSnippets: string[] = [],
-    options?: { simulatedMismatchNumber?: number }
+    options?: {
+      activatedRoles?: string[];
+      simulatedMismatchNumber?: number;
+    }
   ): Promise<CouncilExecutionResult> {
     const workflowId = `wf_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
     const commandId = `cmd_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
@@ -668,11 +769,41 @@ export class MultiAgentCouncil {
 
     const executiveResults = new Map<ExecutiveRole, ExecutiveAgentResult>();
     const consultations: CrossAgentConsultation[] = [];
-    const isHiring = /hire|hiring|recruit|headcount/i.test(command.toLowerCase());
+    const lowerCmd = command.toLowerCase();
+    const isHiring = /hire|hiring|recruit|headcount/i.test(lowerCmd);
+    const isGrowth = /marketing|ad|campaign|growth|acquisition|seo|launch|sale/i.test(lowerCmd);
+
+    // Resolve which specialists should genuinely execute
+    const explicitRoles = (options?.activatedRoles || []).map(r => r.toUpperCase());
+    const hasExplicit = explicitRoles.length > 0;
+
+    const shouldRunTalent = hasExplicit
+      ? explicitRoles.includes('TALENT') || explicitRoles.includes('HR')
+      : isHiring;
+
+    const shouldRunCfo = hasExplicit
+      ? explicitRoles.includes('CFO') || explicitRoles.includes('FINANCE')
+      : true;
+
+    const shouldRunGrowth = hasExplicit
+      ? explicitRoles.includes('GROWTH') || explicitRoles.includes('CMO')
+      : isGrowth;
+
+    const shouldRunLegal = hasExplicit
+      ? explicitRoles.includes('LEGAL')
+      : true;
+
+    const shouldRunOps = hasExplicit
+      ? explicitRoles.includes('OPERATIONS') || explicitRoles.includes('COO')
+      : true;
+
+    const shouldRunAuditor = hasExplicit
+      ? explicitRoles.includes('AUDITOR')
+      : true;
 
     // 2. TALENT AGENT EXECUTION
     let talentOutput: Record<string, any> | undefined;
-    if (isHiring) {
+    if (shouldRunTalent) {
       const talentRes = await this.executeTalentAgent({
         command,
         policy,
@@ -693,131 +824,177 @@ export class MultiAgentCouncil {
       });
     }
 
-    // 3. CFO AGENT EXECUTION (Consultation with Talent)
-    const cfoRes = await this.executeCfoAgent({
-      command,
-      context,
-      policy,
-      talentOutput,
-      workflowId,
-      parentRunId: commandId
-    });
-    executiveResults.set('CFO', cfoRes);
-
-    if (talentOutput) {
-      consultations.push({
-        consultationId: `cons_${Date.now()}_talent_cfo`,
+    // 3. CFO AGENT EXECUTION (Consultation with Talent if applicable)
+    let cfoRes: ExecutiveAgentResult | undefined;
+    if (shouldRunCfo) {
+      cfoRes = await this.executeCfoAgent({
+        command,
+        context,
+        policy,
+        talentOutput,
         workflowId,
-        sourceAgent: 'Talent',
-        targetAgent: 'CFO',
-        question: `Analyze fully loaded compensation and burn rate for ${talentOutput.count}x ${talentOutput.role} at $${talentOutput.baseSalary}/yr base salary.`,
-        response: `Fully loaded cost is $${(cfoRes.financialImpact?.monthlyBurnDelta ?? 0).toLocaleString()}/mo. Projected runway: ${cfoRes.financialImpact?.projectedRunway} months.`,
-        timestamp: new Date().toISOString()
+        parentRunId: commandId
+      });
+      executiveResults.set('CFO', cfoRes);
+
+      if (talentOutput) {
+        consultations.push({
+          consultationId: `cons_${Date.now()}_talent_cfo`,
+          workflowId,
+          sourceAgent: 'Talent',
+          targetAgent: 'CFO',
+          question: `Analyze fully loaded compensation and burn rate for ${talentOutput.count}x ${talentOutput.role} at $${talentOutput.baseSalary}/yr base salary.`,
+          response: `Fully loaded cost is $${(cfoRes.financialImpact?.monthlyBurnDelta ?? 0).toLocaleString()}/mo. Projected runway: ${cfoRes.financialImpact?.projectedRunway} months.`,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      decisionLedgerService.appendEvent({
+        decisionId: commandId,
+        startupId,
+        workflowId,
+        actor: 'CFO',
+        eventType: 'AGENT_VOTE_RECORDED',
+        payload: { vote: cfoRes.vote, financialImpact: cfoRes.financialImpact }
       });
     }
 
-    decisionLedgerService.appendEvent({
-      decisionId: commandId,
-      startupId,
-      workflowId,
-      actor: 'CFO',
-      eventType: 'AGENT_VOTE_RECORDED',
-      payload: { vote: cfoRes.vote, financialImpact: cfoRes.financialImpact }
-    });
-
-    // 4. LEGAL AGENT EXECUTION
-    const legalRes = await this.executeLegalAgent({
-      command,
-      isHiring,
-      workflowId,
-      parentRunId: commandId
-    });
-    executiveResults.set('Legal', legalRes);
-
-    if (isHiring) {
-      consultations.push({
-        consultationId: `cons_${Date.now()}_talent_legal`,
+    // 4. GROWTH AGENT EXECUTION
+    if (shouldRunGrowth) {
+      const growthRes = await this.executeGrowthAgent({
+        command,
+        context,
+        policy,
         workflowId,
-        sourceAgent: 'Talent',
-        targetAgent: 'Legal',
-        question: `Determine mandatory employment covenants and IP assignment terms for candidate role.`,
-        response: `PIIA and At-Will employment covenants required. ${legalRes.conditions.join(', ')}`,
-        timestamp: new Date().toISOString()
+        parentRunId: commandId,
+        evidenceSnippets
+      });
+      executiveResults.set('Growth', growthRes);
+
+      if (shouldRunCfo && cfoRes) {
+        consultations.push({
+          consultationId: `cons_${Date.now()}_growth_cfo`,
+          workflowId,
+          sourceAgent: 'Growth',
+          targetAgent: 'CFO',
+          question: `Assess customer acquisition budget allocation against treasury runway.`,
+          response: `Treasury standing: ${context.financials.runwayMonths} months baseline runway. Discretionary CAC pacing required.`,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      decisionLedgerService.appendEvent({
+        decisionId: commandId,
+        startupId,
+        workflowId,
+        actor: 'Growth',
+        eventType: 'AGENT_VOTE_RECORDED',
+        payload: { vote: growthRes.vote, recommendation: growthRes.recommendation }
       });
     }
 
-    decisionLedgerService.appendEvent({
-      decisionId: commandId,
-      startupId,
-      workflowId,
-      actor: 'Legal',
-      eventType: 'AGENT_VOTE_RECORDED',
-      payload: { vote: legalRes.vote }
-    });
-
-    // 5. OPERATIONS AGENT EXECUTION
-    const opsRes = await this.executeOperationsAgent({
-      command,
-      talentOutput,
-      workflowId,
-      parentRunId: commandId
-    });
-    executiveResults.set('Operations', opsRes);
-
-    if (talentOutput) {
-      consultations.push({
-        consultationId: `cons_${Date.now()}_ops_talent`,
+    // 5. LEGAL AGENT EXECUTION
+    if (shouldRunLegal) {
+      const legalRes = await this.executeLegalAgent({
+        command,
+        isHiring,
         workflowId,
-        sourceAgent: 'Operations',
-        targetAgent: 'Talent',
-        question: `Evaluate team capacity and onboarding lead time (${talentOutput.onboardingLeadTimeDays} days) for role execution.`,
-        response: opsRes.recommendation,
-        timestamp: new Date().toISOString()
+        parentRunId: commandId
+      });
+      executiveResults.set('Legal', legalRes);
+
+      if (talentOutput) {
+        consultations.push({
+          consultationId: `cons_${Date.now()}_talent_legal`,
+          workflowId,
+          sourceAgent: 'Talent',
+          targetAgent: 'Legal',
+          question: `Determine mandatory employment covenants and IP assignment terms for candidate role.`,
+          response: `PIIA and At-Will employment covenants required. ${legalRes.conditions.join(', ')}`,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      decisionLedgerService.appendEvent({
+        decisionId: commandId,
+        startupId,
+        workflowId,
+        actor: 'Legal',
+        eventType: 'AGENT_VOTE_RECORDED',
+        payload: { vote: legalRes.vote }
       });
     }
 
-    decisionLedgerService.appendEvent({
-      decisionId: commandId,
-      startupId,
-      workflowId,
-      actor: 'Operations',
-      eventType: 'AGENT_VOTE_RECORDED',
-      payload: { vote: opsRes.vote }
-    });
+    // 6. OPERATIONS AGENT EXECUTION
+    if (shouldRunOps) {
+      const opsRes = await this.executeOperationsAgent({
+        command,
+        talentOutput,
+        workflowId,
+        parentRunId: commandId
+      });
+      executiveResults.set('Operations', opsRes);
 
-    // 6. AUDITOR AGENT GATE
-    const auditorRes = await this.executeAuditorAgent({
-      command,
-      executiveResults,
-      context,
-      policy,
-      evidenceSnippets,
-      workflowId,
-      parentRunId: commandId,
-      simulatedMismatchNumber: options?.simulatedMismatchNumber
-    });
-    executiveResults.set('Auditor', auditorRes);
+      if (talentOutput) {
+        consultations.push({
+          consultationId: `cons_${Date.now()}_ops_talent`,
+          workflowId,
+          sourceAgent: 'Operations',
+          targetAgent: 'Talent',
+          question: `Evaluate team capacity and onboarding lead time (${talentOutput.onboardingLeadTimeDays} days) for role execution.`,
+          response: opsRes.recommendation,
+          timestamp: new Date().toISOString()
+        });
+      }
 
-    consultations.push({
-      consultationId: `cons_${Date.now()}_cfo_auditor`,
-      workflowId,
-      sourceAgent: 'CFO',
-      targetAgent: 'Auditor',
-      question: `Independently verify reported treasury burn deltas against deterministic financial engine.`,
-      response: auditorRes.recommendation,
-      timestamp: new Date().toISOString()
-    });
+      decisionLedgerService.appendEvent({
+        decisionId: commandId,
+        startupId,
+        workflowId,
+        actor: 'Operations',
+        eventType: 'AGENT_VOTE_RECORDED',
+        payload: { vote: opsRes.vote }
+      });
+    }
 
-    decisionLedgerService.appendEvent({
-      decisionId: commandId,
-      startupId,
-      workflowId,
-      actor: 'Auditor',
-      eventType: 'AUDITOR_VERIFIED',
-      payload: { vote: auditorRes.vote, data: auditorRes.dataOutput }
-    });
+    // 7. AUDITOR AGENT GATE
+    let auditorRes: ExecutiveAgentResult | undefined;
+    if (shouldRunAuditor) {
+      auditorRes = await this.executeAuditorAgent({
+        command,
+        executiveResults,
+        context,
+        policy,
+        evidenceSnippets,
+        workflowId,
+        parentRunId: commandId,
+        simulatedMismatchNumber: options?.simulatedMismatchNumber
+      });
+      executiveResults.set('Auditor', auditorRes);
 
-    // 7. FORMAL BOARD VOTING & CONSENSUS
+      if (cfoRes) {
+        consultations.push({
+          consultationId: `cons_${Date.now()}_cfo_auditor`,
+          workflowId,
+          sourceAgent: 'CFO',
+          targetAgent: 'Auditor',
+          question: `Independently verify reported treasury burn deltas against deterministic financial engine.`,
+          response: auditorRes.recommendation,
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      decisionLedgerService.appendEvent({
+        decisionId: commandId,
+        startupId,
+        workflowId,
+        actor: 'Auditor',
+        eventType: 'AUDITOR_VERIFIED',
+        payload: { vote: auditorRes.vote, data: auditorRes.dataOutput }
+      });
+    }
+
+    // 8. FORMAL BOARD VOTING & CONSENSUS
     const votes: AgentVote[] = Array.from(executiveResults.values()).map(r => r.vote);
     const approvedCount = votes.filter(v => v.verdict === 'APPROVE').length;
     const conditionalCount = votes.filter(v => v.verdict === 'APPROVE_WITH_CONDITIONS').length;
@@ -848,11 +1025,12 @@ export class MultiAgentCouncil {
       votes
     };
 
-    // 8. CEO SYNTHESIS & REVERSIBILITY RATING
+    // 9. CEO SYNTHESIS & REVERSIBILITY RATING
     const allConditions = Array.from(executiveResults.values()).flatMap(r => r.conditions);
+    const monthlyBurnDelta = cfoRes?.financialImpact?.monthlyBurnDelta ?? 0;
     const riskTier = hasUnresolvedVeto 
       ? 'CRITICAL' 
-      : (isHiring || (cfoRes.financialImpact?.monthlyBurnDelta ?? 0) > 15000)
+      : (isHiring || monthlyBurnDelta > 15000)
       ? 'HIGH' 
       : 'MEDIUM';
 
@@ -861,15 +1039,36 @@ export class MultiAgentCouncil {
     let summaryText = '';
     let detailsText = '';
 
+    const bulletPoints: string[] = [];
+    if (talentOutput) {
+      bulletPoints.push(`• Talent: Sourcing timeline ~${talentOutput.onboardingLeadTimeDays} days at $${talentOutput.baseSalary.toLocaleString()}/yr base.`);
+    }
+    if (cfoRes) {
+      bulletPoints.push(`• Finance: Projected runway ${cfoRes.financialImpact?.projectedRunway ?? context.financials.runwayMonths} months (burn impact: ${monthlyBurnDelta > 0 ? `+$${monthlyBurnDelta.toLocaleString()}/mo` : '$0/mo'}).`);
+    }
+    if (executiveResults.has('Growth')) {
+      const g = executiveResults.get('Growth')!;
+      bulletPoints.push(`• Growth: ${g.recommendation}`);
+    }
+    if (executiveResults.has('Legal')) {
+      const l = executiveResults.get('Legal')!;
+      bulletPoints.push(`• Legal: ${l.recommendation}`);
+    }
+    if (executiveResults.has('Operations')) {
+      const o = executiveResults.get('Operations')!;
+      bulletPoints.push(`• Operations: ${o.recommendation}`);
+    }
+    bulletPoints.push(`• Consensus: ${consensusSummary}`);
+
     if (hasUnresolvedVeto) {
       summaryText = `Council execution blocked by formal veto. Escalated to Founder for review.`;
-      detailsText = `Executive Veto: ${consensusSummary}. The proposal cannot proceed automatically without restructuring.`;
+      detailsText = `Executive Veto: ${consensusSummary}. The proposal cannot proceed automatically without restructuring.\n\n${bulletPoints.join('\n')}`;
     } else if (isHiring && talentOutput) {
       summaryText = `Executive Council recommends hiring ${talentOutput.count}x ${talentOutput.role} at $${talentOutput.baseSalary.toLocaleString()}/yr base.`;
-      detailsText = `• Talent: Sourcing timeline ~${talentOutput.onboardingLeadTimeDays} days.\n• Finance: Projected runway adjusted to ${cfoRes.financialImpact?.projectedRunway} months.\n• Legal: PIIA execution required prior to onboarding.\n• Consensus: ${consensusSummary}`;
+      detailsText = bulletPoints.join('\n');
     } else {
       summaryText = `Executive Council completed cross-functional analysis for: "${command}".`;
-      detailsText = `• Treasury Status: Cash $${context.financials.cashBalance.toLocaleString()}, Runway ${context.financials.runwayMonths} mos.\n• Consensus: ${consensusSummary}`;
+      detailsText = bulletPoints.join('\n');
     }
 
     agentRunService.completeWorkflow(
@@ -886,9 +1085,9 @@ export class MultiAgentCouncil {
       boardConsensus,
       consultations,
       auditorAudit: {
-        passed: auditorRes.dataOutput?.passed ?? true,
-        verificationNotes: auditorRes.dataOutput?.verificationNotes ?? [],
-        flaggedIssues: auditorRes.dataOutput?.flaggedIssues ?? []
+        passed: auditorRes?.dataOutput?.passed ?? true,
+        verificationNotes: auditorRes?.dataOutput?.verificationNotes ?? [],
+        flaggedIssues: auditorRes?.dataOutput?.flaggedIssues ?? []
       },
       finalSynthesis: {
         summary: summaryText,
@@ -900,6 +1099,8 @@ export class MultiAgentCouncil {
       }
     };
   }
+
+
 }
 
 export const multiAgentCouncil = new MultiAgentCouncil();

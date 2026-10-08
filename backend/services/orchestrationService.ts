@@ -230,18 +230,35 @@ export function analyzeCommandIntent(command: string): IntentAnalysis {
 
   // 3. Hiring & Headcount Expansion Scenarios
   if (lower.includes('hire') || lower.includes('hiring') || lower.includes('engineer') || lower.includes('developer') || lower.includes('headcount') || lower.includes('recruit')) {
-    const isAction = lower.startsWith('hire ') || lower.startsWith('start hiring') || lower.startsWith('approve hire') || lower.includes('send offer');
+    const isAdvisory = lower.includes('should i') || lower.includes('can we afford') || lower.includes('can we hire') || lower.includes('is it safe to') || lower.includes('would hiring') || (lower.includes('runway') && lower.includes('month'));
+    const isActionPlan = lower.includes('plan') || lower.includes('create a hiring plan') || lower.includes('roadmap') || lower.includes('build a plan') || lower.startsWith('hire ') || lower.startsWith('start hiring') || lower.startsWith('approve hire') || lower.includes('send offer');
+
+    if (isAdvisory && !isActionPlan) {
+      return {
+        intent: 'hiring_scenario',
+        objective: 'Assess runway impact, headcount costs, and hiring feasibility',
+        activatedRoles: ['CEO', 'Finance', 'Talent', 'Auditor'],
+        requiresFinancialCalculations: true,
+        requiresHeadcountModeling: true,
+        requiresRag: true,
+        isUnrelated: false,
+        requiresApproval: false,
+        proposedActionTitle: null,
+        proposedActionImpact: null
+      };
+    }
+
     return {
       intent: 'hiring_scenario',
-      objective: 'Assess headcount talent criteria, compensation models, and financial runway impact',
-      activatedRoles: ['CEO', 'Talent', 'Finance', 'Operations', 'Auditor'],
+      objective: 'Formulate headcount recruitment plan, compensation model, and onboarding roadmap',
+      activatedRoles: ['CEO', 'Talent', 'Finance', 'Operations', 'Legal', 'Auditor'],
       requiresFinancialCalculations: true,
       requiresHeadcountModeling: true,
       requiresRag: true,
       isUnrelated: false,
-      requiresApproval: isAction,
-      proposedActionTitle: isAction ? 'Headcount Recruitment Authorization' : null,
-      proposedActionImpact: isAction ? 'Commits salary compensation pool to startup burn' : null
+      requiresApproval: true,
+      proposedActionTitle: 'Headcount Recruitment Authorization',
+      proposedActionImpact: 'Commits salary compensation pool to startup burn'
     };
   }
 
@@ -267,7 +284,7 @@ export function analyzeCommandIntent(command: string): IntentAnalysis {
     return {
       intent: 'gtm_planning',
       objective: 'Structure go-to-market milestones, distribution channels, and user acquisition strategies',
-      activatedRoles: ['CEO', 'Growth', 'Auditor'],
+      activatedRoles: ['CEO', 'Growth', 'Finance', 'Auditor'],
       requiresFinancialCalculations: false,
       requiresHeadcountModeling: false,
       requiresRag: true,
@@ -861,7 +878,8 @@ export class OrchestrationService {
     const councilResult = await multiAgentCouncil.executeCouncil(
       command,
       canonical,
-      evidence.map(e => e.excerpt)
+      evidence.map(e => e.excerpt),
+      { activatedRoles: analysis.activatedRoles }
     );
 
     // Phase A3: persist the CEO decomposition as assignable Task rows so the work
@@ -886,7 +904,9 @@ export class OrchestrationService {
 
     for (const role of analysis.activatedRoles) {
       onEvent?.({ type: 'agent_started', role, status: 'analyzing' });
-      const execRes = councilResult.executiveResults.get(role as any);
+      const execRes = councilResult.executiveResults.get(role as any)
+        || (role === 'Finance' ? councilResult.executiveResults.get('CFO') : undefined)
+        || (role === 'CFO' ? councilResult.executiveResults.get('Finance' as any) : undefined);
       const contribution = execRes ? execRes.recommendation : `${role} analyzed domain parameters.`;
       agents.push({
         role,
@@ -1074,7 +1094,7 @@ INSTRUCTIONS:
     // 9. Human-in-the-Loop Approval Center Integration
     let approvalRequirement: OrchestrationResponse['approval'] = undefined;
 
-    const shouldTriggerApproval = analysis.requiresApproval || (headcount.hasHiringQuery && headcount.count > 0);
+    const shouldTriggerApproval = analysis.requiresApproval;
 
     if (shouldTriggerApproval) {
       const isHiring = headcount.hasHiringQuery && headcount.count > 0;
