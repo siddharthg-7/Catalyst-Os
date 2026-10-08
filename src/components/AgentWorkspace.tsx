@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Agent, StartupProfile, DecisionRecord, KnowledgeFile } from '../types';
 import {
   Rocket, Landmark, Users, Briefcase, Cog, Shield,
@@ -404,38 +405,33 @@ export default function AgentWorkspace({
           <p className="text-xs text-[#696969] mt-0.5">Direct oversight of individual AI executive officers & operational governance</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveView('agent')}
-            className={`px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'agent'
-                ? 'bg-[#141413] text-[#F3F0EE]'
-                : 'bg-white text-[#696969] border border-[#141413]/10 hover:text-[#141413]'
-            }`}
-          >
-            Officer Workspace
-          </button>
-          <button
-            onClick={() => setActiveView('all')}
-            className={`px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all cursor-pointer ${
-              activeView === 'all'
-                ? 'bg-[#141413] text-[#F3F0EE]'
-                : 'bg-white text-[#696969] border border-[#141413]/10 hover:text-[#141413]'
-            }`}
-          >
-            All Officers ({agents.length})
-          </button>
-          <button
-            onClick={() => setActiveView('config')}
-            className={`px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeView === 'config'
-                ? 'bg-[#141413] text-[#F3F0EE]'
-                : 'bg-white text-[#696969] border border-[#141413]/10 hover:text-[#141413]'
-            }`}
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>Parameters</span>
-          </button>
+        <div className="relative flex items-center p-1 rounded-xl bg-[#141413]/05 border border-[#141413]/10 text-xs font-semibold">
+          {[
+            { id: 'agent' as const, label: 'Officer Workspace' },
+            { id: 'all' as const, label: `All Officers (${agents.length})` },
+            { id: 'config' as const, label: 'Parameters', icon: <Settings className="w-3.5 h-3.5" /> },
+          ].map((v) => {
+            const isActive = activeView === v.id;
+            return (
+              <button
+                key={v.id}
+                onClick={() => setActiveView(v.id)}
+                className={`relative z-10 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                  isActive ? 'text-[#141413]' : 'text-[#696969] hover:text-[#141413]'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="agentViewSwitcherTab"
+                    className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  />
+                )}
+                {v.icon && <span className="relative z-10">{v.icon}</span>}
+                <span className="relative z-10">{v.label}</span>
+              </button>
+            );
+          })}
         </div>
       </Section>
 
@@ -532,24 +528,34 @@ export default function AgentWorkspace({
               { id: 'work' as const, label: 'Work & Tasks' },
               { id: 'decisions' as const, label: 'Decisions', badge: roleDecisions.length > 0 ? String(roleDecisions.length) : undefined },
               { id: 'activity' as const, label: 'Activity' },
-            ].map(t => (
-              <button
-                key={t.id}
-                onClick={() => setAgentTab(t.id)}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  agentTab === t.id
-                    ? 'bg-[#141413] text-[#F3F0EE] shadow-xs'
-                    : 'text-[#696969] hover:text-[#141413] hover:bg-white'
-                }`}
-              >
-                <span>{t.label}</span>
-                {t.badge && (
-                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${agentTab === t.id ? 'bg-white/20 text-white' : 'bg-[#141413]/06 text-[#141413]'}`}>
-                    {t.badge}
-                  </span>
-                )}
-              </button>
-            ))}
+            ].map(t => {
+              const isActive = agentTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setAgentTab(t.id)}
+                  className={`relative px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    isActive
+                      ? 'text-[#F3F0EE]'
+                      : 'text-[#696969] hover:text-[#141413]'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="agentWorkspaceSubTab"
+                      className="absolute inset-0 bg-[#141413] rounded-full shadow-xs"
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    />
+                  )}
+                  <span className="relative z-10">{t.label}</span>
+                  {t.badge && (
+                    <span className={`relative z-10 text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#141413]/06 text-[#141413]'}`}>
+                      {t.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* TAB 1: OVERVIEW (Section 10 of PROMPT.MD) */}

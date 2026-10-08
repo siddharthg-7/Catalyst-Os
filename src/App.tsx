@@ -783,24 +783,27 @@ export default function App() {
     const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
 
     return (
-      <div className="flex h-screen bg-[#F3F0EE] text-[#141413] overflow-hidden font-sans relative">
+      <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
         <AuroraBackground />
         <MouseSpotlight />
       
       {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-[#141413]/10 bg-white p-6 shrink-0 justify-between shadow-[rgba(0,0,0,0.04)_4px_0px_24px_0px]">
-        <div className="space-y-8">
+      <aside className="hidden md:flex flex-col border-r shrink-0 justify-between" style={{ width: 'var(--sidebar-width)', backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', padding: '1.25rem' }}>
+        <div className="space-y-6">
           
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#F3F0EE] border border-[#141413]/20 p-1 flex items-center justify-center">
-              <CatalystLogo className="w-5 h-5 text-[#141413]" />
+          <div className="flex items-center gap-3 px-1">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
+              <CatalystLogo className="w-5 h-5" />
             </div>
-            <span className="font-bold text-lg text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
+            <div>
+              <span className="font-bold text-base block" style={{ letterSpacing: '-0.02em', color: 'var(--c-fg)' }}>CatalystOS</span>
+              <span className="text-label" style={{ fontSize: '0.6rem', color: 'var(--c-faint)' }}>AI Operating System</span>
+            </div>
           </div>
 
           {/* Navigation */}
-          <nav className="space-y-1">
+          <nav className="space-y-0.5">
 
             {navItems.map(({ id, label, Icon, badge, badgeColor }) => {
               const isActive = activeTab === id;
@@ -808,86 +811,125 @@ export default function App() {
                 <button
                   key={id}
                   onClick={() => handleTabChange(id)}
-                  className={`relative w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all font-sans cursor-pointer group ${
-                    isActive
-                      ? 'text-[#F3F0EE]'
-                      : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE]/60'
-                  }`}
+                  className="relative w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all font-sans cursor-pointer group"
+                  style={{ color: isActive ? 'var(--c-bg)' : 'var(--c-muted)' }}
+                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.color = 'var(--c-fg)'; e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; }}}
+                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.backgroundColor = 'transparent'; }}}
                 >
                   {isActive && (
                     <motion.span
                       layoutId="sidebar-active"
-                      className="absolute inset-0 bg-[#141413] rounded-[12px] shadow-sm -z-0"
+                      className="absolute inset-0 rounded-xl -z-0"
+                      style={{ backgroundColor: 'var(--c-fg)', boxShadow: 'var(--shadow-sm)' }}
                       transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
                     />
                   )}
                   <span className="relative z-10 flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-[#F3F0EE]' : 'text-[#141413]/50 group-hover:text-[#141413]'}`} />
+                    <Icon className="w-4 h-4 transition-colors" style={{ opacity: isActive ? 1 : 0.6 }} />
                     <span>{label}</span>
                   </span>
                   {badge && (
-                    <span className={`relative z-10 text-[10px] font-mono font-bold ${isActive ? 'text-[#F3F0EE]/70' : badgeColor}`}>
-                      {badge}
+                    <span className="relative z-10 text-[10px] font-mono font-bold" style={{ opacity: isActive ? 0.7 : 1, color: isActive ? 'var(--c-bg)' : undefined }}>
+                      {!isActive && <span className={badgeColor}>{badge}</span>}
+                      {isActive && badge}
                     </span>
                   )}
                 </button>
               );
             })}
 
-            {/* ── Collapsible Executive Agents Navbar (Section 24 of PROMPT.MD) ── */}
-            <div className="pt-4 border-t border-[#141413]/08 mt-3">
+            {/* ── Collapsible Executive Agents ── */}
+            <div className="pt-3 mt-2" style={{ borderTop: '1px solid var(--c-border)' }}>
               <button
                 onClick={() => setAgentsExpanded(prev => !prev)}
-                className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider font-bold text-[#696969] hover:text-[#141413] transition-colors cursor-pointer"
+                className="w-full flex items-center justify-between px-3 py-1.5 text-label transition-colors cursor-pointer"
+                style={{ color: 'var(--c-faint)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--c-fg)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--c-faint)'; }}
               >
                 <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-[#141413]/60" />
+                  <Users className="w-3.5 h-3.5" style={{ opacity: 0.6 }} />
                   <span>Executive Agents</span>
                 </span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${agentsExpanded ? 'rotate-180' : ''}`} />
               </button>
 
-              {agentsExpanded && (
-                <div className="mt-1 space-y-0.5">
-                  {agents.map(ag => {
-                    const isSelected = activeTab === 'agents' && selectedAgentId === ag.id;
-                    return (
-                      <button
-                        key={ag.id}
-                        onClick={() => handleSelectAgent(ag.id)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-[10px] text-xs transition-all border font-sans cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] font-medium shadow-2xs'
-                            : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] border-transparent'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 truncate">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${ag.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-300'}`} />
-                          <span className="truncate">{ag.name.split(' ')[0]}</span>
-                        </span>
-                        <span className={`text-[10px] font-mono shrink-0 px-1.5 py-0.2 rounded ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                          {ag.role}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              <AnimatePresence>
+                {agentsExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mt-1 space-y-0.5">
+                      {agents.map((ag, i) => {
+                        const isSelected = activeTab === 'agents' && selectedAgentId === ag.id;
+                        return (
+                          <motion.button
+                            key={ag.id}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.03 }}
+                            onClick={() => handleSelectAgent(ag.id)}
+                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all font-sans cursor-pointer"
+                            style={{
+                              backgroundColor: isSelected ? 'var(--c-fg)' : 'transparent',
+                              color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)',
+                              border: isSelected ? '1px solid var(--c-fg)' : '1px solid transparent',
+                            }}
+                            onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; e.currentTarget.style.color = 'var(--c-fg)'; }}}
+                            onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)'; }}}
+                          >
+                            <span className="flex items-center gap-2 truncate">
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${ag.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : ''}`} style={{ backgroundColor: ag.status === 'idle' ? 'var(--c-faint)' : undefined }} />
+                              <span className="truncate">{ag.name.split(' ')[0]}</span>
+                            </span>
+                            <span className="text-[10px] font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ backgroundColor: isSelected ? 'rgba(255,255,255,0.15)' : 'var(--c-surface-2)', color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)' }}>
+                              {ag.role}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </nav>
         </div>
 
-        <div className="space-y-3 pt-4 border-t border-[#141413]/10">
+        <div className="space-y-3 pt-3" style={{ borderTop: '1px solid var(--c-border)' }}>
+          {/* Theme Toggle */}
+          <button
+            onClick={() => {
+              const html = document.documentElement;
+              const current = html.getAttribute('data-theme');
+              const next = current === 'dark' ? 'light' : 'dark';
+              html.setAttribute('data-theme', next);
+              localStorage.setItem('catalystos-theme', next);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer"
+            style={{ color: 'var(--c-muted)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; e.currentTarget.style.color = 'var(--c-fg)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)'; }}
+            title="Toggle Theme"
+          >
+            <Sparkles className="w-4 h-4" style={{ opacity: 0.6 }} />
+            <span>Toggle Theme</span>
+          </button>
+          
           {/* User profile */}
-          <div className="p-3 rounded-[12px] bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-between gap-2 min-w-0">
+          <div className="p-3 rounded-xl flex items-center justify-between gap-2 min-w-0" style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}>
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#141413] flex items-center justify-center text-[#F3F0EE] font-bold text-xs shrink-0 uppercase font-mono">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 uppercase font-mono" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
                 {user?.name?.slice(0, 2)}
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-[#141413] truncate font-sans">{user?.name}</div>
-                <div className="text-[10px] text-[#696969] truncate capitalize flex items-center gap-1 font-mono">
-                  <Shield className="w-2.5 h-2.5 text-[#141413]/40 shrink-0" />
+                <div className="text-xs font-semibold truncate font-sans" style={{ color: 'var(--c-fg)' }}>{user?.name}</div>
+                <div className="text-[10px] truncate capitalize flex items-center gap-1 font-mono" style={{ color: 'var(--c-muted)' }}>
+                  <Shield className="w-2.5 h-2.5 shrink-0" style={{ opacity: 0.4 }} />
                   <span>{user?.role}</span>
                 </div>
               </div>
@@ -898,7 +940,10 @@ export default function App() {
                 navigate('/');
               }}
               title="Sign Out Session"
-              className="p-1.5 rounded-lg bg-white hover:bg-[#141413] hover:text-[#F3F0EE] text-[#696969] transition-colors cursor-pointer shrink-0 border border-[#141413]/10"
+              className="p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+              style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--c-fg)'; e.currentTarget.style.color = 'var(--c-bg)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--c-surface)'; e.currentTarget.style.color = 'var(--c-muted)'; }}
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
@@ -910,46 +955,49 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         
         {/* Top Navbar */}
-        <header className={`h-16 border-b transition-all duration-300 px-6 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30 ${
-          scrolled ? 'glass shadow-glass' : 'bg-white/80 backdrop-blur-sm border-[#141413]/10'
-        }`}>
-          <div className="flex items-center gap-4 text-sm text-[#696969]">
+        <header className="shrink-0 sticky top-0 z-30 flex items-center justify-between px-6 md:px-8 transition-all duration-300" style={{ height: 'var(--topbar-height)', backgroundColor: scrolled ? 'var(--glass-bg)' : 'var(--c-surface)', borderBottom: '1px solid var(--c-border)', backdropFilter: scrolled ? 'blur(20px)' : 'none', boxShadow: scrolled ? 'var(--shadow-sm)' : 'none' }}>
+          <div className="flex items-center gap-4 text-sm">
             {/* Mobile menu trigger */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#141413]"
+              className="md:hidden p-2 rounded-lg transition-colors"
+              style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-fg)' }}
             >
               <Menu className="w-4 h-4" />
             </button>
-            <span className="font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
-            <span className="text-[#141413]/20">/</span>
-            <span className="text-[#696969] font-medium text-xs capitalize font-sans">{tabLabel} Workspace</span>
+            <span className="font-bold font-sans" style={{ letterSpacing: '-0.02em', color: 'var(--c-fg)' }}>CatalystOS</span>
+            <span style={{ color: 'var(--c-border-strong)' }}>/</span>
+            <span className="font-medium text-xs capitalize font-sans" style={{ color: 'var(--c-muted)' }}>{tabLabel} Workspace</span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {/* Search bar */}
             <button
               onClick={() => setCommandPaletteOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/20 text-xs transition-colors cursor-pointer font-sans"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors cursor-pointer font-sans"
+              style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--c-border-strong)'; e.currentTarget.style.color = 'var(--c-fg)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)'; }}
             >
               <Search className="w-3.5 h-3.5" />
               <span>Search anything...</span>
-              <kbd className="text-[9px] font-mono bg-white border border-[#141413]/10 px-1.5 py-0.5 rounded text-[#696969]">⌘K</kbd>
+              <kbd className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)', color: 'var(--c-faint)' }}>⌘K</kbd>
             </button>
 
             {/* Company Knowledge Quick Access */}
             <button
               onClick={() => handleTabChange('knowledge')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all cursor-pointer border ${
-                activeTab === 'knowledge'
-                  ? 'bg-[#141413] text-[#F3F0EE] border-[#141413]'
-                  : 'bg-[#F3F0EE] hover:bg-white text-[#141413] border-[#141413]/10'
-              }`}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+              style={{
+                backgroundColor: activeTab === 'knowledge' ? 'var(--c-fg)' : 'var(--c-surface-2)',
+                color: activeTab === 'knowledge' ? 'var(--c-bg)' : 'var(--c-fg)',
+                border: `1px solid ${activeTab === 'knowledge' ? 'var(--c-fg)' : 'var(--c-border)'}`,
+              }}
               title="Company Knowledge Base"
             >
-              <Database className="w-3.5 h-3.5 text-indigo-600" />
+              <Database className="w-3.5 h-3.5" style={{ color: activeTab === 'knowledge' ? 'var(--c-bg)' : 'var(--c-accent)' }} />
               <span className="font-sans text-[11px] font-semibold">Knowledge</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200/60">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold" style={{ backgroundColor: 'rgba(79,70,229,0.1)', color: 'var(--c-accent)' }}>
                 {knowledge.length}
               </span>
             </button>
@@ -957,19 +1005,22 @@ export default function App() {
             {/* Notifications bell */}
             <button 
               onClick={() => setNotificationsOpen(true)}
-              className="relative p-2 rounded-[10px] bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/20 transition-colors cursor-pointer"
+              className="relative p-2 rounded-lg transition-colors cursor-pointer"
+              style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--c-fg)'; e.currentTarget.style.borderColor = 'var(--c-border-strong)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.borderColor = 'var(--c-border)'; }}
               title="Open Operational Alerts"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--c-accent)' }} />
             </button>
 
             {/* Founder profile */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white border border-[#141413]/10 rounded-[10px]">
-              <div className="w-5 h-5 rounded-md bg-[#141413] flex items-center justify-center text-[10px] font-bold text-[#F3F0EE] uppercase font-mono">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}>
+              <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold uppercase font-mono" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
                 {user?.name?.slice(0, 2)}
               </div>
-              <span className="text-xs text-[#141413] font-medium font-sans">{user?.name}</span>
+              <span className="text-xs font-medium font-sans" style={{ color: 'var(--c-fg)' }}>{user?.name}</span>
             </div>
           </div>
         </header>
@@ -977,110 +1028,131 @@ export default function App() {
         {/* View Content */}
         <main
           onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 15)}
-          className="flex-1 overflow-y-auto bg-[#F3F0EE] scroll-smooth"
+          className="flex-1 overflow-y-auto scroll-smooth"
+          style={{ backgroundColor: 'var(--c-bg)' }}
         >
-          <div className="app-container px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-            {activeTab === 'dashboard' && startup && (
-              <SaaSDashboard 
-                startup={startup}
-                agents={agents}
-                initiatives={initiatives}
-                approvals={approvals}
-                decisions={decisions}
-                knowledge={knowledge}
-                onReviewItem={handleReviewItem}
-                onUploadDoc={handleUploadDoc}
-                onLaunchInitiative={handleLaunchInitiative}
-                onSimulateInitiative={handleSimulateInitiative}
-                onUpdateStartup={handleUpdateStartup}
-                onNavigate={(tab) => handleTabChange(tab)}
-              />
-            )}
-            
-            {activeTab === 'agents' && (
-              <AgentWorkspace 
-                agents={agents} 
-                startup={startup} 
-                decisions={decisions}
-                knowledge={knowledge}
-                onUpdateStartup={handleUpdateStartup} 
-                selectedAgentId={selectedAgentId}
-                onSelectAgent={handleSelectAgent}
-              />
-            )}
+          <div className="app-container page-padding py-8 space-y-8">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              >
+                {activeTab === 'dashboard' && startup && (
+                  <SaaSDashboard 
+                    startup={startup}
+                    agents={agents}
+                    initiatives={initiatives}
+                    approvals={approvals}
+                    decisions={decisions}
+                    knowledge={knowledge}
+                    onReviewItem={handleReviewItem}
+                    onUploadDoc={handleUploadDoc}
+                    onLaunchInitiative={handleLaunchInitiative}
+                    onSimulateInitiative={handleSimulateInitiative}
+                    onUpdateStartup={handleUpdateStartup}
+                    onNavigate={(tab) => handleTabChange(tab)}
+                  />
+                )}
+                
+                {activeTab === 'agents' && (
+                  <AgentWorkspace 
+                    agents={agents} 
+                    startup={startup} 
+                    decisions={decisions}
+                    knowledge={knowledge}
+                    onUpdateStartup={handleUpdateStartup} 
+                    selectedAgentId={selectedAgentId}
+                    onSelectAgent={handleSelectAgent}
+                  />
+                )}
 
-            {activeTab === 'workflows' && (
-              <WorkflowCanvas 
-                initiatives={initiatives} 
-                onLaunchInitiative={handleLaunchInitiative} 
-                onSimulateInitiative={handleSimulateInitiative} 
-                onNavigate={(tab) => handleTabChange(tab as any)}
-              />
-            )}
+                {activeTab === 'workflows' && (
+                  <WorkflowCanvas 
+                    initiatives={initiatives} 
+                    onLaunchInitiative={handleLaunchInitiative} 
+                    onSimulateInitiative={handleSimulateInitiative} 
+                    onNavigate={(tab) => handleTabChange(tab as any)}
+                  />
+                )}
 
-            {activeTab === 'approvals' && (
-              <ApprovalQueue 
-                approvals={approvals} 
-                onReviewItem={handleReviewItem} 
-                currentCash={startup.cashBalance}
-                currentBurn={startup.burnRate}
-              />
-            )}
+                {activeTab === 'approvals' && (
+                  <ApprovalQueue 
+                    approvals={approvals} 
+                    onReviewItem={handleReviewItem} 
+                    currentCash={startup.cashBalance}
+                    currentBurn={startup.burnRate}
+                  />
+                )}
 
-            {activeTab === 'scenarios' && (
-              <ScenarioSimulator
-                currentCash={startup.cashBalance}
-                currentBurn={startup.burnRate}
-                companyName={startup.name}
-              />
-            )}
+                {activeTab === 'scenarios' && (
+                  <ScenarioSimulator
+                    currentCash={startup.cashBalance}
+                    currentBurn={startup.burnRate}
+                    companyName={startup.name}
+                  />
+                )}
 
-            {activeTab === 'decisions' && (
-              <DecisionLog 
-                decisions={decisions} 
-                onRefresh={hydrateState}
-              />
-            )}
+                {activeTab === 'decisions' && (
+                  <DecisionLog 
+                    decisions={decisions} 
+                    onRefresh={hydrateState}
+                  />
+                )}
 
-            {activeTab === 'knowledge' && (
-              <KnowledgeBase 
-                documents={knowledge} 
-                onUploadDoc={handleUploadDoc} 
-              />
-            )}
+                {activeTab === 'knowledge' && (
+                  <KnowledgeBase 
+                    documents={knowledge} 
+                    onUploadDoc={handleUploadDoc} 
+                  />
+                )}
 
-            {activeTab === 'people' && (
-              <PeopleDirectory 
-                user={user}
-                companyName={startup.name}
-                teamMembers={teamMembers}
-                onAddMember={hasPermission('people:write') ? handleAddTeamMember : undefined}
-                onRemoveMember={hasPermission('people:write') ? handleRemoveTeamMember : undefined}
-                memberships={memberships}
-                invitations={invitations}
-                onInviteMember={hasPermission('people:access') ? handleInviteMember : undefined}
-                onRevokeInvitation={hasPermission('people:access') ? handleRevokeInvitation : undefined}
-                onResendInvitation={hasPermission('people:access') ? handleResendInvitation : undefined}
-                onRemoveMembership={hasPermission('people:access') ? handleRemoveMembership : undefined}
-              />
-            )}
+                {activeTab === 'people' && (
+                  <PeopleDirectory 
+                    user={user}
+                    companyName={startup.name}
+                    teamMembers={teamMembers}
+                    onAddMember={hasPermission('people:write') ? handleAddTeamMember : undefined}
+                    onRemoveMember={hasPermission('people:write') ? handleRemoveTeamMember : undefined}
+                    memberships={memberships}
+                    invitations={invitations}
+                    onInviteMember={hasPermission('people:access') ? handleInviteMember : undefined}
+                    onRevokeInvitation={hasPermission('people:access') ? handleRevokeInvitation : undefined}
+                    onResendInvitation={hasPermission('people:access') ? handleResendInvitation : undefined}
+                    onRemoveMembership={hasPermission('people:access') ? handleRemoveMembership : undefined}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
           <Footer onNavigate={(tab) => handleTabChange(tab as any)} />
         </main>
 
       {/* Toast Alerts */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 p-4 rounded-[16px] border shadow-[rgba(0,0,0,0.12)_0px_16px_32px] flex items-center gap-3.5 min-w-[300px] max-w-sm font-sans ${
-          toast.type === 'success' ? 'bg-white border-emerald-200 text-emerald-800' :
-          toast.type === 'error'   ? 'bg-white border-rose-200 text-rose-800' :
-                                     'bg-white border-[#141413]/10 text-[#141413]'
-        }`}>
-          <Sparkles className="w-4 h-4 shrink-0 opacity-60" />
-          <div className="flex-1">
-            <p className="text-xs font-semibold leading-normal">{toast.message}</p>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+            className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl flex items-center gap-3.5 min-w-[300px] max-w-sm font-sans"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: `1px solid ${toast.type === 'success' ? 'var(--c-success)' : toast.type === 'error' ? 'var(--c-danger)' : 'var(--c-border)'}`,
+              color: toast.type === 'success' ? 'var(--c-success)' : toast.type === 'error' ? 'var(--c-danger)' : 'var(--c-fg)',
+              boxShadow: 'var(--shadow-xl)',
+            }}
+          >
+            <Sparkles className="w-4 h-4 shrink-0 opacity-60" />
+            <div className="flex-1">
+              <p className="text-xs font-semibold leading-normal">{toast.message}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Command Palette */}
       <CommandPalette
@@ -1104,57 +1176,83 @@ export default function App() {
 
       </div>
 
-      {/* ── Mobile Drawer ────────────────────────────────────────────────── */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm md:hidden" id="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}>
-          <div className="w-72 bg-white border-r border-[#141413]/10 h-full p-6 flex flex-col justify-between shadow-[rgba(0,0,0,0.12)_8px_0px_32px]" id="mobile-menu-drawer" onClick={e => e.stopPropagation()}>
-            <div className="space-y-6">
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[#F3F0EE] border border-[#141413]/20 flex items-center justify-center">
-                    <CatalystLogo className="w-4 h-4 text-[#141413]" />
+      {/* ── Mobile Drawer (Animated) ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 md:hidden"
+              style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 z-50 w-72 md:hidden flex flex-col justify-between"
+              style={{ backgroundColor: 'var(--c-surface)', borderRight: '1px solid var(--c-border)', boxShadow: 'var(--shadow-xl)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
+                      <CatalystLogo className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm font-bold font-sans" style={{ letterSpacing: '-0.02em', color: 'var(--c-fg)' }}>CatalystOS</span>
                   </div>
-                  <span className="text-sm font-bold text-[#141413] font-sans" style={{ letterSpacing: '-0.02em' }}>CatalystOS</span>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-1.5 rounded-lg transition-colors"
+                    style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] hover:text-[#141413]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+
+                <nav className="space-y-1">
+                  {navItems.map(({ id, label, Icon, badge, badgeColor }, i) => (
+                    <motion.button
+                      key={id}
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-medium font-sans transition-all"
+                      style={{
+                        backgroundColor: activeTab === id ? 'var(--c-fg)' : 'transparent',
+                        color: activeTab === id ? 'var(--c-bg)' : 'var(--c-muted)',
+                      }}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4" />
+                        <span>{label}</span>
+                      </span>
+                      {badge && <span className="text-[10px] font-mono font-bold" style={{ opacity: activeTab === id ? 0.7 : 1 }}>{badge}</span>}
+                    </motion.button>
+                  ))}
+                </nav>
               </div>
 
-              <nav className="space-y-1 pt-2">
-                {navItems.map(({ id, label, badge, badgeColor }) => (
-                  <button
-                    key={id}
-                    onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium font-sans transition-all ${
-                      activeTab === id
-                        ? 'bg-[#141413] text-[#F3F0EE]'
-                        : 'text-[#696969] hover:bg-[#F3F0EE] hover:text-[#141413]'
-                    }`}
-                  >
-                    {label}
-                    {badge && <span className={`text-[10px] font-mono font-bold ${activeTab === id ? 'text-[#F3F0EE]/70' : badgeColor}`}>{badge}</span>}
-                  </button>
-                ))}
-              </nav>
-
-            </div>
-
-            <div className="pt-6 border-t border-[#141413]/10 text-center text-[10px] text-[#696969] font-mono uppercase tracking-widest">
-              Dual Core AI Council
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="p-6" style={{ borderTop: '1px solid var(--c-border)' }}>
+                <div className="text-center text-label" style={{ color: 'var(--c-faint)' }}>
+                  AI Executive Council
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Catalyst OS AI Chatbot */}
       <CatalystOsChatbot />
 
-      {/* Real-time Operational Notifications Drawer (Section 21 of PROMPT.MD) */}
+      {/* Real-time Operational Notifications Drawer */}
       <NotificationPanel 
         isOpen={notificationsOpen} 
         onClose={() => setNotificationsOpen(false)} 

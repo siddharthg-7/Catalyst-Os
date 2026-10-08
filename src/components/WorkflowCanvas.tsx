@@ -4,12 +4,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Initiative, AgentRole, Deliverable } from '../types';
 import {
   Play, Plus, RefreshCw, AlertTriangle, FileText, CheckCircle2,
   ChevronRight, MessageSquare, ArrowRight, ArrowLeft, Users,
   Sparkles, Check, Layers, Clock, ShieldCheck, X
 } from 'lucide-react';
+import Section from './Section';
 
 interface WorkflowCanvasProps {
   initiatives: Initiative[];
@@ -168,7 +170,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
     <div id="workflow-canvas-container" className="space-y-8 font-sans">
       
       {/* ── TOP SECTION HEADER ──────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
+      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#696969]">
@@ -188,27 +190,29 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center p-1 rounded-xl bg-[#141413]/05 border border-[#141413]/10 text-xs font-semibold">
-            <button
-              onClick={() => setWorkflowView('detail')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                workflowView === 'detail'
-                  ? 'bg-white text-[#141413] shadow-sm font-bold'
-                  : 'text-[#696969] hover:text-[#141413]'
-              }`}
-            >
-              Workspace
-            </button>
-            <button
-              onClick={() => setWorkflowView('list')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
-                workflowView === 'list'
-                  ? 'bg-white text-[#141413] shadow-sm font-bold'
-                  : 'text-[#696969] hover:text-[#141413]'
-              }`}
-            >
-              All Workflows ({initiatives.length})
-            </button>
+          <div className="relative flex items-center p-1 rounded-xl bg-[#141413]/05 border border-[#141413]/10 text-xs font-semibold">
+            {(['detail', 'list'] as const).map((view) => {
+              const isActive = workflowView === view;
+              const label = view === 'detail' ? 'Workspace' : `All Workflows (${initiatives.length})`;
+              return (
+                <button
+                  key={view}
+                  onClick={() => setWorkflowView(view)}
+                  className={`relative z-10 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    isActive ? 'text-[#141413]' : 'text-[#696969] hover:text-[#141413]'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="workflowViewTab"
+                      className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    />
+                  )}
+                  <span className="relative z-10">{label}</span>
+                </button>
+              );
+            })}
           </div>
 
           <button
@@ -216,13 +220,13 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               setIsCreateOpen(true);
               setCreateStep(1);
             }}
-            className="interactive-btn px-4 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-2 shadow-sm"
+            className="interactive-btn magnetic-btn premium-button px-4 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-2 shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4 text-[#F3F0EE]" />
             New Workflow
           </button>
         </div>
-      </div>
+      </Section>
 
       {/* ── CONDITIONAL VIEW 1: WORKFLOW LIST / INDEX ───────────────────────── */}
       {workflowView === 'list' ? (
@@ -480,43 +484,42 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                 )}
 
                 {/* Sub-tab Navigation */}
-                <div className="flex items-center gap-2 border-b border-[#141413]/10 pb-2">
-                  <button
-                    onClick={() => setDetailTab('topology')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      detailTab === 'topology'
-                        ? 'bg-[#141413] text-[#F3F0EE]'
-                        : 'text-[#696969] hover:text-[#141413]'
-                    }`}
-                  >
-                    Council Topology & Network
-                  </button>
-                  <button
-                    onClick={() => setDetailTab('debate')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      detailTab === 'debate'
-                        ? 'bg-[#141413] text-[#F3F0EE]'
-                        : 'text-[#696969] hover:text-[#141413]'
-                    }`}
-                  >
-                    Debate Logs
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#141413]/10 text-current">
-                      {activeInit.messages.length}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setDetailTab('deliverables')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      detailTab === 'deliverables'
-                        ? 'bg-[#141413] text-[#F3F0EE]'
-                        : 'text-[#696969] hover:text-[#141413]'
-                    }`}
-                  >
-                    Verified Assets
-                    <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#141413]/10 text-current">
-                      {activeInit.deliverables.length}
-                    </span>
-                  </button>
+                <div className="flex items-center gap-1.5 border-b border-[#141413]/10 pb-2">
+                  {[
+                    { id: 'topology', label: 'Council Topology & Network' },
+                    { id: 'debate', label: 'Debate Logs', count: activeInit.messages.length },
+                    { id: 'deliverables', label: 'Verified Assets', count: activeInit.deliverables.length },
+                  ].map((tab) => {
+                    const isActive = detailTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setDetailTab(tab.id as any)}
+                        className={`relative px-3.5 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${
+                          isActive ? 'text-[#141413]' : 'text-[#696969] hover:text-[#141413]'
+                        }`}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="workflowDetailTab"
+                            className="absolute inset-0 bg-[#141413]/05 rounded-xl border border-[#141413]/10"
+                            style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                          />
+                        )}
+                        <span className="relative z-10">{tab.label}</span>
+                        {tab.count !== undefined && (
+                          <span
+                            className={`relative z-10 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold transition-colors ${
+                              isActive ? 'bg-[#141413] text-[#F3F0EE]' : 'bg-[#141413]/10 text-[#696969]'
+                            }`}
+                          >
+                            {tab.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Sub-tab 1: SVG Multi-Agent Collaboration Topology */}
@@ -712,9 +715,24 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
       )}
 
       {/* ── FOCUSED 6-STEP WORKFLOW CREATION MODAL ─────────────────────────── */}
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-white border border-[#141413]/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-up">
+      <AnimatePresence>
+        {isCreateOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-[#141413]/40 backdrop-blur-sm"
+              onClick={() => setIsCreateOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+              className="relative w-full max-w-xl bg-white border border-[#141413]/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
             
             {/* Modal Header & Progress Indicator */}
             <div className="p-6 border-b border-[#141413]/10 space-y-4">
@@ -954,57 +972,73 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               )}
             </div>
 
-          </div>
+          </motion.div>
         </div>
       )}
+      </AnimatePresence>
 
       {/* ── DELIVERABLE PREVIEW MODAL ──────────────────────────────────────── */}
-      {previewDeliverable && (
-        <div id="deliverable-modal-overlay" className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-white border border-[#141413]/10 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-scale-up">
-            
-            <div className="p-5 border-b border-[#141413]/10 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10">
-                  {previewDeliverable.type}
-                </span>
-                <h4 className="text-base font-bold text-[#141413] mt-1.5">{previewDeliverable.title}</h4>
-              </div>
-              <button
-                onClick={() => setPreviewDeliverable(null)}
-                className="p-1.5 rounded-full hover:bg-[#141413]/05 text-[#696969] hover:text-[#141413] transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto space-y-4 text-xs text-[#141413] leading-relaxed font-mono whitespace-pre-wrap bg-[#FCFBFA]">
-              {previewDeliverable.content}
-            </div>
-
-            <div className="p-4 border-t border-[#141413]/10 bg-[#FCFBFA] flex items-center justify-between text-xs text-[#696969] font-mono">
-              <div className="flex items-center gap-3">
-                <span>Impact: {previewDeliverable.impact}</span>
-                <span className="text-[#141413] font-bold">
-                  Treasury: {previewDeliverable.financialChange ? `${previewDeliverable.financialChange > 0 ? '+' : ''}${(previewDeliverable.financialChange / 1000).toFixed(0)}k` : 'Neutral'}
-                </span>
-              </div>
-              {onNavigate && (
+      <AnimatePresence>
+        {previewDeliverable && (
+          <div id="deliverable-modal-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-[#141413]/40 backdrop-blur-sm"
+              onClick={() => setPreviewDeliverable(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+              className="relative w-full max-w-2xl bg-white border border-[#141413]/10 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-5 border-b border-[#141413]/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10">
+                    {previewDeliverable.type}
+                  </span>
+                  <h4 className="text-base font-bold text-[#141413] mt-1.5">{previewDeliverable.title}</h4>
+                </div>
                 <button
-                  onClick={() => {
-                    setPreviewDeliverable(null);
-                    onNavigate('approvals');
-                  }}
-                  className="interactive-btn px-4 py-2 rounded-xl bg-[#141413] text-[#F3F0EE] font-sans font-bold hover:bg-[#262627] transition-all flex items-center gap-1.5"
+                  onClick={() => setPreviewDeliverable(null)}
+                  className="p-1.5 rounded-full hover:bg-[#141413]/05 text-[#696969] hover:text-[#141413] transition-colors"
                 >
-                  Open in Decision Inbox →
+                  <X className="w-5 h-5" />
                 </button>
-              )}
-            </div>
+              </div>
 
+              <div className="p-6 overflow-y-auto space-y-4 text-xs text-[#141413] leading-relaxed font-mono whitespace-pre-wrap bg-[#FCFBFA]">
+                {previewDeliverable.content}
+              </div>
+
+              <div className="p-4 border-t border-[#141413]/10 bg-[#FCFBFA] flex items-center justify-between text-xs text-[#696969] font-mono">
+                <div className="flex items-center gap-3">
+                  <span>Impact: {previewDeliverable.impact}</span>
+                  <span className="text-[#141413] font-bold">
+                    Treasury: {previewDeliverable.financialChange ? `${previewDeliverable.financialChange > 0 ? '+' : ''}${(previewDeliverable.financialChange / 1000).toFixed(0)}k` : 'Neutral'}
+                  </span>
+                </div>
+                {onNavigate && (
+                  <button
+                    onClick={() => {
+                      setPreviewDeliverable(null);
+                      onNavigate('approvals');
+                    }}
+                    className="interactive-btn px-4 py-2 rounded-xl bg-[#141413] text-[#F3F0EE] font-sans font-bold hover:bg-[#262627] transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    Open in Decision Inbox →
+                  </button>
+                )}
+              </div>
+
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
     </div>
   );

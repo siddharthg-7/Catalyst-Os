@@ -8,9 +8,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,wght@0,1..1000;1,1..1000&display=swap" rel="stylesheet" />
-    <!-- Canvas Cream background prevents white flash before React hydrates -->
+    <!-- Theme initialization to prevent flash before hydration -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('catalystos-theme');
+          var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
     <style>
-      body { background-color: #F3F0EE; }
+      body { background-color: #F3F0EE; margin: 0; }
+      [data-theme="dark"] body { background-color: #0C0C0C; }
     </style>
   </head>
   <body>
