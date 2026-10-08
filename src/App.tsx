@@ -758,12 +758,12 @@ export default function App() {
   const renderDashboard = () => {
     if (!startup) {
       return (
-        <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+        <div className="flex h-screen w-screen items-center justify-center transition-colors duration-300" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
           <div className="text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
-              <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-md border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+              <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
             </div>
-            <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Initializing CatalystOS Executive Council...</p>
+            <p className="text-xs font-mono uppercase tracking-widest text-slate-500">Initializing CatalystOS Executive Council...</p>
           </div>
         </div>
       );
@@ -1270,12 +1270,12 @@ export default function App() {
         path="/"
         element={
           loading || isCheckingStartup ? (
-            <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+            <div className="flex h-screen w-screen items-center justify-center transition-colors duration-300" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
               <div className="text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
-                  <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-md border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+                  <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
                 </div>
-                <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Checking Workspace Status...</p>
+                <p className="text-xs font-mono uppercase tracking-widest text-slate-500">Checking Workspace Status...</p>
               </div>
             </div>
           ) : user ? (
@@ -1303,12 +1303,12 @@ export default function App() {
         path="/auth"
         element={
           loading || isCheckingStartup ? (
-            <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+            <div className="flex h-screen w-screen items-center justify-center transition-colors duration-300" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
               <div className="text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
-                  <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-md border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+                  <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
                 </div>
-                <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Checking Workspace Status...</p>
+                <p className="text-xs font-mono uppercase tracking-widest text-slate-500">Checking Workspace Status...</p>
               </div>
             </div>
           ) : user ? (
@@ -1328,12 +1328,12 @@ export default function App() {
         path="/onboarding"
         element={
           loading || isCheckingStartup ? (
-            <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+            <div className="flex h-screen w-screen items-center justify-center transition-colors duration-300" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
               <div className="text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
-                  <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-md border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+                  <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
                 </div>
-                <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Checking Workspace Status...</p>
+                <p className="text-xs font-mono uppercase tracking-widest text-slate-500">Checking Workspace Status...</p>
               </div>
             </div>
           ) : !user ? (
