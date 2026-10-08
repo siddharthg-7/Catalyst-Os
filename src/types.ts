@@ -168,7 +168,7 @@ export type PermissionArea =
 
 export type PermissionAction =
   | 'startup:write' | 'approvals:review' | 'knowledge:write'
-  | 'people:read' | 'people:write' | 'people:invite'
+  | 'people:read' | 'people:write' | 'people:access'
   | 'orchestrate:execute' | 'orchestrate:request';
 
 export interface UserPermissions {
@@ -177,6 +177,11 @@ export interface UserPermissions {
   areas: PermissionArea[];
   agents: string[];
   actions: PermissionAction[];
+  people?: {
+    read: boolean;
+    write: boolean;
+    access: boolean;
+  };
 }
 
 export interface User {
@@ -307,6 +312,9 @@ export interface CompanyMembership {
   role: string;
   status: 'ACTIVE' | 'SUSPENDED';
   joinedAt: string;
+  /** P1 Task 9 — the owner membership is protected and cannot be removed. */
+  isOwner?: boolean;
+  isSelf?: boolean;
 }
 
 export interface TeamMember {
@@ -318,5 +326,12 @@ export interface TeamMember {
   department: string;
   status?: 'Active' | 'Invited' | 'Inactive';
   joinedAt: string;
+  /**
+   * P1 Task 9 — true when this roster entry matches a live company account by
+   * email. Such a person is shown once, under Company Accounts, not as a
+   * duplicate roster-only entry.
+   */
+  hasAccount?: boolean;
+  linkedUserId?: string | null;
 }
 

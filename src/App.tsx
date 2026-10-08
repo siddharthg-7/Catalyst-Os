@@ -354,7 +354,7 @@ export default function App() {
     agents: ['CEO', 'Finance', 'Talent', 'Growth', 'Legal', 'Operations', 'Investment', 'Auditor'],
     actions: [
       'startup:write', 'approvals:review', 'knowledge:write',
-      'people:read', 'people:write', 'people:invite',
+      'people:read', 'people:write', 'people:access',
       'orchestrate:execute', 'orchestrate:request'
     ]
   });
@@ -469,6 +469,50 @@ export default function App() {
       return updated;
     });
     showToast(`Team member "${memberName}" added to venture.`, 'success');
+  };
+
+  // ── P1 Task 9: revoke a company account's access ──────────────────────────
+  const refreshMemberships = async () => {
+    try {
+      const res = await apiFetch('/api/memberships');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setMemberships(data);
+      }
+    } catch (err) {
+      console.warn('[App] Membership refresh warning:', err);
+    }
+  };
+
+  const handleRemoveMembership = async (id: string) => {
+    const res = await apiFetch(`/api/memberships/${id}`, { method: 'DELETE' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast(data?.error || 'That member could not be removed.', 'error');
+      return;
+    }
+    // The person may still exist as a roster entry, so refresh both lists.
+    await Promise.all([refreshMemberships(), hydrateTeam()]);
+    showToast(`${data.fullName || 'Member'} no longer has access to the workspace.`, 'success');
+  };
+
+  const hydrateTeam = async () => {
+    try {
+      const res = await apiFetch('/api/team');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setTeamMembers(data);
+          if (user?.id) {
+            try {
+              localStorage.setItem(`catalystos_team_${user.id}`, JSON.stringify(data));
+            } catch {}
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[App] Team refresh warning:', err);
+    }
   };
 
   // ── P1 Task 8: invitations ────────────────────────────────────────────────
@@ -994,9 +1038,10 @@ export default function App() {
               onRemoveMember={hasPermission('people:write') ? handleRemoveTeamMember : undefined}
               memberships={memberships}
               invitations={invitations}
-              onInviteMember={hasPermission('people:invite') ? handleInviteMember : undefined}
-              onRevokeInvitation={hasPermission('people:invite') ? handleRevokeInvitation : undefined}
-              onResendInvitation={hasPermission('people:invite') ? handleResendInvitation : undefined}
+              onInviteMember={hasPermission('people:access') ? handleInviteMember : undefined}
+              onRevokeInvitation={hasPermission('people:access') ? handleRevokeInvitation : undefined}
+              onResendInvitation={hasPermission('people:access') ? handleResendInvitation : undefined}
+              onRemoveMembership={hasPermission('people:access') ? handleRemoveMembership : undefined}
             />
           )}
 

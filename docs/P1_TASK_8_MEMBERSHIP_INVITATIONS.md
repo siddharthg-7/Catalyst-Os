@@ -387,6 +387,13 @@ warning if the database is unreachable.
 
 ## 14. Remaining limitations
 
+> **Superseded in part by P1 Task 9.** Items 1 and 2 below (the duplicate People
+> lists and the missing membership-removal endpoint) are resolved in
+> [`P1_TASK_9_MEMBERSHIP_REMOVAL_RECONCILIATION.md`](./P1_TASK_9_MEMBERSHIP_REMOVAL_RECONCILIATION.md),
+> which also closes a stale-JWT hole in the `attachMembershipRole` seam described
+> in §8: company-scoped routes now use the fail-closed `requireActiveMembership`
+> guard instead.
+
 1. **People shows two lists.** "Company Accounts" (Membership) and "Active Team"
    (`TEAM_MEMBER` Memory) are not reconciled — a person can appear in both. See
    the transitional state in §10.

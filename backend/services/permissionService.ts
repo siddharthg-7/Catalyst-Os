@@ -45,8 +45,12 @@ export type Action =
   | 'approvals:review'       // approve / reject / edit an approval
   | 'knowledge:write'        // upload or delete documents
   | 'people:read'
-  | 'people:write'           // add / remove team members
-  | 'people:invite'          // issue invitations
+  | 'people:write'           // manage roster / TEAM_MEMBER records
+  // P1 Task 10 — grant or revoke actual company ACCOUNT access: issuing,
+  // resending and revoking invitations, and suspending a Membership. This
+  // replaced the narrower invite-only permission so the whole account-access
+  // boundary sits behind one check instead of two names for the same concept.
+  | 'people:access'
   | 'orchestrate:execute'    // run an AI command
   | 'orchestrate:request';   // draft only; execution needs an approver
 
@@ -73,7 +77,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permissions> = {
     agents: ALL_AGENTS,
     actions: [
       'startup:write', 'approvals:review', 'knowledge:write',
-      'people:read', 'people:write', 'people:invite',
+      'people:read', 'people:write', 'people:access',
       'orchestrate:execute', 'orchestrate:request'
     ]
   },
@@ -83,7 +87,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permissions> = {
     agents: ALL_AGENTS,
     actions: [
       'startup:write', 'approvals:review', 'knowledge:write',
-      'people:read', 'people:write', 'people:invite',
+      'people:read', 'people:write', 'people:access',
       'orchestrate:execute', 'orchestrate:request'
     ]
   },

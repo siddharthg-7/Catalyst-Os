@@ -10,6 +10,7 @@ import {
   X, 
   AlertCircle,
   Send,
+  UserMinus,
   RotateCcw,
   Ban,
   ShieldCheck
@@ -52,10 +53,12 @@ interface PeopleDirectoryProps {
   /** Accounts that can actually sign in to this company. */
   memberships?: CompanyMembership[];
   invitations?: CompanyInvitation[];
-  /** Omitted when the signed-in role lacks 'people:invite'. */
+  /** Omitted when the signed-in role lacks 'people:access' (P1 Task 10). */
   onInviteMember?: (invite: { email: string; role: string }) => Promise<void>;
   onRevokeInvitation?: (id: string) => Promise<void>;
   onResendInvitation?: (id: string) => Promise<void>;
+  /** P1 Task 9/10 — revokes account access. Omitted without 'people:access'. */
+  onRemoveMembership?: (id: string) => Promise<void>;
 }
 
 export default function PeopleDirectory({
@@ -69,6 +72,7 @@ export default function PeopleDirectory({
   onInviteMember,
   onRevokeInvitation,
   onResendInvitation,
+  onRemoveMembership,
 }: PeopleDirectoryProps) {
   // P1 Task 8 invite state, kept separate from the roster-entry modal above.
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -76,6 +80,19 @@ export default function PeopleDirectory({
   const [inviteRole, setInviteRole] = useState('');
   const [inviteSubmitting, setInviteSubmitting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
+
+  // P1 Task 9 reconciliation: a roster entry that matches a live company account
+  // (by email, flagged server-side as hasAccount) is the same person, so it is
+  // not shown again under Roster. The Memory record itself is preserved — if
+  // their access is later revoked they reappear here as roster-only.
+  const accountEmails = new Set(
+    memberships.map(m => (m.email || '').trim().toLowerCase()).filter(Boolean)
+  );
+  const rosterOnly = teamMembers.filter(m => {
+    if (m.hasAccount) return false;
+    const rosterEmail = (m.email || '').trim().toLowerCase();
+    return !(rosterEmail && accountEmails.has(rosterEmail));
+  });
 
   const pendingInvitations = invitations.filter(i => i.status === 'PENDING');
   const closedInvitations = invitations.filter(i => i.status !== 'PENDING');
@@ -300,6 +317,25 @@ export default function PeopleDirectory({
                 >
                   {member.status === 'ACTIVE' ? 'Active' : 'Suspended'}
                 </span>
+
+                {/* P1 Task 9: the owner membership is protected. Hiding this is
+                    UX only — the backend rejects an owner removal regardless. */}
+                {member.isOwner ? (
+                  <span
+                    title="The company owner cannot be removed"
+                    className="text-[10px] font-mono uppercase tracking-wider px-2 py-1 rounded-md bg-[#F3F0EE] border border-[#141413]/10 text-[#696969] shrink-0"
+                  >
+                    Owner
+                  </span>
+                ) : onRemoveMembership ? (
+                  <button
+                    onClick={() => onRemoveMembership(member.id)}
+                    title={`Remove access for ${member.fullName}`}
+                    className="p-1.5 text-[#696969] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                  >
+                    <UserMinus className="w-3.5 h-3.5" />
+                  </button>
+                ) : null}
               </div>
             ))}
           </div>
@@ -385,9 +421,9 @@ export default function PeopleDirectory({
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-mono uppercase tracking-widest text-[#696969] font-bold">
-            Active Team
+            Roster
           </h3>
-          {teamMembers.length > 0 && onAddMember && (
+          {rosterOnly.length > 0 && onAddMember && (
             <button
               onClick={handleOpenModal}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold transition-all shadow-2xs cursor-pointer hover:shadow-xs active:scale-[0.98]"
@@ -401,17 +437,18 @@ export default function PeopleDirectory({
         <hr className="border-[#141413]/10" />
 
         {/* Empty State vs Members List */}
-        {teamMembers.length === 0 ? (
+        {rosterOnly.length === 0 ? (
           <div className="bg-white rounded-[16px] border border-dashed border-[#141413]/15 p-10 text-center space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center mx-auto text-[#696969]">
               <Users className="w-5 h-5 text-[#141413]/60" />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-[#141413] font-sans">
-                No team members yet
+                No roster-only people
               </p>
               <p className="text-xs text-[#696969] max-w-sm mx-auto font-sans">
-                Expand your core venture roster. Add team members to establish operational reporting and department ownership.
+                Everyone on the roster currently holds a company account. Add someone here to
+                track them before they have CatalystOS access.
               </p>
             </div>
             {onAddMember && <button
@@ -426,7 +463,7 @@ export default function PeopleDirectory({
         ) : (
           <div className="space-y-3">
             <div className="space-y-2.5">
-              {teamMembers.map((member) => {
+              {rosterOnly.map((member) => {
                 const displayName = member.fullName || member.name || 'Team Member';
                 const memberRole = member.role || 'Member';
                 const memberDept = member.department || member.role || 'General';
@@ -469,19 +506,12 @@ export default function PeopleDirectory({
                     </div>
 
                     <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium ${
-                          (member.status || 'Active') === 'Active'
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
-                            : 'bg-amber-50 text-amber-800 border border-amber-200/60'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            (member.status || 'Active') === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'
-                          }`}
-                        />
-                        <span>{member.status || 'Active'}</span>
+                      {/* P1 Task 9: everyone in this list is account-less by
+                          construction — anyone with a live account appears under
+                          Company Accounts instead. */}
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#F3F0EE] text-[#696969] border border-[#141413]/10">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#696969]/50" />
+                        <span>No account</span>
                       </span>
 
                       {onRemoveMember && <button

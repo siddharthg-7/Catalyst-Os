@@ -31,7 +31,10 @@ import {
   resolveMembership,
   listMemberships,
   getEffectivePermissions,
-  attachMembershipRole
+  attachMembershipRole,
+  requireActiveMembership,
+  removeMembership,
+  MembershipError
 } from '../services/membershipService';
 import {
   createInvitation,
@@ -658,7 +661,7 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
 });
 
 // POST update startup profile
-router.post('/startup', authenticateJWT, attachMembershipRole, requirePermission('startup:write'), async (req: AuthenticatedRequest, res) => {
+router.post('/startup', authenticateJWT, requireActiveMembership, requirePermission('startup:write'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   if (!userId) {
     res.status(401).json({ error: 'Authentication required.' });
@@ -868,11 +871,17 @@ router.get('/membership/me', authenticateJWT, async (req: AuthenticatedRequest, 
 });
 
 // GET all members of the caller's company (accounts, not roster entries).
-router.get('/memberships', authenticateJWT, attachMembershipRole, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+router.get('/memberships', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   const startupId = await resolveCallerStartupId(req, res);
   if (!startupId) return;
 
   const rows = await listMemberships(startupId);
+  // P1 Task 9: expose who the owner is and who the caller is, so the People page
+  // can hide the Remove action for the protected owner membership. The backend
+  // still rejects an owner removal regardless of what the UI shows.
+  const startup = isDbAvailable && prisma
+    ? await prisma.startup.findUnique({ where: { id: startupId }, select: { ownerId: true } })
+    : null;
   res.json(rows.map((m: any) => ({
     id: m.id,
     userId: m.userId,
@@ -880,12 +889,60 @@ router.get('/memberships', authenticateJWT, attachMembershipRole, requirePermiss
     email: m.user?.email || '',
     role: m.role,
     status: m.status,
-    joinedAt: m.createdAt
+    joinedAt: m.createdAt,
+    isOwner: Boolean(startup && startup.ownerId === m.userId),
+    isSelf: m.userId === req.user?.id
   })));
 });
 
+// DELETE revoke a member's access to the caller's company (P1 Task 9).
+// Suspends the Membership; never deletes the User account. The company owner is
+// protected. P1 Task 10: requires 'people:access', NOT 'people:write' — revoking
+// account access is a different responsibility from managing roster data, so HR
+// (which holds people:write) is intentionally forbidden here. The target is resolved inside the caller's own company, so a
+// cross-company membership id reads as 404.
+router.delete('/memberships/:id', authenticateJWT, requireActiveMembership, requirePermission('people:access'), async (req: AuthenticatedRequest, res) => {
+  const startupId = await resolveCallerStartupId(req, res);
+  if (!startupId) return;
+
+  try {
+    const removed = await removeMembership(startupId, req.params.id, req.user!.id);
+
+    // Audit trail, consistent with how adding a team member is recorded.
+    if (isDbAvailable && prisma) {
+      await prisma.timelineItem.create({
+        data: {
+          title: `Access Revoked: ${removed.fullName}`,
+          content: `${removed.fullName} (${removed.role}) no longer has access to the company workspace.`,
+          type: 'team',
+          startupId
+        }
+      }).catch(() => {});
+    }
+
+    res.json({
+      success: true,
+      id: removed.id,
+      userId: removed.userId,
+      email: removed.email,
+      fullName: removed.fullName,
+      role: removed.role,
+      status: removed.status,
+      // The User account is deliberately preserved.
+      userAccountRetained: true
+    });
+  } catch (err: any) {
+    if (err instanceof MembershipError) {
+      res.status(err.status).json({ error: err.message, code: err.code });
+      return;
+    }
+    console.error('[Memberships API] Removal error:', err?.message);
+    res.status(500).json({ error: 'The member could not be removed.' });
+  }
+});
+
 // GET invitations for the caller's company.
-router.get('/invitations', authenticateJWT, attachMembershipRole, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+router.get('/invitations', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   const startupId = await resolveCallerStartupId(req, res);
   if (!startupId) return;
   try {
@@ -895,8 +952,8 @@ router.get('/invitations', authenticateJWT, attachMembershipRole, requirePermiss
   }
 });
 
-// POST create an invitation. Requires 'people:invite' (Founder/Admin in Task 7).
-router.post('/invitations', authenticateJWT, attachMembershipRole, requirePermission('people:invite'), async (req: AuthenticatedRequest, res) => {
+// POST create an invitation. Requires 'people:access' (Founder/Admin) — P1 Task 10.
+router.post('/invitations', authenticateJWT, requireActiveMembership, requirePermission('people:access'), async (req: AuthenticatedRequest, res) => {
   const startupId = await resolveCallerStartupId(req, res);
   if (!startupId) return;
 
@@ -921,7 +978,7 @@ router.post('/invitations', authenticateJWT, attachMembershipRole, requirePermis
 });
 
 // POST resend an invitation (supersedes the previous token).
-router.post('/invitations/:id/resend', authenticateJWT, attachMembershipRole, requirePermission('people:invite'), async (req: AuthenticatedRequest, res) => {
+router.post('/invitations/:id/resend', authenticateJWT, requireActiveMembership, requirePermission('people:access'), async (req: AuthenticatedRequest, res) => {
   const startupId = await resolveCallerStartupId(req, res);
   if (!startupId) return;
 
@@ -939,7 +996,7 @@ router.post('/invitations/:id/resend', authenticateJWT, attachMembershipRole, re
 });
 
 // DELETE revoke a pending invitation.
-router.delete('/invitations/:id', authenticateJWT, attachMembershipRole, requirePermission('people:invite'), async (req: AuthenticatedRequest, res) => {
+router.delete('/invitations/:id', authenticateJWT, requireActiveMembership, requirePermission('people:access'), async (req: AuthenticatedRequest, res) => {
   const startupId = await resolveCallerStartupId(req, res);
   if (!startupId) return;
 
@@ -1046,6 +1103,11 @@ router.get('/permissions/me', authenticateJWT, attachMembershipRole, async (req:
     areas: permissions.areas,
     agents: permissions.agents,
     actions: permissions.actions,
+    people: {
+      read: permissions.actions.includes('people:read'),
+      write: permissions.actions.includes('people:write'),
+      access: permissions.actions.includes('people:access')
+    },
     startupId: membership?.startupId ?? null,
     isOwner: membership?.isOwner ?? false
   });
@@ -1078,7 +1140,7 @@ const inMemoryTeamMembers: Array<{
 }> = [];
 
 // GET team members for the authenticated founder's venture
-router.get('/team', authenticateJWT, attachMembershipRole, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+router.get('/team', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   if (!userId) {
     res.status(401).json({ error: 'Authentication required.' });
@@ -1087,27 +1149,50 @@ router.get('/team', authenticateJWT, attachMembershipRole, requirePermission('pe
 
   try {
     if (isDbAvailable && prisma) {
-      const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+      // P1 Task 9: resolve the company through Membership rather than ownerId
+      // only, so an invited member can see the roster too (previously they
+      // always received an empty list).
+      const startupId = await getActiveStartupId(userId);
+      const startup = startupId
+        ? await prisma.startup.findUnique({ where: { id: startupId } })
+        : null;
       if (startup) {
         const memories = await prisma.memory.findMany({
           where: { startupId: startup.id, category: 'TEAM_MEMBER' },
           orderBy: { createdAt: 'desc' }
         });
+
+        // P1 Task 9 reconciliation: a roster entry whose email matches an ACTIVE
+        // membership is the same person as a Company Account. The Memory row is
+        // kept (it is historical roster data) but flagged, so the People page can
+        // show that person once, under Company Accounts.
+        const activeMemberships = await listMemberships(startup.id);
+        const accountEmails = new Map<string, string>();
+        for (const m of activeMemberships) {
+          const memberEmail = (m.user?.email || '').trim().toLowerCase();
+          if (memberEmail) accountEmails.set(memberEmail, m.userId);
+        }
+
         const members = memories.map(m => {
           try {
             const parsed = JSON.parse(m.description);
             const memberName = parsed.fullName || m.title;
             const memberRole = parsed.role || 'Team Member';
             const memberDept = parsed.department || parsed.role || 'General';
+            const memberEmail = (parsed.email || '').trim();
+            const linkedUserId = accountEmails.get(memberEmail.toLowerCase());
             return {
               id: m.id,
               fullName: memberName,
               name: memberName,
               role: memberRole,
               department: memberDept,
-              email: parsed.email || '',
+              email: memberEmail,
               status: parsed.status || 'Active',
-              joinedAt: m.createdAt.toISOString()
+              joinedAt: m.createdAt.toISOString(),
+              /** True when this roster entry corresponds to a live company account. */
+              hasAccount: Boolean(linkedUserId),
+              linkedUserId: linkedUserId || null
             };
           } catch {
             return {
@@ -1118,7 +1203,9 @@ router.get('/team', authenticateJWT, attachMembershipRole, requirePermission('pe
               department: m.description || 'General',
               email: '',
               status: 'Active',
-              joinedAt: m.createdAt.toISOString()
+              joinedAt: m.createdAt.toISOString(),
+              hasAccount: false,
+              linkedUserId: null
             };
           }
         });
@@ -1135,7 +1222,7 @@ router.get('/team', authenticateJWT, attachMembershipRole, requirePermission('pe
 });
 
 // POST add a new team member
-router.post('/team', authenticateJWT, attachMembershipRole, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
+router.post('/team', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   if (!userId) {
     res.status(401).json({ error: 'Authentication required.' });
@@ -1177,7 +1264,12 @@ router.post('/team', authenticateJWT, attachMembershipRole, requirePermission('p
 
   try {
     if (isDbAvailable && prisma) {
-      const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+      // P1 Task 9: resolve via Membership so a member with people:write (e.g. HR)
+      // can manage the roster, not only the owner.
+      const startupId = await getActiveStartupId(userId);
+      const startup = startupId
+        ? await prisma.startup.findUnique({ where: { id: startupId } })
+        : null;
       if (startup) {
         const memory = await prisma.memory.create({
           data: {
@@ -1238,7 +1330,7 @@ router.post('/team', authenticateJWT, attachMembershipRole, requirePermission('p
 });
 
 // DELETE remove a team member
-router.delete('/team/:id', authenticateJWT, attachMembershipRole, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
+router.delete('/team/:id', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   const { id } = req.params;
   if (!userId) {
@@ -1250,7 +1342,12 @@ router.delete('/team/:id', authenticateJWT, attachMembershipRole, requirePermiss
     if (isDbAvailable && prisma) {
       // Scope the delete to the caller's own startup so one tenant cannot
       // remove another tenant's team member by guessing a Memory id.
-      const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+      // P1 Task 9: resolve via Membership so a member with people:write (e.g. HR)
+      // can manage the roster, not only the owner.
+      const startupId = await getActiveStartupId(userId);
+      const startup = startupId
+        ? await prisma.startup.findUnique({ where: { id: startupId } })
+        : null;
       if (!startup) {
         res.status(404).json({ error: 'No venture found for this account.' });
         return;
@@ -1427,7 +1524,7 @@ router.get('/approvals', authenticateJWT, async (req: AuthenticatedRequest, res)
 });
 
 // POST review action on approval item (Supports approve, modify, reject with idempotency)
-router.post('/approvals/:id/review', authenticateJWT, attachMembershipRole, requirePermission('approvals:review'), async (req: AuthenticatedRequest, res) => {
+router.post('/approvals/:id/review', authenticateJWT, requireActiveMembership, requirePermission('approvals:review'), async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { action, feedback, modifications } = req.body; // action: 'approve' | 'modify' | 'reject'
   const idempotencyKey = req.header('Idempotency-Key');
@@ -1483,7 +1580,7 @@ router.post('/approvals/:id/review', authenticateJWT, attachMembershipRole, requ
 });
 
 // POST Section 26: Reversal of an approved deliverable
-router.post('/approvals/:id/reverse', authenticateJWT, attachMembershipRole, requirePermission('approvals:review'), async (req: AuthenticatedRequest, res) => {
+router.post('/approvals/:id/reverse', authenticateJWT, requireActiveMembership, requirePermission('approvals:review'), async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { reason } = req.body || {};
   try {
@@ -1619,7 +1716,7 @@ router.get('/company/policies', authenticateJWT, async (req: AuthenticatedReques
 });
 
 // PUT update company policies (Section 7: Founder only)
-router.put('/company/policies', authenticateJWT, attachMembershipRole, requirePermission('startup:write'), async (req: AuthenticatedRequest, res) => {
+router.put('/company/policies', authenticateJWT, requireActiveMembership, requirePermission('startup:write'), async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user?.id;
     let startupId = 'stp_default';
@@ -2003,7 +2100,7 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
             fundingStage: userContext.startup?.stage || startupProfile.fundingStage || 'Early Stage',
             cashBalance: userContext.financials?.cashBalance || startupProfile.cashBalance || 250000,
             burnRate: userContext.financials?.monthlyBurn || startupProfile.burnRate || 15000,
-            healthScore: userContext.startup?.healthScore || startupProfile.healthScore || 85
+            healthScore: userContext.financial?.healthScore || startupProfile.healthScore || 85
           };
         }
       }

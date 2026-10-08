@@ -124,7 +124,11 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Cr
     throw new InvitationError(404, 'Company not found.', 'STARTUP_NOT_FOUND');
   }
 
-  // Already a member of THIS company? Nothing to invite.
+  // Already an ACTIVE member of THIS company? Nothing to invite.
+  //
+  // P1 Task 9: the status check matters. A SUSPENDED membership means access was
+  // revoked, and that person must be re-invitable — ensureMembership reactivates
+  // the existing row on acceptance, so no duplicate membership is created.
   const existingUser = await safeDbQuery(() =>
     prisma.user.findUnique({ where: { email }, select: { id: true, name: true } })
   ) as any;
@@ -134,7 +138,7 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Cr
         where: { userId_startupId: { userId: existingUser.id, startupId: startup.id } }
       })
     ) as any;
-    if (existingMembership) {
+    if (existingMembership && existingMembership.status === 'ACTIVE') {
       throw new InvitationError(
         409,
         'That person is already a member of this company.',

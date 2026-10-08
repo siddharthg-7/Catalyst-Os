@@ -161,13 +161,13 @@ async function runTests() {
     return { res, nexted };
   }
 
-  assert(runGuard('FOUNDER', 'people:invite').nexted, 'FOUNDER may invite');
-  assert(runGuard('ADMIN', 'people:invite').nexted, 'ADMIN may invite');
-  const financeInvite = runGuard('FINANCE', 'people:invite');
+  assert(runGuard('FOUNDER', 'people:access').nexted, 'FOUNDER may invite');
+  assert(runGuard('ADMIN', 'people:access').nexted, 'ADMIN may invite');
+  const financeInvite = runGuard('FINANCE', 'people:access');
   assert(!financeInvite.nexted && financeInvite.res.statusCode === 403, 'FINANCE gets 403 on invite');
-  const hrInvite = runGuard('HR', 'people:invite');
+  const hrInvite = runGuard('HR', 'people:access');
   assert(!hrInvite.nexted && hrInvite.res.statusCode === 403, 'HR gets 403 on invite');
-  const anonInvite = runGuard(undefined, 'people:invite');
+  const anonInvite = runGuard(undefined, 'people:access');
   assert(!anonInvite.nexted && anonInvite.res.statusCode === 401, 'Unauthenticated gets 401 on invite');
 
   // ── Database-backed tests ────────────────────────────────────────────────
@@ -368,7 +368,11 @@ async function runTests() {
       }
     });
     createdUserIds.push(existingUser.id);
-    const userCountBefore = await prisma.user.count();
+    // Scoped to this invitee's email rather than a global count, which is racy
+    // against the dev server and other suites.
+    const accountsForExistingBefore = await prisma.user.count({
+      where: { email: existingUser.email }
+    });
 
     const inviteExisting = await createInvitation({
       startupId: companyA.startup.id,
@@ -386,9 +390,13 @@ async function runTests() {
     });
     assert(!acceptedExisting.createdUser, 'No new User is created for an existing account');
     assert(acceptedExisting.userId === existingUser.id, 'Membership attaches to the existing User');
+    const accountsForExistingAfter = await prisma.user.count({
+      where: { email: existingUser.email }
+    });
     assert(
-      await prisma.user.count() === userCountBefore,
-      'User count is unchanged (no duplicate account)'
+      accountsForExistingAfter === accountsForExistingBefore && accountsForExistingAfter === 1,
+      'Exactly one User row still exists for that email (no duplicate account)',
+      `before=${accountsForExistingBefore} after=${accountsForExistingAfter}`
     );
     assert(
       await isMemberOf(existingUser.id, companyA.startup.id),

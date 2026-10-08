@@ -139,7 +139,19 @@ export async function ensureMembership(
   const existing = await client.membership.findUnique({
     where: { userId_startupId: { userId, startupId } }
   });
-  if (existing) return { created: false, membership: existing };
+  if (existing) {
+    // P1 Task 9: a previously removed (SUSPENDED) member who is re-invited must
+    // regain access, and must take the role from the NEW invitation rather than
+    // silently inheriting the old one.
+    if (existing.status !== 'ACTIVE' || existing.role !== role) {
+      const reactivated = await client.membership.update({
+        where: { id: existing.id },
+        data: { status: 'ACTIVE', role }
+      });
+      return { created: false, membership: reactivated };
+    }
+    return { created: false, membership: existing };
+  }
 
   const membership = await client.membership.create({
     data: { userId, startupId, role, status: 'ACTIVE' }
@@ -147,13 +159,23 @@ export async function ensureMembership(
   return { created: true, membership };
 }
 
-/** All active members of a company, for the People page. */
-export async function listMemberships(startupId: string): Promise<any[]> {
+/**
+ * Members of a company, for the People page.
+ * Defaults to ACTIVE only: a SUSPENDED membership is a historical record of
+ * access, not a company account, so it must not appear under Company Accounts.
+ */
+export async function listMemberships(
+  startupId: string,
+  opts: { includeSuspended?: boolean } = {}
+): Promise<any[]> {
   if (!startupId || !dbReady()) return [];
   try {
     return await safeDbQuery(() =>
       (prisma as any).membership.findMany({
-        where: { startupId },
+        where: {
+          startupId,
+          ...(opts.includeSuspended ? {} : { status: 'ACTIVE' })
+        },
         include: { user: { select: { id: true, name: true, email: true } } },
         orderBy: { createdAt: 'asc' }
       })
@@ -187,5 +209,145 @@ export async function attachMembershipRole(req: any, _res: any, next: any) {
   } catch (err: any) {
     console.warn('[membershipService] attachMembershipRole note:', err.message);
   }
+  next();
+}
+
+/**
+ * P1 Task 9 — error type for membership operations, mirroring InvitationError so
+ * routes can map a failure to an HTTP status without re-deriving it.
+ */
+export class MembershipError extends Error {
+  constructor(public status: number, message: string, public code: string) {
+    super(message);
+    this.name = 'MembershipError';
+  }
+}
+
+export interface RemovedMembership {
+  id: string;
+  userId: string;
+  startupId: string;
+  role: Role;
+  status: MembershipStatus;
+  email: string;
+  fullName: string;
+}
+
+/**
+ * P1 Task 9 — revokes a member's access to a company by SUSPENDING their
+ * membership. Suspension rather than deletion, because:
+ *   - `resolveMembership()` filters on status ACTIVE, so access is lost immediately;
+ *   - the row remains as an audit record of who once had access;
+ *   - re-inviting the same person reactivates the row (see ensureMembership),
+ *     so no duplicate membership is ever created.
+ *
+ * The User account is never touched — a user may belong to other companies.
+ *
+ * `startupId` must already be derived from the CALLER's own membership; it is
+ * part of the WHERE clause, so a membership in another company reads as 404.
+ */
+export async function removeMembership(
+  startupId: string,
+  membershipId: string,
+  actingUserId: string
+): Promise<RemovedMembership> {
+  if (!dbReady()) {
+    throw new MembershipError(503, 'The database is unavailable.', 'DB_UNAVAILABLE');
+  }
+
+  const membership: any = await safeDbQuery(() =>
+    (prisma as any).membership.findFirst({
+      where: { id: membershipId, startupId },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        startup: { select: { id: true, ownerId: true } }
+      }
+    })
+  );
+
+  // Tenant-scoped: a cross-company id is indistinguishable from a missing one.
+  if (!membership) {
+    throw new MembershipError(404, 'Membership not found in this company.', 'NOT_FOUND');
+  }
+
+  // Owner protection: the founder's membership is the company's anchor and
+  // cannot be revoked here, including by the founder themselves.
+  if (membership.startup?.ownerId === membership.userId) {
+    throw new MembershipError(
+      403,
+      'The membership of the company owner cannot be removed. Transfer ownership first.',
+      'OWNER_PROTECTED'
+    );
+  }
+
+  if (membership.status !== 'ACTIVE') {
+    throw new MembershipError(
+      409,
+      'The access for that member has already been removed.',
+      'ALREADY_REMOVED'
+    );
+  }
+
+  const updated: any = await (prisma as any).membership.update({
+    where: { id: membership.id },
+    data: { status: 'SUSPENDED' }
+  });
+
+  console.log(
+    `[membershipService] Access revoked: ${membership.user?.email} ` +
+    `removed from startup ${startupId} by ${actingUserId}`
+  );
+
+  return {
+    id: updated.id,
+    userId: updated.userId,
+    startupId: updated.startupId,
+    role: normalizeRole(updated.role),
+    status: updated.status as MembershipStatus,
+    email: membership.user?.email || '',
+    fullName: membership.user?.name || membership.user?.email || 'Team Member'
+  };
+}
+
+/**
+ * P1 Task 9 — fail-closed company-scope guard.
+ *
+ * `attachMembershipRole` only HYDRATES the role; when no membership resolves it
+ * leaves `req.user.role` as whatever the JWT claimed. On a company-scoped route
+ * that is a stale-credential hole: a member whose access was just revoked still
+ * carries their old role in an unexpired token, and routes backed by in-memory
+ * state (e.g. the approvals queue) would honour it.
+ *
+ * This middleware closes that by requiring an ACTIVE membership (or ownership)
+ * and returning 403 otherwise. Mount it in place of attachMembershipRole on
+ * every route that acts on company data. Keep attachMembershipRole for routes
+ * that must still answer for a user with no company, such as /permissions/me.
+ */
+export async function requireActiveMembership(req: any, res: any, next: any) {
+  if (!req.user?.id) {
+    res.status(401).json({ error: 'Unauthorized: Authentication required.' });
+    return;
+  }
+
+  let membership: ResolvedMembership | null = null;
+  try {
+    membership = await resolveMembership(req.user.id);
+  } catch (err: any) {
+    console.warn('[membershipService] requireActiveMembership note:', err.message);
+    res.status(503).json({ error: 'Membership could not be verified. Please retry.' });
+    return;
+  }
+
+  if (!membership) {
+    res.status(403).json({
+      error: 'Forbidden: you do not have active access to a company workspace.',
+      code: 'NO_ACTIVE_MEMBERSHIP'
+    });
+    return;
+  }
+
+  // Membership is authoritative: overwrite whatever the token claimed.
+  req.user.role = membership.role;
+  req.membership = membership;
   next();
 }
