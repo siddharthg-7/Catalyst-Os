@@ -1,0 +1,3 @@
+- Service level objectives (SLO) must target 99.9% availability.
+- All deployment tasks must include containerization guidelines.
+- Backup frequencies must be specified for critical transactional datastores.

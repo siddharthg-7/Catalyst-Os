@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalyst OS — Software Requirements Specification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-canvas-default: #ffffff;
+            --color-canvas-subtle: #f6f8fa;
+            --color-border-default: #d0d7de;
+            --color-border-muted: #d8dee4;
+            --color-fg-default: #24292f;
+            --color-fg-muted: #57606a;
+            --color-accent-fg: #0969da;
+            --color-accent-emphasis: #0969da;
+            --color-success-fg: #1a7f37;
+            --color-warning-fg: #9a6700;
+            --color-danger-fg: #cf222e;
+            --color-done-bg: #dafbe1;
+            --color-done-fg: #1a7f37;
+            --color-bonus-bg: #fff8c5;
+            --color-bonus-fg: #9a6700;
+            --color-roadmap-bg: #f6f8fa;
+            --color-roadmap-fg: #57606a;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-canvas-default: #0d1117;
+                --color-canvas-subtle: #161b22;
+                --color-border-default: #30363d;
+                --color-border-muted: #21262d;
+                --color-fg-default: #c9d1d9;
+                --color-fg-muted: #8b949e;
+                --color-accent-fg: #58a6ff;
+                --color-accent-emphasis: #1f6feb;
+                --color-success-fg: #3fb950;
+                --color-warning-fg: #d29922;
+                --color-danger-fg: #f85149;
+                --color-done-bg: #1a7f37;
+                --color-done-fg: #dafbe1;
+                --color-bonus-bg: #9a6700;
+                --color-bonus-fg: #fff8c5;
+                --color-roadmap-bg: #30363d;
+                --color-roadmap-fg: #c9d1d9;
+            }
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--color-fg-default);
+            background-color: var(--color-canvas-default);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1012px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header-content {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--color-border-default);
+            margin-bottom: 40px;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--color-border-muted); }
+        h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--color-border-muted); }
+        h3 { font-size: 1.25em; }
+
+        .header-content h1 {
+            border: none;
+            font-size: 2.5em;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: var(--color-fg-muted);
+            margin-bottom: 24px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .badges img {
+            height: 24px;
+        }
+
+        a {
+            color: var(--color-accent-fg);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        ul, ol {
+            padding-left: 2em;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        table th, table td {
+            padding: 6px 13px;
+            border: 1px solid var(--color-border-default);
+        }
+
+        table th {
+            font-weight: 600;
+            background-color: var(--color-canvas-subtle);
+        }
+
+        table tr:nth-child(2n) {
+            background-color: var(--color-canvas-subtle);
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 85%;
+            padding: 0.2em 0.4em;
+            margin: 0;
+            background-color: var(--color-canvas-subtle);
+            border-radius: 6px;
+        }
+
+        pre {
+            background-color: var(--color-canvas-subtle);
+            border: 1px solid var(--color-border-default);
+            border-radius: 6px;
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .alert {
+            padding: 16px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--color-accent-emphasis);
+            background-color: var(--color-canvas-subtle);
+            border-radius: 0 6px 6px 0;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 12px;
+            margin-right: 8px;
+        }
+
+        .tag-done { background-color: var(--color-done-bg); color: var(--color-done-fg); }
+        .tag-bonus { background-color: var(--color-bonus-bg); color: var(--color-bonus-fg); }
+        .tag-roadmap { background-color: var(--color-roadmap-bg); color: var(--color-roadmap-fg); }
+
+        .svg-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            vertical-align: text-bottom;
+            fill: currentColor;
+            margin-right: 8px;
+        }
+
+        .architecture-box {
+            background: var(--color-canvas-subtle);
+            border: 1px solid var(--color-border-default);
+            border-radius: 8px;
+            padding: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 1.5;
+            color: var(--color-accent-fg);
+            font-weight: 600;
+        }
+
+        /* SVG Icons */
+        .icon-target { color: var(--color-danger-fg); }
+        .icon-list { color: var(--color-accent-fg); }
+        .icon-shield { color: var(--color-success-fg); }
+        .icon-cpu { color: var(--color-accent-fg); }
+        .icon-code { color: var(--color-warning-fg); }
+        .icon-users { color: var(--color-accent-fg); }
+        .icon-play { color: var(--color-success-fg); }
+        .icon-x { color: var(--color-danger-fg); }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="header-content">
+        <h1>Catalyst OS</h1>
+        <div class="subtitle">Autonomous Startup OS · Software Requirements Specification</div>
+        
+        <div class="badges">
+            <img src="https://img.shields.io/badge/Event-VYNEDAM%_Talent_Hunt_2K26-blue?style=flat-square" alt="Event">
+            <img src="https://img.shields.io/badge/Problem_Statement-15-orange?style=flat-square" alt="Problem Statement">
+            <img src="https://img.shields.io/badge/Version-2.0_(Hackathon_Consolidated)-brightgreen?style=flat-square" alt="Version">
+            <img src="https://img.shields.io/badge/Duration-36_Hours-red?style=flat-square" alt="Duration">
+            <img src="https://img.shields.io/badge/Team_Size-5-purple?style=flat-square" alt="Team Size">
+        </div>
+
+        <p style="color: var(--color-fg-muted); max-width: 600px; margin: 0 auto;">
+            A complete architectural blueprint and scope breakdown for the Catalyst OS build.
+        </p>
+    </div>
+
+    <div class="alert">
+        <strong>Changelog from v1:</strong> Added Executive Collaboration Engine (visual orchestration), Startup Memory Engine (scoped), Executive Inbox, Executive Meeting Summary — all accepted at 🟢 because they reuse data/state the system already produces. Voice Interface added but downgraded from the proposed 🟢 to 🟡, and re-specified to use the browser's free Web Speech API instead of ElevenLabs.
+    </div>
+
+    <h2><svg class="svg-icon icon-target" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm0-13a5 5 0 100 10 5 5 0 000-10zm0 8a3 3 0 110-6 3 3 0 010 6z"/></svg> Scope Tiers</h2>
+    <p>Every requirement is tagged with a scope tier. Read this section first.</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Tag</th>
+                <th>Meaning</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="tag tag-done">🟢 MVP-36H</span></td>
+                <td>Build this for real. It must work in the live demo.</td>
+            </tr>
+            <tr>
+                <td><span class="tag tag-bonus">🟡 SIMULATED / BONUS</span></td>
+                <td>Fake it, template it, or build it as an optional non-load-bearing layer. Say so honestly in the pitch.</td>
+            </tr>
+            <tr>
+                <td><span class="tag tag-roadmap">⚪ ROADMAP</span></td>
+                <td>Do not build. Mention only as a future-vision slide.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-list" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 1. Introduction</h2>
+    
+    <h3>1.1 Purpose</h3>
+    <p><strong>Catalyst OS</strong> is an AI command-center for early-stage founders. A founder states a goal in plain language; a <strong>CEO Orchestrator</strong> breaks it into sub-tasks, routes them to specialist agents (Finance, Hiring, Growth, Legal, Investment/Operations), which visibly collaborate, produce recommendations, and surface high-stakes actions for founder approval before anything executes.</p>
+
+    <h3>1.2 Scope for this hackathon</h3>
+    <p>A working, deployed slice proving <code>goal → orchestration → specialist agent → approval → dashboard update</code>, end to end, with 1–2 agents fully real and the rest visibly stubbed but well-dressed. Judging rewards a focused working system over a broad broken one.</p>
+
+    <h3>1.3 Definitions</h3>
+    <ul>
+        <li><strong>Orchestrator / CEO agent</strong> — router interpreting founder intent and delegating to specialists.</li>
+        <li><strong>Specialist agent</strong> — a domain-scoped AI worker (Finance, Hiring, Growth, Legal, Investment).</li>
+        <li><strong>Approval Gate</strong> — queue where high-stakes outputs wait for founder confirmation.</li>
+        <li><strong>Health Score</strong> — composite number summarizing startup status across domains.</li>
+        <li><strong>Memory context</strong> — recent activity-log entries injected into an agent's prompt so responses reference prior decisions.</li>
+    </ul>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-cpu" viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm3 2h6v6H9V8zm2 2v2h2v-2h-2z" fill="currentColor"/></svg> 2. Overall Description</h2>
+    
+    <h3>2.1 Product perspective</h3>
+    <p>A single desktop-first web app: command box (text, optional voice), dashboard of executive cards, approval queue, and a "boardroom" visualization layer that sits between command input and dashboard update.</p>
+
+    <h3>2.2 User classes</h3>
+    <p><strong>Founder</strong> — single role, single demo account. No multi-tenant auth needed.</p>
+
+    <h3>2.3 Operating environment</h3>
+    <ul>
+        <li><strong>Frontend:</strong> React/Next.js on Vercel.</li>
+        <li><strong>Backend:</strong> FastAPI (or Node/Express) on Railway/Render.</li>
+        <li><strong>Database:</strong> managed Postgres (Supabase/Neon).</li>
+        <li><strong>LLM:</strong> one hosted API (Claude or Gemini), one key. No local/fine-tuned models.</li>
+        <li><strong>Voice (optional):</strong> browser-native Web Speech API only. No external voice vendor.</li>
+    </ul>
+
+    <h3>2.4 Design constraints</h3>
+    <p>36 hours, 5 people, no budget for paid third-party APIs (Plaid, Stripe, Deel, DocuSign, ElevenLabs, Deepgram, Crunchbase, Apollo — all ⚪). No Celery/Redis/LangGraph/pgvector — single backend process is sufficient at demo scale.</p>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-code" viewBox="0 0 24 24"><path d="M9 4L3 12l6 8M15 4l6 8-6 8M10 20l4-16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 3. Functional Requirements</h2>
+
+    <h3>4.1 Landing & Onboarding <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-1.1:</strong> Landing page, product one-liner, "Get Started" / "Demo Startup" CTAs.</li>
+        <li><strong>FR-1.2:</strong> Onboarding form: startup name, industry, stage, team size, monthly budget, one-line idea.</li>
+        <li><strong>FR-1.3:</strong> On submit, generates a CompanyContext record in Postgres, redirects to Dashboard.</li>
+        <li><strong>FR-1.4 <span class="tag tag-bonus">🟡</span>:</strong> File upload accepted for "financial statement"; seeded data used regardless of contents.</li>
+    </ul>
+
+    <h3>4.2 CEO Orchestrator <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-2.1:</strong> Accepts free-text founder goal via command box.</li>
+        <li><strong>FR-2.2:</strong> LLM call classifies intent into finance, hiring, growth (stub), legal (stub), investment (stub).</li>
+        <li><strong>FR-2.3:</strong> Routes to the corresponding agent handler.</li>
+        <li><strong>FR-2.4:</strong> Triggers the Executive Collaboration Engine animation (§4.7) instead of a generic spinner.</li>
+    </ul>
+
+    <h3>4.3 Finance Agent <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-3.1:</strong> Compute burn rate and runway deterministically from seeded transaction data.</li>
+        <li><strong>FR-3.2:</strong> Pass computed numbers to the LLM for a founder-facing narrative summary.</li>
+        <li><strong>FR-3.3:</strong> Expose a callable <code>check_budget(amount)</code> function usable by other agents.</li>
+        <li><strong>FR-3.4:</strong> Return output in structured schema.</li>
+    </ul>
+
+    <h3>4.4 Hiring Agent <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-4.1:</strong> Calls Finance's <code>check_budget()</code> before responding to a hiring request.</li>
+        <li><strong>FR-4.2:</strong> Generates a job description via LLM.</li>
+        <li><strong>FR-4.3:</strong> Ranks a fixed set of 5–10 seeded mock candidates via a simple keyword/skill-overlap score.</li>
+        <li><strong>FR-4.4:</strong> Drafts one outreach email per top candidate (held as a draft, never sent).</li>
+    </ul>
+
+    <h3>4.5 Approval Center <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-5.1:</strong> Every "executing" action lands in a pending queue instead of auto-executing.</li>
+        <li><strong>FR-5.2:</strong> Founder can Approve / Reject / Edit.</li>
+        <li><strong>FR-5.3:</strong> Approving updates Health Score and Activity Timeline, marks item EXECUTED.</li>
+    </ul>
+
+    <h3>4.6 Explainable AI <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-6.1:</strong> Every agent recommendation returns structured JSON: <code>recommendation, reasons: [string], confidence: float, source: string</code>.</li>
+        <li><strong>FR-6.2:</strong> Dashboard renders reasons as an expandable "Why?" section.</li>
+    </ul>
+
+    <h3>4.7 Executive Collaboration Engine <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <div class="alert">
+        <strong>Purpose:</strong> Replace the generic loading spinner with a visualization of which departments are "active" while a request processes — this is the single highest demo-impact, lowest-cost item in this revision.
+    </div>
+    <ul>
+        <li><strong>FR-7.1:</strong> On command submission, UI shows a boardroom-style layout.</li>
+        <li><strong>FR-7.2:</strong> Departments relevant to the classified intent illuminate in sequence with contextual status text.</li>
+        <li><strong>FR-7.3:</strong> For the two real agents (Finance, Hiring), status text reflects actual pipeline stage.</li>
+        <li><strong>FR-7.4:</strong> Sequence resolves to "Execution Plan Ready" before the dashboard updates.</li>
+    </ul>
+
+    <h3>4.8 Startup Memory Engine (Scoped) <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-8.1:</strong> Every founder command and agent output is written to <code>activity_log</code>.</li>
+        <li><strong>FR-8.2:</strong> When an agent runs, the last 5–10 relevant <code>activity_log</code> rows are included in prompt context.</li>
+        <li><strong>FR-8.3:</strong> Agent references this history in its narrative.</li>
+    </ul>
+
+    <h3>4.9 Voice Interface (Browser-Native, Optional) <span class="tag tag-bonus">🟡 SIMULATED</span></h3>
+    <ul>
+        <li><strong>FR-9.1:</strong> Founder may submit commands via text (primary) or voice (optional).</li>
+        <li><strong>FR-9.2:</strong> Uses the browser's built-in <code>SpeechRecognition API</code>.</li>
+        <li><strong>FR-9.4:</strong> Optional spoken response via <code>SpeechSynthesis API</code>.</li>
+    </ul>
+
+    <h3>4.10 Executive Inbox / Daily Brief <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-10.1:</strong> On load, render summary block: Health Score delta, pending approvals, recent actions.</li>
+        <li><strong>FR-10.2:</strong> Content generated from existing queries.</li>
+    </ul>
+
+    <h3>4.11 Executive Meeting Summary <span class="tag tag-done">🟢 MVP-36H</span></h3>
+    <ul>
+        <li><strong>FR-11.1:</strong> Aggregate structured outputs from all agents touched by the current request into a single summary view.</li>
+    </ul>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="currentColor"/></svg> 5. Non-Functional Requirements</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Requirement</th>
+                <th>Hackathon target</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>NFR-1</td><td>Command response latency</td><td>Under ~5s end-to-end; no 600ms voice-grade requirement</td></tr>
+            <tr><td>NFR-2</td><td>Availability</td><td>Must survive the demo session; no uptime SLA</td></tr>
+            <tr><td>NFR-3</td><td>Data privacy</td><td>Single demo account, no real PII</td></tr>
+            <tr><td>NFR-4</td><td>Security</td><td>Approval gating is the entire security story; no real credential vaulting</td></tr>
+            <tr><td>NFR-5</td><td>Scalability</td><td>Described verbally + diagram in pitch, not built</td></tr>
+            <tr><td>NFR-6</td><td>Explainability</td><td>Every recommendation carries reason + confidence — non-negotiable</td></tr>
+            <tr><td>NFR-7</td><td>Determinism (Finance)</td><td>Numeric calculations always computed in code, never LLM-guessed</td></tr>
+            <tr><td>NFR-8</td><td>Voice graceful degradation</td><td>Text path must work with voice code entirely disabled</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-cpu" viewBox="0 0 24 24"><path d="M3 3h18v18H3z" stroke="currentColor" stroke-width="2" fill="none"/></svg> 6. System Architecture (Hackathon-Realistic)</h2>
+    <div class="architecture-box">
+Founder (Text, optional Voice via Web Speech API)
+                    │
+                    ▼
+           CEO Orchestrator (LLM intent classify)
+                    │
+                    ▼
+     Executive Collaboration Engine (visual layer)
+                    │
+   ┌────────────────┼────────────────┬─────────┬───────────┐
+   ▼                ▼                ▼         ▼           ▼
+Finance Agent   Hiring Agent    Growth (stub) Legal(stub) Investment(stub)
+   │                │
+   └── check_budget() real call ──┘
+                    │
+                    ▼
+        Structured JSON output (per agent)
+                    │
+                    ▼
+     Executive Meeting Summary (aggregation)
+                    │
+                    ▼
+             Approval Queue (Postgres)
+                    │
+              Founder approves
+                    │
+                    ▼
+   Dashboard: Health Score + Timeline + Executive Inbox update
+                    │
+                    ▼
+        activity_log row written → feeds Memory context (§4.8)
+                    on next relevant agent call
+    </div>
+    <p><strong>Stack:</strong> Next.js + Tailwind frontend; FastAPI backend; Postgres (Supabase/Neon); one LLM provider with structured JSON output mode (temperature 0 for Finance, 0.7 for Growth/Hiring drafting); browser-native Web Speech API for optional voice.</p>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-users" viewBox="0 0 24 24"><path d="M12 14c4 0 7-3 7-7s-3-7-7-7-7 3-7 7 3 7 7 7zm0 2c-4.41 0-12 2.2-12 6v2h24v-2c0-3.8-7.59-6-12-6z" fill="currentColor"/></svg> 7. Team Role Mapping (5 people)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Role</th>
+                <th>Owns</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Backend/Orchestrator lead</td><td>Router, Postgres schema, check_budget() plumbing, activity_log writes</td></tr>
+            <tr><td>AI/Prompting lead</td><td>System prompts (Orchestrator, Finance, Hiring), structured output schemas, memory-context injection (§4.8)</td></tr>
+            <tr><td>Frontend lead</td><td>Dashboard, executive cards, command box, Executive Collaboration Engine animation (§4.7)</td></tr>
+            <tr><td>Frontend/Approval lead</td><td>Approval queue UI, timeline, Executive Inbox (§4.10), Executive Meeting Summary (§4.11)</td></tr>
+            <tr><td>Integration & Demo lead</td><td>Seed data, demo script, pitch deck, stub screens (Legal/Growth/Investment), voice fallback testing (§4.9)</td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg> 8. Demo Script (target ~3 minutes)</h2>
+    <ol>
+        <li><strong>Founder opens dashboard</strong> — Executive Inbox shows "Good morning" brief with Health Score and pending items.</li>
+        <li><strong>Founder types (or speaks):</strong> "We need to hire a backend engineer."</li>
+        <li><strong>Executive Collaboration Engine animates</strong> — Hiring and Finance nodes illuminate, Hiring visibly consults Finance via <code>check_budget()</code>.</li>
+        <li><strong>Executive Meeting Summary appears:</strong> one line each from Finance and Hiring, CEO recommendation.</li>
+        <li><strong>Founder expands "Why?"</strong> on the Hiring recommendation — sees reasons + confidence.</li>
+        <li><strong>Item lands in Approval Center.</strong> Founder clicks Approve.</li>
+        <li><strong>Dashboard updates:</strong> Health Score changes, Activity Timeline logs it, Executive Inbox reflects the new state.</li>
+        <li><em>(If stable)</em> Founder asks a direct Finance question — real computed burn/runway narrative, referencing memory context ("since your last hiring decision...").</li>
+        <li><strong>Close on the Production Roadmap slide:</strong> full 5-pillar vision, real integrations, voice vendor, semantic memory — framed as next steps.</li>
+    </ol>
+
+    <hr>
+
+    <h2><svg class="svg-icon icon-x" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/></svg> 9. Explicitly Out of Scope for the Hackathon Build</h2>
+    <p>ElevenLabs/Deepgram voice vendors · LangGraph · Celery/Redis · pgvector/full RAG · fine-tuned local LLM · Plaid/Stripe/GitHub/Deel/DocuSign/Slack/Google Workspace integrations · multi-tenant auth · desktop push notifications · Auditor Agent self-correction loop · real email sending · semantic/long-term memory beyond current-session activity log.</p>
+    <div class="alert">
+        These aren't rejected as bad ideas — they're the real production roadmap. They're excluded here because building any one of them well would consume the entire 36 hours on its own, at the cost of the working demo.
+    </div>
+
+</div>
+
+</body>
+</html>

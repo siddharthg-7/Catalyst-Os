@@ -1,0 +1,229 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String?
+  role         String    @default("founder")
+  passwordHash String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  startups     Startup[]
+}
+
+model Startup {
+  id            String            @id @default(uuid())
+  name          String
+  industry      String
+  description   String
+  fundingStage  String            @default("pre-seed")
+  cashBalance   Float             @default(250000)
+  burnRate      Float             @default(15000)
+  healthScore   Int               @default(78)
+  ownerId       String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  commands      Command[]
+  decisions     DecisionLog[]
+  agents        ExecutiveAgent[]
+  healthScores  HealthScore[]
+  memories      Memory[]
+  notifications Notification[]
+  plans         Plan[]
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  documents     StartupDocument[]
+  timeline      TimelineItem[]
+}
+
+model StartupDocument {
+  id        String           @id @default(uuid())
+  name      String
+  type      String
+  size      String
+  summary   String
+  insights  String[]
+  startupId String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  chunks    KnowledgeChunk[]
+  startup   Startup          @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model KnowledgeChunk {
+  id         String          @id @default(uuid())
+  content    String
+  documentId String
+  createdAt  DateTime        @default(now())
+  embedding  Embedding?
+  document   StartupDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model Embedding {
+  id        String         @id @default(uuid())
+  vector    Float[]
+  chunkId   String         @unique
+  createdAt DateTime       @default(now())
+  chunk     KnowledgeChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+}
+
+model ExecutiveAgent {
+  id          String   @id @default(uuid())
+  role        String
+  name        String
+  avatar      String
+  status      String   @default("idle")
+  currentTask String?
+  startupId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model Command {
+  id        String   @id @default(uuid())
+  content   String
+  status    String   @default("pending")
+  startupId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model Plan {
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  status      String      @default("planning")
+  startupId   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  approvals   Approval[]
+  executions  Execution[]
+  startup     Startup     @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+}
+
+model Task {
+  id         String   @id @default(uuid())
+  title      String
+  assignedTo String
+  status     String   @default("pending")
+  result     String?
+  planId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  plan       Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model Approval {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  type            String
+  status          String   @default("pending_review")
+  content         String
+  impact          String
+  financialChange Float    @default(0)
+  metricChanges   Json
+  planId          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  startupId String
+  createdAt DateTime @default(now())
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model HealthScore {
+  id        String   @id @default(uuid())
+  score     Int
+  metrics   Json
+  startupId String
+  createdAt DateTime @default(now())
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model TimelineItem {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  type      String   @default("milestone")
+  startupId String
+  createdAt DateTime @default(now())
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model DecisionLog {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  category        String
+  impactText      String
+  financialImpact Float    @default(0)
+  status          String   @default("approved")
+  startupId       String
+  createdAt       DateTime @default(now())
+  startup         Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model Memory {
+  id          String   @id @default(uuid())
+  category    String
+  title       String
+  description String
+  startupId   String
+  createdAt   DateTime @default(now())
+  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+}
+
+model Execution {
+  id        String   @id @default(uuid())
+  action    String
+  payload   Json
+  status    String   @default("completed")
+  planId    String
+  createdAt DateTime @default(now())
+  plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model approval_gates {
+  id          String  @id @db.VarChar
+  action_type String  @db.VarChar
+  payload     Json    @db.Json
+  status      String? @db.VarChar
+}
+
+model candidates {
+  id              String  @id @db.VarChar
+  name            String  @db.VarChar
+  email           String  @db.VarChar
+  resume_text     String?
+  match_score     Float?
+  analysis_report String?
+}
+
+model startup_contexts {
+  id                   String  @id @db.VarChar
+  company_name         String  @db.VarChar
+  industry             String  @db.VarChar
+  target_icp           String?
+  current_monthly_burn Float?
+  cash_on_hand         Float?
+}

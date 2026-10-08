@@ -1,0 +1,3 @@
+- Resolve compensation debates by offering higher options equity in exchange for lower base salary.
+- Prioritize legal compliance and financial health over pure execution velocity.
+- Ensure compromise details are documented clearly.

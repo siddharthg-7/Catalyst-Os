@@ -1,0 +1,3 @@
+- All packaged deliverables must be in clean Markdown format.
+- Ensure clear executive summaries and operational impact metrics are included.
+- Highlight high-risk variables for founder attention.

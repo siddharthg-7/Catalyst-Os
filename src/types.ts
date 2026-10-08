@@ -1,0 +1,276 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export interface StartupProfile {
+  name: string;
+  industry: string;
+  description: string;
+  fundingStage: string;
+  strategy?: string;
+  cashBalance: number;
+  burnRate: number;
+  runwayMonths: number;
+  healthScore: number;
+  metrics: {
+    velocity: number;
+    financialHealth: number;
+    legalCompliance: number;
+    growthRate: number;
+    operationsEfficiency: number;
+  };
+}
+
+export type AgentRole =
+  | 'CEO'
+  | 'Finance'
+  | 'Talent'
+  | 'Growth'
+  | 'Operations'
+  | 'Legal'
+  | 'Investment'
+  | 'Auditor'
+  | 'ConflictResolver'
+  | 'ApprovalManager';
+
+export interface Agent {
+  id: string;
+  name: string;
+  role: AgentRole;
+  avatar: string;
+  description: string;
+  status: 'idle' | 'analyzing' | 'collaborating' | 'generating' | 'reviewing';
+  currentTask?: string;
+  keyMetric: string;
+  metricValue: string;
+  color: string;
+}
+
+export interface AgentMessage {
+  id: string;
+  sender: AgentRole;
+  receiver: AgentRole | 'All';
+  content: string;
+  timestamp: string;
+  isConflict?: boolean;
+}
+
+export interface WorkflowTask {
+  id: string;
+  title: string;
+  assignedTo: AgentRole;
+  status: 'pending' | 'in_progress' | 'completed';
+  result?: string;
+}
+
+export type VoteVerdict = 'APPROVE' | 'APPROVE_WITH_CONDITIONS' | 'VETO';
+
+export interface AgentVote {
+  id: string;
+  approvalId?: string;
+  agentRole: 'CEO' | 'CFO' | 'Talent' | 'Growth' | 'Legal' | 'Operations' | 'Auditor';
+  verdict: VoteVerdict;
+  confidence: number;
+  reason: string;
+  conditions?: string[];
+  evidence?: string[];
+  citations?: string[];
+  createdAt: string;
+}
+
+export interface BoardConsensus {
+  approvedCount: number;
+  conditionalCount: number;
+  vetoCount: number;
+  totalVotes: number;
+  hasUnresolvedVeto: boolean;
+  verdict: 'CONSENSUS_REACHED' | 'CONDITIONAL_APPROVAL' | 'BLOCKED_BY_VETO';
+  summary: string;
+  votes: AgentVote[];
+}
+
+export interface Deliverable {
+  id: string;
+  initiativeId: string;
+  title: string;
+  description: string;
+  type: 'document' | 'contract' | 'financials' | 'marketing_plan' | 'policy';
+  status: 'pending_review' | 'approved' | 'rejected';
+  content: string;
+  impact: string;
+  financialChange?: number;
+  metricChanges?: {
+    velocity?: number;
+    financialHealth?: number;
+    legalCompliance?: number;
+    growthRate?: number;
+    operationsEfficiency?: number;
+  };
+  votes?: AgentVote[];
+  boardConsensus?: BoardConsensus;
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  reversibility?: 'REVERSIBLE' | 'IRREVERSIBLE';
+  headcount?: number;
+  conditions?: string[];
+}
+
+export interface Initiative {
+  id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'active' | 'completed' | 'failed';
+  category: 'funding' | 'hiring' | 'growth' | 'operations' | 'legal';
+  createdAt: string;
+  currentTaskIndex: number;
+  tasks: WorkflowTask[];
+  messages: AgentMessage[];
+  deliverables: Deliverable[];
+  mcp_tool_calls?: MCPToolCall[];
+}
+
+export interface MCPToolCall {
+  tool: string;
+  input: any;
+  output: any;
+}
+
+export interface MCPTool {
+  name: string;
+  description: string;
+  parameters?: any;
+}
+
+export interface VaultStatus {
+  status: 'connected' | 'fallback';
+  vaultAddr: string;
+  keysFound: string[];
+}
+
+export interface KnowledgeFile {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  uploadDate: string;
+  summary: string;
+  insights: string[];
+}
+
+export type UserRole = 'Founder' | 'Executive' | 'Investor' | 'Admin';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+}
+
+export interface DecisionRecord {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  timestamp: string;
+  impactText: string;
+  financialImpact: number;
+  status: 'approved' | 'rejected' | 'failed';
+  participatingAgents?: string[];
+  votes?: Array<{ agent: string; verdict: 'APPROVE' | 'APPROVE_WITH_CONDITIONS' | 'VETO'; reason?: string }>;
+  confidence?: number;
+  citations?: string[];
+  riskLevel?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  reversibility?: 'REVERSIBLE' | 'IRREVERSIBLE';
+  modifications?: string;
+}
+
+export interface OrchestrationAgentActivity {
+  role: string;
+  status: 'idle' | 'analyzing' | 'collaborating' | 'generating' | 'completed';
+  contribution?: string;
+}
+
+export interface OrchestrationEvidence {
+  citationId: string;
+  documentId?: string;
+  documentName?: string;
+  chunkId?: string;
+  excerpt?: string;
+}
+
+export interface OrchestrationCalculation {
+  metric: string;
+  value: number | string;
+  source: string;
+}
+
+export interface OrchestrationApprovalRequirement {
+  required: boolean;
+  approvalId?: string;
+  reason?: string;
+  impact?: string;
+}
+
+export interface OrchestrationResponse {
+  commandId: string;
+  status: 'completed' | 'needs_approval' | 'needs_information' | 'provider_unavailable' | 'failed';
+  interpretation: {
+    intent: string;
+    objective: string;
+  };
+  answer: {
+    summary: string;
+    details?: string;
+  };
+  agents: OrchestrationAgentActivity[];
+  evidence: OrchestrationEvidence[];
+  calculations?: OrchestrationCalculation[];
+  supportingData?: Array<{
+    label: string;
+    value: string;
+    source: string;
+  }>;
+  citations?: Array<{
+    id: string;
+    title: string;
+    source: string;
+    relevance: string;
+  }>;
+  votes?: AgentVote[];
+  boardConsensus?: BoardConsensus;
+  approval?: OrchestrationApprovalRequirement;
+  notifications?: Array<{
+    id: string;
+    title: string;
+    message: string;
+    type: string;
+  }>;
+  nextActions?: Array<{
+    label: string;
+    action: string;
+  }>;
+  confidence?: number;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface TeamMember {
+  id: string;
+  fullName: string;
+  name?: string;
+  email: string;
+  role: string;
+  department: string;
+  status?: 'Active' | 'Invited' | 'Inactive';
+  joinedAt: string;
+}
+

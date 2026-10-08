@@ -1,0 +1,3 @@
+- Employment agreements must include robust IP assignment clauses (PIIA).
+- Vesting structures must enforce a 1-year cliff.
+- All public communications must adhere to strict confidentiality boundaries.

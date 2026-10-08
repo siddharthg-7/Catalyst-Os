@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalyst-frontend
+  namespace: catalyst-os
+  labels:
+    app: catalyst-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalyst-frontend
+  template:
+    metadata:
+      labels:
+        app: catalyst-frontend
+    spec:
+      containers:
+        - name: react-frontend
+          image: catalyst-os/react-frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalyst-frontend-service
+  namespace: catalyst-os
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: catalyst-frontend

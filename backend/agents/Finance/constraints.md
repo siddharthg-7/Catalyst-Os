@@ -1,0 +1,3 @@
+- Standard pre-seed runway target is 12+ months. Flag danger if runway drops below 11 months.
+- Any single expense > $10,000 must be paired with operational efficiency offsets.
+- Always calculate runway after proposed changes.
