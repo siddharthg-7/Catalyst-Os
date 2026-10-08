@@ -1,33 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Code,
-  Cpu,
-  Server,
+  Sparkles,
+  ArrowRight,
+  Shield,
+  ShieldCheck,
   Zap,
-  ExternalLink,
-  Calendar,
-  MapPin,
-  Clock,
+  TrendingUp,
+  Users,
+  Bot,
+  Cpu,
+  LineChart,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+  Star,
+  Play,
+  Building2,
+  Rocket,
+  Search,
+  Globe,
+  Activity,
+  DollarSign,
+  Layers,
+  Plus,
+  Minus,
+  HelpCircle,
   Send,
+  Terminal,
+  X,
+  Menu,
+  Clock,
+  ArrowUpRight,
+  Briefcase,
+  CheckCircle2,
   Moon,
   Sun,
-  Play,
-  Bot,
-  Layers,
-  ArrowRight,
-  ArrowUpRight,
-  CheckCircle2,
-  Sparkles,
-  Shield,
-  Activity,
-  Github,
-  Linkedin,
-  Mail,
-  ChevronRight,
-  Database,
-  Terminal,
-  FileText
+  Database
 } from 'lucide-react';
 import CatalystLogo from './CatalystLogo';
 
@@ -37,23 +46,76 @@ interface HackathonLandingPageProps {
 }
 
 export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: HackathonLandingPageProps) {
-  const [activeTab, setActiveTab] = useState<'home' | 'about' | 'projects' | 'experience' | 'skills' | 'achievements' | 'certifications' | 'contact'>('home');
-  const [isDark, setIsDark] = useState(false);
-  const [demoDropdownOpen, setDemoDropdownOpen] = useState(false);
-  const [contactSubmitted, setContactSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [activeAgent, setActiveAgent] = useState<'atlas' | 'marcus' | 'evelyn' | 'dax'>('atlas');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [activeFaq, setActiveFaq] = useState<number | null>(0);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.getAttribute('data-theme') === 'dark';
+    }
+    return false;
+  });
 
-  // Sync theme with document
+  // Typewriter simulation for interactive agent console
+  const [typingText, setTypingText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Form submission state
+  const [directiveSubmitted, setDirectiveSubmitted] = useState(false);
+  const [directiveForm, setDirectiveForm] = useState({
+    founderName: '',
+    workEmail: '',
+    directiveType: 'runway',
+    directiveText: ''
+  });
+
+  const agentMessages = {
+    atlas: "I've reviewed your current seed round milestones. Based on runway projections and cap table dilution analysis, I recommend structuring the SAFE notes with a $12M valuation cap and a 20% discount. Board briefing memo is generated and ready for approval.",
+    marcus: "Financial telemetry indicates current monthly net burn is $42,500 with $620,000 cash in treasury. Runway extends to 14.6 months. Reclaiming unused cloud licenses and adjusting SaaS tiers can extend operations by an additional 1.8 months.",
+    evelyn: "Technical sprint telemetry shows 8 core microservices operational. PRD for multi-region active replication is drafted. Sub-agent code reviews scored 98.4% test coverage with zero security regressions detected.",
+    dax: "Customer acquisition cost is currently $140 with an LTV of $1,850 (13.2x ratio). Recommending launch of the automated founder referral flywheel to accelerate Q3 self-serve ARR by an estimated 28%."
+  };
+
   useEffect(() => {
-    const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
-    setIsDark(isDarkTheme);
-  }, []);
+    setIsTyping(true);
+    setTypingText('');
+    const fullText = agentMessages[activeAgent];
+    let i = 0;
+    const interval = setInterval(() => {
+      setTypingText(fullText.slice(0, i + 1));
+      i++;
+      if (i >= fullText.length) {
+        clearInterval(interval);
+        setIsTyping(false);
+      }
+    }, 12);
+    return () => clearInterval(interval);
+  }, [activeAgent]);
 
   const toggleTheme = () => {
-    const next = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('catalystos-theme', next);
-    setIsDark(!isDark);
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    if (nextDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
+  const handleDirectiveSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDirectiveSubmitted(true);
+    setTimeout(() => {
+      setDirectiveSubmitted(false);
+      setDirectiveForm({ founderName: '', workEmail: '', directiveType: 'runway', directiveText: '' });
+      if (onDemoLogin) {
+        onDemoLogin();
+      } else {
+        onStartBuilding();
+      }
+    }, 1500);
   };
 
   const scrollToSection = (id: string) => {
@@ -63,940 +125,941 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
     }
   };
 
-  const navLinks = [
-    { id: 'home', label: 'Home' },
-    { id: 'about', label: 'About' },
-    { id: 'projects', label: 'Projects' },
-    { id: 'experience', label: 'Experience' },
-    { id: 'skills', label: 'Skills' },
-    { id: 'achievements', label: 'Achievements' },
-    { id: 'certifications', label: 'Certifications' },
-    { id: 'contact', label: 'Contact' },
-  ] as const;
-
   return (
-    <div className="min-h-screen relative font-sans overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-900 transition-colors duration-300" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
-      
-      {/* ── AMBIENT AURORA & PARTICLES BACKGROUND ────────────────────────── */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div 
-          className="absolute w-[650px] h-[650px] rounded-full blur-[120px] -top-40 -left-20 opacity-40 transition-opacity duration-700"
-          style={{ background: 'radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)' }}
-        />
-        <div 
-          className="absolute w-[600px] h-[600px] rounded-full blur-[130px] top-1/3 -right-20 opacity-35 transition-opacity duration-700"
-          style={{ background: 'radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, transparent 70%)' }}
-        />
-        <div 
-          className="absolute w-[550px] h-[550px] rounded-full blur-[110px] bottom-10 left-1/4 opacity-30 transition-opacity duration-700"
-          style={{ background: 'radial-gradient(circle, rgba(6, 182, 212, 0.16) 0%, transparent 70%)' }}
-        />
-
-        {/* Subtle floating ambient particle dots */}
-        <div className="absolute top-[18%] left-[12%] w-1.5 h-1.5 rounded-full bg-indigo-400/40 animate-ping" style={{ animationDuration: '4s' }} />
-        <div className="absolute top-[28%] right-[15%] w-1 h-1 rounded-full bg-purple-400/50" />
-        <div className="absolute top-[48%] left-[8%] w-1.5 h-1.5 rounded-full bg-sky-400/40" />
-        <div className="absolute top-[65%] right-[22%] w-1 h-1 rounded-full bg-indigo-400/30" />
-        <div className="absolute top-[82%] left-[18%] w-1.5 h-1.5 rounded-full bg-purple-400/40" />
+    <div
+      className="min-h-screen transition-colors duration-300 relative overflow-x-hidden"
+      style={{
+        backgroundColor: 'var(--c-bg)',
+        color: 'var(--c-fg)',
+        fontFamily: "'Inter', sans-serif"
+      }}
+    >
+      {/* ── AMBIENT DREAMY BACKGROUND (PORTFOLIO REFERENCE) ── */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[55vw] h-[55vw] rounded-full bg-indigo-200/30 dark:bg-indigo-900/15 blur-[120px]" />
+        <div className="absolute top-[25%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-200/25 dark:bg-purple-900/15 blur-[140px]" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-sky-200/25 dark:bg-blue-950/20 blur-[130px]" />
       </div>
 
-      {/* ── 1. STICKY FLOATING PILL NAVBAR (Images 2 & 4) ────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 pt-5 flex justify-center pointer-events-none">
-        <nav 
-          className="w-full max-w-5xl rounded-2xl px-4 py-2.5 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.06)] border transition-all duration-300 pointer-events-auto backdrop-blur-md"
-          style={{ 
-            backgroundColor: isDark ? 'rgba(22, 22, 22, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-            borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(226, 232, 240, 0.85)'
+      {/* ── FLOATING PILL NAVBAR (PORTFOLIO REFERENCE) ── */}
+      <header className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <nav
+          className="pointer-events-auto flex items-center justify-between gap-4 sm:gap-8 px-5 py-2.5 rounded-full backdrop-blur-xl border shadow-[0_8px_30px_rgb(0,0,0,0.06)] max-w-4xl w-full transition-all duration-300"
+          style={{
+            backgroundColor: 'var(--c-glass-bg)',
+            borderColor: 'var(--c-glass-border)'
           }}
         >
-          {/* Brand Logo / Avatar */}
-          <div 
+          {/* Logo & Brand */}
+          <div
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="flex items-center gap-2.5 cursor-pointer group"
-            onClick={() => { setActiveTab('home'); scrollToSection('hero'); }}
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white font-bold flex items-center justify-center text-xs shadow-sm group-hover:scale-105 transition-transform">
-              SC
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+              <CatalystLogo className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-sm tracking-tight font-sans" style={{ color: 'var(--c-fg)' }}>
-              Sai Charan
-            </span>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-white">
+                Catalyst<span className="text-indigo-600">OS</span>
+              </span>
+              <span className="text-[9px] font-mono tracking-wider uppercase text-slate-400 -mt-1 hidden sm:block">
+                AI Operating System
+              </span>
+            </div>
           </div>
 
-          {/* Center Navigation Links with Active Pill indicator */}
-          <div className="hidden lg:flex items-center gap-1 text-[13px] font-medium font-sans">
-            {navLinks.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    scrollToSection(tab.id);
-                  }}
-                  className={`relative px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                    isActive ? 'font-semibold text-indigo-600' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="landingNavPill"
-                      className="absolute inset-0 bg-indigo-50 dark:bg-indigo-950/50 rounded-lg -z-10"
-                      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    />
-                  )}
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center gap-1">
+            {[
+              { id: 'overview', label: 'Overview' },
+              { id: 'council', label: 'Council' },
+              { id: 'sprints', label: 'Pipelines' },
+              { id: 'timeline', label: 'Timeline' },
+              { id: 'dispatch', label: 'Directives' },
+              { id: 'faq', label: 'FAQ' }
+            ].map((link) => (
+              <button
+                key={link.id}
+                onClick={() => scrollToSection(link.id)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              >
+                {link.label}
+              </button>
+            ))}
           </div>
 
-          {/* Right Action: Theme toggle + Let's Connect CTA */}
-          <div className="flex items-center gap-2.5">
+          {/* Right Action Buttons */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl transition-all cursor-pointer border hover:scale-105"
-              style={{
-                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(241, 245, 249, 0.8)',
-                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.8)',
-                color: isDark ? '#E2E8F0' : '#475569'
-              }}
-              title="Toggle Theme"
+              className="p-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-xs"
+              title="Toggle theme"
             >
               {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
             </button>
 
-            {/* Let's Connect Button */}
+            {/* Launch / Demo CTA */}
+            {onDemoLogin && (
+              <button
+                onClick={onDemoLogin}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-300 hover:bg-indigo-100 transition-all"
+              >
+                <Play className="w-3 h-3 fill-indigo-600" />
+                Live Demo
+              </button>
+            )}
+
             <button
-              onClick={() => {
-                setActiveTab('contact');
-                scrollToSection('contact');
-              }}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center gap-1.5"
+              onClick={onStartBuilding}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-indigo-500/25 hover:opacity-95 transition-all transform hover:-translate-y-0.5"
             >
-              <span>Let's Connect</span>
+              Start Building
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </nav>
       </header>
 
-      {/* ── 2. HERO METRICS STRIP (Image 1 top cards) ───────────────────────── */}
-      <section id="hero" className="pt-32 pb-12 px-6 relative z-10">
-        <div className="max-w-5xl mx-auto space-y-12">
-          
-          {/* 4 Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-            {[
-              { number: '10+', label: 'Projects Built' },
-              { number: '20+', label: 'Technologies' },
-              { number: '2', label: 'Internships' },
-              { number: '5+', label: 'Achievements' },
-            ].map((stat, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: idx * 0.08 }}
-                className="rounded-2xl p-6 text-center border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group"
-                style={{
-                  backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(241, 245, 249, 0.9)',
-                  boxShadow: '0 8px 30px rgba(0, 0, 0, 0.03)'
-                }}
+      {/* ── HERO SECTION ── */}
+      <section id="overview" className="relative pt-36 sm:pt-44 pb-20 px-4 sm:px-6 max-w-6xl mx-auto z-10">
+        <div className="text-center space-y-6 max-w-3xl mx-auto">
+          {/* Centered Pill Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Autonomous Venture Operating System</span>
+          </motion.div>
+
+          {/* Hero Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-4xl sm:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]"
+          >
+            From Idea to Launch.{' '}
+            <br />
+            One{' '}
+            <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">
+              AI Operating System.
+            </span>
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed"
+          >
+            CatalystOS unifies your executive C-Suite with autonomous AI agents. Real-time runway modeling,
+            automated board memos, equity structuring, and compliance pipelines — with human-in-the-loop governance.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-wrap items-center justify-center gap-3.5 pt-2"
+          >
+            <button
+              onClick={onStartBuilding}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 transition-all hover:-translate-y-0.5 cursor-pointer"
+            >
+              Start Building Free
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            {onDemoLogin && (
+              <button
+                onClick={onDemoLogin}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold border border-slate-300 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all hover:-translate-y-0.5 shadow-xs cursor-pointer"
               >
-                <div className="text-3xl md:text-4xl font-extrabold text-indigo-600 tracking-tight font-sans mb-1 group-hover:scale-105 transition-transform">
-                  {stat.number}
-                </div>
-                <div className="text-xs font-medium text-slate-500 dark:text-slate-400 font-sans">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
+                <Play className="w-3.5 h-3.5 fill-current text-indigo-600" />
+                Explore Live Sandbox
+              </button>
+            )}
+          </motion.div>
+        </div>
+
+        {/* ── 4 STATS METRIC CARDS (REFERENCE IMAGE 1 TOP) ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-16 max-w-5xl mx-auto"
+        >
+          {[
+            { metric: '99.4%', label: 'Autonomous Accuracy', sub: 'Audited deterministic telemetry' },
+            { metric: '4x', label: 'Capital Velocity', sub: 'From idea to board-ready deck' },
+            { metric: '5', label: 'Executive AI Agents', sub: 'Atlas, Marcus, Evelyn, Dax & Core' },
+            { metric: '24/7', label: 'Continuous Governance', sub: 'Human-in-the-loop approval gates' }
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className="p-6 sm:p-7 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] text-center flex flex-col justify-center items-center transition-all duration-300 hover:-translate-y-1"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                borderColor: 'var(--c-border)'
+              }}
+            >
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#4F46E5] tracking-tight mb-1 font-sans">
+                {item.metric}
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                {item.label}
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                {item.sub}
+              </span>
+            </div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ── 4 PASTEL FEATURE CARDS: EXECUTIVE COUNCIL (REFERENCE IMAGE 1 BOTTOM) ── */}
+      <section id="council" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto z-10 relative">
+        <div className="text-center space-y-3 mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 border border-indigo-100 dark:border-indigo-900">
+            Executive AI Council
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Autonomous Venture{' '}
+            <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">
+              Leadership
+            </span>
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+            Specialized intelligence executing across strategy, finance, engineering, and revenue
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Lavender Card: Atlas CEO */}
+          <div
+            className="p-6 sm:p-7 rounded-3xl border transition-all duration-300 hover:-translate-y-1 shadow-[0_8px_30px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--c-pastel-lavender)',
+              borderColor: 'var(--c-pastel-lavender-border)'
+            }}
+          >
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-600 flex items-center justify-center mb-5">
+                <Bot className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold font-mono text-purple-700 uppercase tracking-widest block mb-1">
+                Chief Executive Officer
+              </span>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Atlas — Venture Strategy
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Board memos, investor briefing packets, strategic capitalization roadmap, and governance policy design.
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-purple-200/50 flex items-center justify-between text-[11px] font-semibold text-purple-700">
+              <span>Governance & Vision</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
           </div>
 
-          {/* Quick Demo Access Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl border" style={{ backgroundColor: isDark ? 'var(--c-surface-2)' : '#FFFFFF', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.8)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center text-indigo-600">
-                <Sparkles className="w-4 h-4" />
+          {/* Sky Blue Card: Marcus CFO */}
+          <div
+            className="p-6 sm:p-7 rounded-3xl border transition-all duration-300 hover:-translate-y-1 shadow-[0_8px_30px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--c-pastel-sky)',
+              borderColor: 'var(--c-pastel-sky-border)'
+            }}
+          >
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center mb-5">
+                <TrendingUp className="w-5 h-5" />
               </div>
-              <div>
-                <span className="text-xs font-bold block" style={{ color: 'var(--c-fg)' }}>CatalystOS Autonomous Operating System</span>
-                <span className="text-[11px] text-slate-500">Live Hackathon Full-Stack MVP Environment</span>
+              <span className="text-[10px] font-bold font-mono text-sky-700 uppercase tracking-widest block mb-1">
+                Chief Financial Officer
+              </span>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Marcus — Capital & Runway
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Deterministic cash burn telemetry, dynamic runway modeling, cap table dilution, and SaaS economics optimization.
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-sky-200/50 flex items-center justify-between text-[11px] font-semibold text-sky-700">
+              <span>Financial Telemetry</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          </div>
+
+          {/* Mint Card: Evelyn CPO */}
+          <div
+            className="p-6 sm:p-7 rounded-3xl border transition-all duration-300 hover:-translate-y-1 shadow-[0_8px_30px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--c-pastel-mint)',
+              borderColor: 'var(--c-pastel-mint-border)'
+            }}
+          >
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-5">
+                <Cpu className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold font-mono text-emerald-700 uppercase tracking-widest block mb-1">
+                Chief Product Officer
+              </span>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Evelyn — Product & PRDs
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Technical PRD generation, sprint task decomposition, architecture review, and sub-agent development telemetry.
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-emerald-200/50 flex items-center justify-between text-[11px] font-semibold text-emerald-700">
+              <span>Engineering Velocity</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          </div>
+
+          {/* Amber Card: Dax CRO */}
+          <div
+            className="p-6 sm:p-7 rounded-3xl border transition-all duration-300 hover:-translate-y-1 shadow-[0_8px_30px_rgba(0,0,0,0.02)] flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--c-pastel-amber)',
+              borderColor: 'var(--c-pastel-amber-border)'
+            }}
+          >
+            <div>
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-5">
+                <Zap className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] font-bold font-mono text-amber-700 uppercase tracking-widest block mb-1">
+                Chief Revenue Officer
+              </span>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">
+                Dax — Growth & Revenue
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                GTM competitive positioning, customer funnel attribution, referral loops, and outbound sales orchestration.
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-amber-200/50 flex items-center justify-between text-[11px] font-semibold text-amber-700">
+              <span>Commercial Pipeline</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3 CASE STUDY GRADIENT HEADER CARDS (REFERENCE IMAGE 2) ── */}
+      <section id="sprints" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto z-10 relative">
+        <div className="text-center space-y-3 mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 border border-indigo-100 dark:border-indigo-900">
+            Featured Sprints
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Autonomous <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Execution Pipelines</span>
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+            Live multi-agent execution pipelines across venture strategy, capital, and operations
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1: Peach / Orange Gradient Header */}
+          <div
+            onClick={onStartBuilding}
+            className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            <div>
+              <div
+                className="p-7 border-b"
+                style={{
+                  background: 'linear-gradient(180deg, #FFE8DC 0%, rgba(255,255,255,0.2) 100%)',
+                  borderColor: 'rgba(254, 215, 170, 0.4)'
+                }}
+              >
+                <span className="text-[11px] font-bold tracking-wider text-orange-600 uppercase font-mono block mb-2">
+                  CASE STUDY
+                </span>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                  Q3 Institutional Seed Round & Economics
+                </h3>
+              </div>
+              <div className="p-7 space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Prepare strategic financial pitch scripts, model CAC payback terms, audit cap table dilution, and structure investor disclosure memos.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Funding', 'Atlas CEO', 'Marcus CFO', 'SAFE Notes'].map((t) => (
+                    <span
+                      key={t}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={onStartBuilding}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                style={{ borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(203, 213, 225, 0.8)' }}
+            <div className="p-7 pt-0">
+              <span className="text-xs font-semibold text-indigo-600 flex items-center gap-1 group-hover:underline">
+                View Workflow Canvas <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Card 2: Sky Blue Gradient Header */}
+          <div
+            onClick={onStartBuilding}
+            className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            <div>
+              <div
+                className="p-7 border-b"
+                style={{
+                  background: 'linear-gradient(180deg, #E0F2FE 0%, rgba(255,255,255,0.2) 100%)',
+                  borderColor: 'rgba(186, 230, 253, 0.4)'
+                }}
               >
-                Sign In
-              </button>
-              {onDemoLogin && (
+                <span className="text-[11px] font-bold tracking-wider text-sky-600 uppercase font-mono block mb-2">
+                  CASE STUDY
+                </span>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                  Founding Infrastructure Engineer Hire
+                </h3>
+              </div>
+              <div className="p-7 space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Structure employment agreements, options vesting cliffs, IP transfer covenants, and stress test cash runway impacts.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Talent', 'Equity Pool', 'Legal NDA', 'Evelyn CPO'].map((t) => (
+                    <span
+                      key={t}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-7 pt-0">
+              <span className="text-xs font-semibold text-indigo-600 flex items-center gap-1 group-hover:underline">
+                View Workflow Canvas <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Card 3: Lavender Gradient Header */}
+          <div
+            onClick={onStartBuilding}
+            className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            <div>
+              <div
+                className="p-7 border-b"
+                style={{
+                  background: 'linear-gradient(180deg, #F3E8FF 0%, rgba(255,255,255,0.2) 100%)',
+                  borderColor: 'rgba(233, 213, 255, 0.4)'
+                }}
+              >
+                <span className="text-[11px] font-bold tracking-wider text-purple-600 uppercase font-mono block mb-2">
+                  CASE STUDY
+                </span>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                  SOC-2 Compliance & Vendor Security
+                </h3>
+              </div>
+              <div className="p-7 space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Draft internal data protection guidelines, formulate password compliance, and verify third-party vendor encryption policies.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Compliance', 'Security', 'Audit Trail', 'Governance'].map((t) => (
+                    <span
+                      key={t}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-7 pt-0">
+              <span className="text-xs font-semibold text-indigo-600 flex items-center gap-1 group-hover:underline">
+                View Workflow Canvas <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CONNECTED VERTICAL TIMELINE WITH PURPLE DOTS (REFERENCE IMAGE 3) ── */}
+      <section id="timeline" className="py-20 px-4 sm:px-6 max-w-5xl mx-auto z-10 relative">
+        <div className="text-center space-y-3 mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 border border-indigo-100 dark:border-indigo-900">
+            System Trace
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Live Council{' '}
+            <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">
+              Execution Timeline
+            </span>
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+            Sequential decision traces recorded on the immutable governance audit ledger
+          </p>
+        </div>
+
+        {/* Timeline Container */}
+        <div className="relative pl-6 sm:pl-10 space-y-8">
+          {/* Vertical connecting line */}
+          <div className="absolute left-[11px] sm:left-[19px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-indigo-500 via-purple-500 to-indigo-400" />
+
+          {/* Timeline Event 1 */}
+          <div className="relative">
+            {/* Glowing purple node dot */}
+            <div className="absolute -left-[30px] sm:-left-[39px] top-7 w-4 h-4 rounded-full bg-indigo-600 border-4 border-indigo-200 dark:border-indigo-900 shadow-[0_0_12px_rgba(79,70,229,0.5)]" />
+
+            <div
+              className="p-6 sm:p-8 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] grid grid-cols-1 md:grid-cols-12 gap-6 items-start"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                borderColor: 'var(--c-border)'
+              }}
+            >
+              <div className="md:col-span-7 space-y-3">
+                <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider font-mono">
+                  EXECUTIVE INITIATIVE
+                </span>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Multi-Agent Capital Consensus & Seed Calibration
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Atlas CEO and Marcus CFO synchronized cash telemetry with investor benchmarks. Generated a comprehensive sensitivity analysis under 3 hiring scenarios.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Execution Duration: 1.84s — Status: APPROVED</span>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {['Capital Plan', 'Runway +4.2mo', 'Board Memo', 'Treasury'].map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border-indigo-100"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
                 <button
-                  onClick={onDemoLogin}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                  onClick={onStartBuilding}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#4F46E5] text-white hover:bg-indigo-700 transition-colors shadow-xs"
                 >
-                  <Play className="w-3.5 h-3.5" />
-                  <span>Launch Workspace</span>
+                  View Trace Details <ArrowRight className="w-3.5 h-3.5" />
                 </button>
+              </div>
+
+              <div className="md:col-span-5 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-2">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Telemetry Highlights
+                </h4>
+                <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>Runway stress-tested under $50K MRR expansion</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>Cryptographic audit proof stored on local SQLite</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>Automated Slack alert dispatched to founder</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeline Event 2 */}
+          <div className="relative">
+            {/* Glowing purple node dot */}
+            <div className="absolute -left-[30px] sm:-left-[39px] top-7 w-4 h-4 rounded-full bg-indigo-600 border-4 border-indigo-200 dark:border-indigo-900 shadow-[0_0_12px_rgba(79,70,229,0.5)]" />
+
+            <div
+              className="p-6 sm:p-8 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] grid grid-cols-1 md:grid-cols-12 gap-6 items-start"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                borderColor: 'var(--c-border)'
+              }}
+            >
+              <div className="md:col-span-7 space-y-3">
+                <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider font-mono">
+                  GOVERNANCE PIPELINE
+                </span>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Automated Governance & Human-in-the-Loop Gate
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Critical spend authorization of $18,400 routed through multi-agent validation. Staged in founder approval queue with rollback guarantees.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Execution Duration: 0.92s — Status: PENDING SIGN-OFF</span>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {['Approval Queue', 'Two-Key Auth', 'Budget Gate', 'Audit Log'].map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border-indigo-100"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  onClick={onStartBuilding}
+                  className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#4F46E5] text-white hover:bg-indigo-700 transition-colors shadow-xs"
+                >
+                  View Trace Details <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="md:col-span-5 bg-slate-50 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-2">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Governance Highlights
+                </h4>
+                <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>Non-repudiation digital seal applied</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>One-click approval or reversal via dashboard</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>Zero hallucination constraint check passed</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 2-COLUMN DIRECTIVE DISPATCH HUB (REFERENCE IMAGE 4) ── */}
+      <section id="dispatch" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto z-10 relative">
+        <div className="text-center space-y-3 mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 border border-indigo-100 dark:border-indigo-900">
+            Command Center
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Dispatch an{' '}
+            <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">
+              Executive Directive
+            </span>
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+            Test agent reasoning live or submit a priority directive to your autonomous council
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Live Agent Telemetry & Reasoning Simulation */}
+          <div className="lg:col-span-5 space-y-5">
+            {/* Live Status Card (Portfolio Image 4 Left) */}
+            <div
+              className="p-6 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-4"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                borderColor: 'var(--c-border)'
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  Council Core Online & Listening
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Currently monitoring venture runway, inbound talent applications, and SOC-2 compliance triggers across your organization.
+              </p>
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                <span>Cluster: us-west-enterprise</span>
+                <span>Latency: 38ms</span>
+              </div>
+            </div>
+
+            {/* Interactive Agent Switcher Pills */}
+            <div
+              className="p-6 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-4"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                borderColor: 'var(--c-border)'
+              }}
+            >
+              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider block">
+                Simulate Agent Reasoning
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'atlas', name: 'Atlas CEO', role: 'Strategy' },
+                  { id: 'marcus', name: 'Marcus CFO', role: 'Runway' },
+                  { id: 'evelyn', name: 'Evelyn CPO', role: 'Product' },
+                  { id: 'dax', name: 'Dax CRO', role: 'Growth' }
+                ].map((ag) => (
+                  <button
+                    key={ag.id}
+                    onClick={() => setActiveAgent(ag.id as any)}
+                    className={`p-2.5 rounded-2xl text-left border text-xs font-medium transition-all ${
+                      activeAgent === ag.id
+                        ? 'bg-indigo-50 dark:bg-indigo-950/70 border-indigo-500 text-indigo-600 dark:text-indigo-300 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-indigo-200 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    <div className="font-bold">{ag.name}</div>
+                    <div className="text-[10px] text-slate-400">{ag.role}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Live Output Box with Typewriter Animation */}
+              <div className="p-4 rounded-2xl bg-slate-900 text-slate-200 text-xs font-mono min-h-[120px] relative border border-slate-800">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[10px] text-slate-400">
+                  <span>AGENT OUTPUT STREAM</span>
+                  <span className="text-emerald-400">{isTyping ? 'THINKING...' : 'IDLE'}</span>
+                </div>
+                <p className="leading-relaxed">
+                  {typingText}
+                  {isTyping && <span className="inline-block w-1.5 h-3.5 bg-indigo-400 ml-1 animate-pulse" />}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Directive Form (Portfolio Image 4 Right) */}
+          <div
+            className="lg:col-span-7 p-8 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+              Send Priority Directive
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+              Enter directives for immediate multi-agent orchestration. The council will debate, calibrate financial constraints, and stage actions for sign-off.
+            </p>
+
+            <form onSubmit={handleDirectiveSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                    Founder Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Elena Rostova"
+                    value={directiveForm.founderName}
+                    onChange={(e) => setDirectiveForm({ ...directiveForm, founderName: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl border text-xs outline-hidden transition-all focus:border-indigo-500 bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                    Startup Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="founder@venture.ai"
+                    value={directiveForm.workEmail}
+                    onChange={(e) => setDirectiveForm({ ...directiveForm, workEmail: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-2xl border text-xs outline-hidden transition-all focus:border-indigo-500 bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                  Directive Domain
+                </label>
+                <select
+                  value={directiveForm.directiveType}
+                  onChange={(e) => setDirectiveForm({ ...directiveForm, directiveType: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-xs outline-hidden transition-all focus:border-indigo-500 bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
+                >
+                  <option value="runway">Financial & Runway Stress Testing</option>
+                  <option value="fundraising">Seed Round SAFE Notes & Pitch Prep</option>
+                  <option value="hiring">Founding Engineer Equity & Talent Search</option>
+                  <option value="compliance">SOC-2 & Governance Audit Validation</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1.5">
+                  Directive Details & Constraints
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="e.g. Model the cash runway if we hire 2 senior AI engineers in Q3 while maintaining 14 months of cash cushion. Draft board memo."
+                  value={directiveForm.directiveText}
+                  onChange={(e) => setDirectiveForm({ ...directiveForm, directiveText: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-2xl border text-xs outline-hidden transition-all focus:border-indigo-500 bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={directiveSubmitted}
+                className="w-full py-3 px-6 rounded-2xl bg-[#4F46E5] hover:bg-indigo-700 text-white font-semibold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {directiveSubmitted ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                    Directive Dispatched! Opening Dashboard...
+                  </>
+                ) : (
+                  <>
+                    Dispatch to Executive Council
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FREQUENTLY ASKED QUESTIONS ── */}
+      <section id="faq" className="py-20 px-4 sm:px-6 max-w-4xl mx-auto z-10 relative">
+        <div className="text-center space-y-3 mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 border border-indigo-100 dark:border-indigo-900">
+            Transparency
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Frequently Asked{' '}
+            <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">
+              Questions
+            </span>
+          </h2>
+          <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">
+            Everything you need to know about autonomous startup orchestration
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {[
+            {
+              q: 'How does the human-in-the-loop approval safeguard work?',
+              a: 'Every high-stakes action — such as budget allocation, equity grants, contract execution, or code deployments — requires explicit founder authorization through the Approval Queue. Nothing irreversible is performed unilaterally.'
+            },
+            {
+              q: 'Can CatalystOS integrate with our existing financial bank accounts?',
+              a: 'Yes. CatalystOS connects read-only with Stripe, Brex, Mercury, and QuickBooks through secure OAuth, continuously monitoring live burn rates and calibrating runway predictions without requiring manual CSV uploads.'
+            },
+            {
+              q: 'How are hallucinations prevented across agent deliberations?',
+              a: 'CatalystOS uses a multi-agent verification protocol. Financial figures computed by Marcus CFO must match deterministic mathematical formulas before Atlas CEO incorporates them into strategic board decks.'
+            },
+            {
+              q: 'Can I export our venture workflows and data at any time?',
+              a: 'Absolutely. All board memos, PRDs, equity schedules, and workflow state logs are stored in standardized markdown and JSON formats, exportable with one click.'
+            }
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className="rounded-2xl border transition-all duration-200 overflow-hidden"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                borderColor: 'var(--c-border)'
+              }}
+            >
+              <button
+                onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+                className="w-full p-5 text-left flex items-center justify-between text-sm font-bold text-slate-900 dark:text-white hover:text-indigo-600 transition-colors"
+              >
+                <span>{item.q}</span>
+                {activeFaq === idx ? (
+                  <ChevronUp className="w-4 h-4 text-indigo-600 flex-shrink-0 ml-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0 ml-4" />
+                )}
+              </button>
+              {activeFaq === idx && (
+                <div className="px-5 pb-5 text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800/60 pt-3">
+                  {item.a}
+                </div>
               )}
             </div>
-          </div>
-
+          ))}
         </div>
       </section>
 
-      {/* ── 3. "WHAT I SPECIALIZE IN" / 4 PASTEL CARDS (Image 1) ─────────────── */}
-      <section id="about" className="py-16 px-6 relative z-10">
-        <div className="max-w-5xl mx-auto space-y-12">
-          
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border border-indigo-100 dark:border-indigo-900/60">
-              Core Expertise
+      {/* ── FOOTER ── */}
+      <footer
+        className="border-t py-12 px-4 sm:px-6 relative z-10 transition-colors"
+        style={{
+          backgroundColor: 'var(--c-surface)',
+          borderColor: 'var(--c-border)'
+        }}
+      >
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white">
+              <CatalystLogo className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight" style={{ color: 'var(--c-fg)', letterSpacing: '-0.02em' }}>
-              What I <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Specialize In</span>
-            </h2>
-            <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-              From intelligent computer vision systems to scalable full-stack applications
-            </p>
+            <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+              Catalyst<span className="text-indigo-600">OS</span>
+            </span>
+            <span className="text-xs text-slate-400">
+              — The Autonomous Venture Operating System
+            </span>
           </div>
 
-          {/* 4 Pastel Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            
-            {/* 1. Pastel Lavender */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300"
-              style={{
-                backgroundColor: isDark ? 'rgba(79, 70, 229, 0.08)' : '#F3EFFE',
-                borderColor: isDark ? 'rgba(99, 102, 241, 0.25)' : '#E5DCFB'
-              }}
-            >
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-purple-600 bg-purple-100/80 dark:bg-purple-900/40">
-                  <Cpu className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 font-sans">
-                  AI & Computer Vision
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                  YOLOv11, PyTorch, deep learning, object detection, model training & deployment.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* 2. Pastel Sky Blue */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300"
-              style={{
-                backgroundColor: isDark ? 'rgba(14, 165, 233, 0.08)' : '#EAF3FF',
-                borderColor: isDark ? 'rgba(14, 165, 233, 0.25)' : '#D2E5FF'
-              }}
-            >
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sky-600 bg-sky-100/80 dark:bg-sky-900/40">
-                  <Code className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 font-sans">
-                  Full-Stack Development
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                  React, Next.js, Spring Boot, Node.js, REST APIs, WebSockets, PostgreSQL.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* 3. Pastel Mint */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300"
-              style={{
-                backgroundColor: isDark ? 'rgba(16, 185, 129, 0.08)' : '#EAFBF3',
-                borderColor: isDark ? 'rgba(16, 185, 129, 0.25)' : '#CEF5DF'
-              }}
-            >
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-emerald-600 bg-emerald-100/80 dark:bg-emerald-900/40">
-                  <Server className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 font-sans">
-                  Systems & Infrastructure
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                  Linux, Nginx, reverse proxy, SSL, DNS, Google Cloud, server monitoring.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* 4. Pastel Peach/Amber */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300"
-              style={{
-                backgroundColor: isDark ? 'rgba(245, 158, 11, 0.08)' : '#FEF5EA',
-                borderColor: isDark ? 'rgba(245, 158, 11, 0.25)' : '#FCE5CB'
-              }}
-            >
-              <div className="space-y-4">
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-amber-600 bg-amber-100/80 dark:bg-amber-900/40">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-100 font-sans">
-                  Performance Engineering
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                  Load testing, production hosting, CI/CD, AI-assisted development.
-                </p>
-              </div>
-            </motion.div>
-
+          <div className="flex items-center gap-6 text-xs text-slate-500">
+            <button onClick={() => scrollToSection('overview')} className="hover:text-indigo-600 transition-colors">
+              Overview
+            </button>
+            <button onClick={() => scrollToSection('council')} className="hover:text-indigo-600 transition-colors">
+              Council
+            </button>
+            <button onClick={() => scrollToSection('sprints')} className="hover:text-indigo-600 transition-colors">
+              Pipelines
+            </button>
+            <button onClick={() => scrollToSection('timeline')} className="hover:text-indigo-600 transition-colors">
+              Timeline
+            </button>
+            <button onClick={onStartBuilding} className="font-semibold text-indigo-600 hover:underline">
+              Launch App
+            </button>
           </div>
-
-        </div>
-      </section>
-
-      {/* ── 4. "SELECTED PROJECTS" / CASE STUDY GRADIENT CARDS (Image 2) ─────── */}
-      <section id="projects" className="py-16 px-6 relative z-10">
-        <div className="max-w-5xl mx-auto space-y-12">
-          
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border border-indigo-100 dark:border-indigo-900/60">
-              Featured Work
-            </div>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight" style={{ color: 'var(--c-fg)', letterSpacing: '-0.02em' }}>
-              Selected <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Projects</span>
-            </h2>
-            <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-              Real-world systems, computer vision models, and full-stack software built for production.
-            </p>
-          </div>
-
-          {/* 3 Case Study Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Project 1: Fire & Smoke Detection (Peach top gradient) */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between"
-              style={{
-                backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-              }}
-            >
-              <div>
-                {/* Header with Peach gradient */}
-                <div 
-                  className="p-6 border-b"
-                  style={{
-                    background: isDark ? 'linear-gradient(180deg, rgba(251, 146, 60, 0.15) 0%, transparent 100%)' : 'linear-gradient(180deg, #FFE8DC 0%, #FFFFFF 100%)',
-                    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(254, 215, 170, 0.4)'
-                  }}
-                >
-                  <span className="text-[11px] font-bold tracking-wider text-orange-600 uppercase font-mono block mb-3">
-                    CASE STUDY
-                  </span>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
-                    Fire & Smoke Detection
-                  </h3>
-                </div>
-
-                {/* Content body */}
-                <div className="p-6 space-y-5">
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Real-time industrial fire and smoke detection using YOLOv11 with monitoring dashboard and analytics.
-                  </p>
-
-                  {/* Tech badge pills */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {['YOLOv11', 'PyTorch', 'Computer Vision', 'FastAPI'].map((t) => (
-                      <span
-                        key={t}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium border"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#F3EFFE',
-                          color: isDark ? '#A5B4FC' : '#4F46E5',
-                          borderColor: isDark ? 'rgba(99, 102, 241, 0.2)' : '#E0E7FF'
-                        }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer link */}
-              <div className="p-6 pt-0">
-                <button
-                  onClick={onStartBuilding}
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <span>View Case Study</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Project 2: Smart Parking System (Sky Blue top gradient) */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between"
-              style={{
-                backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-              }}
-            >
-              <div>
-                {/* Header with Sky Blue gradient */}
-                <div 
-                  className="p-6 border-b"
-                  style={{
-                    background: isDark ? 'linear-gradient(180deg, rgba(14, 165, 233, 0.15) 0%, transparent 100%)' : 'linear-gradient(180deg, #E0F2FE 0%, #FFFFFF 100%)',
-                    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(186, 230, 253, 0.4)'
-                  }}
-                >
-                  <span className="text-[11px] font-bold tracking-wider text-sky-600 uppercase font-mono block mb-3">
-                    CASE STUDY
-                  </span>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
-                    Smart Parking System
-                  </h3>
-                </div>
-
-                {/* Content body */}
-                <div className="p-6 space-y-5">
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Bridges communication gap between security and faculty with real-time notifications and slot management.
-                  </p>
-
-                  {/* Tech badge pills */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {['Spring Boot', 'React', 'WebSockets', 'MySQL'].map((t) => (
-                      <span
-                        key={t}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium border"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#F3EFFE',
-                          color: isDark ? '#A5B4FC' : '#4F46E5',
-                          borderColor: isDark ? 'rgba(99, 102, 241, 0.2)' : '#E0E7FF'
-                        }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer link */}
-              <div className="p-6 pt-0">
-                <button
-                  onClick={onStartBuilding}
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <span>View Case Study</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </motion.div>
-
-            {/* Project 3: VoxScholar (Lavender top gradient) */}
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between"
-              style={{
-                backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-              }}
-            >
-              <div>
-                {/* Header with Lavender gradient */}
-                <div 
-                  className="p-6 border-b"
-                  style={{
-                    background: isDark ? 'linear-gradient(180deg, rgba(168, 85, 247, 0.15) 0%, transparent 100%)' : 'linear-gradient(180deg, #F3E8FF 0%, #FFFFFF 100%)',
-                    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(233, 213, 255, 0.4)'
-                  }}
-                >
-                  <span className="text-[11px] font-bold tracking-wider text-purple-600 uppercase font-mono block mb-3">
-                    CASE STUDY
-                  </span>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 leading-snug">
-                    VoxScholar
-                  </h3>
-                </div>
-
-                {/* Content body */}
-                <div className="p-6 space-y-5">
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    AI-powered academic assistant with voice interaction, intelligent Q&A, and study tools.
-                  </p>
-
-                  {/* Tech badge pills */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {['React', 'Node.js', 'FastAPI', 'MongoDB'].map((t) => (
-                      <span
-                        key={t}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium border"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#F3EFFE',
-                          color: isDark ? '#A5B4FC' : '#4F46E5',
-                          borderColor: isDark ? 'rgba(99, 102, 241, 0.2)' : '#E0E7FF'
-                        }}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer link */}
-              <div className="p-6 pt-0">
-                <button
-                  onClick={onStartBuilding}
-                  className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <span>View Case Study</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </motion.div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── 5. "EXPERIENCE" / VERTICAL TIMELINE CARDS (Image 3) ─────────────── */}
-      <section id="experience" className="py-16 px-6 relative z-10">
-        <div className="max-w-5xl mx-auto space-y-12">
-          
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border border-indigo-100 dark:border-indigo-900/60">
-              Career History
-            </div>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight" style={{ color: 'var(--c-fg)', letterSpacing: '-0.02em' }}>
-              Work <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Experience</span>
-            </h2>
-            <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-              Professional hands-on experience in cloud infrastructure, DevOps pipelines, and server architecture.
-            </p>
-          </div>
-
-          {/* Timeline Container with Vertical Line and Purple Node Dots */}
-          <div className="relative pl-6 md:pl-10 space-y-8 max-w-4xl mx-auto">
-            {/* Vertical connector line */}
-            <div className="absolute left-[11px] md:left-[19px] top-6 bottom-6 w-0.5 bg-indigo-200 dark:bg-indigo-900/50" />
-
-            {/* Experience Card 1: DevOps Intern */}
-            <div className="relative">
-              {/* Glowing Purple Node Dot */}
-              <div className="absolute -left-[29px] md:-left-[37px] top-7 w-4 h-4 rounded-full bg-indigo-600 ring-4 ring-indigo-100 dark:ring-indigo-950" />
-
-              <div 
-                className="rounded-3xl p-6 md:p-8 border shadow-[0_8px_30px_rgba(0,0,0,0.03)] grid grid-cols-1 md:grid-cols-12 gap-6"
-                style={{
-                  backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-                }}
-              >
-                {/* Left Column (7 cols) */}
-                <div className="md:col-span-7 space-y-4">
-                  <span className="text-[11px] font-bold tracking-wider text-sky-600 uppercase font-mono block">
-                    INTERNSHIP
-                  </span>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                      DevOps Intern
-                    </h3>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Aarna Connect
-                    </p>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-sans">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>June 2026 — July 2026</span>
-                    </div>
-                  </div>
-
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {['Docker', 'Linux', 'Nginx', 'Git', 'GitHub', 'CI/CD', 'Server Management', 'Cloud Deployment'].map((b) => (
-                      <span
-                        key={b}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium border"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#F3EFFE',
-                          color: isDark ? '#A5B4FC' : '#4F46E5',
-                          borderColor: isDark ? 'rgba(99, 102, 241, 0.2)' : '#E0E7FF'
-                        }}
-                      >
-                        {b}
-                      </span>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => scrollToSection('contact')}
-                    className="mt-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    <span>View Details</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Right Column: Highlights (5 cols) */}
-                <div className="md:col-span-5 md:border-l md:pl-6 border-slate-100 dark:border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 font-mono">
-                    Highlights
-                  </h4>
-                  <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Cloud infrastructure & deployment workflows</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Server configuration & deployment automation</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Application monitoring & environment maintenance</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Streamlined deployment pipelines with CI/CD</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Experience Card 2: Server Management Intern */}
-            <div className="relative">
-              {/* Glowing Purple Node Dot */}
-              <div className="absolute -left-[29px] md:-left-[37px] top-7 w-4 h-4 rounded-full bg-indigo-600 ring-4 ring-indigo-100 dark:ring-indigo-950" />
-
-              <div 
-                className="rounded-3xl p-6 md:p-8 border shadow-[0_8px_30px_rgba(0,0,0,0.03)] grid grid-cols-1 md:grid-cols-12 gap-6"
-                style={{
-                  backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-                }}
-              >
-                {/* Left Column (7 cols) */}
-                <div className="md:col-span-7 space-y-4">
-                  <span className="text-[11px] font-bold tracking-wider text-sky-600 uppercase font-mono block">
-                    INTERNSHIP
-                  </span>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                      Server Management Intern
-                    </h3>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      Head of Innovation, Incubation & Entrepreneurship
-                    </p>
-                    <p className="text-xs text-slate-500">Mentor: Mr. M Krishna Prasad</p>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-sans">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>October 2025 — March 2026</span>
-                    </div>
-                  </div>
-
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {['Linux', 'Nginx', 'Google Cloud', 'SSL', 'DNS', 'Git/GitHub', 'Server Administration'].map((b) => (
-                      <span
-                        key={b}
-                        className="px-2.5 py-1 rounded-lg text-xs font-medium border"
-                        style={{
-                          backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : '#F3EFFE',
-                          color: isDark ? '#A5B4FC' : '#4F46E5',
-                          borderColor: isDark ? 'rgba(99, 102, 241, 0.2)' : '#E0E7FF'
-                        }}
-                      >
-                        {b}
-                      </span>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={() => scrollToSection('contact')}
-                    className="mt-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
-                  >
-                    <span>View Details</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Right Column: Highlights (5 cols) */}
-                <div className="md:col-span-5 md:border-l md:pl-6 border-slate-100 dark:border-slate-800 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-200 font-mono">
-                    Highlights
-                  </h4>
-                  <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Linux server administration and management</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Nginx reverse proxy and SSL configuration</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Google Cloud Console deployment</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                      <span>Production hosting and load testing</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── 6. "LET'S CONNECT" / TWO-COLUMN CONTACT (Image 4) ───────────────── */}
-      <section id="contact" className="py-20 px-6 relative z-10">
-        <div className="max-w-5xl mx-auto space-y-12">
-          
-          {/* Header */}
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border border-indigo-100 dark:border-indigo-900/60">
-              Contact
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight" style={{ color: 'var(--c-fg)', letterSpacing: '-0.02em' }}>
-              Let's <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Connect</span>
-            </h2>
-            <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
-              Open to full-time roles, internships, freelance projects, and interesting collaborations.
-            </p>
-          </div>
-
-          {/* 2-Column Contact Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-            
-            {/* Left Column (5 cols) */}
-            <div className="md:col-span-5 space-y-4">
-              
-              {/* Opportunities Card */}
-              <div 
-                className="rounded-3xl p-6 border shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4"
-                style={{
-                  backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-                }}
-              >
-                <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Available for Opportunities</span>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
-                  Currently open to full-time roles, internships, and exciting projects in AI/ML and full-stack development.
-                </p>
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Andhra Pradesh, India</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>IST (UTC+5:30)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Cards */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block pl-1">
-                  Find me on
-                </span>
-
-                <a 
-                  href="https://github.com" 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="p-4 rounded-2xl border flex items-center gap-3 transition-all hover:-translate-y-0.5 hover:shadow-sm group block"
-                  style={{
-                    backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-                  }}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-800 dark:text-slate-200 group-hover:scale-105 transition-transform">
-                    <Github className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold block" style={{ color: 'var(--c-fg)' }}>GitHub</span>
-                    <span className="text-[10px] text-slate-400 font-mono">@YOUR_GITHUB</span>
-                  </div>
-                </a>
-
-                <a 
-                  href="https://linkedin.com" 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="p-4 rounded-2xl border flex items-center gap-3 transition-all hover:-translate-y-0.5 hover:shadow-sm group block"
-                  style={{
-                    backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                    borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-                  }}
-                >
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center text-blue-600 group-hover:scale-105 transition-transform">
-                    <Linkedin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold block" style={{ color: 'var(--c-fg)' }}>LinkedIn</span>
-                    <span className="text-[10px] text-slate-400 font-mono">Sai Charan</span>
-                  </div>
-                </a>
-              </div>
-
-            </div>
-
-            {/* Right Column: Send a Message Form (7 cols) */}
-            <div className="md:col-span-7">
-              <div 
-                className="rounded-3xl p-6 md:p-8 border shadow-[0_8px_30px_rgba(0,0,0,0.03)] space-y-6"
-                style={{
-                  backgroundColor: isDark ? 'var(--c-surface)' : '#FFFFFF',
-                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.85)'
-                }}
-              >
-                <h3 className="text-lg font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
-                  Send a Message
-                </h3>
-
-                {contactSubmitted ? (
-                  <div className="p-8 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
-                      <CheckCircle2 className="w-6 h-6" />
-                    </div>
-                    <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">Message Received!</h4>
-                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                      Thank you for reaching out. I'll get back to you as soon as possible.
-                    </p>
-                    <button
-                      onClick={() => setContactSubmitted(false)}
-                      className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white"
-                    >
-                      Send Another
-                    </button>
-                  </div>
-                ) : (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      setContactSubmitted(true);
-                    }}
-                    className="space-y-4"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        placeholder="Your Name"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-sans"
-                        style={{
-                          backgroundColor: isDark ? 'var(--c-surface-2)' : '#F8FAFC',
-                          borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0',
-                          color: 'var(--c-fg)'
-                        }}
-                      />
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-sans"
-                        style={{
-                          backgroundColor: isDark ? 'var(--c-surface-2)' : '#F8FAFC',
-                          borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0',
-                          color: 'var(--c-fg)'
-                        }}
-                      />
-                    </div>
-
-                    <input
-                      type="text"
-                      placeholder="Subject"
-                      required
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-sans"
-                      style={{
-                        backgroundColor: isDark ? 'var(--c-surface-2)' : '#F8FAFC',
-                        borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0',
-                        color: 'var(--c-fg)'
-                      }}
-                    />
-
-                    <textarea
-                      rows={5}
-                      placeholder="Your Message"
-                      required
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl text-xs border focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-sans resize-none"
-                      style={{
-                        backgroundColor: isDark ? 'var(--c-surface-2)' : '#F8FAFC',
-                        borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#E2E8F0',
-                        color: 'var(--c-fg)'
-                      }}
-                    />
-
-                    <button
-                      type="submit"
-                      className="w-full py-3 px-6 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_14px_rgba(79,70,229,0.35)] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Send Message</span>
-                    </button>
-                  </form>
-                )}
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
-      <footer className="py-8 px-6 border-t text-center text-xs text-slate-500 dark:text-slate-400 relative z-10" style={{ borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(226, 232, 240, 0.8)' }}>
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-[10px]">
-              SC
-            </div>
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Sai Charan • CatalystOS</span>
-          </div>
-          <p>© {new Date().getFullYear()} Sai Charan. Built with React, TailwindCSS & Framer Motion.</p>
         </div>
       </footer>
-
     </div>
   );
 }

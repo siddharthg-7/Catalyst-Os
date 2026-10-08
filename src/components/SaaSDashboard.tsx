@@ -88,17 +88,22 @@ function KpiCard({ icon, label, value, delta, deltaPositive, showBar, barValue, 
   return (
     <div 
       onClick={onClick}
-      className={`catalyst-card card-hover glow-border p-6 flex flex-col justify-between gap-4 transition-all duration-200 ${
-        onClick ? 'cursor-pointer hover:border-[#141413]/25 group' : ''
+      className={`rounded-3xl p-6 flex flex-col justify-between gap-4 border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
+        onClick ? 'cursor-pointer group' : ''
       }`}
+      style={{
+        backgroundColor: 'var(--c-surface)',
+        borderColor: 'var(--c-border)',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)'
+      }}
     >
       <div className="flex items-center justify-between">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${accentColor}`}>
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${accentColor}`}>
           {icon}
         </div>
         <div className="flex items-center gap-1.5">
           {actionHint && (
-            <span className="opacity-0 group-hover:opacity-100 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full transition-opacity flex items-center gap-1">
+            <span className="opacity-0 group-hover:opacity-100 text-[10px] font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-0.5 rounded-full transition-opacity flex items-center gap-1 border border-indigo-100/60">
               <Edit3 className="w-2.5 h-2.5" />
               <span>{actionHint}</span>
             </span>
@@ -111,19 +116,19 @@ function KpiCard({ icon, label, value, delta, deltaPositive, showBar, barValue, 
       </div>
       <div>
         <div className="flex items-baseline justify-between">
-          <p className="text-3xl font-bold text-[#141413] tracking-tight font-sans">{value}</p>
+          <p className="text-3xl lg:text-4xl font-extrabold text-[#4F46E5] tracking-tight font-sans">{value}</p>
           {onClick && (
-            <span className="p-1 rounded-md text-[#141413]/20 group-hover:text-emerald-700 group-hover:bg-emerald-50 transition-colors">
+            <span className="p-1 rounded-md text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition-colors">
               <Edit3 className="w-3.5 h-3.5" />
             </span>
           )}
         </div>
-        <p className="text-xs text-[#696969] mt-1.5 font-medium">{label}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium">{label}</p>
       </div>
       {showBar && barValue !== undefined && (
-        <div className="h-1.5 w-full bg-[#141413]/06 rounded-full overflow-hidden mt-1">
+        <div className="h-1.5 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden mt-1">
           <div
-            className="h-full rounded-full bg-[#141413] transition-all duration-700"
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-700"
             style={{ width: `${Math.min(Math.max(barValue, 0), 100)}%` }}
           />
         </div>
@@ -577,6 +582,293 @@ export default function SaaSDashboard({
         </div>
       </Section>
 
+      {/* ── 2B. WHAT WE SPECIALIZE IN / 4 PASTEL CARDS (Image 1) ───────────── */}
+      <Section delay={0.12} className="space-y-6">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border border-indigo-100 dark:border-indigo-900/60">
+            Core Council
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            What We <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Specialize In</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+            Autonomous specialized multi-agent executive intelligence coordinating venture operations
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          {/* Lavender Card: Atlas CEO */}
+          <div 
+            onClick={() => onNavigate && onNavigate('agents')}
+            className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-sm"
+            style={{
+              backgroundColor: 'rgba(243, 239, 254, 0.95)',
+              borderColor: '#E5DCFB',
+            }}
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-purple-600 bg-purple-100/90 shadow-xs">
+                <Rocket className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold tracking-tight text-slate-900">
+                Atlas (CEO & Strategy)
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Autonomous corporate roadmaps, milestone planning, and executive council synthesis.
+              </p>
+            </div>
+            <div className="pt-4 border-t border-purple-200/60 flex items-center justify-between text-[11px] font-mono text-purple-700 font-semibold">
+              <span>Velocity: 78%</span>
+              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                View Agent <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Sky Blue Card: Marcus CFO */}
+          <div 
+            onClick={() => onNavigate && onNavigate('agents')}
+            className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-sm"
+            style={{
+              backgroundColor: 'rgba(234, 243, 255, 0.95)',
+              borderColor: '#D2E5FF',
+            }}
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-sky-600 bg-sky-100/90 shadow-xs">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold tracking-tight text-slate-900">
+                Marcus (CFO & Treasury)
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Zero-hallucination deterministic runway math, monthly burn calibration, and cap tables.
+              </p>
+            </div>
+            <div className="pt-4 border-t border-sky-200/60 flex items-center justify-between text-[11px] font-mono text-sky-700 font-semibold">
+              <span>Runway: 13.2 Mo</span>
+              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                View Agent <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Mint Emerald Card: Evelyn CPO */}
+          <div 
+            onClick={() => onNavigate && onNavigate('agents')}
+            className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-sm"
+            style={{
+              backgroundColor: 'rgba(234, 251, 243, 0.95)',
+              borderColor: '#CEF5DF',
+            }}
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-emerald-600 bg-emerald-100/90 shadow-xs">
+                <Users className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold tracking-tight text-slate-900">
+                Evelyn (CPO & Talent)
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Headcount pacing models, compensation benchmarking, equity allocation, and team scorecards.
+              </p>
+            </div>
+            <div className="pt-4 border-t border-emerald-200/60 flex items-center justify-between text-[11px] font-mono text-emerald-700 font-semibold">
+              <span>Headcount: 2 Roles</span>
+              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                View Agent <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Peach Amber Card: Dax CRO */}
+          <div 
+            onClick={() => onNavigate && onNavigate('agents')}
+            className="rounded-3xl p-6 flex flex-col justify-between border transition-all duration-300 hover:-translate-y-1 cursor-pointer group shadow-sm"
+            style={{
+              backgroundColor: 'rgba(254, 245, 234, 0.95)',
+              borderColor: '#FCE5CB',
+            }}
+          >
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-amber-600 bg-amber-100/90 shadow-xs">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold tracking-tight text-slate-900">
+                Dax (CRO & Growth)
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Customer acquisition cost models, LTV ratios, and viral conversion optimization loops.
+              </p>
+            </div>
+            <div className="pt-4 border-t border-amber-200/60 flex items-center justify-between text-[11px] font-mono text-amber-700 font-semibold">
+              <span>Growth: 82%</span>
+              <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                View Agent <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ── 2C. SELECTED INITIATIVES / CASE STUDY GRADIENT CARDS (Image 2) ── */}
+      <Section delay={0.14} className="space-y-6">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border border-indigo-100 dark:border-indigo-900/60">
+            Featured Sprints
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Selected <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Initiatives & Sprints</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+            Live multi-agent execution pipelines across venture strategy, capital, and operations
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Case Study 1: Peach Gradient Top */}
+          <div 
+            onClick={() => onNavigate && onNavigate('workflows')}
+            className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            <div>
+              <div 
+                className="p-6 border-b"
+                style={{
+                  background: 'linear-gradient(180deg, #FFE8DC 0%, rgba(255,255,255,0.2) 100%)',
+                  borderColor: 'rgba(254, 215, 170, 0.4)'
+                }}
+              >
+                <span className="text-[11px] font-bold tracking-wider text-orange-600 uppercase font-mono block mb-2">
+                  CASE STUDY
+                </span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                  Q3 Institutional Seed Round & Economics
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Prepare strategic financial pitch scripts, model CAC payback terms, audit cap table, and structure disclosures.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Funding', 'CEO', 'Finance', 'Legal'].map((t) => (
+                    <span
+                      key={t}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border-indigo-100"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-6 pt-0">
+              <span className="text-xs font-semibold text-indigo-600 flex items-center gap-1 group-hover:underline">
+                View Workflow Canvas <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Case Study 2: Sky Blue Gradient Top */}
+          <div 
+            onClick={() => onNavigate && onNavigate('workflows')}
+            className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            <div>
+              <div 
+                className="p-6 border-b"
+                style={{
+                  background: 'linear-gradient(180deg, #E0F2FE 0%, rgba(255,255,255,0.2) 100%)',
+                  borderColor: 'rgba(186, 230, 253, 0.4)'
+                }}
+              >
+                <span className="text-[11px] font-bold tracking-wider text-sky-600 uppercase font-mono block mb-2">
+                  CASE STUDY
+                </span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                  Founding Infrastructure Engineer Package
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Structure employment agreements, options vesting cliffs, IP transfer covenants, and stress test cash runways.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Hiring', 'Talent', 'Equity', 'Finance'].map((t) => (
+                    <span
+                      key={t}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border-indigo-100"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-6 pt-0">
+              <span className="text-xs font-semibold text-indigo-600 flex items-center gap-1 group-hover:underline">
+                View Workflow Canvas <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+
+          {/* Case Study 3: Lavender Gradient Top */}
+          <div 
+            onClick={() => onNavigate && onNavigate('workflows')}
+            className="rounded-3xl overflow-hidden border shadow-[0_8px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            <div>
+              <div 
+                className="p-6 border-b"
+                style={{
+                  background: 'linear-gradient(180deg, #F3E8FF 0%, rgba(255,255,255,0.2) 100%)',
+                  borderColor: 'rgba(233, 213, 255, 0.4)'
+                }}
+              >
+                <span className="text-[11px] font-bold tracking-wider text-purple-600 uppercase font-mono block mb-2">
+                  CASE STUDY
+                </span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                  SOC-2 Compliance & Vendor Security
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Draft internal data protection guidelines, formulate password compliance, and verify third-party vendor encryption.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Operations', 'Legal', 'Audit', 'Security'].map((t) => (
+                    <span
+                      key={t}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border-indigo-100"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-6 pt-0">
+              <span className="text-xs font-semibold text-indigo-600 flex items-center gap-1 group-hover:underline">
+                View Workflow Canvas <ArrowUpRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </Section>
+
       {/* ── TREASURY & RUNWAY CALIBRATION MODAL ───────────────────────── */}
       {isCalibratingTreasury && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
@@ -714,16 +1006,16 @@ export default function SaaSDashboard({
       )}
 
       {/* ── 3. CATALYST INTELLIGENCE: Executive Suite Assistant & Synthesis ── */}
-      <Section delay={0.15} className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm overflow-hidden">
+      <Section delay={0.15} className="rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] overflow-hidden" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
         {/* Header */}
-        <div className="px-6 pt-5 pb-4 border-b border-[#141413]/06">
+        <div className="px-6 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#141413] flex items-center justify-center shadow-xs">
-              <Sparkles className="w-4 h-4 text-[#F3F0EE]" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs">
+              <Sparkles className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-[#141413]">Ask Catalyst Executive Suite</h2>
-              <p className="text-xs text-[#696969]">Autonomous co-founder grounded in company records and financial bounds</p>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Ask Catalyst Executive Suite</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Autonomous co-founder grounded in company records and financial bounds</p>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-[10px] font-mono font-bold">
@@ -975,13 +1267,13 @@ export default function SaaSDashboard({
       <Section delay={0.2} id="dashboard-sections" className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
         {/* Dynamic Priorities (Derived from Approvals & Initiatives) */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
-            <h2 className="text-sm font-bold text-[#141413] flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-[#141413]" />
+        <div className="rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-6 flex flex-col gap-4" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+          <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-indigo-600" />
               <span>Operational Priorities & Action Items</span>
             </h2>
-            <span className="text-xs font-mono text-[#696969]">
+            <span className="text-xs font-mono text-slate-400">
               {dynamicPriorities.filter(t => !completedTaskIds[t.id]).length} remaining
             </span>
           </div>
@@ -1066,13 +1358,13 @@ export default function SaaSDashboard({
         </div>
 
         {/* Decisions Requiring Attention (Human-in-the-Loop Review Gates) */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
-            <h2 className="text-sm font-bold text-[#141413] flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#141413]" />
+        <div className="rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] p-6 flex flex-col gap-4" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+          <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Shield className="w-4 h-4 text-indigo-600" />
               <span>Decisions Requiring Attention</span>
             </h2>
-            <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+            <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
               {pendingApprovals.length} Pending Gates
             </span>
           </div>
@@ -1236,85 +1528,129 @@ export default function SaaSDashboard({
 
       </Section>
 
-      {/* ── 6. RECENT INTELLIGENCE & STRATEGIC MILESTONES ──────────────── */}
-      <Section delay={0.3} className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-
-        {/* Recent Activity & Corporate Governance Log */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
-            <h2 className="text-sm font-bold text-[#141413] flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#141413]" />
-              <span>Corporate Governance & Audit Log</span>
+      {/* ── 6. CONNECTED VERTICAL EXECUTION TIMELINE (IMAGE 3 REFERENCE) ──────────────── */}
+      <Section delay={0.3} className="space-y-6">
+        <div className="flex items-center justify-between pb-1">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border border-indigo-100 dark:border-indigo-900/60 mb-1">
+              System Trace
+            </div>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Live Council <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Execution Timeline</span>
             </h2>
-            <span className="text-xs text-[#696969] font-mono">Immutable</span>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Real-time audit log of multi-agent decisions, milestones, and governance gates
+            </p>
           </div>
-
-          <div className="space-y-1.5">
-            {activityFeed.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#F3F0EE]/50 transition-colors group">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${CATEGORY_COLOR[item.actor] ?? 'bg-gray-100 text-gray-800 border border-gray-200'}`}>
-                  {item.actor.slice(0, 2).toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#141413] font-medium truncate">
-                    <span className="font-semibold">{item.actor}</span>{' '}
-                    <span className="text-[#696969]">{item.action}</span>
-                  </p>
-                </div>
-                <span className="text-[11px] text-[#696969] shrink-0 font-mono">{item.time}</span>
-              </div>
-            ))}
-          </div>
-
           {onNavigate && (
             <button
               onClick={() => onNavigate('agents')}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#141413] hover:text-black transition-colors mt-auto pt-2 border-t border-[#141413]/06 cursor-pointer"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline"
             >
-              <span>Inspect All Executive Agents</span>
+              <span>Inspect All Agents</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        {/* Dynamic Upcoming Strategic Milestones (Reference 2 Inspiration) */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
-            <h2 className="text-sm font-bold text-[#141413] flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#141413]" />
-              <span>Strategic Milestones & Audit Checkpoints</span>
-            </h2>
-            <span className="text-xs font-mono text-[#696969]">Cadence</span>
-          </div>
+        {/* Timeline with vertical line and glowing purple dots */}
+        <div className="relative pl-6 sm:pl-8 space-y-6">
+          <div className="absolute left-[11px] sm:left-[15px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-indigo-500 via-purple-500 to-indigo-400" />
 
-          <div className="space-y-3">
-            {dynamicEvents.map(event => (
-              <div
-                key={event.id}
-                className="flex items-center gap-3.5 p-3.5 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 hover:border-[#141413]/20 hover:bg-[#F3F0EE]/60 transition-all group cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white border border-[#141413]/10 shadow-xs flex items-center justify-center text-xl shrink-0">
-                  {event.icon}
+          {/* Activity Item 1 */}
+          <div className="relative">
+            <div className="absolute -left-[27px] sm:-left-[31px] top-6 w-3.5 h-3.5 rounded-full bg-indigo-600 border-4 border-indigo-200 dark:border-indigo-900 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
+            <div
+              className="p-5 sm:p-6 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] grid grid-cols-1 md:grid-cols-12 gap-5 items-start"
+              style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}
+            >
+              <div className="md:col-span-7 space-y-2">
+                <span className="text-[10px] font-bold font-mono text-indigo-600 uppercase tracking-wider">
+                  IMMUTABLE AUDIT LOG
+                </span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {activityFeed[0]?.actor || 'Atlas (CEO)'} — {activityFeed[0]?.action || 'Venture Telemetry Synchronized'}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Automated council governance cycle verified across active capital reserves and operational constraints.
+                </p>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                  <Clock className="w-3 h-3" />
+                  <span>Logged: {activityFeed[0]?.time || 'Just now'} · Status: VERIFIED</span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#141413] truncate">{event.title}</p>
-                  <div className="flex items-center justify-between gap-1 mt-1">
-                    <p className="text-xs text-[#696969] font-medium">{event.day} · {event.time}</p>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white border border-[#141413]/10 text-[#141413]">
-                      {event.tag}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {['Autonomous Run', 'Cap Table', 'Audit Sealed'].map(t => (
+                    <span key={t} className="px-2.5 py-0.5 rounded-lg text-[10px] font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border-indigo-100">
+                      {t}
                     </span>
-                  </div>
+                  ))}
                 </div>
               </div>
-            ))}
+              <div className="md:col-span-5 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+                <h4 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Verification Highlights
+                </h4>
+                <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
+                  <li className="flex items-start gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>Runway calibrated at {runwayMonths.toFixed(1)} months</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>Non-repudiation signature recorded</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
-          <div className="pt-2 border-t border-[#141413]/06 flex items-center justify-between text-xs text-[#696969]">
-            <span>Continuous tracking across autonomous cycles</span>
-            <span className="font-semibold text-[#141413]">Sync Active</span>
+          {/* Activity Item 2 */}
+          <div className="relative">
+            <div className="absolute -left-[27px] sm:-left-[31px] top-6 w-3.5 h-3.5 rounded-full bg-indigo-600 border-4 border-indigo-200 dark:border-indigo-900 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
+            <div
+              className="p-5 sm:p-6 rounded-3xl border shadow-[0_8px_30px_rgba(0,0,0,0.03)] grid grid-cols-1 md:grid-cols-12 gap-5 items-start"
+              style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}
+            >
+              <div className="md:col-span-7 space-y-2">
+                <span className="text-[10px] font-bold font-mono text-indigo-600 uppercase tracking-wider">
+                  STRATEGIC MILESTONE
+                </span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {dynamicEvents[0]?.title || 'Q3 Financial & Governance Audit'}
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Scheduled cadence inspection for regulatory filings, compliance certificates, and budget thresholds.
+                </p>
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                  <Calendar className="w-3 h-3" />
+                  <span>Cadence: {dynamicEvents[0]?.day || 'Upcoming'} · {dynamicEvents[0]?.time || '10:00 AM'}</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {['Milestone', dynamicEvents[0]?.tag || 'Governance', 'Automated Checkpoint'].map(t => (
+                    <span key={t} className="px-2.5 py-0.5 rounded-lg text-[10px] font-medium border bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 border-indigo-100">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="md:col-span-5 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+                <h4 className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Cadence Highlights
+                </h4>
+                <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
+                  <li className="flex items-start gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>Synchronized with {startup.name || 'Startup'} roadmap</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                    <span>Continuous telemetry across autonomous cycles</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
-
       </Section>
 
       {/* ── 7. COMPANY KNOWLEDGE: Document Grounding Hub ──────────────── */}
