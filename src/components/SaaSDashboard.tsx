@@ -7,7 +7,8 @@ import {
   LineChart, Briefcase, Check, ShieldCheck, AlertCircle,
   FileText, ExternalLink, Calculator, Layers, Loader2,
   BookOpen, UploadCloud, Database, Target, Zap, BarChart3,
-  Shield, CheckCircle2, ChevronDown, Settings2, Edit3, X, SlidersHorizontal
+  Shield, CheckCircle2, ChevronDown, Settings2, Edit3, X, SlidersHorizontal,
+  Rocket, ArrowUpRight, Bot, Cpu, Landmark
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../hooks/useChat';
