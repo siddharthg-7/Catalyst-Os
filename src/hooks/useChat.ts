@@ -6,6 +6,7 @@ import {
   OrchestrationEvidence, 
   OrchestrationApprovalRequirement 
 } from '../types';
+import { voiceService } from '../services/voiceService';
 
 export interface ChatMessage {
   id: string;
@@ -130,7 +131,12 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
         const streamRes = await fetchImpl('/api/orchestrate/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ command: trimmedText, commandId })
+          body: JSON.stringify({
+            command: trimmedText,
+            commandId,
+            inputType: isVoice ? 'voice' : 'text',
+            source: isVoice ? 'microphone' : 'keyboard'
+          })
         });
 
         if (!streamRes.ok) {
@@ -208,6 +214,9 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
 
                   if (res.approval?.required) {
                     window.dispatchEvent(new CustomEvent('CATALYST_APPROVAL_CREATED', { detail: res.approval }));
+                  }
+                  if (isVoice && res.answer?.summary) {
+                    voiceService.synthesizeAndPlay(res.answer.summary);
                   }
                   streamSucceeded = true;
                 }

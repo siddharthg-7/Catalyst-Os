@@ -45,12 +45,12 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
       {parts.map((part, idx) => {
         if (part.type === 'code') {
           return (
-            <div key={idx} className="my-3 rounded-xl bg-[#060608] border border-white/10 overflow-hidden font-mono text-xs shadow-lg">
-              <div className="flex items-center justify-between px-4 py-2 bg-[#111111] border-b border-white/[0.08] text-white/50 text-[10px] uppercase font-bold tracking-wider">
+            <div key={idx} className="my-3 rounded-xl bg-[#F3F5FB] border border-[#151A2D]/10 overflow-hidden font-mono text-xs shadow-lg">
+              <div className="flex items-center justify-between px-4 py-2 bg-[#ECEFF7] border-b border-[#151A2D]/10 text-[#68758F] text-[10px] uppercase font-bold tracking-wider">
                 <span>{part.language}</span>
                 <button
                   onClick={() => handleCopyCode(part.text, idx)}
-                  className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
+                  className="flex items-center gap-1 hover:text-[#5546ED] transition-colors cursor-pointer"
                 >
                   {copiedIndex === idx ? (
                     <>
@@ -65,7 +65,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
                   )}
                 </button>
               </div>
-              <pre className="p-4 overflow-x-auto text-purple-200 leading-normal">
+              <pre className="p-4 overflow-x-auto text-[#5546ED] leading-normal">
                 <code>{part.text}</code>
               </pre>
             </div>
@@ -81,13 +81,13 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
 
               // Headings ### or ## or #
               if (line.startsWith('### ')) {
-                return <h3 key={lIdx} className="text-base font-bold text-white pt-2 pb-1 font-sans">{line.replace('### ', '')}</h3>;
+                return <h3 key={lIdx} className="text-base font-bold text-[#151A2D] pt-2 pb-1 font-sans">{line.replace('### ', '')}</h3>;
               }
               if (line.startsWith('## ')) {
-                return <h2 key={lIdx} className="text-lg font-bold text-white pt-2 pb-1 font-sans">{line.replace('## ', '')}</h2>;
+                return <h2 key={lIdx} className="text-lg font-bold text-[#151A2D] pt-2 pb-1 font-sans">{line.replace('## ', '')}</h2>;
               }
               if (line.startsWith('# ')) {
-                return <h1 key={lIdx} className="text-xl font-extrabold text-white pt-2 pb-1 font-sans">{line.replace('# ', '')}</h1>;
+                return <h1 key={lIdx} className="text-xl font-extrabold text-[#151A2D] pt-2 pb-1 font-sans">{line.replace('# ', '')}</h1>;
               }
 
               // Bullet points - or *
@@ -105,7 +105,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
               if (/^\d+\.\s/.test(line.trim())) {
                 return (
                   <div key={lIdx} className="pl-2 flex items-start gap-2">
-                    <span className="font-mono text-white/50 text-xs mt-0.5">{line.trim().split('.')[0]}.</span>
+                    <span className="font-mono text-[#68758F] text-xs mt-0.5">{line.trim().split('.')[0]}.</span>
                     <span>{parseInlineFormatting(line.trim().replace(/^\d+\.\s+/, ''))}</span>
                   </div>
                 );
@@ -128,14 +128,14 @@ function parseInlineFormatting(text: string): React.ReactNode {
 
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="font-bold text-white">{part.slice(2, -2)}</strong>;
+      return <strong key={i} className="font-bold text-[#151A2D]">{part.slice(2, -2)}</strong>;
     }
     if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={i} className="italic text-white/90">{part.slice(1, -1)}</em>;
+      return <em key={i} className="italic text-[#536079]">{part.slice(1, -1)}</em>;
     }
     if (part.startsWith('`') && part.endsWith('`')) {
       return (
-        <code key={i} className="px-1.5 py-0.5 rounded bg-white/10 text-purple-200 font-mono text-xs border border-white/10">
+        <code key={i} className="px-1.5 py-0.5 rounded bg-[#5546ED]/5 text-[#5546ED] font-mono text-xs border border-[#151A2D]/10">
           {part.slice(1, -1)}
         </code>
       );

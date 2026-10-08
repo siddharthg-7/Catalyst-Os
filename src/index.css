@@ -14,25 +14,25 @@
 /* ── Light Theme (Default) ────────────────────────────────────────────────── */
 :root {
   /* Surfaces */
-  --c-bg:          #F3F0EE;
+  --c-bg:          #F7F8FC;
   --c-surface:     #FFFFFF;
-  --c-surface-2:   #F7F5F3;
-  --c-surface-3:   #EDEBE8;
+  --c-surface-2:   #F3F5FB;
+  --c-surface-3:   #ECEFF7;
 
   /* Text */
-  --c-fg:          #141413;
-  --c-fg-secondary:#4A4A48;
-  --c-muted:       #696969;
-  --c-faint:       #9A9490;
+  --c-fg:          #151A2D;
+  --c-fg-secondary:#536079;
+  --c-muted:       #68758F;
+  --c-faint:       #929BB0;
 
   /* Borders */
-  --c-border:      rgba(20, 20, 19, 0.08);
-  --c-border-strong: rgba(20, 20, 19, 0.18);
+  --c-border:      rgba(42, 54, 88, 0.09);
+  --c-border-strong: rgba(42, 54, 88, 0.18);
 
   /* Accents */
-  --c-accent:      #4F46E5;
-  --c-accent-2:    #7C3AED;
-  --c-accent-3:    #0891B2;
+  --c-accent:      #5546ED;
+  --c-accent-2:    #7A42EB;
+  --c-accent-3:    #438FEA;
 
   /* Semantic */
   --c-success:     #059669;
@@ -43,19 +43,19 @@
   /* Glass */
   --glass-bg:       rgba(255, 255, 255, 0.80);
   --glass-light-bg: rgba(255, 255, 255, 0.50);
-  --glass-border:   rgba(20, 20, 19, 0.08);
+  --glass-border:   rgba(42, 54, 88, 0.09);
   --glass-blur:     20px;
 
   /* Spotlight */
-  --spotlight-color: rgba(20, 20, 19, 0.035);
+  --spotlight-color: rgba(85, 70, 237, 0.035);
 
   /* Shadows */
-  --shadow-xs:      0 1px 2px rgba(20, 20, 19, 0.04);
-  --shadow-sm:      0 1px 3px rgba(20, 20, 19, 0.06), 0 1px 2px rgba(20, 20, 19, 0.04);
-  --shadow-md:      0 4px 12px rgba(20, 20, 19, 0.06);
-  --shadow-lg:      0 10px 30px -5px rgba(20, 20, 19, 0.08);
-  --shadow-xl:      0 20px 50px -10px rgba(20, 20, 19, 0.12);
-  --shadow-card:    0 4px 20px -2px rgba(20, 20, 19, 0.05);
+  --shadow-xs:      0 1px 2px rgba(31, 43, 80, 0.04);
+  --shadow-sm:      0 1px 3px rgba(31, 43, 80, 0.06), 0 1px 2px rgba(31, 43, 80, 0.035);
+  --shadow-md:      0 4px 12px rgba(31, 43, 80, 0.06);
+  --shadow-lg:      0 10px 30px -5px rgba(31, 43, 80, 0.08);
+  --shadow-xl:      0 20px 50px -10px rgba(31, 43, 80, 0.11);
+  --shadow-card:    0 4px 20px -2px rgba(31, 43, 80, 0.05);
   --shadow-glow:    0 0 20px rgba(79, 70, 229, 0.08);
 
   /* Card hover */
@@ -75,11 +75,11 @@
 
   /* Scrollbar */
   --scrollbar-track: var(--c-bg);
-  --scrollbar-thumb: #D1CDC7;
-  --scrollbar-thumb-hover: #9A9490;
+  --scrollbar-thumb: #D5D9E6;
+  --scrollbar-thumb-hover: #A7AEC1;
 
   /* Aurora */
-  --aurora-opacity: 0.45;
+  --aurora-opacity: 0.30;
 
   /* Sidebar */
   --sidebar-width: 260px;
@@ -270,6 +270,7 @@ html {
 body {
   font-family: var(--font-sans);
   background-color: var(--c-bg);
+  background-image: radial-gradient(ellipse at 10% 8%, rgba(105, 91, 240, 0.05), transparent 35%), radial-gradient(ellipse at 90% 30%, rgba(84, 174, 220, 0.035), transparent 32%);
   color: var(--c-fg);
   overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -804,4 +805,40 @@ input:focus, textarea:focus, select:focus {
 
 .glow-active {
   box-shadow: 0 0 30px rgba(79, 70, 229, 0.15);
+}
+
+
+/* Keep motion calm and accessible across the whole application. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Legacy utility colors now resolve to the shared light palette. */
+:root:not([data-theme="dark"]) [class*="bg-[#F3F0EE]"] {
+  background-color: var(--c-bg) !important;
+}
+
+:root:not([data-theme="dark"]) [class~="bg-[#FCFBFA]"] {
+  background-color: var(--c-surface-2) !important;
+}
+
+:root:not([data-theme="dark"]) [class~="bg-[#141413]"] {
+  background-color: var(--c-accent) !important;
+}
+
+:root:not([data-theme="dark"]) [class*="border-[#141413]/"] {
+  border-color: var(--c-border) !important;
+}
+
+:root:not([data-theme="dark"]) [class~="text-[#141413]"] {
+  color: var(--c-fg) !important;
+}
+
+:root:not([data-theme="dark"]) [class~="text-[#F3F0EE]"] {
+  color: #FFFFFF !important;
 }

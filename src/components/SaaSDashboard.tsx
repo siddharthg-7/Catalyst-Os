@@ -8,12 +8,15 @@ import {
   FileText, ExternalLink, Calculator, Layers, Loader2,
   BookOpen, UploadCloud, Database, Target, Zap, BarChart3,
   Shield, CheckCircle2, ChevronDown, Settings2, Edit3, X, SlidersHorizontal,
-  Rocket, ArrowUpRight, Bot, Cpu, Landmark
+  Rocket, ArrowUpRight, Bot, Cpu, Landmark, Radio
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../hooks/useChat';
 import MarkdownRenderer from './chatbot/MarkdownRenderer';
 import Section from './Section';
+import VoiceMicButton from './voice/VoiceMicButton';
+import VoiceModeModal from './voice/VoiceModeModal';
+import VoiceStudioPanel from './voice/VoiceStudioPanel';
 
 interface SaaSDashboardProps {
   startup: StartupProfile;
@@ -158,6 +161,10 @@ export default function SaaSDashboard({
   const [editCash, setEditCash] = useState<number>(startup.cashBalance || 50000);
   const [editBurn, setEditBurn] = useState<number>(startup.burnRate || 8000);
   const [isSavingTreasury, setIsSavingTreasury] = useState(false);
+
+  // Voice Studio & Conversational Voice Mode State
+  const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
+  const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState(false);
 
   useEffect(() => {
     if (startup.cashBalance !== undefined) setEditCash(startup.cashBalance);
@@ -1019,6 +1026,26 @@ export default function SaaSDashboard({
               <p className="text-xs text-slate-500 dark:text-slate-400">Autonomous co-founder grounded in company records and financial bounds</p>
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsVoiceModeOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200/70 dark:border-indigo-900/70 transition-all cursor-pointer shadow-xs"
+                title="Launch Hands-Free Voice Mode"
+              >
+                <Radio className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+                <span>Voice Mode</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsVoiceStudioOpen(true)}
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-xs"
+                title="Configure Voice Studio Neural Models"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                <span>Voice Studio</span>
+              </button>
+
               <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-[10px] font-mono font-bold">
                 <Database className="w-2.5 h-2.5 text-indigo-600" />
                 <span>Grounded ({knowledge.length} Docs)</span>
@@ -1211,19 +1238,8 @@ export default function SaaSDashboard({
               className="flex-1 bg-transparent px-2.5 py-1.5 text-sm text-[#141413] placeholder:text-[#696969]/60 focus:outline-none resize-none max-h-24 leading-relaxed font-sans"
             />
 
-            {/* Mic button */}
-            <button
-              type="button"
-              onClick={toggleRecording}
-              title={isRecording ? 'Stop recording' : 'Voice input'}
-              className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 ${
-                isRecording
-                  ? 'bg-rose-500 text-white animate-pulse'
-                  : 'text-[#696969] hover:text-[#141413] hover:bg-white'
-              }`}
-            >
-              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </button>
+            {/* Voice Recording Mic button */}
+            <VoiceMicButton onTranscript={(txt) => setAiInput(txt)} />
 
             {/* Send button */}
             <button
@@ -1748,6 +1764,22 @@ export default function SaaSDashboard({
           </div>
         )}
       </Section>
+
+      {/* ── CONVERSATIONAL VOICE MODE MODAL ── */}
+      <VoiceModeModal
+        isOpen={isVoiceModeOpen}
+        onClose={() => setIsVoiceModeOpen(false)}
+        onSendCommand={sendMessage}
+        lastAssistantResponse={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
+        isOrchestrating={isTyping}
+        onOpenVoiceStudio={() => setIsVoiceStudioOpen(true)}
+      />
+
+      {/* ── VOICE STUDIO MANAGEMENT PANEL ── */}
+      <VoiceStudioPanel
+        isOpen={isVoiceStudioOpen}
+        onClose={() => setIsVoiceStudioOpen(false)}
+      />
 
     </div>
   );

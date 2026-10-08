@@ -8,6 +8,7 @@ import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import apiRouter from './backend/routes/api';
+import voiceRouter from './backend/voice/routes';
 import { validateEnvironmentConfig } from './backend/services/configValidator';
 
 import { createProxyMiddleware } from 'http-proxy-middleware';
@@ -61,6 +62,9 @@ app.get('/ready', async (req, res) => {
     environment: process.env.NODE_ENV || 'development'
   });
 });
+
+// Mount modularized Voice Studio & Speech API routes
+app.use('/api/voice', voiceRouter);
 
 // Mount modularized backend API routes
 app.use('/api', apiRouter);

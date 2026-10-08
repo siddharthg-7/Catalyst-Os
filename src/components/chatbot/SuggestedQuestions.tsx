@@ -11,8 +11,8 @@ export default function SuggestedQuestions({ questions, onSelect }: SuggestedQue
 
   return (
     <div className="space-y-2 pt-2">
-      <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#777777] uppercase tracking-wider font-bold">
-        <Sparkles className="w-3 h-3 text-white" />
+      <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#68758F] uppercase tracking-wider font-bold">
+        <Sparkles className="w-3 h-3 text-[#151A2D]" />
         <span>Suggested Questions</span>
       </div>
 
@@ -21,10 +21,10 @@ export default function SuggestedQuestions({ questions, onSelect }: SuggestedQue
           <button
             key={idx}
             onClick={() => onSelect(q)}
-            className="p-3 rounded-xl bg-[#111111] border border-white/[0.08] hover:border-white text-left text-xs text-[#B8B8B8] hover:text-white transition-all flex items-center justify-between group cursor-pointer font-sans shadow-sm"
+            className="p-3 rounded-xl bg-[#F3F5FB] border border-[#151A2D]/10 hover:border-[#5546ED]/40 text-left text-xs text-[#536079] hover:text-[#151A2D] transition-all flex items-center justify-between group cursor-pointer font-sans shadow-sm"
           >
             <span className="truncate pr-2 font-medium">{q}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-[#777777] group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-[#68758F] group-hover:text-[#151A2D] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
           </button>
         ))}
       </div>
