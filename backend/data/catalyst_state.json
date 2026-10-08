@@ -1,0 +1,169 @@
+{
+  "startupProfile": {
+    "name": "NovaTech",
+    "industry": "Enterprise AI & Developer Platform",
+    "description": "Autonomous developer infrastructure and multi-agent systems for enterprise microservices.",
+    "fundingStage": "Seed",
+    "cashBalance": 7200000,
+    "burnRate": 800000,
+    "runwayMonths": 9,
+    "healthScore": 81,
+    "metrics": {
+      "velocity": 80,
+      "financialHealth": 75,
+      "legalCompliance": 90,
+      "growthRate": 65,
+      "operationsEfficiency": 82
+    },
+    "teamSize": 8
+  },
+  "initiatives": [
+    {
+      "id": "init_demo_hiring",
+      "title": "Should we hire 2 engineers before our next product launch?",
+      "description": "Determine whether adding 2 senior engineers before the 6-week enterprise launch is financially and operationally justified, balancing sprint capacity against runway burn.",
+      "category": "hiring",
+      "status": "completed",
+      "createdAt": "2026-10-08T21:00:00.000Z",
+      "currentTaskIndex": 0,
+      "tasks": [
+        {
+          "id": "task_f1",
+          "title": "Stress test runway impact of 2 new senior hires (-₹4L/mo) vs 1 senior hire (-₹2L/mo) against ₹72L reserves",
+          "assignedTo": "Finance",
+          "status": "completed",
+          "result": "Aura (Finance) runway audit: NovaTech holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway."
+        },
+        {
+          "id": "task_o1",
+          "title": "Evaluate 3-developer bandwidth bottleneck and onboarding mentorship drag on 6-week launch sprint",
+          "assignedTo": "Operations",
+          "status": "completed",
+          "result": "Helix (Operations) delivery audit: Reviewed workflow bottlenecks and confirmed operational pipeline is capable of absorbing this initiative."
+        },
+        {
+          "id": "task_g1",
+          "title": "Quantify delivery commitments for 5 enterprise pilot partners and ₹25L ARR launch milestone",
+          "assignedTo": "Growth",
+          "status": "completed",
+          "result": "Vector (Growth) market audit: Verified customer acquisition trajectory. Initiative directly accelerates qualified pipeline conversion."
+        }
+      ],
+      "messages": [
+        {
+          "id": "msg_ceo_start_1791494660938",
+          "sender": "CEO",
+          "receiver": "All",
+          "content": "Team, we are launching an important initiative: \"Determine whether adding 2 senior engineers before the 6-week enterprise launch is financially and operationally justified, balancing sprint capacity against runway burn.\". I have decomposed our objectives and assigned concrete tasks. Let's coordinate immediately to secure quality execution.",
+          "timestamp": "2026-10-08T21:24:20.938Z"
+        },
+        {
+          "id": "msg_finance_1791494661753",
+          "sender": "Finance",
+          "receiver": "CEO",
+          "content": "Aura (Finance) runway audit: NovaTech holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway.\n\n**Recommendations:**\n- **Approve 1 Senior Hire (Defer Second Hire to Post-Launch)**: Authorizes 1 senior platform engineer. Preserves 7.8 months of operational runway while unlocking core backend throughput. (Est. Impact: $-200000)",
+          "timestamp": "2026-10-08T21:24:21.753Z",
+          "isConflict": true
+        },
+        {
+          "id": "msg_operations_1791494662015",
+          "sender": "Operations",
+          "receiver": "CEO",
+          "content": "Helix (Operations) delivery audit: Reviewed workflow bottlenecks and confirmed operational pipeline is capable of absorbing this initiative.\n\n**Recommendations:**\n- **Optimize Delivery Pipeline**: Streamline operational procedures and eliminate handoff bottlenecks across modules. (Est. Impact: $0)",
+          "timestamp": "2026-10-08T21:24:22.015Z",
+          "isConflict": false
+        },
+        {
+          "id": "msg_growth_1791494662160",
+          "sender": "Growth",
+          "receiver": "CEO",
+          "content": "Vector (Growth) market audit: Verified customer acquisition trajectory. Initiative directly accelerates qualified pipeline conversion.\n\n**Recommendations:**\n- **Deploy Growth Acceleration Loop**: Launch targeted acquisition campaigns to capture high-intent enterprise pipeline. (Est. Impact: $2500000)",
+          "timestamp": "2026-10-08T21:24:22.160Z",
+          "isConflict": false
+        },
+        {
+          "id": "msg_resolver_1791494662613",
+          "sender": "ConflictResolver",
+          "receiver": "All",
+          "content": "### Conflict Mediated Successfully\n\n**Resolution:** Executive Consensus: Proceed with hiring ONE senior platform engineer immediately. Defer second hire to post-launch.\n\n**Compromise Details:** Balances Aura's runway preservation goals (maintaining 7.8 months of runway) with Helix's onboarding bandwidth and Vector's 5 enterprise pilot SLA commitments.",
+          "timestamp": "2026-10-08T21:24:22.614Z"
+        },
+        {
+          "id": "msg_ceo_final_1791494662717",
+          "sender": "CEO",
+          "receiver": "All",
+          "content": "Our strategic planning session has completed successfully. Loom-V Director has packaged our final corporate deliverable: **\"Executive Decision: Hire 1 Senior Platform Infrastructure Engineer\"**. I have directed this to the Founder Approval Queue for high-fidelity review.",
+          "timestamp": "2026-10-08T21:24:22.717Z"
+        }
+      ],
+      "deliverables": [
+        {
+          "id": "del_1791494662717",
+          "initiativeId": "init_demo_hiring",
+          "title": "Executive Decision: Hire 1 Senior Platform Infrastructure Engineer",
+          "description": "Synthesized council resolution approving 1 senior engineer to eliminate the 6-week launch bottleneck while preserving 7.8 months of runway.",
+          "type": "contract",
+          "status": "pending_review",
+          "content": "# EXECUTIVE COUNCIL DECISION CHARTER: HIRING AUTHORIZATION\n\n### Strategic Recommendation\n**Proceed with hiring ONE senior platform engineer immediately.** Defer the second engineering hire to the post-launch milestone.\n\n### Council Consensus Analysis\n- **Atlas (CEO / Strategy):** Aligned with the 6-week enterprise launch sprint; resolves core backend delivery bottleneck.\n- **Aura (Finance):** Rejects 2 hires (runway collapses from 9.0m to 5.5m). Approves 1 hire (burn increases to ₹10L/mo, runway safely preserved at 7.8m).\n- **Helix (Operations):** 1 senior engineer integrates in 10 days; avoids the 25% mentorship overhead of onboarding 2 developers during active sprint.\n- **Vector (Growth):** Protects launch SLAs for 5 enterprise pilot partners and unlocks ₹25,00,000 in ARR.\n\n### Financial & Operational Impact\n- **Headcount:** +1 (Engineering team grows from 3 to 4, total team to 9)\n- **Monthly Burn:** Increases by ₹2,00,000 / month\n- **Cash Runway:** 7.8 Months (Above 6-month safety buffer)\n- **Sprint Velocity:** +20%\n- **Risk Rating:** Low-Medium\n- **Confidence:** 94% High",
+          "impact": "Eliminates the 6-week enterprise launch bottleneck while preserving 7.8 months of cash runway.",
+          "financialChange": -200000,
+          "metricChanges": {
+            "velocity": 20,
+            "financialHealth": -2,
+            "legalCompliance": 5,
+            "growthRate": 12,
+            "operationsEfficiency": 15
+          }
+        }
+      ]
+    }
+  ],
+  "approvals": [
+    {
+      "id": "del_1791494662717",
+      "initiativeId": "init_demo_hiring",
+      "title": "Executive Decision: Hire 1 Senior Platform Infrastructure Engineer",
+      "description": "Synthesized council resolution approving 1 senior engineer to eliminate the 6-week launch bottleneck while preserving 7.8 months of runway.",
+      "type": "contract",
+      "status": "pending_review",
+      "content": "# EXECUTIVE COUNCIL DECISION CHARTER: HIRING AUTHORIZATION\n\n### Strategic Recommendation\n**Proceed with hiring ONE senior platform engineer immediately.** Defer the second engineering hire to the post-launch milestone.\n\n### Council Consensus Analysis\n- **Atlas (CEO / Strategy):** Aligned with the 6-week enterprise launch sprint; resolves core backend delivery bottleneck.\n- **Aura (Finance):** Rejects 2 hires (runway collapses from 9.0m to 5.5m). Approves 1 hire (burn increases to ₹10L/mo, runway safely preserved at 7.8m).\n- **Helix (Operations):** 1 senior engineer integrates in 10 days; avoids the 25% mentorship overhead of onboarding 2 developers during active sprint.\n- **Vector (Growth):** Protects launch SLAs for 5 enterprise pilot partners and unlocks ₹25,00,000 in ARR.\n\n### Financial & Operational Impact\n- **Headcount:** +1 (Engineering team grows from 3 to 4, total team to 9)\n- **Monthly Burn:** Increases by ₹2,00,000 / month\n- **Cash Runway:** 7.8 Months (Above 6-month safety buffer)\n- **Sprint Velocity:** +20%\n- **Risk Rating:** Low-Medium\n- **Confidence:** 94% High",
+      "impact": "Eliminates the 6-week enterprise launch bottleneck while preserving 7.8 months of cash runway.",
+      "financialChange": -200000,
+      "metricChanges": {
+        "velocity": 20,
+        "financialHealth": -2,
+        "legalCompliance": 5,
+        "growthRate": 12,
+        "operationsEfficiency": 15
+      }
+    }
+  ],
+  "decisionLog": [
+    {
+      "id": "dec_initial_1",
+      "title": "Approve: Reserve Cloud Compute Nodes for Enterprise Launch",
+      "description": "Committed to 1-year reserved instances on AWS compute to optimize unit economics ahead of enterprise pilot onboarding.",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-02T10:00:00.000Z",
+      "impactText": "Saves ₹1,50,000 monthly in compute overhead while securing 99.98% dedicated SLA.",
+      "financialImpact": -150000,
+      "status": "approved"
+    }
+  ],
+  "knowledgeFiles": [
+    {
+      "id": "doc_novatech_strategy",
+      "name": "NovaTech_Enterprise_Strategy.md",
+      "type": "pitch_deck",
+      "size": "18.4 KB",
+      "uploadDate": "2026-10-05T09:00:00.000Z",
+      "summary": "Executive roadmap for NovaTech Enterprise Orchestrator. Documents our 6-week launch timeline with 5 pilot enterprise customers, 3 developers bandwidth bottleneck, and ₹8L/mo burn boundary.",
+      "insights": [
+        "Enterprise launch is firmly committed in 6 weeks with 5 pilot partner contracts.",
+        "The engineering team currently has only 3 core developers and is operating at 95% workload capacity.",
+        "Hiring 2 senior engineers immediately would accelerate backend pipeline delivery, but increases monthly burn by ₹4L/mo, dangerously reducing runway from 9 months to 5.5 months.",
+        "Orchestrator consensus recommendation: Hire 1 senior platform engineer now, and postpone the second hire until enterprise launch revenue milestone is reached."
+      ]
+    }
+  ]
+}

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, TeamMember, UserPermissions, CompanyInvitation } from './types';
 import SaaSDashboard from './components/SaaSDashboard';
 import AgentWorkspace from './components/AgentWorkspace';
@@ -39,6 +40,9 @@ import AuthScreen from './components/AuthScreen';
 import CatalystLogo from './components/CatalystLogo';
 import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 import NotificationPanel from './components/NotificationPanel';
+import MouseSpotlight from './components/MouseSpotlight';
+import AuroraBackground from './components/AuroraBackground';
+import Footer from './components/Footer';
 
 export default function App() {
   const navigate = useNavigate();
@@ -59,6 +63,7 @@ export default function App() {
   });
 
   const [isCheckingStartup, setIsCheckingStartup] = useState<boolean>(false);
+  const [scrolled, setScrolled] = useState<boolean>(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -768,7 +773,7 @@ export default function App() {
     const navItems = [
       { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
       { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
-      { id: 'knowledge' as const,  label: 'RAG Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-indigo-600' },
+      { id: 'knowledge' as const,  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-indigo-600' },
       { id: 'workflows' as const,  label: 'Workflows',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-[#696969]' },
       { id: 'people' as const,     label: 'People',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : 'New', badgeColor: 'text-emerald-600' },
       { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-indigo-600' },
@@ -778,7 +783,9 @@ export default function App() {
     const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
 
     return (
-      <div className="flex h-screen bg-[#F3F0EE] text-[#141413] overflow-hidden font-sans">
+      <div className="flex h-screen bg-[#F3F0EE] text-[#141413] overflow-hidden font-sans relative">
+        <AuroraBackground />
+        <MouseSpotlight />
       
       {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-64 border-r border-[#141413]/10 bg-white p-6 shrink-0 justify-between shadow-[rgba(0,0,0,0.04)_4px_0px_24px_0px]">
@@ -801,18 +808,25 @@ export default function App() {
                 <button
                   key={id}
                   onClick={() => handleTabChange(id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all border font-sans cursor-pointer ${
+                  className={`relative w-full flex items-center justify-between px-3 py-2.5 rounded-[12px] text-xs font-medium transition-all font-sans cursor-pointer group ${
                     isActive
-                      ? 'bg-[#141413] border-[#141413] text-[#F3F0EE] shadow-sm'
-                      : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] border-transparent'
+                      ? 'text-[#F3F0EE]'
+                      : 'text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE]/60'
                   }`}
                 >
-                  <span className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#F3F0EE]' : 'text-[#141413]/50'}`} />
-                    {label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="sidebar-active"
+                      className="absolute inset-0 bg-[#141413] rounded-[12px] shadow-sm -z-0"
+                      transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-[#F3F0EE]' : 'text-[#141413]/50 group-hover:text-[#141413]'}`} />
+                    <span>{label}</span>
                   </span>
                   {badge && (
-                    <span className={`text-[10px] font-mono font-bold ${isActive ? 'text-[#F3F0EE]/70' : badgeColor}`}>
+                    <span className={`relative z-10 text-[10px] font-mono font-bold ${isActive ? 'text-[#F3F0EE]/70' : badgeColor}`}>
                       {badge}
                     </span>
                   )}
@@ -896,7 +910,9 @@ export default function App() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         
         {/* Top Navbar */}
-        <header className="h-16 border-b border-[#141413]/10 bg-white/80 backdrop-blur-sm px-6 md:px-8 flex items-center justify-between shrink-0">
+        <header className={`h-16 border-b transition-all duration-300 px-6 md:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30 ${
+          scrolled ? 'glass shadow-glass' : 'bg-white/80 backdrop-blur-sm border-[#141413]/10'
+        }`}>
           <div className="flex items-center gap-4 text-sm text-[#696969]">
             {/* Mobile menu trigger */}
             <button
@@ -921,7 +937,7 @@ export default function App() {
               <kbd className="text-[9px] font-mono bg-white border border-[#141413]/10 px-1.5 py-0.5 rounded text-[#696969]">⌘K</kbd>
             </button>
 
-            {/* RAG Knowledge Base Quick Access (Inside Login) */}
+            {/* Company Knowledge Quick Access */}
             <button
               onClick={() => handleTabChange('knowledge')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all cursor-pointer border ${
@@ -929,10 +945,10 @@ export default function App() {
                   ? 'bg-[#141413] text-[#F3F0EE] border-[#141413]'
                   : 'bg-[#F3F0EE] hover:bg-white text-[#141413] border-[#141413]/10'
               }`}
-              title="Company RAG Knowledge Base"
+              title="Company Knowledge Base"
             >
               <Database className="w-3.5 h-3.5 text-indigo-600" />
-              <span className="font-mono text-[11px] font-bold">RAG</span>
+              <span className="font-sans text-[11px] font-semibold">Knowledge</span>
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200/60">
                 {knowledge.length}
               </span>
@@ -959,92 +975,97 @@ export default function App() {
         </header>
 
         {/* View Content */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-[#F3F0EE]">
-          
-          {activeTab === 'dashboard' && startup && (
-            <SaaSDashboard 
-              startup={startup}
-              agents={agents}
-              initiatives={initiatives}
-              approvals={approvals}
-              decisions={decisions}
-              knowledge={knowledge}
-              onReviewItem={handleReviewItem}
-              onUploadDoc={handleUploadDoc}
-              onLaunchInitiative={handleLaunchInitiative}
-              onSimulateInitiative={handleSimulateInitiative}
-              onUpdateStartup={handleUpdateStartup}
-              onNavigate={(tab) => handleTabChange(tab)}
-            />
-          )}
-          
-          {activeTab === 'agents' && (
-            <AgentWorkspace 
-              agents={agents} 
-              startup={startup} 
-              decisions={decisions}
-              knowledge={knowledge}
-              onUpdateStartup={handleUpdateStartup} 
-              selectedAgentId={selectedAgentId}
-              onSelectAgent={handleSelectAgent}
-            />
-          )}
+        <main
+          onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 15)}
+          className="flex-1 overflow-y-auto bg-[#F3F0EE] scroll-smooth"
+        >
+          <div className="app-container px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            {activeTab === 'dashboard' && startup && (
+              <SaaSDashboard 
+                startup={startup}
+                agents={agents}
+                initiatives={initiatives}
+                approvals={approvals}
+                decisions={decisions}
+                knowledge={knowledge}
+                onReviewItem={handleReviewItem}
+                onUploadDoc={handleUploadDoc}
+                onLaunchInitiative={handleLaunchInitiative}
+                onSimulateInitiative={handleSimulateInitiative}
+                onUpdateStartup={handleUpdateStartup}
+                onNavigate={(tab) => handleTabChange(tab)}
+              />
+            )}
+            
+            {activeTab === 'agents' && (
+              <AgentWorkspace 
+                agents={agents} 
+                startup={startup} 
+                decisions={decisions}
+                knowledge={knowledge}
+                onUpdateStartup={handleUpdateStartup} 
+                selectedAgentId={selectedAgentId}
+                onSelectAgent={handleSelectAgent}
+              />
+            )}
 
-          {activeTab === 'workflows' && (
-            <WorkflowCanvas 
-              initiatives={initiatives} 
-              onLaunchInitiative={handleLaunchInitiative} 
-              onSimulateInitiative={handleSimulateInitiative} 
-            />
-          )}
+            {activeTab === 'workflows' && (
+              <WorkflowCanvas 
+                initiatives={initiatives} 
+                onLaunchInitiative={handleLaunchInitiative} 
+                onSimulateInitiative={handleSimulateInitiative} 
+                onNavigate={(tab) => handleTabChange(tab as any)}
+              />
+            )}
 
-          {activeTab === 'approvals' && (
-            <ApprovalQueue 
-              approvals={approvals} 
-              onReviewItem={handleReviewItem} 
-              currentCash={startup.cashBalance}
-              currentBurn={startup.burnRate}
-            />
-          )}
+            {activeTab === 'approvals' && (
+              <ApprovalQueue 
+                approvals={approvals} 
+                onReviewItem={handleReviewItem} 
+                currentCash={startup.cashBalance}
+                currentBurn={startup.burnRate}
+              />
+            )}
 
-          {activeTab === 'scenarios' && (
-            <ScenarioSimulator
-              currentCash={startup.cashBalance}
-              currentBurn={startup.burnRate}
-              companyName={startup.name}
-            />
-          )}
+            {activeTab === 'scenarios' && (
+              <ScenarioSimulator
+                currentCash={startup.cashBalance}
+                currentBurn={startup.burnRate}
+                companyName={startup.name}
+              />
+            )}
 
-          {activeTab === 'decisions' && (
-            <DecisionLog 
-              decisions={decisions} 
-              onRefresh={hydrateState}
-            />
-          )}
+            {activeTab === 'decisions' && (
+              <DecisionLog 
+                decisions={decisions} 
+                onRefresh={hydrateState}
+              />
+            )}
 
-          {activeTab === 'knowledge' && (
-            <KnowledgeBase 
-              documents={knowledge} 
-              onUploadDoc={handleUploadDoc} 
-            />
-          )}
+            {activeTab === 'knowledge' && (
+              <KnowledgeBase 
+                documents={knowledge} 
+                onUploadDoc={handleUploadDoc} 
+              />
+            )}
 
-          {activeTab === 'people' && (
-            <PeopleDirectory 
-              user={user}
-              companyName={startup.name}
-              teamMembers={teamMembers}
-              onAddMember={hasPermission('people:write') ? handleAddTeamMember : undefined}
-              onRemoveMember={hasPermission('people:write') ? handleRemoveTeamMember : undefined}
-              memberships={memberships}
-              invitations={invitations}
-              onInviteMember={hasPermission('people:access') ? handleInviteMember : undefined}
-              onRevokeInvitation={hasPermission('people:access') ? handleRevokeInvitation : undefined}
-              onResendInvitation={hasPermission('people:access') ? handleResendInvitation : undefined}
-              onRemoveMembership={hasPermission('people:access') ? handleRemoveMembership : undefined}
-            />
-          )}
-
+            {activeTab === 'people' && (
+              <PeopleDirectory 
+                user={user}
+                companyName={startup.name}
+                teamMembers={teamMembers}
+                onAddMember={hasPermission('people:write') ? handleAddTeamMember : undefined}
+                onRemoveMember={hasPermission('people:write') ? handleRemoveTeamMember : undefined}
+                memberships={memberships}
+                invitations={invitations}
+                onInviteMember={hasPermission('people:access') ? handleInviteMember : undefined}
+                onRevokeInvitation={hasPermission('people:access') ? handleRevokeInvitation : undefined}
+                onResendInvitation={hasPermission('people:access') ? handleResendInvitation : undefined}
+                onRemoveMembership={hasPermission('people:access') ? handleRemoveMembership : undefined}
+              />
+            )}
+          </div>
+          <Footer onNavigate={(tab) => handleTabChange(tab as any)} />
         </main>
 
       {/* Toast Alerts */}

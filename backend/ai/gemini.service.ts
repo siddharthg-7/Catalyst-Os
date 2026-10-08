@@ -37,8 +37,8 @@ export async function callModelJson<T>(
     const text = response.text || '';
     const cleanJson = text.trim().replace(/^```json\s*/i, '').replace(/```$/, '');
     return JSON.parse(cleanJson) as T;
-  } catch (err) {
-    console.error('[Gemini Central Service] Error during model call, returning fallback:', err);
+  } catch (err: any) {
+    console.warn(`[Gemini Central Service] AI model unavailable (${err.message || 'connection'}). Utilizing high-fidelity domain fallback.`);
     return fallbackGenerator();
   }
 }

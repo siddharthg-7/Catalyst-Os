@@ -8,6 +8,8 @@ export interface StartupProfile {
   industry: string;
   description: string;
   fundingStage: string;
+  teamSize?: number | string;
+  monthlyRevenue?: number | string;
   strategy?: string;
   cashBalance: number;
   burnRate: number;

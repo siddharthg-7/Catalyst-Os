@@ -16,7 +16,8 @@ import {
   resetAgentStatuses,
   isDbAvailable,
   users,
-  UserDBRecord
+  UserDBRecord,
+  persistCurrentState
 } from '../state';
 import { ai, runMultiAgentCollaboration } from '../services/geminiService';
 import { Initiative, Deliverable, UserRole, User } from '../../src/types';
@@ -366,21 +367,21 @@ router.post('/auth/demo', async (req, res) => {
       canonical = await workspaceService.saveOnboardingData(demoUser.id, {
         founderName: 'Alex Rivera',
         founderRole: 'Founder & CEO',
-        startupName: 'Cyberdyne Systems',
-        industry: 'AI / Developer Tools',
-        description: 'Autonomous multi-agent developer infrastructure that validates, tests, and deploys mission-critical microservices with zero downtime and strict compliance boundaries.',
+        startupName: 'NovaTech',
+        industry: 'Enterprise AI & Developer Platform',
+        description: 'Autonomous developer infrastructure and multi-agent systems for enterprise microservices.',
         fundingStage: 'Seed',
         stage: 'Seed',
-        targetIcp: 'Enterprise Series A–C VP of Engineering & DevOps Directors',
-        primaryProduct: 'Autonomous Infrastructure Orchestration Engine',
-        problem: 'Engineering teams waste 35% of sprint cycles manually writing, debugging, and auditing deployment pipelines instead of shipping revenue-generating features.',
-        cashBalance: 750000,
-        monthlyBurn: 45000,
-        timeline: '90 Days',
-        goals: ['Launch Enterprise Beta with 5 design partners and reach $20k MRR'],
-        priorities: ['Finding Customers / GTM'],
+        targetIcp: 'Enterprise VPs of Engineering & Cloud Infrastructure Teams',
+        primaryProduct: 'Autonomous Developer Infrastructure Platform',
+        problem: 'Engineering teams waste 40% of sprint capacity manually auditing compliance and managing microservice pipelines instead of shipping revenue-generating features.',
+        cashBalance: 7200000,
+        monthlyBurn: 800000,
+        timeline: '6 Weeks',
+        goals: ['Launch enterprise product in 6 weeks with 5 pilot partners and unlock ₹25L ARR'],
+        priorities: ['Enterprise Product Launch', 'Platform Engineering Capacity'],
         path: 'existing',
-        teamSize: '2–5 Members'
+        teamSize: '8 (3 Core Developers)'
       });
     } catch (demoErr: any) {
       console.warn('[Demo Auth] Workspace seeding note:', demoErr.message);
@@ -394,16 +395,16 @@ router.post('/auth/demo', async (req, res) => {
     onboarded: true,
     startup: {
       id: canonical?.startupId || 'startup_catalyst_demo',
-      name: canonical?.startup?.name || 'Cyberdyne Systems',
-      industry: canonical?.startup?.industry || 'AI / Developer Tools',
-      description: canonical?.startup?.description || 'Autonomous multi-agent developer infrastructure',
+      name: canonical?.startup?.name || 'NovaTech',
+      industry: canonical?.startup?.industry || 'Enterprise AI & Developer Platform',
+      description: canonical?.startup?.description || 'Autonomous developer infrastructure and multi-agent systems',
       fundingStage: canonical?.startup?.stage || 'Seed',
       stage: canonical?.startup?.stage || 'Seed',
-      cashBalance: canonical?.financials?.cashBalance ?? 750000,
-      burnRate: canonical?.financials?.monthlyBurn ?? 45000,
-      monthlyBurn: canonical?.financials?.monthlyBurn ?? 45000,
-      runwayMonths: canonical?.financials?.runwayMonths ?? 16.7,
-      healthScore: 88,
+      cashBalance: canonical?.financials?.cashBalance ?? 7200000,
+      burnRate: canonical?.financials?.monthlyBurn ?? 800000,
+      monthlyBurn: canonical?.financials?.monthlyBurn ?? 800000,
+      runwayMonths: canonical?.financials?.runwayMonths ?? 9.0,
+      healthScore: 82,
       metrics: {
         velocity: 86,
         financialHealth: 92,
@@ -620,13 +621,13 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
         burnRate: canonical.financials.monthlyBurn,
         monthlyBurn: canonical.financials.monthlyBurn,
         runwayMonths: canonical.financials.runwayMonths,
-        healthScore: 80,
-        metrics: {
-          velocity: 85,
-          financialHealth: 90,
-          legalCompliance: 95,
-          growthRate: 45,
-          operationsEfficiency: 88,
+        healthScore: (canonical.financials as any)?.healthScore || 82,
+        metrics: (canonical.financials as any)?.metrics || {
+          velocity: 78,
+          financialHealth: 84,
+          legalCompliance: 92,
+          growthRate: 65,
+          operationsEfficiency: 80,
         },
         targetIcp: canonical.business.targetIcp,
         primaryProduct: canonical.business.primaryProduct,
@@ -637,6 +638,35 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
     }
   } catch (dbErr: any) {
     console.warn('[Startup API] Database query warning:', dbErr.message);
+  }
+
+  // Graceful fallback to seeded company state (NovaTech)
+  if (startupProfile && startupProfile.name && startupProfile.name.trim() !== '') {
+    return res.json({
+      id: 'startup_catalyst_demo',
+      name: startupProfile.name,
+      industry: startupProfile.industry,
+      description: startupProfile.description,
+      fundingStage: startupProfile.fundingStage,
+      stage: startupProfile.fundingStage,
+      cashBalance: startupProfile.cashBalance,
+      burnRate: startupProfile.burnRate,
+      monthlyBurn: startupProfile.burnRate,
+      runwayMonths: startupProfile.runwayMonths,
+      healthScore: startupProfile.healthScore || 82,
+      metrics: startupProfile.metrics || {
+        velocity: 78,
+        financialHealth: 84,
+        legalCompliance: 92,
+        growthRate: 65,
+        operationsEfficiency: 80,
+      },
+      targetIcp: 'Enterprise Series A–C Engineering Leaders & SaaS Buyers',
+      primaryProduct: 'Autonomous Developer Infrastructure for Enterprise Microservices',
+      goals: ['Launch enterprise product in 6 weeks with 5 design partners and reach ₹25L MRR'],
+      priorities: ['Enterprise Product Launch', 'Engineering Capacity Bottlenecks', 'Runway Preservation'],
+      onboarded: true
+    });
   }
 
   // Not onboarded yet
@@ -1403,6 +1433,7 @@ router.post('/initiatives', authenticateJWT, (req: AuthenticatedRequest, res) =>
   };
 
   initiatives.unshift(newInit);
+  persistCurrentState();
   res.status(201).json(newInit);
 });
 
@@ -1498,6 +1529,9 @@ router.post('/initiatives/:id/simulate', authenticateJWT, async (req: Authentica
       d.initiativeId = init.id;
       approvals.unshift({ ...d, status: 'pending_review' });
     });
+
+    // Save updated initiative and pending approvals to durable state file
+    persistCurrentState();
 
     res.json(init);
   } catch (err: any) {
@@ -2100,7 +2134,7 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
             fundingStage: userContext.startup?.stage || startupProfile.fundingStage || 'Early Stage',
             cashBalance: userContext.financials?.cashBalance || startupProfile.cashBalance || 250000,
             burnRate: userContext.financials?.monthlyBurn || startupProfile.burnRate || 15000,
-            healthScore: userContext.financial?.healthScore || startupProfile.healthScore || 85
+            healthScore: (userContext.financial as any)?.healthScore || (userContext.startup as any)?.healthScore || startupProfile.healthScore || 85
           };
         }
       }

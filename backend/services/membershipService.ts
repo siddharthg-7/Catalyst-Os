@@ -10,7 +10,7 @@
  * Deliberately NOT a rewrite of authorization: this module only resolves
  * "which company, and in what role". Capabilities still come from permissionService.
  */
-import { prisma, safeDbQuery } from './dbService';
+import { prisma, safeDbQuery, hasValidDbUrl } from './dbService';
 import { normalizeRole, getPermissions, type Role, type Permissions } from './permissionService';
 
 export type MembershipStatus = 'ACTIVE' | 'SUSPENDED';
@@ -25,7 +25,7 @@ export interface ResolvedMembership {
 }
 
 function dbReady(): boolean {
-  return Boolean(prisma);
+  return Boolean(hasValidDbUrl && prisma);
 }
 
 /**
@@ -326,6 +326,12 @@ export async function removeMembership(
 export async function requireActiveMembership(req: any, res: any, next: any) {
   if (!req.user?.id) {
     res.status(401).json({ error: 'Unauthorized: Authentication required.' });
+    return;
+  }
+
+  // Graceful offline fallback: If database is unconfigured, authenticated user continues with memory workspace
+  if (!dbReady()) {
+    next();
     return;
   }
 

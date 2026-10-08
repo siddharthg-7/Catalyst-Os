@@ -13,9 +13,16 @@ declare global {
 
 const rawDbUrl = process.env.DATABASE_URL || '';
 
+export const hasValidDbUrl = Boolean(
+  rawDbUrl &&
+  !rawDbUrl.includes(':password@') &&
+  !rawDbUrl.includes('placeholder') &&
+  !rawDbUrl.includes('your_password')
+);
+
 // Format Neon URL with pgbouncer=true, pool_timeout=30, and connect_timeout=30 for serverless pooler resilience
 function buildResilientDbUrl(url: string): string | undefined {
-  if (!url) return undefined;
+  if (!url || !hasValidDbUrl) return undefined;
   let formatted = url;
   if (formatted.includes('-pooler') && !formatted.includes('pgbouncer=true')) {
     formatted += (formatted.includes('?') ? '&' : '?') + 'pgbouncer=true';
@@ -66,7 +73,7 @@ export const prisma = global.prismaSingleton || new PrismaClient({
 });
 
 // Periodic keep-alive query (every 45s) to prevent Neon connection pool from idling out
-if (typeof setInterval !== 'undefined') {
+if (typeof setInterval !== 'undefined' && hasValidDbUrl) {
   setInterval(async () => {
     try {
       await prisma.$executeRawUnsafe('SELECT 1');
@@ -90,6 +97,9 @@ if (process.env.NODE_ENV !== 'production') {
  * or if compute is cold-starting / connection pool is waiting (P2024 / P1001).
  */
 export async function safeDbQuery<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
+  if (!hasValidDbUrl) {
+    throw new Error('Database is offline or not configured with valid credentials.');
+  }
   let attempt = 0;
   while (attempt < retries) {
     try {

@@ -1,6 +1,6 @@
 import { prisma, safeDbQuery } from './dbService';
 import { companyContextService } from './companyContextService';
-import { startupProfile, approvals, decisionLog, initiatives, isDbAvailable } from '../state';
+import { startupProfile, approvals, decisionLog, initiatives, isDbAvailable, persistCurrentState } from '../state';
 import { Deliverable, StartupProfile, DecisionRecord } from '../../src/types';
 import { decisionLedgerService } from './decisionLedgerService';
 import { idempotencyService } from './idempotencyService';
@@ -578,6 +578,7 @@ export class ApprovalService {
           status: 'rejected'
         });
         if (memoryIndex !== -1) approvals.splice(memoryIndex, 1);
+        persistCurrentState();
       }
 
       decisionLedgerService.appendEvent({
@@ -960,6 +961,10 @@ export class ApprovalService {
           } else {
             startupProfile.runwayMonths = 999;
           }
+          if (teamSizeDelta !== 0) {
+            const currentCount = typeof startupProfile.teamSize === 'number' ? startupProfile.teamSize : parseInt(String(startupProfile.teamSize || '8'), 10);
+            startupProfile.teamSize = currentCount + teamSizeDelta;
+          }
           if (healthScoreDelta !== 0) {
             startupProfile.healthScore = Math.min(100, Math.max(10, startupProfile.healthScore + healthScoreDelta));
           }
@@ -982,6 +987,9 @@ export class ApprovalService {
         });
 
         if (memoryIndex !== -1) approvals.splice(memoryIndex, 1);
+
+        // Persist updated metrics, decision record, and removed approval to disk
+        persistCurrentState();
 
         decisionLedgerService.appendEvent({
           decisionId: approvalId,
@@ -1105,6 +1113,7 @@ export class ApprovalService {
     }
 
     processed.status = 'rejected';
+    persistCurrentState();
 
     decisionLedgerService.appendEvent({
       decisionId: approvalId,

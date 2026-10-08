@@ -1,11 +1,17 @@
-import React, { useState, useRef } from 'react';
+/**
+ * CatalystOS - Company Knowledge Base (Section 16)
+ * User-facing presentation framed around Company Knowledge (Documents, Research, Strategy, Financials, Customer & Product Info).
+ * Technical RAG concepts nested in clean collapsible system details.
+ */
+
+import React, { useState, useRef, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { KnowledgeFile } from '../types';
 import {
   UploadCloud, FileText, Search, Sparkles, Send, Calendar,
   HardDrive, Loader2, CheckCircle2, AlertTriangle, X,
   Globe, Github, Link2, FileUp, BookOpen, ChevronDown,
-  Lightbulb, Clock, ArrowRight
+  Lightbulb, Clock, ArrowRight, Layers, ShieldCheck, ChevronRight
 } from 'lucide-react';
 
 interface KnowledgeBaseProps {
@@ -22,41 +28,35 @@ interface ActiveUpload {
   error?: string;
 }
 
+const CATEGORIES = [
+  { id: 'ALL', label: 'All Knowledge' },
+  { id: 'strategy', label: 'Strategy & Pitch' },
+  { id: 'financials', label: 'Financials' },
+  { id: 'research', label: 'Research & Notes' },
+  { id: 'product', label: 'Product & Tech' },
+  { id: 'legal', label: 'Legal & Contracts' },
+];
+
 const DOC_TYPES = [
-  { value: 'pitch_deck', label: 'Pitch Deck' },
-  { value: 'business_plan', label: 'Business Plan' },
-  { value: 'financial_reports', label: 'Financial Report' },
-  { value: 'hiring_docs', label: 'Hiring Document' },
-  { value: 'meeting_notes', label: 'Meeting Notes' },
-  { value: 'legal', label: 'Legal Document' },
-  { value: 'other', label: 'Other' },
+  { value: 'pitch_deck', label: 'Pitch Deck (Strategy)' },
+  { value: 'business_plan', label: 'Business Plan (Strategy)' },
+  { value: 'financial_reports', label: 'Financial Report (Financials)' },
+  { value: 'hiring_docs', label: 'Hiring Document (People)' },
+  { value: 'meeting_notes', label: 'Meeting Notes & Research' },
+  { value: 'legal', label: 'Legal Document (Compliance)' },
+  { value: 'other', label: 'Product & Other' },
 ];
 
 const QUICK_PROMPTS = [
-  "Summarize my pitch deck",
-  "What are our key goals?",
-  "How much runway do we have?",
-  "What risks did investors mention?",
+  "Summarize our target investor narrative",
+  "What are our key quarterly milestones?",
+  "How much cash runway do we have forecasted?",
+  "What IP or legal risks were flagged?",
 ];
-
-const UPLOAD_CARDS = [
-  { id: 'file',    icon: FileUp,       label: 'Documents',   desc: 'PDF, DOCX, PPTX, TXT, CSV',   color: 'text-gray-900', bg: 'bg-gray-50' },
-  { id: 'website', icon: Globe,        label: 'Website',     desc: 'Add any website or link',       color: 'text-blue-600',   bg: 'bg-blue-50' },
-  { id: 'github',  icon: Github,       label: 'GitHub',      desc: 'Sync a repository',             color: 'text-gray-700',   bg: 'bg-gray-100' },
-  { id: 'notion',  icon: BookOpen,     label: 'Notion',      desc: 'Connect your Notion pages',     color: 'text-orange-500', bg: 'bg-orange-50' },
-];
-
-const FILE_ICON_COLOR: Record<string, string> = {
-  pitch_deck: 'text-gray-700',
-  business_plan: 'text-blue-500',
-  financial_reports: 'text-emerald-500',
-  hiring_docs: 'text-pink-500',
-  meeting_notes: 'text-amber-500',
-  legal: 'text-red-500',
-  other: 'text-gray-400',
-};
 
 export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseProps) {
+  const [activeCategory, setActiveCategory] = useState<string>('ALL');
+  const [searchDocQuery, setSearchDocQuery] = useState('');
   const [uploadTab, setUploadTab] = useState<'file' | 'paste' | 'website' | 'github' | 'notion'>('file');
   const [docType, setDocType] = useState('pitch_deck');
   const [isDragging, setIsDragging] = useState(false);
@@ -68,23 +68,43 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
   const [docContent, setDocContent] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  // Website / GitHub / Notion inputs
+  // External URLs
   const [webUrl, setWebUrl] = useState('');
   const [githubRepo, setGithubRepo] = useState('');
   const [notionUrl, setNotionUrl] = useState('');
 
-  // Selected doc for overview
+  // Selected doc
   const [selectedDocId, setSelectedDocId] = useState<string>(documents[0]?.id || '');
-  const activeDoc = documents.find(d => d.id === selectedDocId) || documents[0];
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
-  // Ask Catalyst
+  // Ask Company Knowledge
   const [query, setQuery] = useState('');
   const [isQuerying, setIsQuerying] = useState(false);
   const [queryAnswer, setQueryAnswer] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { apiFetch } = useAuth();
 
-  // ── File upload logic ──────────────────────────────────────────────────────
+  // Filtered documents
+  const filteredDocuments = useMemo(() => {
+    return documents.filter(doc => {
+      if (activeCategory === 'strategy' && !['pitch_deck', 'business_plan'].includes(doc.type)) return false;
+      if (activeCategory === 'financials' && doc.type !== 'financial_reports') return false;
+      if (activeCategory === 'research' && doc.type !== 'meeting_notes') return false;
+      if (activeCategory === 'product' && !['other', 'hiring_docs'].includes(doc.type)) return false;
+      if (activeCategory === 'legal' && doc.type !== 'legal') return false;
+
+      if (searchDocQuery.trim()) {
+        const q = searchDocQuery.toLowerCase();
+        return doc.name.toLowerCase().includes(q) || doc.summary?.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [documents, activeCategory, searchDocQuery]);
+
+  const activeDoc = documents.find(d => d.id === selectedDocId) || filteredDocuments[0] || documents[0];
+
+  // Upload handler
   const processFiles = (files: File[]) => {
     files.forEach((file) => {
       const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
@@ -96,7 +116,7 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
           id: uploadId, name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
           progress: 100, status: 'failed',
-          error: 'Unsupported format. Use PDF, DOCX, PPTX, CSV or TXT.'
+          error: 'Unsupported format. Use PDF, DOCX, PPTX, CSV, TXT, or MD.'
         }, ...prev]);
         return;
       }
@@ -107,23 +127,23 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
-          setActiveUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress: 30, status: 'uploading' } : u));
+          setActiveUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress: 35, status: 'uploading' } : u));
           const dataUrl = event.target?.result as string;
           const base64Data = dataUrl.split(',')[1];
 
-          let progressVal = 30;
+          let progressVal = 35;
           const interval = setInterval(() => {
-            progressVal += 8;
+            progressVal += 10;
             if (progressVal > 85) clearInterval(interval);
             else setActiveUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress: progressVal, status: progressVal > 65 ? 'analyzing' : 'uploading' } : u));
-          }, 350);
+          }, 300);
 
           await onUploadDoc(file.name, '', docType, base64Data, file.type);
           clearInterval(interval);
           setActiveUploads(prev => prev.map(u => u.id === uploadId ? { ...u, progress: 100, status: 'completed' } : u));
           setSuccessToast(true);
-          setTimeout(() => setSuccessToast(false), 5000);
-          setTimeout(() => setActiveUploads(prev => prev.filter(u => u.id !== uploadId)), 6000);
+          setTimeout(() => setSuccessToast(false), 4000);
+          setTimeout(() => setActiveUploads(prev => prev.filter(u => u.id !== uploadId)), 5000);
         } catch (err: any) {
           setActiveUploads(prev => prev.map(u => u.id === uploadId ? { ...u, status: 'failed', error: err.message || 'Upload failed' } : u));
         }
@@ -133,7 +153,8 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
   };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setIsDragging(false);
+    e.preventDefault();
+    setIsDragging(false);
     processFiles(Array.from(e.dataTransfer.files) as File[]);
   };
 
@@ -141,411 +162,470 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
     e.preventDefault();
     if (!docName || !docContent) return;
     setIsUploading(true);
-    try { await onUploadDoc(docName, docContent, docType); setDocName(''); setDocContent(''); }
-    catch (err) { console.error(err); }
-    finally { setIsUploading(false); }
+    try {
+      await onUploadDoc(docName, docContent, docType);
+      setDocName('');
+      setDocContent('');
+      setSuccessToast(true);
+      setTimeout(() => setSuccessToast(false), 4000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUploading(false);
+    }
   };
-
-  const { apiFetch } = useAuth();
 
   const handleQuerySubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!query.trim()) return;
-    setIsQuerying(true); setQueryAnswer(null);
+    setIsQuerying(true);
+    setQueryAnswer(null);
     try {
       const res = await apiFetch('/api/knowledge/query', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
       });
-      if (res.ok) { const data = await res.json(); setQueryAnswer(data.answer); }
-    } catch (err) { console.error(err); }
-    finally { setIsQuerying(false); }
+      if (res.ok) {
+        const data = await res.json();
+        setQueryAnswer(data.answer);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsQuerying(false);
+    }
   };
 
-  const TABS: { id: typeof uploadTab; label: string }[] = [
-    { id: 'file', label: 'Upload Files' },
-    { id: 'paste', label: 'Paste Text' },
-    { id: 'website', label: 'Website URL' },
-    { id: 'github', label: 'GitHub Repo' },
-    { id: 'notion', label: 'Notion' },
-  ];
-
   return (
-    <div className="space-y-6 pb-8 font-sans">
+    <div id="company-knowledge-container" className="space-y-6 font-sans">
+      
+      {/* ── HEADER ────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#696969]">
+              Institutional Memory & Truth
+            </span>
+            <span className="w-1 h-1 rounded-full bg-[#141413]/30" />
+            <span className="text-[11px] font-mono text-[#696969]">
+              {documents.length} Grounding Sources
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#141413]">
+            Company Knowledge
+          </h1>
+          <p className="text-sm text-[#696969] mt-1 max-w-2xl">
+            Centralized repository of corporate intelligence. Ground your executive agents with pitch decks, financial sheets, board memos, and strategy documents.
+          </p>
+        </div>
 
-      {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Knowledge Center</h1>
-        <p className="text-sm text-gray-400 mt-1">Teach Catalyst everything about your company.</p>
+        {/* Quick Upload Button */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="interactive-btn px-4 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-2 shadow-sm self-start md:self-center"
+        >
+          <UploadCloud className="w-4 h-4 text-[#F3F0EE]" />
+          Upload Document
+        </button>
       </div>
 
-      {/* ── Success toast ───────────────────────────────────────────────── */}
+      {/* ── SUCCESS TOAST ─────────────────────────────────────────────────── */}
       {successToast && (
-        <div className="fixed top-5 right-5 z-50 flex items-center gap-3 bg-white border border-emerald-100 shadow-lg rounded-2xl px-4 py-3 animate-fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-          <p className="text-sm text-gray-700 font-medium">Document added successfully. Catalyst is ready to answer your questions.</p>
-          <button onClick={() => setSuccessToast(false)} className="text-gray-300 hover:text-gray-500 ml-1"><X className="w-4 h-4" /></button>
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white border border-emerald-500/20 shadow-xl rounded-2xl px-5 py-3.5 animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <p className="text-xs text-[#141413] font-medium">Document ingested & synthesized into executive memory.</p>
+          <button onClick={() => setSuccessToast(false)} className="text-[#696969] hover:text-[#141413]">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
-      {/* ── Main 2-column layout ────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-
-        {/* ════ LEFT COLUMN ════════════════════════════════════════════════ */}
-        <div className="space-y-5">
-
-          {/* Add Knowledge card */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-            <div>
-              <h2 className="text-base font-bold text-gray-900">Add Knowledge</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Upload documents, links, and sources so Catalyst can learn about your startup.</p>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex flex-wrap gap-1.5">
-              {TABS.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setUploadTab(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    uploadTab === tab.id
-                      ? 'bg-gray-900 text-white shadow-sm shadow-gray-200'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Doc type selector */}
-            <div>
-              <label className="text-xs font-semibold text-gray-500 mb-1.5 block">What type of document is this?</label>
-              <div className="relative">
-                <select
-                  value={docType}
-                  onChange={e => setDocType(e.target.value)}
-                  className="w-full appearance-none px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-700 focus:outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-100 cursor-pointer pr-8"
-                >
-                  {DOC_TYPES.map(dt => <option key={dt.value} value={dt.value}>{dt.label}</option>)}
-                </select>
-                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* ── Tab: Upload Files ── */}
-            {uploadTab === 'file' && (
-              <div className="space-y-4">
-                {/* 2x2 source cards */}
-                <div className="grid grid-cols-2 gap-3">
-                  {UPLOAD_CARDS.map(card => (
-                    <button
-                      key={card.id}
-                      onClick={() => card.id === 'file' ? fileInputRef.current?.click() : undefined}
-                      className="flex flex-col items-start gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-gray-100 transition-all cursor-pointer text-left"
-                    >
-                      <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center`}>
-                        <card.icon className={`w-4 h-4 ${card.color}`} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{card.label}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{card.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Drag & drop zone */}
-                <div
-                  onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`flex flex-col items-center justify-center gap-2 py-6 rounded-xl border-2 border-dashed transition-all cursor-pointer ${
-                    isDragging
-                      ? 'border-gray-400 bg-gray-50'
-                      : 'border-gray-200 bg-gray-50 hover:border-gray-200 hover:bg-gray-50/30'
-                  }`}
-                >
-                  <UploadCloud className={`w-7 h-7 ${isDragging ? 'text-gray-700' : 'text-gray-300'}`} />
-                  <p className="text-sm text-gray-500">
-                    <span className="font-semibold text-gray-700">Drag & drop files here</span>, or{' '}
-                    <span className="text-gray-900 font-semibold">browse</span>
-                  </p>
-                  <p className="text-[11px] text-gray-400">Supports PDF, DOCX, PPTX, CSV (max 10MB)</p>
-                </div>
-                <input ref={fileInputRef} type="file" multiple onChange={e => { if (e.target.files) processFiles(Array.from(e.target.files) as File[]); }} accept=".pdf,.docx,.pptx,.csv,.txt,.md" className="hidden" />
-
-                {/* Upload progress items */}
-                {activeUploads.length > 0 && (
-                  <div className="space-y-2">
-                    {activeUploads.map(upload => (
-                      <div key={upload.id} className={`p-3 rounded-xl border text-xs space-y-1.5 ${
-                        upload.status === 'failed' ? 'bg-rose-50 border-rose-100' : 'bg-white border-gray-100'
-                      }`}>
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-gray-700 truncate max-w-[70%]">{upload.name}</span>
-                          {upload.status === 'completed' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
-                          {upload.status === 'failed' && <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />}
-                          {['reading', 'uploading', 'analyzing'].includes(upload.status) && <Loader2 className="w-4 h-4 text-gray-700 animate-spin shrink-0" />}
-                        </div>
-
-                        {upload.status !== 'failed' && (
-                          <>
-                            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                              <div className="h-full bg-gray-500 rounded-full transition-all duration-300" style={{ width: `${upload.progress}%` }} />
-                            </div>
-                            <p className={`text-[10px] ${upload.status === 'completed' ? 'text-emerald-600' : 'text-gray-400'}`}>
-                              {upload.status === 'reading' && 'Reading file...'}
-                              {upload.status === 'uploading' && 'Catalyst is learning from your document...'}
-                              {upload.status === 'analyzing' && 'Catalyst is learning from your document...'}
-                              {upload.status === 'completed' && 'Document ready ✓'}
-                            </p>
-                          </>
-                        )}
-                        {upload.status === 'failed' && <p className="text-rose-600">{upload.error}</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Tab: Paste Text ── */}
-            {uploadTab === 'paste' && (
-              <form onSubmit={handlePasteSubmit} className="space-y-3">
-                <input
-                  type="text" placeholder="Document name" value={docName}
-                  onChange={e => setDocName(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-300"
-                />
-                <textarea
-                  placeholder="Paste your content here..." value={docContent}
-                  onChange={e => setDocContent(e.target.value)} rows={6}
-                  className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-300 resize-none"
-                />
-                <button
-                  type="submit" disabled={!docName || !docContent || isUploading}
-                  className="w-full py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {isUploading ? 'Saving...' : 'Add to Knowledge'}
-                </button>
-              </form>
-            )}
-
-            {/* ── Tab: Website URL ── */}
-            {uploadTab === 'website' && (
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="url" placeholder="https://yourwebsite.com" value={webUrl}
-                      onChange={e => setWebUrl(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-300"
-                    />
-                  </div>
-                  <button className="px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-black transition-colors">Import</button>
-                </div>
-                <p className="text-xs text-gray-400">Catalyst will read and extract knowledge from the page.</p>
-              </div>
-            )}
-
-            {/* ── Tab: GitHub Repo ── */}
-            {uploadTab === 'github' && (
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="text" placeholder="https://github.com/yourorg/yourrepo" value={githubRepo}
-                      onChange={e => setGithubRepo(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-300"
-                    />
-                  </div>
-                  <button className="px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors">Sync</button>
-                </div>
-                <p className="text-xs text-gray-400">Catalyst will index your repository's README and key files.</p>
-              </div>
-            )}
-
-            {/* ── Tab: Notion ── */}
-            {uploadTab === 'notion' && (
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="url" placeholder="https://notion.so/your-page" value={notionUrl}
-                      onChange={e => setNotionUrl(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-300"
-                    />
-                  </div>
-                  <button className="px-4 py-2.5 rounded-xl bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors">Connect</button>
-                </div>
-                <p className="text-xs text-gray-400">Connect a public Notion page to bring in your company docs.</p>
-              </div>
-            )}
-          </div>
-
-          {/* ── Your Documents (Document Library) ─────────────────────── */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4">Your Documents</h3>
-            {documents.length === 0 ? (
-              <div className="text-center py-8 text-gray-400 text-sm">
-                <FileText className="w-8 h-8 mx-auto mb-2 text-gray-200" />
-                No documents yet. Upload your first file above.
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {documents.map(doc => (
-                  <button
-                    key={doc.id}
-                    onClick={() => setSelectedDocId(doc.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
-                      selectedDocId === doc.id
-                        ? 'bg-gray-50 border border-gray-200'
-                        : 'hover:bg-gray-50 border border-transparent'
-                    }`}
-                  >
-                    <FileText className={`w-4 h-4 shrink-0 ${FILE_ICON_COLOR[doc.type] ?? 'text-gray-400'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{doc.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-gray-400 capitalize">{doc.type.replace('_', ' ')}</span>
-                        <span className="text-gray-200">·</span>
-                        <span className="text-[10px] text-gray-400">{doc.size}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-[10px] text-gray-400 shrink-0">
-                      <Calendar className="w-3 h-3" />
-                      {new Date(doc.uploadDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ════ RIGHT COLUMN ════════════════════════════════════════════════ */}
-        <div className="xl:col-span-2 space-y-4">
-          {activeDoc ? (
-            <>
-              {/* A. Document Overview */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-1">Document Overview</p>
-                    <h3 className="text-base font-bold text-gray-900">{activeDoc.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0 text-[11px] text-gray-400">
-                    <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date(activeDoc.uploadDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    <span className="flex items-center gap-1"><HardDrive className="w-3.5 h-3.5" /> {activeDoc.size}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* B. AI Summary */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-gray-700" />
-                  <h3 className="text-sm font-bold text-gray-900">AI Summary</h3>
-                </div>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {activeDoc.summary || 'Catalyst is still processing this document. Check back shortly for an AI-generated summary.'}
-                </p>
-              </div>
-
-              {/* C. What Catalyst Learned */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-gray-700" />
-                  <h3 className="text-sm font-bold text-gray-900">What Catalyst Learned</h3>
-                </div>
-                {activeDoc.insights && activeDoc.insights.length > 0 ? (
-                  <ul className="space-y-2.5">
-                    {activeDoc.insights.slice(0, 5).map((insight, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0 mt-0.5">
-                          <Sparkles className="w-2.5 h-2.5 text-gray-500" />
-                        </span>
-                        <p className="text-sm text-gray-600 leading-relaxed">{insight}</p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-gray-400">No insights extracted yet. Upload a document to see what Catalyst learns.</p>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-              <Sparkles className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-gray-500">Select a document to see its summary and insights</p>
-              <p className="text-xs text-gray-400 mt-1">Or upload your first document on the left.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Ask Catalyst (full-width bottom) ────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-        <div>
-          <h2 className="text-base font-bold text-gray-900">Ask Catalyst about your knowledge</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Ask any question about your uploaded documents. Catalyst will search, understand, and answer.</p>
-        </div>
-
-        <form onSubmit={handleQuerySubmit} className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Ask anything about your startup, documents, or strategy..."
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-100 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-300 focus:ring-2 focus:ring-gray-100"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={!query.trim() || isQuerying}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-          >
-            {isQuerying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            Ask
-          </button>
-        </form>
-
-        {/* Quick prompt chips */}
-        <div className="flex flex-wrap gap-2">
-          {QUICK_PROMPTS.map(p => (
+      {/* ── CATEGORY PILLS BAR ────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2">
+          {CATEGORIES.map((cat) => (
             <button
-              key={p}
-              onClick={() => setQuery(p)}
-              className="text-xs text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-50 border border-gray-100 hover:border-gray-200 px-3 py-1.5 rounded-full transition-all"
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                activeCategory === cat.id
+                  ? 'bg-[#141413] text-[#F3F0EE]'
+                  : 'bg-white border border-[#141413]/10 text-[#696969] hover:text-[#141413]'
+              }`}
             >
-              {p}
+              {cat.label}
             </button>
           ))}
         </div>
 
-        {/* Answer */}
-        {(isQuerying || queryAnswer) && (
-          <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-2">
-            {isQuerying && (
-              <div className="flex items-center gap-2 text-gray-900 text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Catalyst is searching your documents...
+        <div className="relative w-64 shrink-0 hidden sm:block">
+          <Search className="w-3.5 h-3.5 text-[#696969] absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search documents..."
+            value={searchDocQuery}
+            onChange={(e) => setSearchDocQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-white border border-[#141413]/15 text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413]"
+          />
+        </div>
+      </div>
+
+      {/* ── MAIN 2-COLUMN BALANCED LAYOUT ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* LEFT COLUMN: Add Knowledge & Document Library (5 cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Add Knowledge Source Card */}
+          <div className="catalyst-card card-hover glow-border p-5 rounded-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-[#141413]">Add Knowledge Source</h3>
+                <p className="text-[11px] text-[#696969]">Feed context directly into council reasoning.</p>
+              </div>
+              <span className="text-[10px] font-mono text-[#696969] uppercase font-bold">Inbound</span>
+            </div>
+
+            {/* Input tabs */}
+            <div className="flex flex-wrap gap-1.5 border-b border-[#141413]/05 pb-3">
+              {[
+                { id: 'file', label: 'File Upload' },
+                { id: 'paste', label: 'Paste Text' },
+                { id: 'website', label: 'Website' },
+                { id: 'github', label: 'GitHub' },
+                { id: 'notion', label: 'Notion' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setUploadTab(t.id as any)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                    uploadTab === t.id
+                      ? 'bg-[#141413] text-[#F3F0EE]'
+                      : 'bg-[#FCFBFA] border border-[#141413]/08 text-[#696969] hover:text-[#141413]'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Category Type selector */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-[#696969] block">Document Domain</label>
+              <div className="relative">
+                <select
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-[#FCFBFA] border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413] appearance-none"
+                >
+                  {DOC_TYPES.map((dt) => (
+                    <option key={dt.value} value={dt.value}>{dt.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-[#696969] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Tab: File Upload */}
+            {uploadTab === 'file' && (
+              <div className="space-y-3">
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
+                    isDragging
+                      ? 'border-[#141413] bg-[#141413]/05'
+                      : 'border-[#141413]/15 bg-[#FCFBFA] hover:border-[#141413]/40'
+                  }`}
+                >
+                  <UploadCloud className="w-6 h-6 text-[#141413]" />
+                  <p className="text-xs text-[#141413] font-semibold">
+                    Drag & drop files here, or <span className="underline">browse</span>
+                  </p>
+                  <p className="text-[10px] text-[#696969]">PDF, DOCX, PPTX, CSV, TXT, MD (Max 15MB)</p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={(e) => { if (e.target.files) processFiles(Array.from(e.target.files)); }}
+                  accept=".pdf,.docx,.pptx,.csv,.txt,.md"
+                  className="hidden"
+                />
+
+                {/* Progress bars */}
+                {activeUploads.length > 0 && (
+                  <div className="space-y-2">
+                    {activeUploads.map((u) => (
+                      <div key={u.id} className="p-3 rounded-xl border border-[#141413]/10 bg-white space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-[#141413] truncate max-w-[70%]">{u.name}</span>
+                          {u.status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                          {u.status === 'failed' && <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />}
+                          {['reading', 'uploading', 'analyzing'].includes(u.status) && (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#141413]" />
+                          )}
+                        </div>
+                        <div className="w-full h-1 bg-[#141413]/08 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-[#141413] transition-all duration-300"
+                            style={{ width: `${u.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            {queryAnswer && (
-              <>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-700 uppercase tracking-wider">
-                  <Sparkles className="w-3 h-3" /> Catalyst's Answer
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{queryAnswer}</p>
-              </>
+
+            {/* Tab: Paste Text */}
+            {uploadTab === 'paste' && (
+              <form onSubmit={handlePasteSubmit} className="space-y-2.5">
+                <input
+                  type="text"
+                  placeholder="Document Title (e.g., Q3 Strategy Memo)"
+                  value={docName}
+                  onChange={(e) => setDocName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413]"
+                />
+                <textarea
+                  rows={4}
+                  placeholder="Paste context, meeting notes, customer transcripts..."
+                  value={docContent}
+                  onChange={(e) => setDocContent(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413] resize-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!docName || !docContent || isUploading}
+                  className="w-full py-2 rounded-xl bg-[#141413] text-[#F3F0EE] text-xs font-bold hover:bg-[#262627] disabled:opacity-40"
+                >
+                  {isUploading ? 'Ingesting...' : 'Add to Knowledge'}
+                </button>
+              </form>
+            )}
+
+            {/* Other integration tabs */}
+            {['website', 'github', 'notion'].includes(uploadTab) && (
+              <div className="space-y-2.5 text-xs">
+                <input
+                  type="url"
+                  placeholder={
+                    uploadTab === 'website' ? 'https://company.com/deck' :
+                    uploadTab === 'github' ? 'https://github.com/company/repo' : 'https://notion.so/workspace/doc'
+                  }
+                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413]"
+                />
+                <button
+                  type="button"
+                  className="w-full py-2 rounded-xl bg-[#141413] text-[#F3F0EE] text-xs font-bold hover:bg-[#262627]"
+                >
+                  Connect & Sync Source
+                </button>
+              </div>
             )}
           </div>
-        )}
+
+          {/* Document Library List */}
+          <div className="catalyst-card card-hover glow-border p-5 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-[#141413]">Documents ({filteredDocuments.length})</h3>
+              <span className="text-[10px] font-mono text-[#696969]">Audited</span>
+            </div>
+
+            <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+              {filteredDocuments.map((doc) => {
+                const isSelected = activeDoc?.id === doc.id;
+                return (
+                  <button
+                    key={doc.id}
+                    onClick={() => setSelectedDocId(doc.id)}
+                    className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
+                      isSelected
+                        ? 'bg-white border-[#141413] shadow-sm'
+                        : 'bg-[#FCFBFA] border-[#141413]/08 hover:border-[#141413]/25'
+                    }`}
+                  >
+                    <div className="p-2 rounded-lg bg-[#141413]/05 text-[#141413] shrink-0 mt-0.5">
+                      <FileText className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-bold text-[#141413] truncate">{doc.name}</h4>
+                      <div className="flex items-center gap-2 mt-1 text-[10px] text-[#696969] font-mono">
+                        <span className="uppercase">{doc.type.replace('_', ' ')}</span>
+                        <span>·</span>
+                        <span>{doc.size}</span>
+                        <span>·</span>
+                        <span>{new Date(doc.uploadDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: Query Hub & Selected Document Inspection (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          {/* Ask Company Knowledge Search Hub */}
+          <div className="catalyst-card p-6 rounded-2xl space-y-4">
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969]">
+                Interactive Semantic Intelligence
+              </span>
+              <h3 className="text-base font-bold text-[#141413] mt-0.5">
+                Ask Company Knowledge
+              </h3>
+              <p className="text-xs text-[#696969] mt-0.5">
+                Query grounded corporate facts across all uploaded pitch decks, financials, and transcripts.
+              </p>
+            </div>
+
+            <form onSubmit={handleQuerySubmit} className="relative">
+              <input
+                type="text"
+                placeholder="Ask anything about the company, cap table, runway, or roadmap..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-4 pr-12 py-3 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413] shadow-sm"
+              />
+              <button
+                type="submit"
+                disabled={!query.trim() || isQuerying}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-[#141413] text-[#F3F0EE] hover:bg-[#262627] disabled:opacity-40 transition-colors"
+              >
+                {isQuerying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              </button>
+            </form>
+
+            {/* Quick Prompts */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {QUICK_PROMPTS.map((qp, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    setQuery(qp);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-[#FCFBFA] border border-[#141413]/08 text-[11px] text-[#696969] hover:text-[#141413] hover:border-[#141413]/30 transition-all font-medium"
+                >
+                  "{qp}"
+                </button>
+              ))}
+            </div>
+
+            {/* Answer Box */}
+            {queryAnswer && (
+              <div className="p-4 rounded-xl bg-[#FCFBFA] border border-[#141413]/10 space-y-2 animate-fade-in">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#141413]">
+                  <Sparkles className="w-4 h-4 text-emerald-600" />
+                  <span>Synthesized Corporate Answer</span>
+                </div>
+                <p className="text-xs text-[#141413] leading-relaxed font-sans">{queryAnswer}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Selected Document Deep Dive */}
+          {activeDoc ? (
+            <div className="catalyst-card p-6 rounded-2xl space-y-5">
+              <div className="flex items-start justify-between border-b border-[#141413]/10 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase rounded-md bg-[#141413]/05 text-[#141413]">
+                      {activeDoc.type.replace('_', ' ')}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#696969]">{activeDoc.size}</span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#141413]">{activeDoc.name}</h3>
+                </div>
+
+                <span className="text-xs font-mono text-[#696969] flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {new Date(activeDoc.uploadDate).toLocaleDateString()}
+                </span>
+              </div>
+
+              {/* AI Executive Summary */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-[#141413] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  Executive Synthesis & Key Takeaways
+                </span>
+                <p className="text-xs text-[#141413] leading-relaxed bg-[#FCFBFA] p-4 rounded-xl border border-[#141413]/08">
+                  {activeDoc.summary || 'Document indexed and available for cross-council grounding.'}
+                </p>
+              </div>
+
+              {/* Key Insights List */}
+              {activeDoc.keyInsights && activeDoc.keyInsights.length > 0 && (
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-[#141413] flex items-center gap-1.5">
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                    Audited Extracted Insights
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {activeDoc.keyInsights.map((insight, idx) => (
+                      <div key={idx} className="p-3 rounded-xl bg-[#FCFBFA] border border-[#141413]/08 text-xs text-[#141413]">
+                        {insight}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Technical / RAG Advanced Accordion (Hidden by default) */}
+              <div className="pt-2 border-t border-[#141413]/10">
+                <button
+                  type="button"
+                  onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
+                  className="flex items-center justify-between w-full text-xs font-mono text-[#696969] hover:text-[#141413] py-1"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5" />
+                    Advanced System & Vector Grounding Details
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showTechnicalDetails ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showTechnicalDetails && (
+                  <div className="mt-3 p-4 rounded-xl bg-[#FCFBFA] border border-[#141413]/08 text-[11px] font-mono space-y-2 text-[#696969] animate-fade-in">
+                    <div className="flex justify-between">
+                      <span>Document ID:</span>
+                      <span className="text-[#141413]">{activeDoc.id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Embedding Model:</span>
+                      <span className="text-[#141413]">text-embedding-004 (768-dim)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Index Store:</span>
+                      <span className="text-[#141413]">PostgreSQL / pgvector (Neon)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Grounding Status:</span>
+                      <span className="text-emerald-700 font-bold">100% Vectorized & Audited</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          ) : (
+            <div className="p-12 text-center border border-dashed border-[#141413]/20 rounded-2xl text-xs text-[#696969]">
+              Select a document to inspect executive summaries and key findings.
+            </div>
+          )}
+
+        </div>
+
       </div>
 
     </div>

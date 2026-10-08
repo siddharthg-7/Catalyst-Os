@@ -11,6 +11,7 @@ import {
   Settings, ArrowRight, ShieldCheck, Activity, Layers,
   ChevronRight, Calendar, UserCheck, Scale, Compass, Check
 } from 'lucide-react';
+import Section from './Section';
 
 interface AgentWorkspaceProps {
   agents: Agent[];
@@ -254,6 +255,7 @@ export default function AgentWorkspace({
 }: AgentWorkspaceProps) {
   const [activeView, setActiveView] = useState<'agent' | 'all' | 'config'>('agent');
   const [currentRole, setCurrentRole] = useState<string>('CEO');
+  const [agentTab, setAgentTab] = useState<'overview' | 'responsibilities' | 'work' | 'decisions' | 'activity'>('overview');
 
   useEffect(() => {
     if (selectedAgentId) {
@@ -396,7 +398,7 @@ export default function AgentWorkspace({
   return (
     <div className="space-y-6 font-sans">
       {/* Top Header & View Mode Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#141413]/10 pb-4">
+      <Section delay={0.05} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#141413]/10 pb-4">
         <div>
           <h2 className="text-xl font-bold text-[#141413] tracking-tight">Executive Agent Workspace</h2>
           <p className="text-xs text-[#696969] mt-0.5">Direct oversight of individual AI executive officers & operational governance</p>
@@ -435,53 +437,55 @@ export default function AgentWorkspace({
             <span>Parameters</span>
           </button>
         </div>
-      </div>
+      </Section>
 
       {/* Role Picker Strip (Section 24 & 27: Data-driven agent navigation) */}
       {activeView === 'agent' && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {agents.map((ag) => {
-            const isSelected = ag.role === currentRole;
-            return (
-              <button
-                key={ag.id}
-                onClick={() => {
-                  setCurrentRole(ag.role);
-                  if (onSelectAgent) onSelectAgent(ag.id);
-                }}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-[14px] text-xs font-semibold shrink-0 transition-all border cursor-pointer ${
-                  isSelected
-                    ? 'bg-[#141413] text-[#F3F0EE] border-[#141413] shadow-xs'
-                    : 'bg-white text-[#696969] border-[#141413]/10 hover:text-[#141413] hover:border-[#141413]/30'
-                }`}
-              >
-                {getRoleIcon(ag.role)}
-                <span>{ag.name}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                  {ag.role}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <Section delay={0.1}>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {agents.map((ag) => {
+              const isSelected = ag.role === currentRole;
+              return (
+                <button
+                  key={ag.id}
+                  onClick={() => {
+                    setCurrentRole(ag.role);
+                    if (onSelectAgent) onSelectAgent(ag.id);
+                  }}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-[14px] text-xs font-semibold shrink-0 transition-all border cursor-pointer interactive-btn ${
+                    isSelected
+                      ? 'bg-[#141413] text-[#F3F0EE] border-[#141413] shadow-xs'
+                      : 'bg-white text-[#696969] border-[#141413]/10 hover:text-[#141413] hover:border-[#141413]/30 card-hover'
+                  }`}
+                >
+                  {getRoleIcon(ag.role)}
+                  <span>{ag.name}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                    {ag.role}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </Section>
       )}
 
       {/* VIEW 1: DEDICATED AGENT WORKSPACE (Section 25 of PROMPT.MD) */}
       {activeView === 'agent' && activeAgent && (
         <div className="space-y-6">
           {/* Agent Identity & Status Header Card */}
-          <div className="p-6 rounded-[20px] bg-white border border-[#141413]/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="p-6 rounded-[20px] bg-white border border-[#141413]/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 card-hover glow-border">
             <div className="flex items-start gap-4">
               <img
                 src={activeAgent.avatar}
                 alt={activeAgent.name}
                 referrerPolicy="no-referrer"
-                className="w-16 h-16 rounded-2xl object-cover border border-[#141413]/15 shadow-xs shrink-0"
+                className="w-16 h-16 rounded-2xl object-cover border border-[#141413]/15 shadow-xs shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <h3 className="text-xl font-bold text-[#141413] tracking-tight">{activeAgent.name}</h3>
-                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-800 border border-gray-200">
+                  <span className="tech-badge">
                     {activeAgent.role}
                   </span>
                   {getStatusBadge(activeAgent.status)}
@@ -508,7 +512,7 @@ export default function AgentWorkspace({
           {/* Key Metrics Strip (Section 25 Supporting Data) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {dynamicKeyMetrics.map((km, idx) => (
-              <div key={idx} className="p-4 rounded-[16px] bg-white border border-[#141413]/10 shadow-xs">
+              <div key={idx} className="p-4 rounded-[16px] bg-white border border-[#141413]/10 shadow-xs card-hover glow-border">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-[#696969] font-bold block">{km.label}</span>
                 <div className="flex items-baseline justify-between mt-1">
                   <span className="text-xl font-bold text-[#141413] font-mono">{km.value}</span>
@@ -520,123 +524,345 @@ export default function AgentWorkspace({
             ))}
           </div>
 
-          {/* Responsibilities & Capabilities Two-Column Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Responsibilities */}
-            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/10 shadow-xs space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#141413]/05 flex items-center justify-center text-[#141413]">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-bold text-[#141413]">Official Responsibilities</h4>
-              </div>
-              <ul className="space-y-2.5">
-                {detail.responsibilities.map((resp, i) => (
-                  <li key={i} className="text-xs text-[#141413]/85 flex items-start gap-2 leading-relaxed">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#141413] mt-1.5 shrink-0" />
-                    <span>{resp}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Current Active Tasks & Pipeline */}
-            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/10 shadow-xs space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#141413]/05 flex items-center justify-center text-[#141413]">
-                  <Activity className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-bold text-[#141413]">Operational Workload & Tasks</h4>
-              </div>
-              <div className="space-y-2.5">
-                {detail.sampleTasks.map((task, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-[#F3F0EE]/60 border border-[#141413]/08 flex items-center justify-between text-xs">
-                    <span className="text-[#141413] font-medium">{task}</span>
-                    <span className="text-[10px] font-mono text-[#696969] bg-white px-2 py-0.5 rounded border border-[#141413]/10 shrink-0 ml-2">
-                      Audited
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {/* Workspace Sub-Navigation Tabs (Sections 9 & 10) */}
+          <div className="flex items-center gap-1.5 border-b border-[#141413]/10 pb-2 overflow-x-auto scrollbar-none">
+            {[
+              { id: 'overview' as const, label: 'Overview' },
+              { id: 'responsibilities' as const, label: 'Responsibilities' },
+              { id: 'work' as const, label: 'Work & Tasks' },
+              { id: 'decisions' as const, label: 'Decisions', badge: roleDecisions.length > 0 ? String(roleDecisions.length) : undefined },
+              { id: 'activity' as const, label: 'Activity' },
+            ].map(t => (
+              <button
+                key={t.id}
+                onClick={() => setAgentTab(t.id)}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  agentTab === t.id
+                    ? 'bg-[#141413] text-[#F3F0EE] shadow-xs'
+                    : 'text-[#696969] hover:text-[#141413] hover:bg-white'
+                }`}
+              >
+                <span>{t.label}</span>
+                {t.badge && (
+                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${agentTab === t.id ? 'bg-white/20 text-white' : 'bg-[#141413]/06 text-[#141413]'}`}>
+                    {t.badge}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
-          {/* Recent Decisions & Activity */}
-          <div className="p-6 rounded-[20px] bg-white border border-[#141413]/10 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#696969]" />
-                <h4 className="text-sm font-bold text-[#141413]">Recent Executive Directives & History</h4>
-              </div>
-              <span className="text-[10px] font-mono text-[#696969]">PERSISTENT AUDIT TRAIL</span>
-            </div>
-
-            {roleDecisions.length > 0 ? (
-              <div className="space-y-3">
-                {roleDecisions.map((dec) => (
-                  <div key={dec.id} className="p-3.5 rounded-xl border border-[#141413]/10 bg-[#F3F0EE]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div>
-                      <span className="font-bold text-[#141413]">{dec.title}</span>
-                      <p className="text-gray-500 text-[11px] mt-0.5">{dec.description}</p>
-                    </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-gray-200 text-gray-700 shrink-0">
-                      {dec.status.toUpperCase()}
-                    </span>
+          {/* TAB 1: OVERVIEW (Section 10 of PROMPT.MD) */}
+          {agentTab === 'overview' && (
+            <div className="space-y-6 animate-fadeIn">
+              {/* 1. Current Focus */}
+              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Compass className="w-4 h-4 text-[#141413]" />
+                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#696969]">Current Strategic Focus</h4>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-[#696969] italic py-2">
-                No custom decisions logged for {activeAgent.name} yet. Directives will record here when multi-agent JARVIS workflows execute.
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* VIEW 2: ALL OFFICERS ROSTER (Grid of all 8 executives) */}
-      {activeView === 'all' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {agents.map((agent) => (
-            <div
-              key={agent.id}
-              onClick={() => {
-                setCurrentRole(agent.role);
-                setActiveView('agent');
-                if (onSelectAgent) onSelectAgent(agent.id);
-              }}
-              className="p-5 rounded-[20px] border border-[#141413]/10 bg-white flex flex-col justify-between hover:border-[#141413]/30 transition-all group shadow-sm cursor-pointer"
-            >
-              <div>
-                <div className="flex items-start justify-between">
-                  <img
-                    src={agent.avatar}
-                    alt={agent.name}
-                    referrerPolicy="no-referrer"
-                    className="w-12 h-12 rounded-xl object-cover border border-[#141413]/10 group-hover:scale-105 transition-transform"
-                  />
-                  <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-md bg-gray-100 text-gray-800 border border-gray-200">
-                    {agent.role}
+                  <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    Active Authority
                   </span>
                 </div>
+                <p className="text-base font-bold text-[#141413] tracking-tight">{activeAgent.keyMetric}</p>
+                <p className="text-xs text-[#696969] leading-relaxed max-w-2xl">{detail.responsibilities[0]}</p>
+              </div>
 
-                <div className="mt-4">
-                  <h4 className="text-sm font-bold text-[#141413] flex items-center gap-1.5 leading-snug">
-                    {getRoleIcon(agent.role)}
-                    <span>{agent.name}</span>
-                  </h4>
-                  <p className="text-xs text-[#696969] mt-2 leading-relaxed line-clamp-2">
-                    {agent.description}
+              {/* 2. AI Brief */}
+              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#696969]">AI Executive Brief</h4>
+                </div>
+                <div className="p-4 rounded-xl bg-[#F3F0EE]/50 border border-[#141413]/06 text-xs text-[#141413] leading-relaxed space-y-2">
+                  <p>
+                    <strong className="text-[#141413]">{detail.officialTitle}</strong> operating in synchronized autonomous alignment with the CatalystOS founder council.
+                  </p>
+                  <p className="text-[#696969]">
+                    {activeAgent.description} Grounded in verified corporate telemetry, deterministic runway boundaries, and live team records.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-[#141413]/10 flex items-center justify-between text-xs font-mono">
-                <span className="text-[#696969] text-[11px] truncate">{agent.keyMetric}</span>
-                {getStatusBadge(agent.status)}
+              {/* 3. Current Priorities & 4. Active Work (Two Columns) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Current Priorities */}
+                <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#141413]" />
+                      <h4 className="text-sm font-bold text-[#141413]">Current Priorities</h4>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#696969]">Active</span>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {detail.responsibilities.slice(0, 3).map((resp, i) => (
+                      <li key={i} className="text-xs text-[#141413] flex items-start gap-2.5 leading-relaxed">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#141413] mt-1.5 shrink-0" />
+                        <span>{resp}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Active Work */}
+                <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-[#141413]" />
+                      <h4 className="text-sm font-bold text-[#141413]">Active Workload</h4>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#696969]">In Flight</span>
+                  </div>
+                  <div className="space-y-2.5">
+                    {detail.sampleTasks.slice(0, 3).map((task, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 flex items-center justify-between text-xs">
+                        <span className="text-[#141413] font-medium truncate">{task}</span>
+                        <span className="text-[10px] font-mono text-[#696969] bg-white px-2 py-0.5 rounded border border-[#141413]/10 shrink-0 ml-2">
+                          Audited
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Recent Activity */}
+              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#696969]" />
+                    <h4 className="text-sm font-bold text-[#141413]">Recent Activity & Directives</h4>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#696969]">Audit Trail</span>
+                </div>
+                {roleDecisions.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {roleDecisions.slice(0, 3).map((dec) => (
+                      <div key={dec.id} className="p-3.5 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div>
+                          <span className="font-bold text-[#141413]">{dec.title}</span>
+                          <p className="text-[#696969] text-[11px] mt-0.5">{dec.description}</p>
+                        </div>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-[#141413]/10 text-[#141413] shrink-0">
+                          {dec.status.toUpperCase()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#696969] italic py-2">
+                    No custom directives logged for {activeAgent.name} yet. System commands record automatically during execution.
+                  </p>
+                )}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* TAB 2: RESPONSIBILITIES */}
+          {agentTab === 'responsibilities' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
+              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-[#141413]/06">
+                  <CheckCircle2 className="w-4 h-4 text-[#141413]" />
+                  <h4 className="text-sm font-bold text-[#141413]">Official Responsibilities</h4>
+                </div>
+                <ul className="space-y-2.5">
+                  {detail.responsibilities.map((resp, i) => (
+                    <li key={i} className="text-xs text-[#141413] flex items-start gap-2.5 leading-relaxed">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#141413] mt-1.5 shrink-0" />
+                      <span>{resp}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-[#141413]/06">
+                  <Layers className="w-4 h-4 text-[#141413]" />
+                  <h4 className="text-sm font-bold text-[#141413]">Core Capabilities & Tools</h4>
+                </div>
+                <ul className="space-y-2.5">
+                  {detail.capabilities.map((cap, i) => (
+                    <li key={i} className="text-xs text-[#141413] flex items-start gap-2.5 leading-relaxed">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0" />
+                      <span>{cap}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: WORK & TASKS */}
+          {agentTab === 'work' && (
+            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#141413]" />
+                  <h4 className="text-sm font-bold text-[#141413]">Operational Workload & Task Pipeline</h4>
+                </div>
+                <span className="text-xs font-mono text-[#696969]">{detail.sampleTasks.length} Pipeline Items</span>
+              </div>
+              <div className="space-y-3">
+                {detail.sampleTasks.map((task, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/08 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                      <span className="text-sm font-semibold text-[#141413] block">{task}</span>
+                      <span className="text-[11px] text-[#696969] font-mono mt-0.5 block">Automated execution verified by Sentry (Auditor)</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 shrink-0 w-fit">
+                      Grounded
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: DECISIONS */}
+          {agentTab === 'decisions' && (
+            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#696969]" />
+                  <h4 className="text-sm font-bold text-[#141413]">Executive Directives & Decision History</h4>
+                </div>
+                <span className="text-[10px] font-mono text-[#696969]">PERSISTENT AUDIT TRAIL</span>
+              </div>
+
+              {roleDecisions.length > 0 ? (
+                <div className="space-y-3">
+                  {roleDecisions.map((dec) => (
+                    <div key={dec.id} className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div>
+                        <span className="font-bold text-[#141413] text-sm block">{dec.title}</span>
+                        <p className="text-[#696969] text-xs mt-1 leading-relaxed">{dec.description}</p>
+                      </div>
+                      <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-white border border-[#141413]/10 text-[#141413] shrink-0 font-bold w-fit">
+                        {dec.status.toUpperCase()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 rounded-xl border border-dashed border-[#141413]/15 text-center space-y-2">
+                  <Clock className="w-8 h-8 text-[#696969] mx-auto opacity-50" />
+                  <p className="text-xs font-bold text-[#141413]">No Directives Logged Yet</p>
+                  <p className="text-xs text-[#696969] max-w-sm mx-auto">
+                    Directives for {activeAgent.name} will record here when cross-agent council initiatives and decisions execute.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 5: ACTIVITY */}
+          {agentTab === 'activity' && (
+            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#141413]" />
+                  <h4 className="text-sm font-bold text-[#141413]">Live Operational Stream</h4>
+                </div>
+                <span className="text-[10px] font-mono text-[#696969]">Real-Time Telemetry</span>
+              </div>
+
+              <div className="space-y-3">
+                <div className="p-4 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/08 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <div>
+                      <p className="font-semibold text-[#141413]">{activeAgent.name} Status: {activeAgent.status}</p>
+                      <p className="text-[11px] text-[#696969]">{activeAgent.currentTask || 'Monitoring startup parameters and council updates'}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#696969]">Active</span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/08 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                    <div>
+                      <p className="font-semibold text-[#141413]">RAG Grounding Verification</p>
+                      <p className="text-[11px] text-[#696969]">Operating strictly against {knowledge.length} indexed corporate documents</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-700 font-bold">Verified</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VIEW 2: ALL OFFICERS ROSTER (Executive Council Grid - Section 8 of PROMPT.MD) */}
+      {activeView === 'all' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-[#141413]">Autonomous Executive Council</h3>
+              <p className="text-xs text-[#696969] mt-0.5">8 AI executive agents orchestrating strategy, capital, talent, and compliance</p>
+            </div>
+            <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-white border border-[#141413]/10 text-[#141413]">
+              {agents.length} Executives Active
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {agents.map((agent) => (
+              <div
+                key={agent.id}
+                onClick={() => {
+                  setCurrentRole(agent.role);
+                  setActiveView('agent');
+                  setAgentTab('overview');
+                  if (onSelectAgent) onSelectAgent(agent.id);
+                }}
+                className="catalyst-card card-hover glow-border p-6 flex flex-col justify-between cursor-pointer group"
+              >
+                <div>
+                  <div className="flex items-start justify-between">
+                    <img
+                      src={agent.avatar}
+                      alt={agent.name}
+                      referrerPolicy="no-referrer"
+                      className="w-14 h-14 rounded-2xl object-cover border border-[#141413]/10 group-hover:scale-105 transition-transform shadow-xs"
+                    />
+                    <span className="tech-badge">
+                      {agent.role}
+                    </span>
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className="text-base font-bold text-[#141413] flex items-center gap-1.5 leading-snug">
+                      {getRoleIcon(agent.role)}
+                      <span>{agent.name}</span>
+                    </h4>
+                    <p className="text-[11px] font-medium text-[#696969] mt-0.5">
+                      {EXECUTIVE_DETAILS[agent.role]?.officialTitle || agent.role}
+                    </p>
+                    <p className="text-xs text-[#141413]/80 mt-2.5 leading-relaxed line-clamp-2">
+                      {agent.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3.5 border-t border-[#141413]/08 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${agent.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : 'bg-stone-300'}`} />
+                    <span className="text-[11px] font-mono text-[#696969] capitalize">{agent.status}</span>
+                  </div>
+                  <span className="text-xs font-bold text-[#141413] group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                    <span>Inspect</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -96,17 +96,37 @@ export async function runOrchestrationLoop(
   };
 
   const fallbackCeo = (): PlannerOutputDTO => {
+    const isHiringScenario = initiative.id === 'init_demo_hiring' || 
+      initiative.title.toLowerCase().includes('hire') || 
+      initiative.title.toLowerCase().includes('engineer') ||
+      initiative.title.toLowerCase().includes('launch');
+
+    if (isHiringScenario) {
+      return {
+        initiativeId: initiative.id || `init_${Date.now()}`,
+        founderGoal: initiative.description,
+        requiredExecutives: ['Finance', 'Operations', 'Growth'],
+        ragQueryString: 'NovaTech enterprise launch runway pilot customers engineering bottleneck',
+        decomposedTasks: [
+          { id: 'task_f1', assignedTo: 'Finance', title: 'Stress test runway impact of 2 new senior hires (-₹4L/mo) vs 1 senior hire (-₹2L/mo) against ₹72L reserves', constraints: 'Maintain minimum 6-month runway buffer.' },
+          { id: 'task_o1', assignedTo: 'Operations', title: 'Evaluate 3-developer bandwidth bottleneck and onboarding mentorship drag on 6-week launch sprint', constraints: 'Current team at 95% capacity; avoid 25% sprint drag.' },
+          { id: 'task_g1', assignedTo: 'Growth', title: 'Quantify delivery commitments for 5 enterprise pilot partners and ₹25L ARR launch milestone', constraints: 'Release committed in 6 weeks.' }
+        ],
+        expectedDeliverables: [{ type: 'contract', title: 'Executive Decision: Hire 1 Senior Platform Infrastructure Engineer' }]
+      };
+    }
+
     return {
       initiativeId: `init_${Date.now()}`,
       founderGoal: initiative.description,
-      requiredExecutives: ['Finance', 'Talent', 'Legal'],
-      ragQueryString: 'engineer recruitment stock vesting options',
+      requiredExecutives: ['Finance', 'Operations', 'Growth'],
+      ragQueryString: 'strategic growth expansion budget planning',
       decomposedTasks: [
-        { id: 'task_t1', assignedTo: 'Talent', title: 'Audit lead platforms developer salary ranges.', constraints: 'Keep options target at 1.5%.' },
-        { id: 'task_f1', assignedTo: 'Finance', title: 'Verify base budget availability.', constraints: 'Do not drop runway under 11 months.' },
-        { id: 'task_l1', assignedTo: 'Legal', title: 'Verify vesting compliance and clauses.', constraints: '4-year vesting, 1-year cliff.' }
+        { id: 'task_f1', assignedTo: 'Finance', title: 'Audit treasury bounds & cash burn impact', constraints: 'Protect 12-month runway.' },
+        { id: 'task_o1', assignedTo: 'Operations', title: 'Assess infrastructure scaling and delivery limits', constraints: 'Maintain 99.9% uptime.' },
+        { id: 'task_g1', assignedTo: 'Growth', title: 'Model acquisition conversion and revenue upside', constraints: 'Target 30% MoM growth.' }
       ],
-      expectedDeliverables: [{ type: 'contract', title: 'Automated Platform Lead Offer Package' }]
+      expectedDeliverables: [{ type: 'document', title: 'Strategic Initiative Execution Roadmap' }]
     };
   };
 
@@ -190,10 +210,91 @@ export async function runOrchestrationLoop(
     });
 
     const fallbackAgent = (): AgentResponseDTO => {
-      // Basic deterministic fallback
-      const isHiring = task.title.toLowerCase().includes('salary') || task.title.toLowerCase().includes('compensation') || task.title.toLowerCase().includes('engineer');
-      const isFinance = role === 'Finance';
-      
+      const isHiring = task.title.toLowerCase().includes('salary') || 
+        task.title.toLowerCase().includes('compensation') || 
+        task.title.toLowerCase().includes('hire') || 
+        task.title.toLowerCase().includes('engineer');
+
+      if (role === 'Finance') {
+        return {
+          agentId: 'Finance',
+          reasoning: isHiring
+            ? 'Aura (Finance) runway audit: NovaTech holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway.'
+            : 'Aura (Finance) treasury audit: Verified expenditure against liquid capital and monthly burn rate. Runway preserves target tolerance boundaries.',
+          recommendations: [{
+            id: `rec_finance_1`,
+            title: isHiring ? 'Approve 1 Senior Hire (Defer Second Hire to Post-Launch)' : 'Authorize Controlled Expenditure',
+            description: isHiring
+              ? 'Authorizes 1 senior platform engineer. Preserves 7.8 months of operational runway while unlocking core backend throughput.'
+              : 'Approve budgeted capital deployment with strict monthly milestone reviews.',
+            financialImpact: isHiring ? -200000 : -100000,
+            riskRating: 'medium'
+          }],
+          isConflict: isHiring, // Clash: 2 hires creates unsafe burn
+          conflictReason: isHiring ? 'Adding 2 engineers simultaneously reduces cash runway to 5.5 months, breaching our 6-month fiscal safety boundary.' : undefined,
+          metricChanges: {
+            velocity: 15,
+            financialHealth: -2,
+            legalCompliance: 0,
+            growthRate: 0,
+            operationsEfficiency: 10
+          }
+        };
+      }
+
+      if (role === 'Operations') {
+        return {
+          agentId: 'Operations',
+          reasoning: isHiring
+            ? 'Helix (Operations) bottleneck audit: Our 3-developer core team is running at 95% workload capacity. Onboarding 2 new developers concurrently introduces a 25% mentorship overhead, slowing sprint velocity right before the 6-week launch. A single senior platform specialist can be integrated in under 10 days with minimal team disruption.'
+            : 'Helix (Operations) delivery audit: Reviewed workflow bottlenecks and confirmed operational pipeline is capable of absorbing this initiative.',
+          recommendations: [{
+            id: `rec_ops_1`,
+            title: isHiring ? 'Targeted Platform Infrastructure Integration' : 'Optimize Delivery Pipeline',
+            description: isHiring
+              ? 'Assign 1 senior engineer strictly to CI/CD pipeline automation and enterprise API reliability to protect launch deadline.'
+              : 'Streamline operational procedures and eliminate handoff bottlenecks across modules.',
+            financialImpact: 0,
+            riskRating: 'low'
+          }],
+          isConflict: false,
+          metricChanges: {
+            velocity: 18,
+            financialHealth: 0,
+            legalCompliance: 0,
+            growthRate: 5,
+            operationsEfficiency: 15
+          }
+        };
+      }
+
+      if (role === 'Growth') {
+        return {
+          agentId: 'Growth',
+          reasoning: isHiring
+            ? 'Vector (Growth) market impact audit: NovaTech has 5 enterprise pilot agreements committed for launch in 6 weeks, unlocking ₹25,00,000 in ARR. Missing this milestone due to platform bottlenecks risks pilot cancellation. We need immediate platform throughput to fulfill pilot SLAs.'
+            : 'Vector (Growth) market audit: Verified customer acquisition trajectory. Initiative directly accelerates qualified pipeline conversion.',
+          recommendations: [{
+            id: `rec_growth_1`,
+            title: isHiring ? 'Accelerate Enterprise Pilot Delivery SLAs' : 'Deploy Growth Acceleration Loop',
+            description: isHiring
+              ? 'Deploy platform capacity to satisfy data security and throughput criteria for the 5 enterprise pilot partners.'
+              : 'Launch targeted acquisition campaigns to capture high-intent enterprise pipeline.',
+            financialImpact: 2500000,
+            riskRating: 'low'
+          }],
+          isConflict: false,
+          metricChanges: {
+            velocity: 10,
+            financialHealth: 5,
+            legalCompliance: 0,
+            growthRate: 15,
+            operationsEfficiency: 5
+          }
+        };
+      }
+
+      // Default specialty agent fallback
       return {
         agentId: role,
         reasoning: `Executed subtask: "${task.title}". Analyzed boundaries, constraints, and dependencies.`,
@@ -201,14 +302,13 @@ export async function runOrchestrationLoop(
           id: `rec_${role.toLowerCase()}_1`,
           title: `Approve ${role} parameters`,
           description: `Vetted target limits for: "${task.title}".`,
-          financialImpact: isFinance ? (isHiring ? -115000 / 12 : -1200) : 0,
+          financialImpact: 0,
           riskRating: 'low'
         }],
-        isConflict: isFinance && isHiring, // standard CFO clash
-        conflictReason: isFinance && isHiring ? 'Salary request cuts our runway below safe pre-seed levels.' : undefined,
+        isConflict: false,
         metricChanges: {
           velocity: 5,
-          financialHealth: isFinance ? -4 : 2,
+          financialHealth: 0,
           legalCompliance: role === 'Legal' ? 15 : 0
         }
       };
@@ -300,14 +400,31 @@ export async function runOrchestrationLoop(
     };
 
     const fallbackResolver = (): ConflictResolutionDTO => {
+      const isHiring = initiative.id === 'init_demo_hiring' || 
+        initiative.title.toLowerCase().includes('hire') || 
+        initiative.title.toLowerCase().includes('engineer') || 
+        initiative.title.toLowerCase().includes('launch');
+
+      if (isHiring) {
+        return {
+          conflictId: `con_${Date.now()}`,
+          resolvedMetrics: {
+            financialChange: -200000,
+            metricChanges: { velocity: 20, financialHealth: -2, legalCompliance: 5, growthRate: 12, operationsEfficiency: 15 }
+          },
+          resolutionText: 'Executive Consensus: Proceed with hiring ONE senior platform engineer immediately. Defer second hire to post-launch.',
+          compromiseDetails: 'Balances Aura\'s runway preservation goals (maintaining 7.8 months of runway) with Helix\'s onboarding bandwidth and Vector\'s 5 enterprise pilot SLA commitments.'
+        };
+      }
+
       return {
         conflictId: `con_${Date.now()}`,
         resolvedMetrics: {
-          financialChange: -10666,
-          metricChanges: { velocity: 15, financialHealth: -3, legalCompliance: 8, growthRate: 0, operationsEfficiency: 10 }
+          financialChange: -100000,
+          metricChanges: { velocity: 15, financialHealth: -2, legalCompliance: 8, growthRate: 10, operationsEfficiency: 10 }
         },
-        resolutionText: 'Structured elegant compromise: Adjust base salary limit to $128,000, compensated with 1.65% options equity.',
-        compromiseDetails: 'Balances Talent recruitment requirements with CFO runway preservation goals.'
+        resolutionText: 'Structured elegant compromise: Re-align budget allocations and deploy phased milestone pacing.',
+        compromiseDetails: 'Maintains runway margin while achieving operational targets.'
       };
     };
 
@@ -370,16 +487,35 @@ export async function runOrchestrationLoop(
   };
 
   const fallbackApproval = (): any => {
+    const isHiring = initiative.id === 'init_demo_hiring' || 
+      initiative.title.toLowerCase().includes('hire') || 
+      initiative.title.toLowerCase().includes('engineer') || 
+      initiative.title.toLowerCase().includes('launch');
+
+    if (isHiring) {
+      return {
+        id: `del_${Date.now()}`,
+        initiativeId: ceoPlan.initiativeId,
+        title: 'Executive Decision: Hire 1 Senior Platform Infrastructure Engineer',
+        description: 'Synthesized council resolution approving 1 senior engineer to eliminate the 6-week launch bottleneck while preserving 7.8 months of runway.',
+        type: 'contract',
+        content: `# EXECUTIVE COUNCIL DECISION CHARTER: HIRING AUTHORIZATION\n\n### Strategic Recommendation\n**Proceed with hiring ONE senior platform engineer immediately.** Defer the second engineering hire to the post-launch milestone.\n\n### Council Consensus Analysis\n- **Atlas (CEO / Strategy):** Aligned with the 6-week enterprise launch sprint; resolves core backend delivery bottleneck.\n- **Aura (Finance):** Rejects 2 hires (runway collapses from 9.0m to 5.5m). Approves 1 hire (burn increases to ₹10L/mo, runway safely preserved at 7.8m).\n- **Helix (Operations):** 1 senior engineer integrates in 10 days; avoids the 25% mentorship overhead of onboarding 2 developers during active sprint.\n- **Vector (Growth):** Protects launch SLAs for 5 enterprise pilot partners and unlocks ₹25,00,000 in ARR.\n\n### Financial & Operational Impact\n- **Headcount:** +1 (Engineering team grows from 3 to 4, total team to 9)\n- **Monthly Burn:** Increases by ₹2,00,000 / month\n- **Cash Runway:** 7.8 Months (Above 6-month safety buffer)\n- **Sprint Velocity:** +20%\n- **Risk Rating:** Low-Medium\n- **Confidence:** 94% High`,
+        impact: 'Eliminates the 6-week enterprise launch bottleneck while preserving 7.8 months of cash runway.',
+        financialChange: -200000,
+        metricChanges: { velocity: 20, financialHealth: -2, legalCompliance: 5, growthRate: 12, operationsEfficiency: 15 }
+      };
+    }
+
     return {
       id: `del_${Date.now()}`,
       initiativeId: ceoPlan.initiativeId,
-      title: 'DevOps Platform Architecture Hiring & Options Policy',
-      description: 'Fully vetted employment agreement detailing stock pool limits, vesting, and NDAs.',
-      type: 'contract',
-      content: `# LEAD INFRASTRUCTURE DEVELOPER COMPENSATION CHARTER\n\n- **Base Salary:** $128,000 USD\n- **Equity Grant:** 1.65% Stock Options pool\n- **Vesting:** 4-year standard, 1-year cliff.\n- **Legal terms:** Broad intellectual property assignment clauses protecting proprietary scheduling code.`,
-      impact: 'Dramatically improves development velocity (+15) and infrastructure setup while preserving cash-runway bounds.',
-      financialChange: -10666,
-      metricChanges: { velocity: 15, financialHealth: -3, legalCompliance: 8, growthRate: 0, operationsEfficiency: 10 }
+      title: 'Strategic Growth & Operational Execution Charter',
+      description: 'Council-approved operational roadmap aligning capital governance and milestone delivery.',
+      type: 'document',
+      content: `# STRATEGIC INITIATIVE EXECUTION CHARTER\n\n- **Objective:** Accelerate roadmap execution under capital governance constraints.\n- **Financial Thresholds:** Monthly burn ceiling enforced.\n- **Operational Checkpoints:** Bi-weekly executive council audit review.`,
+      impact: 'Improves execution velocity while protecting capital efficiency.',
+      financialChange: -100000,
+      metricChanges: { velocity: 15, financialHealth: -2, legalCompliance: 8, growthRate: 10, operationsEfficiency: 10 }
     };
   };
 

@@ -28,23 +28,6 @@ export function addUser(user: UserDBRecord) {
   });
 }
 
-export let startupProfile: StartupProfile = {
-  name: '',
-  industry: '',
-  description: '',
-  fundingStage: 'Pre-Seed',
-  cashBalance: 0,
-  burnRate: 0,
-  runwayMonths: 0,
-  healthScore: 0,
-  metrics: {
-    velocity: 0,
-    financialHealth: 0,
-    legalCompliance: 0,
-    growthRate: 0,
-    operationsEfficiency: 0,
-  },
-};
 
 export const agentsList: Agent[] = [
   {
@@ -137,10 +120,94 @@ export const agentsList: Agent[] = [
   },
 ];
 
-export let initiatives: Initiative[] = [];
-export let approvals: Deliverable[] = [];
-export let decisionLog: DecisionRecord[] = [];
-export let knowledgeFiles: KnowledgeFile[] = [];
+import { loadPersistedState, savePersistedState } from './services/storageService';
+
+export const DEFAULT_NOVATECH_PROFILE: StartupProfile = {
+  name: 'NovaTech',
+  industry: 'Enterprise AI & Developer Platform',
+  description: 'Autonomous developer infrastructure and multi-agent systems for enterprise microservices.',
+  fundingStage: 'Seed',
+  cashBalance: 7200000, // ₹72 Lakhs ($86,400)
+  burnRate: 800000,    // ₹8 Lakhs / mo ($9,600)
+  runwayMonths: 9.0,   // 9 Months
+  healthScore: 82,
+  metrics: {
+    velocity: 78,
+    financialHealth: 84,
+    legalCompliance: 92,
+    growthRate: 65,
+    operationsEfficiency: 80,
+  },
+};
+
+export const DEFAULT_INITIATIVES: Initiative[] = [
+  {
+    id: 'init_demo_hiring',
+    title: 'Should we hire 2 engineers before our next product launch?',
+    description: 'Determine whether adding 2 senior engineers before the 6-week enterprise launch is financially and operationally justified, balancing sprint capacity against runway burn.',
+    category: 'hiring',
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    currentTaskIndex: 0,
+    tasks: [
+      { id: 't_h1', title: 'Audit engineering bottleneck & 6-week enterprise launch commitments', assignedTo: 'CEO', status: 'pending' },
+      { id: 't_h2', title: 'Stress test cash runway (-₹4L/mo) against ₹72L reserves', assignedTo: 'Finance', status: 'pending' },
+      { id: 't_h3', title: 'Evaluate developer onboarding ramp time vs sprint delivery capacity', assignedTo: 'Operations', status: 'pending' },
+      { id: 't_h4', title: 'Quantify enterprise pilot delivery expectations & ARR impact', assignedTo: 'Growth', status: 'pending' },
+    ],
+    messages: [],
+    deliverables: []
+  }
+];
+
+export const DEFAULT_KNOWLEDGE_FILES: KnowledgeFile[] = [
+  {
+    id: 'doc_novatech_strategy',
+    name: 'NovaTech_Enterprise_Strategy.md',
+    type: 'pitch_deck',
+    size: '18.4 KB',
+    uploadDate: '2026-10-05T09:00:00.000Z',
+    summary: 'Executive roadmap for NovaTech Enterprise Orchestrator. Documents our 6-week launch timeline with 5 pilot enterprise customers, 3 developers bandwidth bottleneck, and ₹8L/mo burn boundary.',
+    insights: [
+      'Enterprise launch is firmly committed in 6 weeks with 5 pilot partner contracts.',
+      'The engineering team currently has only 3 core developers and is operating at 95% workload capacity.',
+      'Hiring 2 senior engineers immediately would accelerate backend pipeline delivery, but increases monthly burn by ₹4L/mo, dangerously reducing runway from 9 months to 5.5 months.',
+      'Orchestrator consensus recommendation: Hire 1 senior platform engineer now, and postpone the second hire until enterprise launch revenue milestone is reached.'
+    ]
+  }
+];
+
+export const DEFAULT_DECISION_LOG: DecisionRecord[] = [
+  {
+    id: 'dec_initial_1',
+    title: 'Approve: Reserve Cloud Compute Nodes for Enterprise Launch',
+    description: 'Committed to 1-year reserved instances on AWS compute to optimize unit economics ahead of enterprise pilot onboarding.',
+    category: 'FINANCIALS',
+    timestamp: '2026-10-02T10:00:00.000Z',
+    impactText: 'Saves ₹1,50,000 monthly in compute overhead while securing 99.98% dedicated SLA.',
+    financialImpact: -150000,
+    status: 'approved'
+  }
+];
+
+// Initialize state from file cache or default seeds
+const persisted = loadPersistedState();
+
+export let startupProfile: StartupProfile = persisted?.startupProfile || { ...DEFAULT_NOVATECH_PROFILE };
+export let initiatives: Initiative[] = (persisted?.initiatives && persisted.initiatives.length > 0) ? persisted.initiatives : [...DEFAULT_INITIATIVES];
+export let approvals: Deliverable[] = persisted?.approvals || [];
+export let decisionLog: DecisionRecord[] = (persisted?.decisionLog && persisted.decisionLog.length > 0) ? persisted.decisionLog : [...DEFAULT_DECISION_LOG];
+export let knowledgeFiles: KnowledgeFile[] = (persisted?.knowledgeFiles && persisted.knowledgeFiles.length > 0) ? persisted.knowledgeFiles : [...DEFAULT_KNOWLEDGE_FILES];
+
+export function persistCurrentState() {
+  savePersistedState({
+    startupProfile,
+    initiatives,
+    approvals,
+    decisionLog,
+    knowledgeFiles
+  });
+}
 
 // Mutators and helpers to keep state synchronized
 export function updateStartupProfile(updater: Partial<StartupProfile>) {
@@ -150,6 +217,7 @@ export function updateStartupProfile(updater: Partial<StartupProfile>) {
   } else {
     startupProfile.runwayMonths = 999;
   }
+  persistCurrentState();
 
   // Update in background
   if (isDbAvailable) {
