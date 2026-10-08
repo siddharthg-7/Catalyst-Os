@@ -10,14 +10,16 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
+  id           String       @id @default(uuid())
+  email        String       @unique
   name         String?
-  role         String    @default("founder")
+  role         String       @default("founder")
   passwordHash String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   startups     Startup[]
+  memberships  Membership[]
+  sentInvites  Invitation[] @relation("InvitationInvitedBy")
 }
 
 model Startup {
@@ -42,6 +44,56 @@ model Startup {
   owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   documents     StartupDocument[]
   timeline      TimelineItem[]
+  memberships   Membership[]
+  invitations   Invitation[]
+}
+
+/// P1 Task 8 — authoritative relationship between a User and a Startup/Company.
+/// `Startup.ownerId` is retained for backwards compatibility; the founder also
+/// receives an explicit FOUNDER Membership so all access can resolve uniformly
+/// through: User -> Membership -> Startup -> role -> permissionService.
+model Membership {
+  id        String   @id @default(uuid())
+  userId    String
+  startupId String
+  /// One of permissionService.ROLES (FOUNDER | ADMIN | FINANCE | HR | OPERATIONS | GROWTH).
+  role      String   @default("OPERATIONS")
+  /// ACTIVE | SUSPENDED. Invited-but-not-yet-accepted state lives on Invitation,
+  /// so a Membership row always means "this user really has access".
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, startupId])
+  @@index([startupId])
+  @@index([userId])
+}
+
+/// P1 Task 8 — a pending offer of Membership for an email address.
+/// Only the SHA-256 hash of the token is stored; the raw token is handed to the
+/// invitee once, via the invitation URL, and never persisted or returned again.
+model Invitation {
+  id          String    @id @default(uuid())
+  startupId   String
+  email       String
+  /// One of permissionService.ROLES, validated server-side before persisting.
+  role        String
+  /// SHA-256 hex digest of the raw invitation token. Never exposed through any API.
+  tokenHash   String    @unique
+  /// PENDING | ACCEPTED | EXPIRED | REVOKED
+  status      String    @default("PENDING")
+  expiresAt   DateTime
+  invitedById String
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  startup     Startup   @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  invitedBy   User      @relation("InvitationInvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([startupId, status])
+  @@index([email])
 }
 
 model StartupDocument {

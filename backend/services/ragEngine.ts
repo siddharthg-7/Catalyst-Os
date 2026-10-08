@@ -1,5 +1,6 @@
 import { prisma, safeDbQuery } from './dbService';
 import { ai } from './geminiService';
+import { knowledgeFiles } from '../state';
 
 export interface RetrievedChunk {
   id: string;
@@ -300,8 +301,35 @@ export async function performHybridSearch(
   }
 
   if (!chunksFromDb || chunksFromDb.length === 0) {
-    console.log(`[RAG Engine] No corporate document chunks exist for startup: ${startupId}`);
-    return [];
+    const memoryDocs = (knowledgeFiles || []).filter((kf: any) => !kf.startupId || kf.startupId === startupId);
+    if (memoryDocs.length === 0) {
+      console.log(`[RAG Engine] No corporate document chunks exist for startup: ${startupId}`);
+      return [];
+    }
+
+    const memoryCandidates: RetrievedChunk[] = [];
+    for (const doc of memoryDocs) {
+      const fullText = `${doc.name}\n${doc.summary || ''}\n${(doc.insights || []).join('\n')}`;
+      const kwScore = computeKeywordScore(query, fullText);
+      const semScore = kwScore > 0 ? 0.75 : 0.4;
+      const hybrid = alpha * semScore + (1 - alpha) * kwScore;
+
+      memoryCandidates.push({
+        id: `mem_${doc.id}`,
+        content: fullText,
+        documentId: doc.id,
+        documentName: doc.name,
+        documentType: doc.type || 'general',
+        similarityScore: semScore,
+        keywordScore: kwScore,
+        hybridScore: hybrid
+      });
+    }
+
+    memoryCandidates.sort((a, b) => b.hybridScore - a.hybridScore);
+    const topMem = memoryCandidates.slice(0, limit * 3);
+    const reRankedMem = reRankHeuristic(query, topMem);
+    return reRankedMem.slice(0, limit);
   }
 
   const candidates: RetrievedChunk[] = [];

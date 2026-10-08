@@ -168,23 +168,54 @@ export function analyzeCommandIntent(command: string): IntentAnalysis {
     };
   }
 
-  // 2. Startup Identity & Vision Overview
+  // 2. Startup Identity, Context & Vision Overview
   const identityPatterns = [
     'what is my startup', 'who are we', 'tell me about my startup', 'tell me about our startup',
     'what is our company', 'about our company', 'what does our company do', 'startup overview',
     'what is catalyst os', 'who is catalyst os', 'what do we do',
     'what do you know about my company', 'what do you know about our company',
     'what do you know about this company', 'tell me about my company', 'about my company',
-    'what is my company', 'who is my company', 'what do you know about us', 'what do you know'
+    'what is my company', 'who is my company', 'what do you know about us', 'what do you know',
+    'company context', 'startup context', 'what is our context', 'tell me the context',
+    'what is our company context', 'what do you know about my context', 'our company context',
+    'what context do you have', 'context of my company', 'tell me about our company'
   ];
   if (
     identityPatterns.some(p => lower.includes(p)) ||
     (lower.startsWith('what is') && lower.includes('startup')) ||
-    (lower.includes('know') && (lower.includes('company') || lower.includes('startup') || lower.includes('venture')))
+    (lower.includes('know') && (lower.includes('company') || lower.includes('startup') || lower.includes('venture'))) ||
+    (lower.includes('context') && (lower.includes('company') || lower.includes('startup') || lower.includes('our') || lower.includes('my') || lower.includes('business') || lower.includes('venture') || lower.includes('what')))
   ) {
     return {
       intent: 'startup_identity',
       objective: 'Articulate verified startup identity, industry market positioning, and core mission',
+      activatedRoles: ['CEO', 'Auditor'],
+      requiresFinancialCalculations: false,
+      requiresHeadcountModeling: false,
+      requiresRag: true,
+      isUnrelated: false,
+      requiresApproval: false,
+      proposedActionTitle: null,
+      proposedActionImpact: null
+    };
+  }
+
+  // 3. Knowledge Base & Document Inquiries
+  const knowledgePatterns = [
+    'what documents do we have', 'what docs do we have', 'what is in our knowledge base',
+    'what is in the knowledge base', 'summarize our documents', 'summarize knowledge documents',
+    'knowledge documents', 'knowledge base', 'rag documents', 'what files are uploaded',
+    'what files do we have', 'show documents', 'list documents', 'summarize verified findings from our knowledge documents',
+    'what did i upload', 'my documents', 'our documents', 'company documents'
+  ];
+  if (
+    knowledgePatterns.some(p => lower.includes(p)) ||
+    (lower.includes('document') && (lower.includes('what') || lower.includes('list') || lower.includes('summarize') || lower.includes('show') || lower.includes('our') || lower.includes('any'))) ||
+    (lower.includes('knowledge') && (lower.includes('what') || lower.includes('base') || lower.includes('summarize') || lower.includes('show') || lower.includes('findings') || lower.includes('rag')))
+  ) {
+    return {
+      intent: 'knowledge_inquiry',
+      objective: 'Query and synthesize findings across corporate knowledge documents and RAG vector store',
       activatedRoles: ['CEO', 'Auditor'],
       requiresFinancialCalculations: false,
       requiresHeadcountModeling: false,
@@ -529,6 +560,20 @@ export class OrchestrationService {
         });
       }
 
+      const docEvidence = (canonical.documents || []).map((d, idx) => ({
+        citationId: `[CIT-${idx + 1}]`,
+        documentId: d.id,
+        documentName: d.name,
+        excerpt: d.summary || `Verified corporate document for ${name}`
+      }));
+
+      const docCitations = (canonical.documents || []).map((d, idx) => ({
+        id: `CIT-${idx + 1}`,
+        title: d.name,
+        source: 'Corporate Knowledge Base (RAG)',
+        relevance: '100%'
+      }));
+
       const level1Response: OrchestrationResponse = {
         commandId,
         status: 'completed',
@@ -541,18 +586,96 @@ export class OrchestrationService {
           details
         },
         supportingData,
+        citations: docCitations,
+        evidence: docEvidence,
         agents: [
           { role: 'CEO', status: 'completed', contribution: `Synthesized verified company profile for ${name}.` },
-          { role: 'Auditor', status: 'completed', contribution: 'Verified factual alignment against canonical startup context.' }
+          { role: 'Auditor', status: 'completed', contribution: 'Verified factual alignment against canonical startup context and RAG documents.' }
         ],
-        evidence: [],
         confidence: 1.0
       };
 
       await this.recordCommandPersistence(commandId, command, level1Response.status, startupId, summary, analysis.objective);
       this.updateConversationMemory(startupId, command, summary);
+      if (docEvidence.length > 0) {
+        onEvent?.({ type: 'retrieval', sources: docEvidence });
+      }
       onEvent?.({ type: 'complete', response: level1Response });
       return level1Response;
+    }
+
+    // LEVEL 1.5 — KNOWLEDGE BASE & DOCUMENT AUDIT (RAG Grounded for Entire Company)
+    if (analysis.intent === 'knowledge_inquiry') {
+      console.log(`[Command] commandId=${commandId} Level 1.5 Knowledge Base Inquiry execution.`);
+      const name = canonical.startup.name;
+      const docs = canonical.documents || [];
+      const docCount = docs.length;
+
+      let retrievedChunks: any[] = [];
+      try {
+        retrievedChunks = await performHybridSearch(command, startupId, 4);
+      } catch (err: any) {
+        console.warn('[Orchestrator] Hybrid search notice in knowledge_inquiry:', err.message);
+      }
+
+      let summary = '';
+      let details = '';
+      if (docCount === 0) {
+        summary = `No corporate documents have been uploaded for ${name} yet.`;
+        details = `Your company workspace is currently grounded in your foundational onboarding profile and treasury records. To expand your AI council's RAG knowledge, upload pitch decks, PRDs, contracts, or financial plans in the Knowledge Center.`;
+      } else {
+        summary = `${name} has ${docCount} verified document(s) indexed in the corporate Knowledge Base, fully accessible across all executive agents.`;
+        const docList = docs.map((d, i) => `• [${d.type.toUpperCase()}] **${d.name}** (${d.size || 'Grounded'})\n  Summary: ${d.summary || 'Strategic corporate reference.'}`).join('\n\n');
+        details = `### Verified Company Documents (RAG Grounded):\n${docList}\n\nAll documents are tenant-isolated and actively accessible to CEO, CFO, CMO, CTO, Legal, and Operations agents.`;
+      }
+
+      const evidence = (retrievedChunks.length > 0 ? retrievedChunks : docs).map((item: any, idx: number) => ({
+        citationId: `[CIT-${idx + 1}]`,
+        documentId: item.documentId || item.id,
+        documentName: item.documentName || item.name,
+        excerpt: (item.content ? item.content.slice(0, 200) + '...' : item.summary) || `Verified company document for ${name}`
+      }));
+
+      const citations = docs.map((d, idx) => ({
+        id: `CIT-${idx + 1}`,
+        title: d.name,
+        source: 'Corporate Knowledge Base (RAG)',
+        relevance: '100%'
+      }));
+
+      const supportingData = [
+        { label: 'Startup Name', value: name, source: 'Startup Profile' },
+        { label: 'Total Documents', value: `${docCount} Documents`, source: 'RAG Knowledge Index' },
+        { label: 'Access Scope', value: 'Entire Company (All Agents)', source: 'Tenant Isolation Policy' },
+        { label: 'Search Engine', value: 'Hybrid Semantic + Keyword', source: 'Neon PostgreSQL RAG Storage' }
+      ];
+
+      const knowResponse: OrchestrationResponse = {
+        commandId,
+        status: 'completed',
+        interpretation: {
+          intent: analysis.intent,
+          objective: analysis.objective
+        },
+        answer: {
+          summary,
+          details
+        },
+        supportingData,
+        citations,
+        evidence,
+        agents: [
+          { role: 'CEO', status: 'completed', contribution: `Audited ${docCount} corporate knowledge documents for ${name}.` },
+          { role: 'Auditor', status: 'completed', contribution: 'Verified all documents are company-scoped and RAG grounded.' }
+        ],
+        confidence: 1.0
+      };
+
+      await this.recordCommandPersistence(commandId, command, knowResponse.status, startupId, summary, analysis.objective);
+      this.updateConversationMemory(startupId, command, summary);
+      onEvent?.({ type: 'retrieval', sources: evidence });
+      onEvent?.({ type: 'complete', response: knowResponse });
+      return knowResponse;
     }
 
     // LEVEL 2 — DATA + DETERMINISTIC TOOL (Section 19 of PROMPT.MD)

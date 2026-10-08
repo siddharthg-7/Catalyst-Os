@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Activity, CheckSquare, FileText, Sparkles, Rocket, Loader2, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, Activity, CheckSquare, FileText, Database, Sparkles, Rocket, Loader2, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CommandPaletteProps {
@@ -118,7 +118,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
   const commands = [
     { id: 'nav-dash',  name: 'Go to Dashboard',    category: 'Navigation', icon: Activity,    action: () => onNavigate('dashboard') },
     { id: 'nav-appr',  name: 'Go to Approvals',    category: 'Navigation', icon: CheckSquare, action: () => onNavigate('approvals') },
-    { id: 'nav-know',  name: 'Go to Knowledge',    category: 'Navigation', icon: FileText,    action: () => onNavigate('knowledge') },
+    { id: 'nav-know',  name: 'Go to RAG Knowledge Base', category: 'Navigation', icon: Database, action: () => onNavigate('knowledge') },
     { id: 'act-sim',   name: 'Simulate Collaboration Cycle', category: 'Actions', icon: Sparkles, action: () => onRunAction('simulate') },
   ];
 

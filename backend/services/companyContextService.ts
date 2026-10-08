@@ -220,6 +220,43 @@ export class CompanyContextService {
       }
     }
 
+    // P1 Task 8: if the user owns no startup, resolve the company through their
+    // Membership. This is what lets an invited team member load the shared
+    // company context. Founder/ownerId resolution above is unchanged.
+    if (!startup && isDbAvailable && prisma) {
+      try {
+        const membership: any = await safeDbQuery(() =>
+          (prisma as any).membership.findFirst({
+            where: { userId, status: 'ACTIVE' },
+            orderBy: { createdAt: 'asc' },
+            select: { startupId: true }
+          })
+        );
+        if (membership?.startupId) {
+          startup = await safeDbQuery(() =>
+            prisma.startup.findUnique({
+              where: { id: membership.startupId },
+              include: {
+                owner: true,
+                agents: true,
+                documents: { orderBy: { createdAt: 'desc' } },
+                decisions: { orderBy: { createdAt: 'desc' }, take: 10 },
+                plans: {
+                  include: {
+                    approvals: { where: { status: 'pending_review' } }
+                  }
+                },
+                timeline: { orderBy: { createdAt: 'desc' }, take: 10 },
+                memories: true
+              }
+            })
+          );
+        }
+      } catch (err: any) {
+        console.warn('[CompanyContextService] Membership lookup note:', err.message);
+      }
+    }
+
     if (!startup) {
       if (cached) return cached.context;
       return null;

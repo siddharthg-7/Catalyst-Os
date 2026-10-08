@@ -157,7 +157,27 @@ export interface KnowledgeFile {
   insights: string[];
 }
 
-export type UserRole = 'Founder' | 'Executive' | 'Investor' | 'Admin';
+export type UserRole =
+  | 'Founder' | 'Executive' | 'Investor' | 'Admin'
+  | 'FOUNDER' | 'ADMIN' | 'FINANCE' | 'HR' | 'OPERATIONS' | 'GROWTH';
+
+/** P1 Task 7 — effective permission set returned by GET /api/permissions/me. */
+export type PermissionArea =
+  | 'dashboard' | 'approvals' | 'knowledge' | 'workflows'
+  | 'agents' | 'people' | 'scenarios' | 'decisions';
+
+export type PermissionAction =
+  | 'startup:write' | 'approvals:review' | 'knowledge:write'
+  | 'people:read' | 'people:write' | 'people:invite'
+  | 'orchestrate:execute' | 'orchestrate:request';
+
+export interface UserPermissions {
+  role: string;
+  storedRole?: string;
+  areas: PermissionArea[];
+  agents: string[];
+  actions: PermissionAction[];
+}
 
 export interface User {
   id: string;
@@ -261,6 +281,32 @@ export interface OrchestrationResponse {
     code: string;
     message: string;
   };
+}
+
+/** P1 Task 8 — a pending/closed offer of Membership, as returned by /api/invitations. */
+export interface CompanyInvitation {
+  id: string;
+  email: string;
+  role: string;
+  status: 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'REVOKED';
+  expiresAt: string;
+  acceptedAt?: string | null;
+  createdAt: string;
+  invitedById?: string;
+  /** Development only: present when no SMTP provider is configured. */
+  invitationUrl?: string;
+  emailDelivered?: boolean;
+}
+
+/** P1 Task 8 — a real account with access to the company. */
+export interface CompanyMembership {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  role: string;
+  status: 'ACTIVE' | 'SUSPENDED';
+  joinedAt: string;
 }
 
 export interface TeamMember {

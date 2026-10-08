@@ -448,11 +448,31 @@ Return ONLY valid JSON without markdown code blocks.`;
         }));
       }
 
-      // Chunk, embed, and index into Neon PostgreSQL RAG storage in background (non-blocking)
-      ingestDocument(docId, dossierText, docName, docType)
-        .then(() => console.log(`[WorkspaceService] Knowledge document "${docName}" indexed and ready in Knowledge Center.`))
-        .catch(ragErr => console.warn('[WorkspaceService] Background document indexing warning:', ragErr.message));
-      console.log(`[WorkspaceService] Knowledge document "${docName}" indexed and ready in Knowledge Center.`);
+      // Synchronously chunk, embed, and index into Neon PostgreSQL RAG storage so context is immediately queryable
+      try {
+        await ingestDocument(docId, dossierText, docName, docType);
+        console.log(`[WorkspaceService] Knowledge document "${docName}" indexed and ready in Knowledge Center (RAG Grounded).`);
+      } catch (ragErr: any) {
+        console.warn('[WorkspaceService] Background document indexing warning:', ragErr.message);
+      }
+
+      // Synchronize in-memory knowledgeFiles for instant access across all agents and fallback search
+      const profileDocItem: any = {
+        id: docId,
+        name: docName,
+        type: docType,
+        size: docSize,
+        uploadDate: new Date().toISOString(),
+        summary: analysis.summary,
+        insights: analysis.insights,
+        startupId
+      };
+      const existingIdx = knowledgeFiles.findIndex(k => k.id === docId);
+      if (existingIdx >= 0) {
+        knowledgeFiles[existingIdx] = profileDocItem;
+      } else {
+        knowledgeFiles.unshift(profileDocItem);
+      }
 
       // Operational notification
       await safeDbQuery(() => prisma.notification.create({

@@ -181,8 +181,8 @@ export function resetAgentStatuses() {
   agentsList.forEach(a => {
     a.status = 'idle';
     if (!isDbAvailable) return;
-    prisma.executiveAgent.update({
-      where: { id: a.id },
+    prisma.executiveAgent.updateMany({
+      where: { role: a.role },
       data: { status: 'idle', currentTask: null }
     }).catch(() => {});
   });
@@ -194,15 +194,15 @@ export function setAgentStatuses(status: 'idle' | 'analyzing' | 'collaborating' 
     if (isTarget) {
       a.status = status;
       if (!isDbAvailable) return;
-      prisma.executiveAgent.update({
-        where: { id: a.id },
+      prisma.executiveAgent.updateMany({
+        where: { role: a.role },
         data: { status, currentTask: status !== 'idle' ? `${status.toUpperCase()}...` : null }
       }).catch(() => {});
     } else if (activeRole) {
       a.status = 'idle';
       if (!isDbAvailable) return;
-      prisma.executiveAgent.update({
-        where: { id: a.id },
+      prisma.executiveAgent.updateMany({
+        where: { role: a.role },
         data: { status: 'idle', currentTask: null }
       }).catch(() => {});
     }

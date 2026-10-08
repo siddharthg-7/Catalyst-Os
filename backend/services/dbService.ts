@@ -50,7 +50,9 @@ export const prisma = global.prismaSingleton || new PrismaClient({
     msg.includes('kind: Io') ||
     msg.includes('forcibly closed by the remote host') ||
     msg.includes('column e.embedding does not exist') ||
-    msg.includes('42703')
+    msg.includes('42703') ||
+    msg.includes('Record to update not found') ||
+    msg.includes('P2025')
   ) {
     return;
   }

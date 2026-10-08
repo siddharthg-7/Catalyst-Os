@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TeamMember, UserRole } from '../types';
+import { TeamMember, UserRole, CompanyInvitation, CompanyMembership } from '../types';
 import { 
   Users, 
   UserPlus, 
@@ -8,8 +8,25 @@ import {
   Building2,
   Trash2, 
   X, 
-  AlertCircle
+  AlertCircle,
+  Send,
+  RotateCcw,
+  Ban,
+  ShieldCheck
 } from 'lucide-react';
+
+/**
+ * P1 Task 7 — the minimal fixed role set. Mirrors ROLES in
+ * backend/services/permissionService.ts, which is what actually enforces access.
+ * FOUNDER is not assignable here: it belongs to the venture owner.
+ */
+const ASSIGNABLE_ROLES = [
+  { value: 'ADMIN',      label: 'Admin',      hint: 'Full access to every area, agent and approval.' },
+  { value: 'FINANCE',    label: 'Finance',    hint: 'Dashboard, Finance/Auditor/Investment agents, scenarios. Approvals read-only.' },
+  { value: 'HR',         label: 'HR',         hint: 'Dashboard, Talent and Legal agents, People (can add members).' },
+  { value: 'OPERATIONS', label: 'Operations', hint: 'Workflows, Operations and CEO agents, decision ledger.' },
+  { value: 'GROWTH',     label: 'Growth',     hint: 'Workflows, Growth and CEO agents, knowledge base.' }
+] as const;
 
 interface PeopleDirectoryProps {
   user: {
@@ -20,14 +37,25 @@ interface PeopleDirectoryProps {
   } | null;
   companyName?: string;
   teamMembers: TeamMember[];
-  onAddMember: (member: { 
+  /** Omitted when the signed-in role lacks 'people:write' (P1 Task 7). */
+  onAddMember?: (member: { 
     fullName: string; 
     email: string; 
     role: string; 
     department: string; 
     status?: 'Active' | 'Invited' 
   }) => Promise<void>;
-  onRemoveMember: (id: string) => Promise<void>;
+  /** Omitted when the signed-in role lacks 'people:write' (P1 Task 7). */
+  onRemoveMember?: (id: string) => Promise<void>;
+
+  // ── P1 Task 8: real accounts (Membership) and pending invitations ──────────
+  /** Accounts that can actually sign in to this company. */
+  memberships?: CompanyMembership[];
+  invitations?: CompanyInvitation[];
+  /** Omitted when the signed-in role lacks 'people:invite'. */
+  onInviteMember?: (invite: { email: string; role: string }) => Promise<void>;
+  onRevokeInvitation?: (id: string) => Promise<void>;
+  onResendInvitation?: (id: string) => Promise<void>;
 }
 
 export default function PeopleDirectory({
@@ -36,7 +64,45 @@ export default function PeopleDirectory({
   teamMembers,
   onAddMember,
   onRemoveMember,
+  memberships = [],
+  invitations = [],
+  onInviteMember,
+  onRevokeInvitation,
+  onResendInvitation,
 }: PeopleDirectoryProps) {
+  // P1 Task 8 invite state, kept separate from the roster-entry modal above.
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('');
+  const [inviteSubmitting, setInviteSubmitting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  const pendingInvitations = invitations.filter(i => i.status === 'PENDING');
+  const closedInvitations = invitations.filter(i => i.status !== 'PENDING');
+
+  const handleInviteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteError(null);
+    if (!inviteEmail.includes('@')) {
+      setInviteError('Enter a valid email address.');
+      return;
+    }
+    if (!inviteRole) {
+      setInviteError('Select a role for this person.');
+      return;
+    }
+    setInviteSubmitting(true);
+    try {
+      await onInviteMember?.({ email: inviteEmail.trim(), role: inviteRole });
+      setInviteEmail('');
+      setInviteRole('');
+      setInviteOpen(false);
+    } catch (err: any) {
+      setInviteError(err?.message || 'The invitation could not be sent.');
+    } finally {
+      setInviteSubmitting(false);
+    }
+  };
   const [modalOpen, setModalOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -95,6 +161,7 @@ export default function PeopleDirectory({
 
     setIsSubmitting(true);
     try {
+      if (!onAddMember) return;
       await onAddMember({
         fullName: trimmedName,
         email: trimmedEmail,
@@ -177,12 +244,150 @@ export default function PeopleDirectory({
       </div>
 
       {/* ── Active Team Sub-Section ─────────────────────────────────────────── */}
+      {/* ── P1 Task 8: Company Accounts (Membership) ──────────────────────── */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-mono uppercase tracking-widest text-[#696969] font-bold">
+            Company Accounts
+          </h3>
+          {onInviteMember && (
+            <button
+              onClick={() => setInviteOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold transition-all shadow-2xs cursor-pointer hover:shadow-xs active:scale-[0.98]"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Invite Member</span>
+            </button>
+          )}
+        </div>
+
+        <hr className="border-[#141413]/10" />
+
+        <p className="text-[11px] text-[#696969]">
+          People who can sign in to {companyName}. Listing someone under Active Team below
+          does not create an account — only an accepted invitation does.
+        </p>
+
+        {memberships.length === 0 ? (
+          <div className="bg-white rounded-[16px] border border-dashed border-[#141413]/15 p-6 text-center">
+            <p className="text-xs text-[#696969]">
+              No additional accounts yet. Invite a teammate to give them access.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {memberships.map(member => (
+              <div
+                key={member.id}
+                className="bg-white rounded-[14px] border border-[#141413]/10 px-4 py-3 flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-xl bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-[#141413]/60" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold truncate">{member.fullName}</p>
+                  <p className="text-[11px] text-[#696969] truncate">{member.email}</p>
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-1 rounded-md bg-[#F3F0EE] border border-[#141413]/10 text-[#141413]/70 shrink-0">
+                  {member.role}
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1 rounded-md shrink-0 ${
+                    member.status === 'ACTIVE'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/60'
+                      : 'bg-[#F3F0EE] text-[#696969] border border-[#141413]/10'
+                  }`}
+                >
+                  {member.status === 'ACTIVE' ? 'Active' : 'Suspended'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── P1 Task 8: Invitations ────────────────────────────────────────── */}
+      {(pendingInvitations.length > 0 || closedInvitations.length > 0) && (
+        <div className="space-y-3 pt-2">
+          <h3 className="text-xs font-mono uppercase tracking-widest text-[#696969] font-bold">
+            Invitations
+          </h3>
+          <hr className="border-[#141413]/10" />
+
+          <div className="space-y-2.5">
+            {[...pendingInvitations, ...closedInvitations].map(invite => {
+              const statusStyle: Record<string, string> = {
+                PENDING: 'bg-amber-50 text-amber-800 border-amber-200/60',
+                ACCEPTED: 'bg-emerald-50 text-emerald-800 border-emerald-200/60',
+                EXPIRED: 'bg-[#F3F0EE] text-[#696969] border-[#141413]/10',
+                REVOKED: 'bg-rose-50 text-rose-700 border-rose-200/60'
+              };
+              const label: Record<string, string> = {
+                PENDING: 'Pending',
+                ACCEPTED: 'Active',
+                EXPIRED: 'Expired',
+                REVOKED: 'Revoked'
+              };
+              return (
+                <div
+                  key={invite.id}
+                  className="bg-white rounded-[14px] border border-[#141413]/10 px-4 py-3 flex items-center gap-3"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-[#F3F0EE] border border-[#141413]/10 flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4 text-[#141413]/60" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold truncate">{invite.email}</p>
+                    <p className="text-[11px] text-[#696969]">
+                      {invite.status === 'PENDING'
+                        ? `Expires ${new Date(invite.expiresAt).toLocaleDateString()}`
+                        : invite.status === 'ACCEPTED' && invite.acceptedAt
+                        ? `Joined ${new Date(invite.acceptedAt).toLocaleDateString()}`
+                        : `Invited ${new Date(invite.createdAt).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-1 rounded-md bg-[#F3F0EE] border border-[#141413]/10 text-[#141413]/70 shrink-0">
+                    {invite.role}
+                  </span>
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-1 rounded-md border shrink-0 ${
+                      statusStyle[invite.status] || statusStyle.EXPIRED
+                    }`}
+                  >
+                    {label[invite.status] || invite.status}
+                  </span>
+
+                  {invite.status !== 'ACCEPTED' && onResendInvitation && (
+                    <button
+                      onClick={() => onResendInvitation(invite.id)}
+                      title="Resend invitation (issues a new link)"
+                      className="p-1.5 text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] rounded-lg transition-colors cursor-pointer shrink-0"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {invite.status === 'PENDING' && onRevokeInvitation && (
+                    <button
+                      onClick={() => onRevokeInvitation(invite.id)}
+                      title="Revoke invitation"
+                      className="p-1.5 text-[#696969] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                    >
+                      <Ban className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-mono uppercase tracking-widest text-[#696969] font-bold">
             Active Team
           </h3>
-          {teamMembers.length > 0 && (
+          {teamMembers.length > 0 && onAddMember && (
             <button
               onClick={handleOpenModal}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold transition-all shadow-2xs cursor-pointer hover:shadow-xs active:scale-[0.98]"
@@ -209,14 +414,14 @@ export default function PeopleDirectory({
                 Expand your core venture roster. Add team members to establish operational reporting and department ownership.
               </p>
             </div>
-            <button
+            {onAddMember && <button
               type="button"
               onClick={handleOpenModal}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[12px] bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold transition-all shadow-sm cursor-pointer hover:shadow-md active:scale-[0.98]"
             >
               <UserPlus className="w-4 h-4" />
               <span>+ Add Team Member</span>
-            </button>
+            </button>}
           </div>
         ) : (
           <div className="space-y-3">
@@ -279,13 +484,13 @@ export default function PeopleDirectory({
                         <span>{member.status || 'Active'}</span>
                       </span>
 
-                      <button
+                      {onRemoveMember && <button
                         onClick={() => onRemoveMember(member.id)}
                         title="Remove member"
                         className="p-1.5 text-[#696969] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </button>}
                     </div>
                   </div>
                 );
@@ -293,7 +498,7 @@ export default function PeopleDirectory({
             </div>
 
             {/* Quick action bar below list */}
-            <div className="pt-2 flex justify-start">
+            {onAddMember && <div className="pt-2 flex justify-start">
               <button
                 type="button"
                 onClick={handleOpenModal}
@@ -302,10 +507,96 @@ export default function PeopleDirectory({
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>[ + Add Team Member ]</span>
               </button>
-            </div>
+            </div>}
           </div>
         )}
       </div>
+
+      {/* ── P1 Task 8: Invite Member Modal ───────────────────────────────────── */}
+      {inviteOpen && onInviteMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#141413]/40 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-[20px] border border-[#141413]/10 shadow-lg p-6 space-y-5">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <h2 className="text-sm font-bold">Invite Member</h2>
+                <p className="text-[11px] text-[#696969]">
+                  They receive a single-use link to join {companyName} with the role you pick.
+                </p>
+              </div>
+              <button
+                onClick={() => { setInviteOpen(false); setInviteError(null); }}
+                className="p-1.5 text-[#696969] hover:text-[#141413] hover:bg-[#F3F0EE] rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleInviteSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label htmlFor="invite-email" className="text-[10px] uppercase font-mono tracking-widest text-[#696969] font-bold block">
+                  Email
+                </label>
+                <input
+                  id="invite-email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  placeholder="teammate@company.com"
+                  required
+                  className="w-full bg-[#F3F0EE]/40 border border-[#141413]/15 rounded-[12px] px-3.5 py-2.5 text-xs placeholder-[#696969]/60 focus:outline-none focus:border-[#141413] focus:bg-white transition-all"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="invite-role" className="text-[10px] uppercase font-mono tracking-widest text-[#696969] font-bold block">
+                  Role
+                </label>
+                <select
+                  id="invite-role"
+                  value={inviteRole}
+                  onChange={e => setInviteRole(e.target.value)}
+                  required
+                  className="w-full bg-[#F3F0EE]/40 border border-[#141413]/15 rounded-[12px] px-3.5 py-2.5 text-xs focus:outline-none focus:border-[#141413] focus:bg-white transition-all"
+                >
+                  <option value="">Select a role…</option>
+                  {ASSIGNABLE_ROLES.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-[#696969] pt-0.5">
+                  {ASSIGNABLE_ROLES.find(r => r.value === inviteRole)?.hint
+                    || 'Determines which areas and AI agents they can access.'}
+                </p>
+              </div>
+
+              {inviteError && (
+                <div className="flex items-start gap-2 text-[11px] text-rose-700 bg-rose-50 border border-rose-200/60 rounded-[10px] px-3 py-2">
+                  <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                  <span>{inviteError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={inviteSubmitting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[12px] bg-[#141413] hover:bg-[#262627] disabled:opacity-60 text-[#F3F0EE] text-xs font-bold transition-all cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{inviteSubmitting ? 'Sending…' : 'Send invitation'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setInviteOpen(false); setInviteError(null); }}
+                  className="px-4 py-2.5 rounded-[12px] border border-[#141413]/15 bg-white hover:bg-[#F3F0EE]/60 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── Add Person Modal ─────────────────────────────────────────────────── */}
       {modalOpen && (
@@ -390,15 +681,21 @@ export default function PeopleDirectory({
                 >
                   Role
                 </label>
-                <input
+                <select
                   id="role"
-                  type="text"
-                  placeholder="e.g., Finance"
                   value={role}
                   onChange={e => setRole(e.target.value)}
-                  className="w-full bg-[#F3F0EE]/40 border border-[#141413]/15 rounded-[12px] px-3.5 py-2.5 text-xs text-[#141413] placeholder-[#696969]/60 focus:outline-none focus:border-[#141413] focus:bg-white font-sans transition-all"
+                  className="w-full bg-[#F3F0EE]/40 border border-[#141413]/15 rounded-[12px] px-3.5 py-2.5 text-xs text-[#141413] focus:outline-none focus:border-[#141413] focus:bg-white font-sans transition-all"
                   required
-                />
+                >
+                  <option value="">Select a role…</option>
+                  {ASSIGNABLE_ROLES.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-[#696969] font-sans pt-0.5">
+                  {ASSIGNABLE_ROLES.find(r => r.value === role)?.hint || 'Determines which areas and AI agents this person can access.'}
+                </p>
               </div>
 
               {/* Department */}

@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, TeamMember } from './types';
+import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, TeamMember, UserPermissions, CompanyInvitation } from './types';
 import SaaSDashboard from './components/SaaSDashboard';
 import AgentWorkspace from './components/AgentWorkspace';
 import WorkflowCanvas from './components/WorkflowCanvas';
@@ -14,6 +14,7 @@ import KnowledgeBase from './components/KnowledgeBase';
 import DecisionLog from './components/DecisionLog';
 import ScenarioSimulator from './components/ScenarioSimulator';
 import PeopleDirectory from './components/PeopleDirectory';
+import AcceptInvitation from './components/AcceptInvitation';
 import { 
   Bell,
   CheckSquare, 
@@ -29,7 +30,8 @@ import {
   ChevronDown,
   Users,
   TrendingUp,
-  Layers
+  Layers,
+  Database
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -340,6 +342,25 @@ export default function App() {
     return [];
   });
 
+  // P1 Task 8 — accounts with real access (Membership) and pending invitations.
+  const [memberships, setMemberships] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<CompanyInvitation[]>([]);
+
+  // P1 Task 7 — effective permissions, mirrored from the backend.
+  // Founder-equivalent defaults keep the UI usable until /api/permissions/me answers.
+  const [permissions, setPermissions] = useState<UserPermissions>({
+    role: 'FOUNDER',
+    areas: ['dashboard', 'approvals', 'knowledge', 'workflows', 'agents', 'people', 'scenarios', 'decisions'],
+    agents: ['CEO', 'Finance', 'Talent', 'Growth', 'Legal', 'Operations', 'Investment', 'Auditor'],
+    actions: [
+      'startup:write', 'approvals:review', 'knowledge:write',
+      'people:read', 'people:write', 'people:invite',
+      'orchestrate:execute', 'orchestrate:request'
+    ]
+  });
+
+  const hasPermission = (action: UserPermissions['actions'][number]) => permissions.actions.includes(action);
+
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
 
   const showToast = (message: string, type: 'info' | 'success' | 'error' = 'success') => {
@@ -358,9 +379,26 @@ export default function App() {
         apiFetch('/api/decisions'),
         apiFetch('/api/knowledge'),
         apiFetch('/api/team'),
+        apiFetch('/api/permissions/me'),
+        apiFetch('/api/invitations'),
+        apiFetch('/api/memberships'),
       ]);
 
-      const [startupRes, agentsRes, initiativesRes, approvalsRes, decisionsRes, knowledgeRes, teamRes] = results;
+      const [startupRes, agentsRes, initiativesRes, approvalsRes, decisionsRes, knowledgeRes, teamRes, permissionsRes, invitationsRes, membershipsRes] = results;
+
+      if (invitationsRes.status === 'fulfilled' && invitationsRes.value.ok) {
+        const data = await invitationsRes.value.json();
+        if (Array.isArray(data)) setInvitations(data);
+      }
+      if (membershipsRes.status === 'fulfilled' && membershipsRes.value.ok) {
+        const data = await membershipsRes.value.json();
+        if (Array.isArray(data)) setMemberships(data);
+      }
+
+      if (permissionsRes.status === 'fulfilled' && permissionsRes.value.ok) {
+        const perms = await permissionsRes.value.json();
+        if (perms && Array.isArray(perms.areas) && Array.isArray(perms.actions)) setPermissions(perms);
+      }
 
       if (startupRes.status === 'fulfilled' && startupRes.value.ok) setStartup(await startupRes.value.json());
       if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) setAgents(await agentsRes.value.json());
@@ -431,6 +469,76 @@ export default function App() {
       return updated;
     });
     showToast(`Team member "${memberName}" added to venture.`, 'success');
+  };
+
+  // ── P1 Task 8: invitations ────────────────────────────────────────────────
+  const refreshInvitations = async () => {
+    try {
+      const res = await apiFetch('/api/invitations');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setInvitations(data);
+      }
+    } catch (err) {
+      console.warn('[App] Invitation refresh warning:', err);
+    }
+  };
+
+  const handleInviteMember = async (invite: { email: string; role: string }) => {
+    const res = await apiFetch('/api/invitations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(invite)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data?.error || 'The invitation could not be created.', 'error');
+      throw new Error(data?.error || 'Invitation failed');
+    }
+    await refreshInvitations();
+    // With no SMTP configured the backend returns the link in development so the
+    // founder can pass it along manually.
+    if (data.invitationUrl && !data.emailDelivered) {
+      try {
+        await navigator.clipboard?.writeText(data.invitationUrl);
+        showToast(`Invitation created for ${invite.email}. Link copied to clipboard.`, 'success');
+      } catch {
+        showToast(`Invitation created for ${invite.email}. Copy the link from the server log.`, 'info');
+      }
+    } else {
+      showToast(`Invitation emailed to ${invite.email}.`, 'success');
+    }
+  };
+
+  const handleRevokeInvitation = async (id: string) => {
+    const res = await apiFetch(`/api/invitations/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showToast(data?.error || 'The invitation could not be revoked.', 'error');
+      return;
+    }
+    await refreshInvitations();
+    showToast('Invitation revoked.', 'success');
+  };
+
+  const handleResendInvitation = async (id: string) => {
+    const res = await apiFetch(`/api/invitations/${id}/resend`, { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast(data?.error || 'The invitation could not be resent.', 'error');
+      return;
+    }
+    await refreshInvitations();
+    if (data.invitationUrl && !data.emailDelivered) {
+      try {
+        await navigator.clipboard?.writeText(data.invitationUrl);
+        showToast('New invitation link created and copied to clipboard.', 'success');
+      } catch {
+        showToast('New invitation link created. Copy it from the server log.', 'info');
+      }
+    } else {
+      showToast('Invitation resent.', 'success');
+    }
   };
 
   const handleRemoveTeamMember = async (id: string) => {
@@ -616,12 +724,12 @@ export default function App() {
     const navItems = [
       { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
       { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
-      { id: 'knowledge' as const,  label: 'Knowledge',  Icon: FileText,    badge: `${knowledge.length} files`, badgeColor: 'text-[#696969]' },
+      { id: 'knowledge' as const,  label: 'RAG Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-indigo-600' },
       { id: 'workflows' as const,  label: 'Workflows',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-[#696969]' },
       { id: 'people' as const,     label: 'People',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : 'New', badgeColor: 'text-emerald-600' },
       { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-indigo-600' },
       { id: 'decisions' as const,  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-[#696969]' },
-    ];
+    ].filter(item => permissions.areas.includes(item.id as any));
 
     const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
 
@@ -769,6 +877,23 @@ export default function App() {
               <kbd className="text-[9px] font-mono bg-white border border-[#141413]/10 px-1.5 py-0.5 rounded text-[#696969]">⌘K</kbd>
             </button>
 
+            {/* RAG Knowledge Base Quick Access (Inside Login) */}
+            <button
+              onClick={() => handleTabChange('knowledge')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-all cursor-pointer border ${
+                activeTab === 'knowledge'
+                  ? 'bg-[#141413] text-[#F3F0EE] border-[#141413]'
+                  : 'bg-[#F3F0EE] hover:bg-white text-[#141413] border-[#141413]/10'
+              }`}
+              title="Company RAG Knowledge Base"
+            >
+              <Database className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="font-mono text-[11px] font-bold">RAG</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200/60">
+                {knowledge.length}
+              </span>
+            </button>
+
             {/* Notifications bell */}
             <button 
               onClick={() => setNotificationsOpen(true)}
@@ -865,8 +990,13 @@ export default function App() {
               user={user}
               companyName={startup.name}
               teamMembers={teamMembers}
-              onAddMember={handleAddTeamMember}
-              onRemoveMember={handleRemoveTeamMember}
+              onAddMember={hasPermission('people:write') ? handleAddTeamMember : undefined}
+              onRemoveMember={hasPermission('people:write') ? handleRemoveTeamMember : undefined}
+              memberships={memberships}
+              invitations={invitations}
+              onInviteMember={hasPermission('people:invite') ? handleInviteMember : undefined}
+              onRevokeInvitation={hasPermission('people:invite') ? handleRevokeInvitation : undefined}
+              onResendInvitation={hasPermission('people:invite') ? handleResendInvitation : undefined}
             />
           )}
 
@@ -1001,6 +1131,10 @@ export default function App() {
       <Route path="/signup" element={<Navigate to="/auth" replace />} />
 
       {/* Authentication Phase Route */}
+      {/* P1 Task 8: public invitation acceptance. The raw token is the credential,
+          so this route must not sit behind the authentication guard. */}
+      <Route path="/accept-invitation" element={<AcceptInvitation />} />
+
       <Route
         path="/auth"
         element={

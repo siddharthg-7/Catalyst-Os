@@ -712,16 +712,16 @@ export default function SaaSDashboard({
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
-              <BookOpen className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center shrink-0">
+              <Database className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-gray-900 tracking-tight">Document Intelligence & Knowledge Grounding</h2>
+                <h2 className="text-base font-bold text-gray-900 tracking-tight">RAG Document Intelligence & Knowledge Grounding</h2>
                 {knowledge.length > 0 ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-semibold">
-                    <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                    <span>Grounded ({knowledge.length} Docs)</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-semibold font-mono">
+                    <ShieldCheck className="w-3 h-3 text-indigo-600" />
+                    <span>RAG Grounded ({knowledge.length} Docs)</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold">
@@ -939,7 +939,11 @@ export default function SaaSDashboard({
               <h2 className="text-sm font-bold text-gray-900">Ask Catalyst Executive Suite</h2>
               <p className="text-xs text-gray-400">Autonomous co-founder grounded in company records</p>
             </div>
-            <div className="ml-auto flex items-center gap-1.5">
+            <div className="ml-auto flex items-center gap-2">
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-[10px] font-mono font-bold">
+                <Database className="w-2.5 h-2.5 text-indigo-600" />
+                <span>RAG Active ({knowledge.length} Docs)</span>
+              </span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs text-gray-400 font-medium">Online</span>
             </div>

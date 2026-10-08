@@ -26,6 +26,29 @@ import {
   AuthenticatedRequest, 
   JWT_SECRET 
 } from '../services/neonAuthMiddleware';
+import {
+  getActiveStartupId,
+  resolveMembership,
+  listMemberships,
+  getEffectivePermissions,
+  attachMembershipRole
+} from '../services/membershipService';
+import {
+  createInvitation,
+  listInvitations,
+  revokeInvitation,
+  resendInvitation,
+  peekInvitation,
+  acceptInvitation,
+  InvitationError
+} from '../services/invitationService';
+import {
+  requirePermission,
+  getPermissions,
+  normalizeRole,
+  ROLE_PERMISSIONS,
+  ROLES
+} from '../services/permissionService';
 import jwt from 'jsonwebtoken';
 import agentsRouter from '../agents/controller';
 import { markdownRagService } from '../services/markdownRagService';
@@ -635,7 +658,7 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
 });
 
 // POST update startup profile
-router.post('/startup', authenticateJWT, requireRole(['Founder', 'Admin']), async (req: AuthenticatedRequest, res) => {
+router.post('/startup', authenticateJWT, attachMembershipRole, requirePermission('startup:write'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   if (!userId) {
     res.status(401).json({ error: 'Authentication required.' });
@@ -780,6 +803,265 @@ router.post('/notifications/read-all', authenticateJWT, async (req: Authenticate
 });
 
 // ============================================================================
+// MEMBERSHIP + INVITATIONS (P1 Task 8)
+// Membership is the authoritative User <-> Startup relationship.
+// Every route below resolves the caller's company through membershipService and
+// scopes all queries to it, so cross-company access is structurally impossible.
+// ============================================================================
+
+/**
+ * Resolves the company the caller acts within. Returns null and writes the
+ * response when there is none, so callers can simply return.
+ */
+async function resolveCallerStartupId(
+  req: AuthenticatedRequest,
+  res: any
+): Promise<string | null> {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return null;
+  }
+  const startupId = await getActiveStartupId(userId);
+  if (!startupId) {
+    res.status(404).json({ error: 'No company found for this account. Complete onboarding first.' });
+    return null;
+  }
+  return startupId;
+}
+
+function sendInvitationError(res: any, err: any) {
+  if (err instanceof InvitationError) {
+    res.status(err.status).json({ error: err.message, code: err.code });
+    return;
+  }
+  console.error('[Invitations API] Unexpected error:', err?.message);
+  res.status(500).json({ error: 'The invitation could not be processed.' });
+}
+
+/** Raw tokens and URLs are development aids only. */
+const exposeInvitationUrl = process.env.NODE_ENV !== 'production';
+
+// GET the caller's own membership (which company, which role).
+router.get('/membership/me', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
+  }
+  const membership = await resolveMembership(userId);
+  if (!membership) {
+    res.json({ membership: null, role: normalizeRole(req.user?.role), startupId: null });
+    return;
+  }
+  res.json({
+    membership: {
+      startupId: membership.startupId,
+      role: membership.role,
+      status: membership.status,
+      isOwner: membership.isOwner,
+      viaOwnership: membership.viaOwnership
+    },
+    role: membership.role,
+    startupId: membership.startupId
+  });
+});
+
+// GET all members of the caller's company (accounts, not roster entries).
+router.get('/memberships', authenticateJWT, attachMembershipRole, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  const startupId = await resolveCallerStartupId(req, res);
+  if (!startupId) return;
+
+  const rows = await listMemberships(startupId);
+  res.json(rows.map((m: any) => ({
+    id: m.id,
+    userId: m.userId,
+    fullName: m.user?.name || m.user?.email || 'Team Member',
+    email: m.user?.email || '',
+    role: m.role,
+    status: m.status,
+    joinedAt: m.createdAt
+  })));
+});
+
+// GET invitations for the caller's company.
+router.get('/invitations', authenticateJWT, attachMembershipRole, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  const startupId = await resolveCallerStartupId(req, res);
+  if (!startupId) return;
+  try {
+    res.json(await listInvitations(startupId));
+  } catch (err) {
+    sendInvitationError(res, err);
+  }
+});
+
+// POST create an invitation. Requires 'people:invite' (Founder/Admin in Task 7).
+router.post('/invitations', authenticateJWT, attachMembershipRole, requirePermission('people:invite'), async (req: AuthenticatedRequest, res) => {
+  const startupId = await resolveCallerStartupId(req, res);
+  if (!startupId) return;
+
+  try {
+    const created = await createInvitation({
+      startupId,
+      email: req.body?.email,
+      role: req.body?.role,
+      invitedById: req.user!.id
+    });
+
+    res.status(201).json({
+      ...created.invitation,
+      emailDelivered: created.delivery.delivered,
+      deliveryChannel: created.delivery.channel,
+      // Development only: lets a founder copy the link when SMTP is absent.
+      ...(exposeInvitationUrl ? { invitationUrl: created.invitationUrl } : {})
+    });
+  } catch (err) {
+    sendInvitationError(res, err);
+  }
+});
+
+// POST resend an invitation (supersedes the previous token).
+router.post('/invitations/:id/resend', authenticateJWT, attachMembershipRole, requirePermission('people:invite'), async (req: AuthenticatedRequest, res) => {
+  const startupId = await resolveCallerStartupId(req, res);
+  if (!startupId) return;
+
+  try {
+    const created = await resendInvitation(startupId, req.params.id, req.user!.id);
+    res.json({
+      ...created.invitation,
+      emailDelivered: created.delivery.delivered,
+      deliveryChannel: created.delivery.channel,
+      ...(exposeInvitationUrl ? { invitationUrl: created.invitationUrl } : {})
+    });
+  } catch (err) {
+    sendInvitationError(res, err);
+  }
+});
+
+// DELETE revoke a pending invitation.
+router.delete('/invitations/:id', authenticateJWT, attachMembershipRole, requirePermission('people:invite'), async (req: AuthenticatedRequest, res) => {
+  const startupId = await resolveCallerStartupId(req, res);
+  if (!startupId) return;
+
+  try {
+    res.json(await revokeInvitation(startupId, req.params.id));
+  } catch (err) {
+    sendInvitationError(res, err);
+  }
+});
+
+// GET inspect an invitation by raw token. Public: the invitee is not signed in
+// yet. The token itself is the credential; no company data beyond the name is
+// returned, and the token hash is never exposed.
+router.get('/invitations/accept/:token', authRateLimiter, async (req, res) => {
+  try {
+    res.json(await peekInvitation(req.params.token));
+  } catch (err) {
+    sendInvitationError(res, err);
+  }
+});
+
+// POST accept an invitation. Public by design, because a brand-new invitee has
+// no account; the raw token is the authorization. A signed-in caller's identity
+// is checked against the invitation email inside acceptInvitation.
+router.post('/invitations/accept', authRateLimiter, async (req: AuthenticatedRequest, res) => {
+  const { token, password, name } = req.body || {};
+
+  // If a valid Bearer token is present, bind acceptance to that account.
+  let authenticatedUserId: string | undefined;
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    try {
+      const decoded: any = jwt.verify(authHeader.slice(7).trim(), JWT_SECRET);
+      if (decoded?.sub) authenticatedUserId = decoded.sub;
+    } catch {
+      // An unusable token is treated as anonymous rather than fatal.
+    }
+  }
+
+  try {
+    const result = await acceptInvitation({
+      rawToken: token,
+      password,
+      name,
+      authenticatedUserId,
+      hashPassword: (plain: string) => bcrypt.hash(plain, 10)
+    });
+
+    // Issue a session with the existing auth architecture (same JWT contract).
+    const user = await prisma.user.findUnique({ where: { id: result.userId } });
+    const sessionToken = jwt.sign(
+      {
+        sub: result.userId,
+        email: user?.email,
+        name: user?.name,
+        role: result.role
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(201).json({
+      success: true,
+      token: sessionToken,
+      user: {
+        id: result.userId,
+        email: user?.email,
+        name: user?.name || 'Team Member',
+        role: result.role
+      },
+      membership: {
+        startupId: result.startupId,
+        role: result.role,
+        status: 'ACTIVE'
+      },
+      companyName: result.companyName,
+      createdUser: result.createdUser,
+      onboarded: true
+    });
+  } catch (err) {
+    sendInvitationError(res, err);
+  }
+});
+
+// ============================================================================
+// PERMISSIONS (P1 Task 7 - Role -> areas / agents / actions)
+// ============================================================================
+
+// GET the effective permission set for the authenticated caller.
+// The frontend mirrors this to hide areas; the backend still enforces it.
+router.get('/permissions/me', authenticateJWT, attachMembershipRole, async (req: AuthenticatedRequest, res) => {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
+  }
+  // P1 Task 8: the role now comes from the caller's Membership when one exists,
+  // falling back to User.role so accounts without a company keep working.
+  const membership = await resolveMembership(req.user.id);
+  const permissions = await getEffectivePermissions(req.user.id, req.user.role);
+  res.json({
+    userId: req.user.id,
+    storedRole: req.user.role,
+    role: permissions.role,
+    areas: permissions.areas,
+    agents: permissions.agents,
+    actions: permissions.actions,
+    startupId: membership?.startupId ?? null,
+    isOwner: membership?.isOwner ?? false
+  });
+});
+
+// GET the full role catalogue (used by the Add Person / role pickers).
+router.get('/permissions/roles', authenticateJWT, (req: AuthenticatedRequest, res) => {
+  res.json(ROLES.map(role => ({
+    role,
+    areas: ROLE_PERMISSIONS[role].areas,
+    agents: ROLE_PERMISSIONS[role].agents,
+    actions: ROLE_PERMISSIONS[role].actions
+  })));
+});
+
+// ============================================================================
 // TEAM MANAGEMENT (P1 Task 5 - People Directory)
 // ============================================================================
 
@@ -796,7 +1078,7 @@ const inMemoryTeamMembers: Array<{
 }> = [];
 
 // GET team members for the authenticated founder's venture
-router.get('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+router.get('/team', authenticateJWT, attachMembershipRole, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   if (!userId) {
     res.status(401).json({ error: 'Authentication required.' });
@@ -853,7 +1135,7 @@ router.get('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => {
 });
 
 // POST add a new team member
-router.post('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+router.post('/team', authenticateJWT, attachMembershipRole, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   if (!userId) {
     res.status(401).json({ error: 'Authentication required.' });
@@ -878,6 +1160,16 @@ router.post('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => 
     res.status(400).json({ error: 'Role is required.' });
     return;
   }
+  // P1 Task 7: roles are a fixed set, not free text, so the permission map always resolves.
+  const assignableRoles = ROLES.filter(r => r !== 'FOUNDER');
+  const canonicalRole = memberRole.toUpperCase();
+  if (!assignableRoles.includes(canonicalRole as any)) {
+    res.status(400).json({
+      error: `Role must be one of [${assignableRoles.join(', ')}].`,
+      allowedRoles: assignableRoles
+    });
+    return;
+  }
   if (!memberDept) {
     res.status(400).json({ error: 'Department is required.' });
     return;
@@ -893,7 +1185,7 @@ router.post('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => 
             title: memberName,
             description: JSON.stringify({
               fullName: memberName,
-              role: memberRole,
+              role: canonicalRole,
               department: memberDept,
               email: memberEmail,
               status: status || 'Active'
@@ -916,7 +1208,7 @@ router.post('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => 
           id: memory.id,
           fullName: memberName,
           name: memberName,
-          role: memberRole,
+          role: canonicalRole,
           department: memberDept,
           email: memberEmail,
           status: status || 'Active',
@@ -931,7 +1223,7 @@ router.post('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => 
       userId,
       fullName: memberName,
       name: memberName,
-      role: memberRole,
+      role: canonicalRole,
       department: memberDept,
       email: memberEmail,
       status: (status as any) || 'Active',
@@ -946,7 +1238,7 @@ router.post('/team', authenticateJWT, async (req: AuthenticatedRequest, res) => 
 });
 
 // DELETE remove a team member
-router.delete('/team/:id', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+router.delete('/team/:id', authenticateJWT, attachMembershipRole, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
   const { id } = req.params;
   if (!userId) {
@@ -956,11 +1248,25 @@ router.delete('/team/:id', authenticateJWT, async (req: AuthenticatedRequest, re
 
   try {
     if (isDbAvailable && prisma) {
-      await prisma.memory.deleteMany({
-        where: { id, category: 'TEAM_MEMBER' }
+      // Scope the delete to the caller's own startup so one tenant cannot
+      // remove another tenant's team member by guessing a Memory id.
+      const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+      if (!startup) {
+        res.status(404).json({ error: 'No venture found for this account.' });
+        return;
+      }
+      const removed = await prisma.memory.deleteMany({
+        where: { id, category: 'TEAM_MEMBER', startupId: startup.id }
       });
+      if (removed.count === 0) {
+        const idxMem = inMemoryTeamMembers.findIndex(m => m.id === id && m.userId === userId);
+        if (idxMem === -1) {
+          res.status(404).json({ error: 'Team member not found.' });
+          return;
+        }
+      }
     }
-    const idx = inMemoryTeamMembers.findIndex(m => m.id === id);
+    const idx = inMemoryTeamMembers.findIndex(m => m.id === id && m.userId === userId);
     if (idx !== -1) inMemoryTeamMembers.splice(idx, 1);
     res.json({ success: true, id });
   } catch (err: any) {
@@ -1121,7 +1427,7 @@ router.get('/approvals', authenticateJWT, async (req: AuthenticatedRequest, res)
 });
 
 // POST review action on approval item (Supports approve, modify, reject with idempotency)
-router.post('/approvals/:id/review', authenticateJWT, requireRole(['Founder', 'Admin']), async (req: AuthenticatedRequest, res) => {
+router.post('/approvals/:id/review', authenticateJWT, attachMembershipRole, requirePermission('approvals:review'), async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { action, feedback, modifications } = req.body; // action: 'approve' | 'modify' | 'reject'
   const idempotencyKey = req.header('Idempotency-Key');
@@ -1177,7 +1483,7 @@ router.post('/approvals/:id/review', authenticateJWT, requireRole(['Founder', 'A
 });
 
 // POST Section 26: Reversal of an approved deliverable
-router.post('/approvals/:id/reverse', authenticateJWT, requireRole(['Founder', 'Admin']), async (req: AuthenticatedRequest, res) => {
+router.post('/approvals/:id/reverse', authenticateJWT, attachMembershipRole, requirePermission('approvals:review'), async (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const { reason } = req.body || {};
   try {
@@ -1313,7 +1619,7 @@ router.get('/company/policies', authenticateJWT, async (req: AuthenticatedReques
 });
 
 // PUT update company policies (Section 7: Founder only)
-router.put('/company/policies', authenticateJWT, requireRole(['Founder', 'Admin']), async (req: AuthenticatedRequest, res) => {
+router.put('/company/policies', authenticateJWT, attachMembershipRole, requirePermission('startup:write'), async (req: AuthenticatedRequest, res) => {
   try {
     const userId = req.user?.id;
     let startupId = 'stp_default';
@@ -1348,6 +1654,14 @@ router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res)
         where: { ownerId: userId },
         orderBy: { createdAt: 'desc' }
       });
+      if (!activeStartup) {
+        const userContext = await companyContextService.getContextForUser(userId);
+        if (userContext?.startupId) {
+          activeStartup = await prisma.startup.findUnique({
+            where: { id: userContext.startupId }
+          });
+        }
+      }
     } catch (e: any) {
       console.warn('[Knowledge API] DB startup find failed:', e.message);
     }
@@ -1392,7 +1706,7 @@ router.get('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res)
 });
 
 // POST upload/ingest new knowledge document with multiple formats support
-router.post('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+router.post('/knowledge', authenticateJWT, requirePermission('knowledge:write'), async (req: AuthenticatedRequest, res) => {
   const { name, content, type, fileData, mimeType } = req.body;
   if (!name || !type) {
     res.status(400).json({ error: 'Missing required document name or type.' });
@@ -1441,6 +1755,12 @@ router.post('/knowledge', authenticateJWT, async (req: AuthenticatedRequest, res
       activeStartup = req.user?.id
         ? await prismaClient.startup.findFirst({ where: { ownerId: req.user.id } })
         : null;
+      if (!activeStartup && req.user?.id) {
+        const userContext = await companyContextService.getContextForUser(req.user.id);
+        if (userContext?.startupId) {
+          activeStartup = await prismaClient.startup.findUnique({ where: { id: userContext.startupId } });
+        }
+      }
     } catch (e: any) {
       console.warn('[Knowledge API] Active startup lookup warning:', e.message);
     }
@@ -1578,7 +1898,16 @@ Format your output exactly as valid JSON with "summary" (string) and "insights" 
       uploadDate: createdDoc.createdAt.toISOString(),
       summary: createdDoc.summary,
       insights: createdDoc.insights,
+      startupId
     };
+
+    // Synchronize in-memory knowledgeFiles for instant company-wide access
+    const existingIdx = knowledgeFiles.findIndex(k => k.id === newFile.id);
+    if (existingIdx >= 0) {
+      knowledgeFiles[existingIdx] = newFile as any;
+    } else {
+      knowledgeFiles.unshift(newFile as any);
+    }
 
     res.status(201).json(newFile);
   } catch (error: any) {
@@ -1654,35 +1983,53 @@ router.post('/knowledge/query', authenticateJWT, async (req: AuthenticatedReques
     return;
   }
 
-  if (!isDbAvailable) {
-    res.json({
-      answer: `### Knowledge Retrieval Response (Offline Mode)\n\nBased on your query "${query}", we simulated search against local offline knowledge base files.\n\n- No database is connected, showing simulated local insights.`,
-      citations: []
-    });
-    return;
-  }
-
   try {
-    const activeStartup = req.user?.id
-      ? await safeDbQuery(() => prisma.startup.findFirst({ where: { ownerId: req.user.id } }))
-      : null;
+    let activeStartup: any = null;
+    if (isDbAvailable && prisma && req.user?.id) {
+      activeStartup = await safeDbQuery(() => prisma.startup.findFirst({ where: { ownerId: req.user.id } }));
+    }
+    if (!activeStartup && req.user?.id) {
+      const userContext = await companyContextService.getContextForUser(req.user.id);
+      if (userContext?.startupId) {
+        if (isDbAvailable && prisma) {
+          activeStartup = await safeDbQuery(() => prisma.startup.findUnique({ where: { id: userContext.startupId } }));
+        }
+        if (!activeStartup) {
+          activeStartup = {
+            id: userContext.startupId,
+            name: userContext.startup?.name || startupProfile.name || 'Company',
+            industry: userContext.startup?.industry || startupProfile.industry || 'Technology',
+            description: userContext.startup?.description || startupProfile.description || '',
+            fundingStage: userContext.startup?.stage || startupProfile.fundingStage || 'Early Stage',
+            cashBalance: userContext.financials?.cashBalance || startupProfile.cashBalance || 250000,
+            burnRate: userContext.financials?.monthlyBurn || startupProfile.burnRate || 15000,
+            healthScore: userContext.startup?.healthScore || startupProfile.healthScore || 85
+          };
+        }
+      }
+    }
 
     if (!activeStartup) {
-      res.json({
-        answer: 'No corporate files matching your query have been indexed yet. Please upload relevant strategic documents (PDF, DOCX, PPTX, CSV) to feed the knowledge base!',
-        citations: []
-      });
-      return;
+      activeStartup = {
+        id: 'stp_default',
+        name: startupProfile.name || 'Company',
+        industry: startupProfile.industry || 'Technology',
+        description: startupProfile.description || '',
+        fundingStage: startupProfile.fundingStage || 'Early Stage',
+        cashBalance: startupProfile.cashBalance || 250000,
+        burnRate: startupProfile.burnRate || 15000,
+        healthScore: startupProfile.healthScore || 85
+      };
     }
     const startupId = activeStartup.id;
 
-    // 1. Perform Hybrid Search across all document chunks
+    // 1. Perform Hybrid Search across all document chunks (Postgres or in-memory company files)
     const limit = 5;
     const retrievedChunks = await performHybridSearch(query, startupId, limit);
 
     if (retrievedChunks.length === 0) {
       res.json({
-        answer: 'No corporate files matching your query have been indexed yet. Please upload relevant strategic documents (PDF, DOCX, PPTX, CSV) to feed the knowledge base!',
+        answer: `No corporate files matching your query have been indexed yet for **${activeStartup.name}**. Please upload relevant strategic documents (PDF, DOCX, PPTX, CSV) or complete founder onboarding to feed the knowledge base!`,
         citations: []
       });
       return;
