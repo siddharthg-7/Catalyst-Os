@@ -16,6 +16,7 @@ import {
   Deliverable 
 } from '../../src/types';
 import { multiAgentCouncil, CouncilExecutionResult } from './multiAgentCouncil';
+import { delegateWorkOrders } from './taskDelegationService';
 
 // Benchmark salaries for headcount modeling (annual USD)
 const SALARY_BENCHMARKS: Record<string, number> = {
@@ -861,6 +862,17 @@ export class OrchestrationService {
       command,
       canonical,
       evidence.map(e => e.excerpt)
+    );
+
+    // Phase A3: persist the CEO decomposition as assignable Task rows so the work
+    // survives the request and can reach an employee workspace. Delegation must
+    // never fail the founder's command, so this is deliberately non-throwing.
+    await delegateWorkOrders(
+      startupId,
+      councilResult.decomposition.workOrders.map(w => ({
+        department: w.department,
+        objective: w.objective
+      }))
     );
 
     const agents: OrchestrationAgentActivity[] = [];

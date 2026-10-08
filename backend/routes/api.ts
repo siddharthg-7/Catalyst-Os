@@ -38,6 +38,11 @@ import {
   MembershipError
 } from '../services/membershipService';
 import {
+  listTasksForUser,
+  updateTaskForUser,
+  TaskDelegationError
+} from '../services/taskDelegationService';
+import {
   createInvitation,
   listInvitations,
   revokeInvitation,
@@ -1108,6 +1113,46 @@ router.post('/invitations/accept', authRateLimiter, async (req: AuthenticatedReq
     });
   } catch (err) {
     sendInvitationError(res, err);
+  }
+});
+
+// ============================================================================
+// TASK DELEGATION (Phase A3)
+// The council's decomposition is persisted as assignable Task rows. Listing is
+// scoped to the caller's company AND their role: FOUNDER/ADMIN see the whole
+// workload, an employee sees only their own department's tasks.
+// ============================================================================
+
+function sendTaskError(res: any, err: any) {
+  if (err instanceof TaskDelegationError) {
+    res.status(err.status).json({ error: err.message, code: err.code });
+    return;
+  }
+  console.error('[Tasks API] Unexpected error:', err?.message);
+  res.status(500).json({ error: 'The task could not be processed.' });
+}
+
+// GET the tasks the caller is allowed to see.
+router.get('/tasks', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    res.json(await listTasksForUser(req.user!.id));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// PATCH a task's status and/or result. An employee advances their own work;
+// approved/rejected are reserved for the founder approval loop.
+router.patch('/tasks/:id', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    res.json(await updateTaskForUser({
+      userId: req.user!.id,
+      taskId: req.params.id,
+      status: req.body?.status,
+      result: req.body?.result
+    }));
+  } catch (err) {
+    sendTaskError(res, err);
   }
 });
 

@@ -1079,13 +1079,56 @@ export class ApprovalService {
       };
     }
 
-    const processed = processedApprovalsMap.get(approvalId);
+    let dbApproval: any = null;
+    let startup: any = null;
+
+    if (isDbAvailable && prisma) {
+      dbApproval = await safeDbQuery(() =>
+        prisma.approval.findUnique({
+          where: { id: approvalId },
+          include: {
+            plan: {
+              include: {
+                startup: true
+              }
+            }
+          }
+        })
+      );
+      if (dbApproval) {
+        startup = dbApproval.plan?.startup;
+      }
+    }
+
+    let processed = processedApprovalsMap.get(approvalId);
+    if (!processed && dbApproval && dbApproval.status === 'approved') {
+      processed = mapApprovalToDeliverable(dbApproval);
+      processedApprovalsMap.set(approvalId, processed);
+    }
+
     if (!processed) {
       return { success: false, statusCode: 404, error: 'Deliverable must be in processed approved state to be reversed.' };
     }
 
     if (processed.status !== 'approved') {
       return { success: false, statusCode: 400, error: `Cannot reverse deliverable with status "${processed.status}". Only approved items can be reversed.` };
+    }
+
+    if (startup && startup.ownerId && startup.ownerId !== userId) {
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'Forbidden: You do not have permission to reverse approvals for another company.'
+      };
+    }
+
+    if (!startup && isDbAvailable && prisma) {
+      const startupId = approvalToStartupMap.get(approvalId);
+      if (startupId) {
+        startup = await safeDbQuery(() => prisma.startup.findUnique({ where: { id: startupId } }));
+      } else if (userId) {
+        startup = await safeDbQuery(() => prisma.startup.findFirst({ where: { ownerId: userId } }));
+      }
     }
 
     const isHiring = (processed.type || '').toLowerCase() === 'contract' ||
@@ -1103,6 +1146,54 @@ export class ApprovalService {
     const origChange = processed.financialChange || 0;
     const restoredCashDelta = origChange < 0 ? Math.abs(origChange) : -origChange;
     const restoredBurnDelta = origChange < 0 ? -Math.round(Math.abs(origChange) / 12) : 0;
+
+    // Persist rollback to PostgreSQL database
+    if (startup && isDbAvailable && prisma) {
+      const newDbCash = Math.max(0, startup.cashBalance + restoredCashDelta);
+      const newDbBurn = Math.max(0, startup.burnRate + restoredBurnDelta);
+      await safeDbQuery(async () => {
+        await prisma.startup.update({
+          where: { id: startup.id },
+          data: {
+            cashBalance: newDbCash,
+            burnRate: newDbBurn
+          }
+        });
+
+        if (dbApproval) {
+          await prisma.approval.update({
+            where: { id: approvalId },
+            data: { status: 'rejected' }
+          });
+        }
+
+        await prisma.decisionLog.create({
+          data: {
+            title: `Reverse: ${processed!.title}`,
+            description: `Reversed by founder: "${reason || 'Founder reversed previous approval'}"`,
+            category: 'FINANCIAL',
+            impactText: `Reversal restored $${restoredCashDelta.toLocaleString()} to cash balance.`,
+            financialImpact: restoredCashDelta,
+            status: 'rejected',
+            startupId: startup.id
+          }
+        });
+
+        await prisma.timelineItem.create({
+          data: {
+            title: `Reversed: ${processed!.title}`,
+            content: reason || 'Founder reversed previous approval',
+            type: 'reversal',
+            startupId: startup.id
+          }
+        });
+      }, 3);
+
+      startup.cashBalance = newDbCash;
+      startup.burnRate = newDbBurn;
+      companyContextService.invalidate(startup.id);
+      companyContextService.invalidate(userId);
+    }
 
     startupProfile.cashBalance = Math.max(0, startupProfile.cashBalance + restoredCashDelta);
     startupProfile.burnRate = Math.max(0, startupProfile.burnRate + restoredBurnDelta);

@@ -298,8 +298,16 @@ async function run() {
         await (prisma as any).membership.deleteMany({ where: { startupId: startupB.id } });
         await prisma.startup.delete({ where: { id: startupB.id } });
       }
-      if (userA?.id) await prisma.user.delete({ where: { id: userA.id } });
-      if (userB?.id) await prisma.user.delete({ where: { id: userB.id } });
+      if (userA?.id) await prisma.user.delete({ where: { id: userA.id } }).catch(() => {});
+      if (userB?.id) await prisma.user.delete({ where: { id: userB.id } }).catch(() => {});
+      // Clean up any invitee users created during invitation acceptance tests
+      await prisma.user.deleteMany({
+        where: {
+          email: {
+            startsWith: 't10_'
+          }
+        }
+      }).catch(() => {});
       console.log('  Cleaned up test data.');
     } catch (cleanupErr: any) {
       console.warn('  Cleanup note:', cleanupErr.message);
