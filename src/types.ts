@@ -11,6 +11,10 @@ export interface StartupProfile {
   teamSize?: number | string;
   monthlyRevenue?: number | string;
   strategy?: string;
+  targetIcp?: string;
+  primaryProduct?: string;
+  goals?: string[];
+  priorities?: string[];
   cashBalance: number;
   burnRate: number;
   runwayMonths: number;
@@ -22,6 +26,19 @@ export interface StartupProfile {
     growthRate: number;
     operationsEfficiency: number;
   };
+}
+
+export interface DelegatedTask {
+  id: string;
+  title: string;
+  department: string;
+  agent: string;
+  ownerRole: string | null;
+  status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'rejected';
+  result: string | null;
+  needsHumanOwner: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type AgentRole =

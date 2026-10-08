@@ -615,6 +615,10 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
   try {
     const canonical = await workspaceService.getCanonicalContext(userId);
     if (canonical && canonical.startup && canonical.startup.name && canonical.startup.name.trim() !== '') {
+      const financialSection = canonical.financials || (canonical as any).financial || {};
+      const cash = financialSection.cashBalance ?? 245000;
+      const burn = financialSection.monthlyBurn ?? 18500;
+      const runway = financialSection.runwayMonths ?? (burn > 0 ? cash / burn : 12);
       return res.json({
         id: canonical.startupId,
         name: canonical.startup.name,
@@ -622,22 +626,23 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
         description: canonical.startup.description,
         fundingStage: canonical.startup.stage,
         stage: canonical.startup.stage,
-        cashBalance: canonical.financials.cashBalance,
-        burnRate: canonical.financials.monthlyBurn,
-        monthlyBurn: canonical.financials.monthlyBurn,
-        runwayMonths: canonical.financials.runwayMonths,
-        healthScore: (canonical.financials as any)?.healthScore || 82,
-        metrics: (canonical.financials as any)?.metrics || {
+        teamSize: canonical.operations?.teamSize || '8',
+        cashBalance: cash,
+        burnRate: burn,
+        monthlyBurn: burn,
+        runwayMonths: runway,
+        healthScore: financialSection.healthScore || 82,
+        metrics: financialSection.metrics || {
           velocity: 78,
           financialHealth: 84,
           legalCompliance: 92,
           growthRate: 65,
           operationsEfficiency: 80,
         },
-        targetIcp: canonical.business.targetIcp,
-        primaryProduct: canonical.business.primaryProduct,
-        goals: canonical.goals,
-        priorities: canonical.priorities,
+        targetIcp: canonical.business?.targetIcp,
+        primaryProduct: canonical.business?.primaryProduct,
+        goals: canonical.goals || canonical.growth?.goals,
+        priorities: canonical.priorities || canonical.growth?.currentPriorities,
         onboarded: true
       });
     }
@@ -654,6 +659,7 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
       description: startupProfile.description,
       fundingStage: startupProfile.fundingStage,
       stage: startupProfile.fundingStage,
+      teamSize: startupProfile.teamSize || '8',
       cashBalance: startupProfile.cashBalance,
       burnRate: startupProfile.burnRate,
       monthlyBurn: startupProfile.burnRate,

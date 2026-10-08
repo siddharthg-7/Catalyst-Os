@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, TeamMember, UserPermissions, CompanyInvitation } from './types';
+import { StartupProfile, Agent, Initiative, Deliverable, KnowledgeFile, DecisionRecord, TeamMember, UserPermissions, CompanyInvitation, DelegatedTask } from './types';
 import SaaSDashboard from './components/SaaSDashboard';
 import AgentWorkspace from './components/AgentWorkspace';
 import WorkflowCanvas from './components/WorkflowCanvas';
@@ -351,6 +351,9 @@ export default function App() {
   const [memberships, setMemberships] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<CompanyInvitation[]>([]);
 
+  // Phase A3 — Council decomposed work orders and delegated tasks.
+  const [tasks, setTasks] = useState<DelegatedTask[]>([]);
+
   // P1 Task 7 — effective permissions, mirrored from the backend.
   // Founder-equivalent defaults keep the UI usable until /api/permissions/me answers.
   const [permissions, setPermissions] = useState<UserPermissions>({
@@ -373,6 +376,19 @@ export default function App() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const hydrateTasks = async () => {
+    if (!user) return;
+    try {
+      const res = await apiFetch('/api/tasks');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setTasks(data);
+      }
+    } catch (err) {
+      console.warn('[App] Tasks refresh warning:', err);
+    }
+  };
+
   const hydrateState = async () => {
     if (!user) return;
     try {
@@ -387,9 +403,10 @@ export default function App() {
         apiFetch('/api/permissions/me'),
         apiFetch('/api/invitations'),
         apiFetch('/api/memberships'),
+        apiFetch('/api/tasks'),
       ]);
 
-      const [startupRes, agentsRes, initiativesRes, approvalsRes, decisionsRes, knowledgeRes, teamRes, permissionsRes, invitationsRes, membershipsRes] = results;
+      const [startupRes, agentsRes, initiativesRes, approvalsRes, decisionsRes, knowledgeRes, teamRes, permissionsRes, invitationsRes, membershipsRes, tasksRes] = results;
 
       if (invitationsRes.status === 'fulfilled' && invitationsRes.value.ok) {
         const data = await invitationsRes.value.json();
@@ -398,6 +415,10 @@ export default function App() {
       if (membershipsRes.status === 'fulfilled' && membershipsRes.value.ok) {
         const data = await membershipsRes.value.json();
         if (Array.isArray(data)) setMemberships(data);
+      }
+      if (tasksRes.status === 'fulfilled' && tasksRes.value.ok) {
+        const taskData = await tasksRes.value.json();
+        if (Array.isArray(taskData)) setTasks(taskData);
       }
 
       if (permissionsRes.status === 'fulfilled' && permissionsRes.value.ok) {
@@ -1048,11 +1069,15 @@ export default function App() {
                     approvals={approvals}
                     decisions={decisions}
                     knowledge={knowledge}
+                    tasks={tasks}
+                    memberships={memberships}
+                    invitations={invitations}
                     onReviewItem={handleReviewItem}
                     onUploadDoc={handleUploadDoc}
                     onLaunchInitiative={handleLaunchInitiative}
                     onSimulateInitiative={handleSimulateInitiative}
                     onUpdateStartup={handleUpdateStartup}
+                    onRefreshTasks={hydrateTasks}
                     onNavigate={(tab) => handleTabChange(tab)}
                   />
                 )}
