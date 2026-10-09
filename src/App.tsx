@@ -18,6 +18,7 @@ import PeopleDirectory from './components/PeopleDirectory';
 import AcceptInvitation from './components/AcceptInvitation';
 import EmployeeWorkspace from './components/EmployeeWorkspace';
 import ExecutiveCouncilWorkspace from './components/ExecutiveCouncilWorkspace';
+import RoleAwareDashboard from './components/RoleAwareDashboard';
 import { 
   Bell,
   CheckSquare, 
@@ -192,6 +193,7 @@ export default function App() {
   const [notificationsOpen, setNotificationsOpen] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [selectedTaskIdForWorkspace, setSelectedTaskIdForWorkspace] = useState<string | null>(null);
 
   // Sync selected agent with URL if on /dashboard/agents/:agentId
   useEffect(() => {
@@ -415,6 +417,31 @@ export default function App() {
   const hydrateState = async () => {
     if (!user) return;
     try {
+      const userRoleUpper = (user.role || '').toUpperCase();
+      const isEmployee = ['HR', 'FINANCE', 'GROWTH', 'OPERATIONS'].includes(userRoleUpper);
+
+      // Fast-path role-scoped loading for employees: avoids 7 unauthorized founder roundtrips
+      if (isEmployee) {
+        const [startupRes, agentsRes, permissionsRes, tasksRes] = await Promise.allSettled([
+          apiFetch('/api/startup'),
+          apiFetch('/api/agents'),
+          apiFetch('/api/permissions/me'),
+          apiFetch('/api/tasks'),
+        ]);
+
+        if (tasksRes.status === 'fulfilled' && tasksRes.value.ok) {
+          const taskData = await tasksRes.value.json();
+          if (Array.isArray(taskData)) setTasks(taskData);
+        }
+        if (permissionsRes.status === 'fulfilled' && permissionsRes.value.ok) {
+          const perms = await permissionsRes.value.json();
+          if (perms && Array.isArray(perms.areas) && Array.isArray(perms.actions)) setPermissions(perms);
+        }
+        if (startupRes.status === 'fulfilled' && startupRes.value.ok) setStartup(await startupRes.value.json());
+        if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) setAgents(await agentsRes.value.json());
+        return;
+      }
+
       const results = await Promise.allSettled([
         apiFetch('/api/startup'),
         apiFetch('/api/agents'),
@@ -737,7 +764,7 @@ export default function App() {
 
   const handleReviewItem = async (
     id: string, 
-    action: 'approve' | 'modify' | 'reject', 
+    action: 'approve' | 'modify' | 'reject' | 'request_changes', 
     feedback?: string,
     modifications?: any
   ) => {
@@ -760,11 +787,16 @@ export default function App() {
         const decRes = await apiFetch('/api/decisions');
         if (decRes.ok) setDecisions(await decRes.json());
 
+        // Refresh task status across the shared application shell
+        await hydrateTasks();
+
         const toastMsg = 
           action === 'approve'
             ? 'Deliverable signed off. System metrics and ledger adjusted.'
             : action === 'modify'
             ? 'Deliverable approved with modified parameters. Metrics adjusted.'
+            : action === 'request_changes'
+            ? 'Revision requested. Deliverable returned to employee workspace with founder directives.'
             : 'Deliverable rejected with founder directives and returned to council.';
         showToast(toastMsg, action === 'reject' ? 'info' : 'success');
       } else {
@@ -815,7 +847,7 @@ export default function App() {
 
     // ── Navigation Categories (Linear & Notion Information Architecture) ───────
     interface NavItem {
-      id: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people';
+      id: string;
       label: string;
       Icon: any;
       badge?: string;
@@ -827,9 +859,12 @@ export default function App() {
       items: NavItem[];
     }
 
+    const isPrivileged = user?.role === 'FOUNDER' || user?.role === 'ADMIN' || user?.role === 'Founder' || permissions.role === 'FOUNDER' || permissions.role === 'ADMIN';
+    const normRole = (user?.role || permissions.role || 'FOUNDER').toUpperCase();
+
     const navSections: NavSection[] = [
       {
-        title: 'Workspace',
+        title: isPrivileged ? 'Workspace' : `${normRole} Command`,
         items: [
           { id: 'dashboard' as const, label: 'Overview', Icon: LayoutDashboard },
           { id: 'workspace' as const, label: 'Tasks & Projects', Icon: CheckSquare },
@@ -918,7 +953,7 @@ export default function App() {
                       return (
                         <button
                           key={id}
-                          onClick={() => handleTabChange(id)}
+                          onClick={() => handleTabChange(id as any)}
                           title={sidebarCollapsed ? label : undefined}
                           className={`w-full flex items-center rounded-lg text-xs font-medium transition-colors cursor-pointer text-left ${
                             sidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-2'
@@ -1131,24 +1166,41 @@ export default function App() {
                 transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
               >
                 {activeTab === 'dashboard' && startup && (
-                  <SaaSDashboard 
-                    startup={startup}
-                    agents={agents}
-                    initiatives={initiatives}
-                    approvals={approvals}
-                    decisions={decisions}
-                    knowledge={knowledge}
-                    tasks={tasks}
-                    memberships={memberships}
-                    invitations={invitations}
-                    onReviewItem={handleReviewItem}
-                    onUploadDoc={handleUploadDoc}
-                    onLaunchInitiative={handleLaunchInitiative}
-                    onSimulateInitiative={handleSimulateInitiative}
-                    onUpdateStartup={handleUpdateStartup}
-                    onRefreshTasks={hydrateTasks}
-                    onNavigate={(tab) => handleTabChange(tab as any)}
-                  />
+                  isPrivileged ? (
+                    <SaaSDashboard 
+                      startup={startup}
+                      agents={agents}
+                      initiatives={initiatives}
+                      approvals={approvals}
+                      decisions={decisions}
+                      knowledge={knowledge}
+                      tasks={tasks}
+                      memberships={memberships}
+                      invitations={invitations}
+                      onReviewItem={handleReviewItem}
+                      onUploadDoc={handleUploadDoc}
+                      onLaunchInitiative={handleLaunchInitiative}
+                      onSimulateInitiative={handleSimulateInitiative}
+                      onUpdateStartup={handleUpdateStartup}
+                      onRefreshTasks={hydrateTasks}
+                      onNavigate={(tab) => handleTabChange(tab as any)}
+                    />
+                  ) : (
+                    <RoleAwareDashboard 
+                      userRole={user?.role || permissions.role}
+                      userName={user?.name || 'Team Member'}
+                      companyName={startup?.name}
+                      tasks={tasks}
+                      teamMembers={teamMembers}
+                      onOpenTask={(taskId) => {
+                        setSelectedTaskIdForWorkspace(taskId);
+                        handleTabChange('workspace');
+                      }}
+                      onNavigate={(tab) => handleTabChange(tab as any)}
+                      onRefreshTasks={hydrateTasks}
+                      apiFetch={apiFetch}
+                    />
+                  )
                 )}
 
                 {activeTab === 'workspace' && (
@@ -1156,6 +1208,7 @@ export default function App() {
                     userRole={user?.role}
                     userName={user?.name}
                     companyName={startup?.name}
+                    initialTaskId={selectedTaskIdForWorkspace}
                     onRefreshTasks={hydrateTasks}
                     onNavigateToApprovals={() => handleTabChange('approvals')}
                   />

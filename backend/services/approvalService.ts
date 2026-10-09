@@ -22,7 +22,7 @@ export interface ReviewApprovalParams {
   userId: string;
   userRole?: string;
   startupId?: string;
-  action: 'approve' | 'modify' | 'reject';
+  action: 'approve' | 'modify' | 'reject' | 'request_changes' | 'changes_requested';
   feedback?: string;
   idempotencyKey?: string;
   modifications?: {
@@ -105,17 +105,48 @@ export function incrementTeamSize(existingDescription: string, countToAdd: numbe
  * Maps a Prisma Approval record to standard Deliverable interface.
  */
 export function mapApprovalToDeliverable(appr: any): Deliverable {
-  let metricChanges = { velocity: 0, financialHealth: 0, legalCompliance: 0, growthRate: 0, operationsEfficiency: 0 };
+  let metricChanges: any = { velocity: 0, financialHealth: 0, legalCompliance: 0, growthRate: 0, operationsEfficiency: 0 };
+  let extraMeta: any = {};
   if (appr.metricChanges) {
     if (typeof appr.metricChanges === 'string') {
       try {
-        metricChanges = { ...metricChanges, ...JSON.parse(appr.metricChanges) };
+        const parsed = JSON.parse(appr.metricChanges);
+        extraMeta = parsed;
+        metricChanges = { ...metricChanges, ...parsed };
       } catch {
         // ignore parse error
       }
     } else if (typeof appr.metricChanges === 'object') {
+      extraMeta = appr.metricChanges;
       metricChanges = { ...metricChanges, ...appr.metricChanges };
     }
+  }
+
+  // Phase D2: Extract structured fields for Founder Approval Experience
+  let preparedBy = extraMeta.preparedBy;
+  let preparedByRole = extraMeta.preparedByRole;
+  let aiAssistance = extraMeta.aiAssistance;
+  let summary = extraMeta.summary || appr.description;
+  let recommendation = extraMeta.recommendation;
+  let taskId = extraMeta.taskId || (appr.id?.startsWith('appr_task_') ? appr.id.replace('appr_task_', '') : undefined);
+  let founderFeedback = extraMeta.founderFeedback;
+
+  // Fallbacks if not stored in metricChanges
+  if (!preparedBy && appr.id?.startsWith('appr_task_')) {
+    preparedBy = 'HR Employee';
+    preparedByRole = 'HR';
+  }
+  if ((!aiAssistance || aiAssistance === 'Talent') && appr.id?.startsWith('appr_task_')) {
+    aiAssistance = 'Echo';
+  }
+  if (!recommendation && aiAssistance) {
+    recommendation = `Recommended for sign-off by ${aiAssistance} & Employee.`;
+  }
+
+  // Check if content has embedded founder directive
+  if (!founderFeedback && typeof appr.content === 'string') {
+    const match = appr.content.match(/\[FOUNDER_(?:DIRECTIVE|FEEDBACK)\]:\s*([^\n]+)/);
+    if (match) founderFeedback = match[1].trim();
   }
 
   return {
@@ -127,8 +158,15 @@ export function mapApprovalToDeliverable(appr: any): Deliverable {
     content: appr.content || appr.description,
     impact: appr.impact || 'Requires founder verification.',
     financialChange: appr.financialChange ?? 0,
-    status: appr.status || 'pending_review',
-    metricChanges
+    status: (appr.status as any) || 'pending_review',
+    metricChanges,
+    preparedBy,
+    preparedByRole,
+    aiAssistance,
+    summary,
+    recommendation,
+    taskId,
+    founderFeedback
   };
 }
 
@@ -266,8 +304,8 @@ export class ApprovalService {
       return [];
     }
 
-    let userStartupId: string | null = null;
-    if (isDbAvailable && prisma) {
+    let userStartupId: string | null = userToStartupMap.get(userId) || null;
+    if (!userStartupId && isDbAvailable && prisma) {
       const userStartup = await safeDbQuery(() =>
         prisma.startup.findFirst({
           where: { ownerId: userId },
@@ -276,6 +314,18 @@ export class ApprovalService {
       );
       if (userStartup) {
         userStartupId = userStartup.id;
+        userToStartupMap.set(userId, userStartup.id);
+      } else {
+        const mem: any = await safeDbQuery(() =>
+          (prisma as any).membership.findFirst({
+            where: { userId, status: 'ACTIVE' },
+            select: { startupId: true }
+          })
+        );
+        if (mem?.startupId) {
+          userStartupId = mem.startupId;
+          userToStartupMap.set(userId, mem.startupId);
+        }
       }
     }
 
@@ -502,7 +552,7 @@ export class ApprovalService {
     const currentStatus = dbApproval ? dbApproval.status : memoryApproval?.status;
 
     // 3. Idempotency Guard: prevent re-executing already processed approvals
-    if (currentStatus !== 'pending_review') {
+    if (currentStatus !== 'pending_review' && currentStatus !== 'pending') {
       const deliverable = dbApproval ? mapApprovalToDeliverable(dbApproval) : memoryApproval!;
       const alreadyStatusResult: ReviewApprovalResult = {
         success: true,
@@ -625,6 +675,127 @@ export class ApprovalService {
       });
 
       return rejectResult;
+    }
+
+    // 4.5 Handle REQUEST CHANGES (Phase D3: Employee Review -> Founder Approval Loop)
+    if (action === 'request_changes' || (action as any) === 'request-changes' || (action as any) === 'changes_requested') {
+      const directiveFeedback = feedback?.trim() || 'Please revise deliverable per founder directives and resubmit.';
+
+      if (dbApproval && isDbAvailable && prisma) {
+        await safeDbQuery(async () => {
+          await prisma.approval.update({
+            where: { id: approvalId },
+            data: {
+              status: 'changes_requested',
+              content: `${dbApproval.content}\n\n[FOUNDER_DIRECTIVE]: ${directiveFeedback}`
+            }
+          });
+
+          if (approvalId.startsWith('appr_task_')) {
+            const taskId = approvalId.replace('appr_task_', '');
+            await (prisma as any).task.update({
+              where: { id: taskId },
+              data: {
+                status: 'in_progress',
+                result: `${dbApproval.content}\n\n[FOUNDER_DIRECTIVE]: ${directiveFeedback}`
+              }
+            }).catch(() => {});
+          }
+
+          await prisma.decisionLog.create({
+            data: {
+              title: `Changes Requested: ${dbApproval.title}`,
+              description: `Founder requested modifications: "${directiveFeedback}"`,
+              category: (dbApproval.type || 'OPERATIONS').toUpperCase(),
+              impactText: 'Execution held pending employee revision. No financial mutations applied.',
+              financialImpact: 0,
+              status: 'changes_requested',
+              startupId: startup.id
+            }
+          });
+
+          await prisma.timelineItem.create({
+            data: {
+              title: `Changes Requested: ${dbApproval.title}`,
+              content: `Founder directive: "${directiveFeedback}". Deliverable returned to employee workspace.`,
+              type: 'revision_requested',
+              startupId: startup.id
+            }
+          });
+
+          await prisma.notification.create({
+            data: {
+              title: `Revision Requested: ${dbApproval.title}`,
+              message: `Founder directive: "${directiveFeedback}". Please update work and resubmit.`,
+              type: 'CHANGES_REQUESTED',
+              startupId: startup.id
+            }
+          });
+        }, 3);
+
+        companyContextService.invalidate(startup.id);
+        companyContextService.invalidate(userId);
+      }
+
+      if (memoryApproval) {
+        memoryApproval.status = 'changes_requested';
+        decisionLog.unshift({
+          id: `dec_${Date.now()}`,
+          title: `Changes Requested: ${memoryApproval.title}`,
+          description: `Founder requested modifications: "${directiveFeedback}"`,
+          category: memoryApproval.type.toUpperCase(),
+          timestamp: new Date().toISOString(),
+          impactText: 'Execution held pending employee revision. No financial mutations applied.',
+          financialImpact: 0,
+          status: 'changes_requested'
+        });
+        persistCurrentState();
+      }
+
+      decisionLedgerService.appendEvent({
+        decisionId: approvalId,
+        startupId: startup?.id || 'stp_default',
+        workflowId: dbApproval?.initiativeId || memoryApproval?.initiativeId || approvalId,
+        actor: `Founder (${userId})`,
+        eventType: 'FOUNDER_CHANGES_REQUESTED',
+        payload: { feedback: directiveFeedback }
+      });
+
+      // Clear from processedApprovalsMap so when employee resubmits it can be reviewed again
+      processedApprovalsMap.delete(approvalId);
+
+      const changeItem = dbApproval 
+        ? mapApprovalToDeliverable({ 
+            ...dbApproval, 
+            status: 'changes_requested', 
+            content: `${dbApproval.content}\n\n[FOUNDER_DIRECTIVE]: ${directiveFeedback}` 
+          }) 
+        : { ...memoryApproval!, status: 'changes_requested' as any, founderFeedback: directiveFeedback };
+
+      const changeReqResult: ReviewApprovalResult = {
+        success: true,
+        message: 'Changes requested. Deliverable returned to employee workspace with founder directives.',
+        item: changeItem,
+        startupProfile: await this.buildStartupProfile(startup),
+        stateChangesApplied: {
+          isStateChanging: false,
+          cashBalanceDelta: 0,
+          burnRateDelta: 0,
+          teamSizeDelta: 0,
+          runwayMonths: startup ? (startup.burnRate > 0 ? parseFloat((startup.cashBalance / startup.burnRate).toFixed(1)) : 999) : 0,
+          healthScoreDelta: 0
+        }
+      };
+
+      await idempotencyService.commit({
+        tenantId: effectiveTenantId,
+        approvalId,
+        action,
+        idempotencyKey: params.idempotencyKey,
+        result: changeReqResult
+      });
+
+      return changeReqResult;
     }
 
     // 5. Handle APPROVAL & MODIFICATION

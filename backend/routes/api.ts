@@ -43,6 +43,7 @@ import {
   assignTaskForUser,
   getRoleScopedContext,
   getAgentDraftForTask,
+  assistEmployeeOnTask,
   listPlansForUser,
   getPlanById,
   ensureAiSpecialistCapability,
@@ -274,14 +275,14 @@ router.post('/auth/signin', authRateLimiter, async (req, res) => {
     }
 
     if (user.passwordHash) {
-      const isValid = bcrypt.compareSync(password, user.passwordHash);
+      const isValid = await bcrypt.compare(password, user.passwordHash);
       if (!isValid) {
         res.status(401).json({ error: 'Invalid email or password.' });
         return;
       }
     } else {
       // If legacy or demo account without password, upgrade password
-      const newHash = bcrypt.hashSync(password, 10);
+      const newHash = await bcrypt.hash(password, 10);
       user.passwordHash = newHash;
       if (isDbAvailable && prisma) {
         await safeDbQuery(() => (prisma as any).user.update({
@@ -291,24 +292,37 @@ router.post('/auth/signin', authRateLimiter, async (req, res) => {
       }
     }
 
-    // Check if user already has an onboarded startup workspace
+    // Fast-path check if user already has an onboarded startup workspace
     let userStartup: any = null;
     let isOnboarded = false;
     if (isDbAvailable && prisma) {
       try {
-        const canonical = await workspaceService.getCanonicalContext(user.id);
-        if (canonical && canonical.startup && canonical.startup.name) {
+        let startup = await safeDbQuery(() => prisma.startup.findFirst({
+          where: { ownerId: user.id }
+        }));
+        if (!startup) {
+          const mem: any = await safeDbQuery(() => (prisma as any).membership.findFirst({
+            where: { userId: user.id, status: 'ACTIVE' },
+            select: { startupId: true }
+          }));
+          if (mem?.startupId) {
+            startup = await safeDbQuery(() => prisma.startup.findUnique({
+              where: { id: mem.startupId }
+            }));
+          }
+        }
+        if (startup && startup.name) {
           isOnboarded = true;
           userStartup = {
-            id: canonical.startupId,
-            name: canonical.startup.name,
-            industry: canonical.startup.industry,
-            description: canonical.startup.description,
-            fundingStage: canonical.startup.stage,
-            cashBalance: canonical.financials.cashBalance,
-            burnRate: canonical.financials.monthlyBurn,
-            runwayMonths: canonical.financials.runwayMonths,
-            healthScore: 80,
+            id: startup.id,
+            name: startup.name,
+            industry: startup.industry,
+            description: startup.description,
+            fundingStage: startup.fundingStage,
+            cashBalance: startup.cashBalance,
+            burnRate: startup.burnRate,
+            runwayMonths: startup.burnRate > 0 ? parseFloat((startup.cashBalance / startup.burnRate).toFixed(1)) : 999,
+            healthScore: startup.healthScore || 80,
             metrics: {
               velocity: 85,
               financialHealth: 90,
@@ -316,10 +330,6 @@ router.post('/auth/signin', authRateLimiter, async (req, res) => {
               growthRate: 45,
               operationsEfficiency: 88,
             },
-            targetIcp: canonical.business.targetIcp,
-            primaryProduct: canonical.business.primaryProduct,
-            goals: canonical.goals,
-            priorities: canonical.priorities,
             onboarded: true
           };
         }
@@ -440,19 +450,32 @@ router.get('/auth/me', authenticateJWT, async (req: AuthenticatedRequest, res) =
   let isOnboarded = false;
   if (user?.id && isDbAvailable && prisma) {
     try {
-      const canonical = await workspaceService.getCanonicalContext(user.id);
-      if (canonical && canonical.startup && canonical.startup.name) {
+      let startup = await safeDbQuery(() => prisma.startup.findFirst({
+        where: { ownerId: user.id }
+      }));
+      if (!startup) {
+        const mem: any = await safeDbQuery(() => (prisma as any).membership.findFirst({
+          where: { userId: user.id, status: 'ACTIVE' },
+          select: { startupId: true }
+        }));
+        if (mem?.startupId) {
+          startup = await safeDbQuery(() => prisma.startup.findUnique({
+            where: { id: mem.startupId }
+          }));
+        }
+      }
+      if (startup && startup.name) {
         isOnboarded = true;
         userStartup = {
-          id: canonical.startupId,
-          name: canonical.startup.name,
-          industry: canonical.startup.industry,
-          description: canonical.startup.description,
-          fundingStage: canonical.startup.stage,
-          cashBalance: canonical.financials.cashBalance,
-          burnRate: canonical.financials.monthlyBurn,
-          runwayMonths: canonical.financials.runwayMonths,
-          healthScore: 80,
+          id: startup.id,
+          name: startup.name,
+          industry: startup.industry,
+          description: startup.description,
+          fundingStage: startup.fundingStage,
+          cashBalance: startup.cashBalance,
+          burnRate: startup.burnRate,
+          runwayMonths: startup.burnRate > 0 ? parseFloat((startup.cashBalance / startup.burnRate).toFixed(1)) : 999,
+          healthScore: startup.healthScore || 80,
           metrics: {
             velocity: 85,
             financialHealth: 90,
@@ -460,10 +483,6 @@ router.get('/auth/me', authenticateJWT, async (req: AuthenticatedRequest, res) =
             growthRate: 45,
             operationsEfficiency: 88,
           },
-          targetIcp: canonical.business.targetIcp,
-          primaryProduct: canonical.business.primaryProduct,
-          goals: canonical.goals,
-          priorities: canonical.priorities,
           onboarded: true
         };
       }
@@ -591,6 +610,91 @@ const handleGetCompanyContext = async (req: AuthenticatedRequest, res: any) => {
         res.status(404).json({ error: 'No startup workspace found for authenticated user.', onboarded: false });
         return;
       }
+    }
+
+    const membership = await resolveMembership(userId);
+    const callerRole = (membership?.role || req.user?.role || 'FOUNDER').toUpperCase();
+    const isPrivileged = callerRole === 'FOUNDER' || callerRole === 'ADMIN';
+
+    if (!isPrivileged) {
+      // Phase C3: Strictly role-scoped company context (Zero cross-department leaks)
+      const agentScopedContext = companyContextService.getAgentScopedContext(context, callerRole);
+      const workspaceContext = await getRoleScopedContext({ userId });
+
+      return res.json({
+        onboarded: true,
+        startupId: context.metadata?.startupId || membership?.startupId,
+        identity: {
+          name: context.identity?.name,
+          industry: context.identity?.industry,
+          stage: context.identity?.stage,
+          description: context.identity?.description
+        },
+        role: callerRole,
+        department: workspaceContext.department,
+        agentScopedContext,
+        accessibleDocuments: workspaceContext.accessibleDocuments,
+        // Role-specific sections according to C3:
+        ...(callerRole === 'HR' ? {
+          people: {
+            teamSize: context.operations?.teamSize || '8',
+            biggestChallenge: context.operations?.biggestChallenge || 'Engineering hiring velocity',
+            strategicGoals: context.goals?.strategicGoals || []
+          },
+          hiring: {
+            openRequisitions: ['Senior Backend Engineer', 'Staff React Engineer', 'Infrastructure Lead'],
+            pipelineStages: ['Recruiter Screen', 'Technical Pairing', 'System Architecture', 'Founder Review'],
+            levelingBand: 'IC4 - IC5 Standard'
+          },
+          policies: workspaceContext.accessibleDocuments.filter(d =>
+            d.name.toLowerCase().includes('hiring') || d.name.toLowerCase().includes('handbook')
+          )
+        } : callerRole === 'FINANCE' ? {
+          finance: {
+            cashBalance: context.financial?.cashBalance,
+            monthlyBurn: context.financial?.monthlyBurn,
+            runwayMonths: context.financial?.runwayMonths,
+            healthScore: context.financial?.healthScore
+          },
+          budgets: {
+            departmentAllocations: [
+              { department: 'Engineering / R&D', allocation: '55%', monthly: '$10,175' },
+              { department: 'Growth & Marketing', allocation: '25%', monthly: '$4,625' },
+              { department: 'General & Admin', allocation: '20%', monthly: '$3,700' }
+            ],
+            disbursementThreshold: '$10,000 dual sign-off'
+          },
+          documents: workspaceContext.accessibleDocuments
+        } : callerRole === 'GROWTH' ? {
+          growth: {
+            targetIcp: context.business?.targetIcp,
+            primaryProduct: context.business?.primaryProduct,
+            problemSolved: context.business?.problem,
+            growthPriorities: context.growth?.currentPriorities,
+            targetTimeline: context.growth?.targetTimeline
+          },
+          campaigns: [
+            { name: 'Developer Ecosystem Inbound', channel: 'Content & Open-Source', status: 'Active' },
+            { name: 'Founder Direct Outbound', channel: 'Cold Email & LinkedIn', status: 'In Review' },
+            { name: 'Product-Led Onboarding Loop', channel: 'In-App Viral Invites', status: 'Active' }
+          ],
+          documents: workspaceContext.accessibleDocuments
+        } : callerRole === 'OPERATIONS' ? {
+          operations: {
+            teamSize: context.operations?.teamSize || '8',
+            workflowVelocity: '88% SLA Adherence',
+            efficiencyScore: context.financial?.metrics?.operationsEfficiency || 80
+          },
+          processes: [
+            { name: 'Infrastructure Deployment & CI/CD SLA', version: '2.4', owner: 'Helix' },
+            { name: 'Incident Response & P0 Escalation Matrix', version: '1.2', owner: 'Operations' },
+            { name: 'Team Capacity & Sprint Velocity Modeling', version: '3.0', owner: 'Helix' }
+          ],
+          documents: workspaceContext.accessibleDocuments
+        } : {
+          documents: workspaceContext.accessibleDocuments
+        })
+      });
     }
 
     const responsePayload: any = {
@@ -1195,6 +1299,24 @@ router.get('/tasks/:id/draft', authenticateJWT, requireActiveMembership, require
   }
 });
 
+// POST interact with companion AI executive assistant on a task (Phase C5).
+router.post('/tasks/:id/assistant', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { question, currentDraft } = req.body || {};
+    if (!question || typeof question !== 'string') {
+      return res.status(400).json({ error: 'Question is required for AI assistance.' });
+    }
+    res.json(await assistEmployeeOnTask({
+      userId: req.user!.id,
+      taskId: req.params.id,
+      question,
+      currentDraft
+    }));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
 // GET employee workspace payload: companion agent, role-scoped documents, metrics (Phase B2).
 router.get('/workspace/employee', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   try {
@@ -1711,8 +1833,9 @@ router.post('/approvals/:id/review', authenticateJWT, requireActiveMembership, r
     }
   }
 
-  if (!action || !['approve', 'modify', 'reject'].includes(action)) {
-    return res.status(400).json({ error: 'Valid action ("approve" | "modify" | "reject") is required.' });
+  const normalizedAction = (action === 'request-changes' || action === 'changes_requested') ? 'request_changes' : action;
+  if (!normalizedAction || !['approve', 'modify', 'reject', 'request_changes'].includes(normalizedAction)) {
+    return res.status(400).json({ error: 'Valid action ("approve" | "modify" | "reject" | "request_changes") is required.' });
   }
 
   try {
@@ -1720,7 +1843,7 @@ router.post('/approvals/:id/review', authenticateJWT, requireActiveMembership, r
       approvalId: id,
       userId: req.user!.id,
       userRole: req.user!.role,
-      action: action as any,
+      action: normalizedAction as any,
       feedback,
       modifications,
       idempotencyKey

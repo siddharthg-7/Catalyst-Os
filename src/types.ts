@@ -67,8 +67,10 @@ export interface DelegatedTask {
   ownerRole: string | null;
   assignedUserId?: string | null;
   assignedUserName?: string | null;
-  status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'rejected';
+  status: 'pending' | 'in_progress' | 'submitted' | 'changes_requested' | 'approved' | 'rejected';
   result: string | null;
+  founderFeedback?: string | null;
+  changesRequested?: boolean;
   needsHumanOwner: boolean;
   humanRequirement?: HumanRoleRequirement | null;
   createdAt: string;
@@ -186,7 +188,7 @@ export interface Deliverable {
   title: string;
   description: string;
   type: 'document' | 'contract' | 'financials' | 'marketing_plan' | 'policy';
-  status: 'pending_review' | 'approved' | 'rejected';
+  status: 'pending_review' | 'approved' | 'rejected' | 'changes_requested';
   content: string;
   impact: string;
   financialChange?: number;
@@ -203,6 +205,14 @@ export interface Deliverable {
   reversibility?: 'REVERSIBLE' | 'IRREVERSIBLE';
   headcount?: number;
   conditions?: string[];
+  // Phase D — Employee Review -> Founder Approval Experience
+  preparedBy?: string;
+  preparedByRole?: string;
+  aiAssistance?: string;
+  summary?: string;
+  recommendation?: string;
+  taskId?: string;
+  founderFeedback?: string;
 }
 
 export interface Initiative {
@@ -297,7 +307,7 @@ export interface DecisionRecord {
   timestamp: string;
   impactText: string;
   financialImpact: number;
-  status: 'approved' | 'rejected' | 'failed';
+  status: 'approved' | 'rejected' | 'failed' | 'changes_requested';
   participatingAgents?: string[];
   votes?: Array<{ agent: string; verdict: 'APPROVE' | 'APPROVE_WITH_CONDITIONS' | 'VETO'; reason?: string }>;
   confidence?: number;

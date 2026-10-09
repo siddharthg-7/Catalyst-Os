@@ -11,13 +11,13 @@ import { Deliverable } from '../types';
 import {
   CheckCircle2, XCircle, FileText, ChevronRight,
   Shield, SlidersHorizontal, ArrowRight, Check, X,
-  Search, ExternalLink, Scale, Sparkles
+  Search, ExternalLink, Scale, Sparkles, RotateCcw
 } from 'lucide-react';
 import Section from './Section';
 
 interface ApprovalQueueProps {
   approvals: Deliverable[];
-  onReviewItem: (id: string, action: 'approve' | 'modify' | 'reject', feedback?: string, modifications?: any) => Promise<void>;
+  onReviewItem: (id: string, action: 'approve' | 'modify' | 'reject' | 'request_changes', feedback?: string, modifications?: any) => Promise<void>;
   currentCash?: number;
   currentBurn?: number;
 }
@@ -36,6 +36,8 @@ export default function ApprovalQueue({
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModifying, setIsModifying] = useState(false);
+  const [isRequestingChanges, setIsRequestingChanges] = useState(false);
+  const [changesDirective, setChangesDirective] = useState('');
 
   // Modification form state
   const [customCost, setCustomCost] = useState<string>('');
@@ -445,6 +447,92 @@ export default function ApprovalQueue({
             {/* Drawer Body */}
             <div className="p-6 space-y-6 flex-1">
               
+              {/* Phase D2 — Founder Approval Experience Card */}
+              <div 
+                className="p-5 rounded-2xl border space-y-4 shadow-sm"
+                style={{ 
+                  backgroundColor: 'var(--c-surface-2)', 
+                  border: '1px solid var(--c-border)' 
+                }}
+              >
+                <div className="flex items-center justify-between pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
+                  <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-500 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    APPROVAL REQUIRED
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    Phase D Executive Gate
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider block font-bold" style={{ color: 'var(--c-muted)' }}>
+                    Task:
+                  </span>
+                  <h4 className="text-sm font-bold mt-0.5" style={{ color: 'var(--c-fg)' }}>
+                    {selectedItem.title}
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+                    <span className="text-[9px] font-mono uppercase tracking-wider block font-bold" style={{ color: 'var(--c-muted)' }}>
+                      Prepared by:
+                    </span>
+                    <span className="text-xs font-semibold mt-0.5 block truncate" style={{ color: 'var(--c-fg)' }}>
+                      {selectedItem.preparedBy || 'HR Employee'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+                    <span className="text-[9px] font-mono uppercase tracking-wider block font-bold" style={{ color: 'var(--c-muted)' }}>
+                      AI assistance:
+                    </span>
+                    <span className="text-xs font-semibold mt-0.5 block truncate text-indigo-400">
+                      {selectedItem.aiAssistance || selectedGovernance?.rec || 'Echo'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider block font-bold" style={{ color: 'var(--c-muted)' }}>
+                    Summary:
+                  </span>
+                  <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--c-fg)' }}>
+                    {selectedItem.summary || selectedItem.description}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider block font-bold" style={{ color: 'var(--c-muted)' }}>
+                    Impact:
+                  </span>
+                  <p className="text-xs mt-1 leading-relaxed text-emerald-500 font-medium">
+                    {selectedItem.impact || 'Verified operational deliverable with treasury runway safety.'}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-xl border bg-indigo-500/5 border-indigo-500/20">
+                  <span className="text-[9px] font-mono uppercase tracking-wider block font-bold text-indigo-400">
+                    Recommendation:
+                  </span>
+                  <p className="text-xs mt-1 leading-relaxed text-indigo-200">
+                    {selectedItem.recommendation || `Approve deliverable and authorize operational execution.`}
+                  </p>
+                </div>
+
+                {selectedItem.founderFeedback && (
+                  <div className="p-3 rounded-xl border bg-amber-500/10 border-amber-500/25">
+                    <span className="text-[9px] font-mono uppercase tracking-wider block font-bold text-amber-500">
+                      Previous Revision Directive:
+                    </span>
+                    <p className="text-xs mt-0.5 text-amber-300">
+                      "{selectedItem.founderFeedback}"
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Deterministic Impact Projections */}
               <div 
                 className="p-4 rounded-xl space-y-3"
@@ -606,6 +694,68 @@ export default function ApprovalQueue({
                 borderTop: '1px solid var(--c-border)' 
               }}
             >
+              {/* Phase D3: Inline Request Changes Directives Box */}
+              {isRequestingChanges && (
+                <div 
+                  className="p-4 rounded-xl border space-y-2.5 animate-fade-in"
+                  style={{
+                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                    borderColor: 'rgba(245, 158, 11, 0.3)'
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Founder Directives for Employee (Phase D3)
+                    </span>
+                    <span className="text-[10px] font-mono text-amber-500/70">Returns to Employee + AI Loop</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder='e.g. "Reduce hiring budget and resubmit."'
+                    value={changesDirective}
+                    onChange={(e) => setChangesDirective(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl text-xs outline-none transition-all"
+                    style={{
+                      backgroundColor: 'var(--c-surface)',
+                      border: '1px solid rgba(245, 158, 11, 0.4)',
+                      color: 'var(--c-fg)'
+                    }}
+                    autoFocus
+                  />
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsRequestingChanges(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
+                      style={{ color: 'var(--c-muted)' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!changesDirective.trim()) return;
+                        setIsSubmitting(true);
+                        try {
+                          await onReviewItem(selectedItem.id, 'request_changes', changesDirective.trim());
+                          setIsRequestingChanges(false);
+                          setChangesDirective('');
+                          setSelectedItemId(null);
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }}
+                      disabled={!changesDirective.trim() || isSubmitting}
+                      className="px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-50 transition-all text-black font-bold"
+                      style={{ backgroundColor: '#f59e0b' }}
+                    >
+                      Send Revision Request
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
@@ -622,10 +772,11 @@ export default function ApprovalQueue({
                 </button>
 
                 <div className="flex items-center gap-2">
+                  {/* [ Reject ] */}
                   <button
                     onClick={() => handleAction('reject')}
                     disabled={isSubmitting}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
                     style={{
                       backgroundColor: 'rgba(239, 68, 68, 0.1)',
                       border: '1px solid rgba(239, 68, 68, 0.25)',
@@ -635,6 +786,21 @@ export default function ApprovalQueue({
                     <XCircle className="w-4 h-4" /> Reject
                   </button>
 
+                  {/* [ Request Changes ] */}
+                  <button
+                    onClick={() => setIsRequestingChanges(!isRequestingChanges)}
+                    disabled={isSubmitting}
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    style={{
+                      backgroundColor: isRequestingChanges ? 'rgba(245, 158, 11, 0.25)' : 'rgba(245, 158, 11, 0.1)',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                      color: 'rgb(245, 158, 11)'
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4" /> Request Changes
+                  </button>
+
+                  {/* [ Approve ] */}
                   {isModifying ? (
                     <button
                       onClick={() => handleAction('modify')}
@@ -654,7 +820,7 @@ export default function ApprovalQueue({
                         color: 'var(--c-bg)'
                       }}
                     >
-                      <CheckCircle2 className="w-4 h-4" /> Approve & Sign
+                      <CheckCircle2 className="w-4 h-4" /> Approve
                     </button>
                   )}
                 </div>
