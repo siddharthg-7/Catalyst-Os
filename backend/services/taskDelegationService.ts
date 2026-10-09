@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Phase A3 — Task Decomposition & Delegation.
  *
  * The council already decomposes a founder command into work orders, but those
@@ -2051,14 +2051,39 @@ export async function assistEmployeeOnTask(params: {
   const task = decodeTask(row);
   const companionAgent = getCompanionAgent(task.department || role);
   const companyName = row.plan?.startup?.name || 'Catalyst OS';
+  const qLower = question.toLowerCase();
   const workspaceContext = await getRoleScopedContext({ userId });
 
   const permittedDocs = workspaceContext.accessibleDocuments;
   const docNames = permittedDocs.map(d => d.name);
   const founderFeedback = task.founderFeedback || (row.result && typeof row.result === 'string' ? row.result.match(/\[FOUNDER_(?:DIRECTIVE|FEEDBACK)\]:\s*([^\n]+)/)?.[1] : null);
 
+  // Check if query is asking about decision memory (Phase F3 - Close Loop)
+  const isDecisionQuery =
+    qLower.includes('why are we') ||
+    qLower.includes('why did we') ||
+    qLower.includes('who approved') ||
+    qLower.includes('previous decision') ||
+    qLower.includes('two engineers') ||
+    qLower.includes('hiring decision') ||
+    qLower.includes('why we are hiring') ||
+    qLower.includes('memory') ||
+    qLower.includes('decision log');
+
+  let retrievedMemoriesText = '';
+  let memoryRetrievalResult: DecisionMemoryRetrievalResult | null = null;
+  if (isDecisionQuery) {
+    try {
+      memoryRetrievalResult = await retrieveDecisionMemory({ userId, query: question });
+      if (memoryRetrievalResult.memories.length > 0) {
+        retrievedMemoriesText = memoryRetrievalResult.memories.map(m =>
+          `[DECISION MEMORY: ${m.title}]\n${m.description}`
+        ).join('\n\n');
+      }
+    } catch {}
+  }
+
   // Check for forbidden cross-department disclosure requests (Zero Leak Boundary)
-  const qLower = question.toLowerCase();
   if (role === 'HR' && (qLower.includes('cap table') || qLower.includes('financial statement') || qLower.includes('cash balance') || qLower.includes('bank account'))) {
     return {
       reply: `I am Echo, your Head of People & Recruiting co-pilot. I have reviewed your question, but confidential company treasury reserves and shareholder cap tables are restricted to the Finance department under company data governance. I can assist you with candidate compensation bands, hiring policies, or leveling benchmarks instead.`,
@@ -2097,6 +2122,9 @@ ${founderFeedback ? `FOUNDER DIRECTIVE / REVISION REQUEST (PHASE D3 COLLABORATIO
 The founder reviewed this deliverable and requested: "${founderFeedback}".
 Your primary goal is to guide the employee in revising the deliverable to address this directive (e.g. reducing budget, adjusting requisitions, adding constraints).\n` : ''}
 
+${retrievedMemoriesText ? `COMPANY DECISION MEMORIES & HISTORICAL CONTEXT (PHASE F3):
+${retrievedMemoriesText}\n` : ''}
+
 CURRENT WORKING DRAFT IN EMPLOYEE WORK AREA:
 """
 ${currentDraft || task.result || '(Draft not yet started)'}
@@ -2111,9 +2139,10 @@ INSTRUCTIONS:
 1. Act as a supportive, expert, and professional AI executive partner.
 2. Directly answer the employee's question or fulfill their request grounded in the permitted policies.
 3. If founder feedback is present, ensure the advice explicitly satisfies the founder's directive.
-4. If the employee asks to edit, refine, or add to their draft, provide concrete, ready-to-use text in a designated suggestions section.
-5. Explain the rationale for your recommendation clearly and concisely.
-6. Return your response in JSON format with fields:
+4. If past decision memories are present, cite them to answer questions on why decisions were made.
+5. If the employee asks to edit, refine, or add to their draft, provide concrete, ready-to-use text in a designated suggestions section.
+6. Explain the rationale for your recommendation clearly and concisely.
+7. Return your response in JSON format with fields:
    - "reply": string (conversational response to the employee)
    - "explanation": string (brief justification or policy grounding)
    - "suggestedEdits": string (optional concrete snippet or improved deliverable section to apply)
@@ -2151,7 +2180,17 @@ INSTRUCTIONS:
   if (!aiGenerated) {
     const dept = (task.department || '').toUpperCase();
     if (dept === 'TALENT' || dept === 'HR') {
-      if (founderFeedback && (founderFeedback.toLowerCase().includes('budget') || founderFeedback.toLowerCase().includes('reduce'))) {
+      if (isDecisionQuery && memoryRetrievalResult && memoryRetrievalResult.memories.length > 0) {
+        const top = memoryRetrievalResult.memories[0];
+        const d = top.details;
+        aiGenerated = {
+          reply: memoryRetrievalResult.answerSummary,
+          explanation: `Retrieved from immutable company decision memory (${top.title}): ${d.why || 'Approved headcount addition'} approved by ${d.whoApproved || 'Founder'}.`,
+          suggestedEdits: currentDraft
+            ? currentDraft + `\n\n#### Historical Decision Reference\n- **Approved Plan:** ${top.title}\n- **Rationale:** ${d.why || 'Approved headcount expansion'}\n- **Authorized By:** ${d.whoApproved || 'Founder'}\n- **Outcome:** ${d.outcome || 'Updated company state'}`
+            : `### Historical Decision Reference: ${top.title}\n- **Rationale:** ${d.why || 'Approved headcount expansion'}\n- **Authorized By:** ${d.whoApproved || 'Founder'}`
+        };
+      } else if (founderFeedback && (founderFeedback.toLowerCase().includes('budget') || founderFeedback.toLowerCase().includes('reduce'))) {
         aiGenerated = {
           reply: `I have reviewed the founder's directive: "${founderFeedback}". To adjust the hiring plan per founder feedback, I recommend lowering the target base compensation range by 15% and replacing sign-on cash bonuses with performance milestones. This reduces annualized hiring cost to $125,000 per IC while remaining aligned with our hiring policy.`,
           explanation: `Incorporated founder directive ("${founderFeedback}") while standardizing interview scorecards and complying with Engineering Hiring Policy.`,
@@ -2202,5 +2241,151 @@ INSTRUCTIONS:
     agentName: companionAgent.name,
     agentRole: companionAgent.role,
     permittedDocsReferenced: docNames
+  };
+}
+
+export interface ParsedDecisionMemory {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  createdAt: Date;
+  details: {
+    whatHappened?: string;
+    whoRequested?: string;
+    whoWorkedOnIt?: string;
+    whichAiHelped?: string;
+    whatWasRecommended?: string;
+    whoApproved?: string;
+    when?: string;
+    why?: string;
+    outcome?: string;
+  };
+}
+
+export interface DecisionMemoryRetrievalResult {
+  query: string;
+  memories: ParsedDecisionMemory[];
+  relevantDecisions: Array<{
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    status: string;
+    financialImpact?: number;
+    impactText?: string;
+    createdAt: Date;
+  }>;
+  answerSummary: string;
+}
+
+export function parseMemoryDescription(desc: string): ParsedDecisionMemory['details'] {
+  const getField = (label: string) => {
+    const regex = new RegExp(`\\*\\*${label}:\\*\\*\\s*([^\\n]+)`, 'i');
+    const match = desc.match(regex);
+    return match ? match[1].trim() : undefined;
+  };
+  return {
+    whatHappened: getField('What happened') || getField('What'),
+    whoRequested: getField('Who requested it') || getField('Requested by'),
+    whoWorkedOnIt: getField('Who worked on it') || getField('Worked on by'),
+    whichAiHelped: getField('Which AI helped') || getField('AI assistance'),
+    whatWasRecommended: getField('What was recommended') || getField('Recommendation'),
+    whoApproved: getField('Who approved it') || getField('Approved by'),
+    when: getField('When'),
+    why: getField('Why'),
+    outcome: getField('Outcome')
+  };
+}
+
+/**
+ * F3 — MEMORY → FUTURE AI
+ * Retrieves previously recorded decisions from the company Memory and DecisionLog models.
+ * Used when someone asks "Why are we hiring two engineers?" or other decision background questions,
+ * closing the WORK -> DECISION -> MEMORY -> FUTURE CONTEXT loop.
+ */
+export async function retrieveDecisionMemory(params: {
+  userId: string;
+  query: string;
+}): Promise<DecisionMemoryRetrievalResult> {
+  const { userId, query } = params;
+  if (!prisma) {
+    throw new TaskDelegationError(503, 'The database is unavailable.', 'DB_UNAVAILABLE');
+  }
+
+  const membership = await resolveMembership(userId);
+  let startupId = membership?.startupId;
+  if (!startupId) {
+    const startup = await safeDbQuery(() => (prisma as any).startup.findFirst({ where: { ownerId: userId } })) as any;
+    if (startup) startupId = startup.id;
+  }
+  if (!startupId) {
+    throw new TaskDelegationError(403, 'Forbidden: no active company context found.', 'NO_ACTIVE_MEMBERSHIP');
+  }
+
+  const memoryRows: any[] = await safeDbQuery(() =>
+    (prisma as any).memory.findMany({
+      where: { startupId },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    })
+  ) || [];
+
+  const decisionRows: any[] = await safeDbQuery(() =>
+    (prisma as any).decisionLog.findMany({
+      where: { startupId },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    })
+  ) || [];
+
+  const parsedMemories: ParsedDecisionMemory[] = memoryRows.map(m => ({
+    id: m.id,
+    category: m.category,
+    title: m.title,
+    description: m.description,
+    createdAt: m.createdAt,
+    details: parseMemoryDescription(m.description || '')
+  }));
+
+  const qLower = (query || '').toLowerCase();
+  const searchTerms = qLower.split(/[\s,?.!]+/).filter(w => w.length > 2 && !['why', 'are', 'we', 'the', 'did', 'who', 'what', 'and', 'for', 'our', 'this', 'that', 'with'].includes(w));
+
+  // Filter memories that match search terms
+  const matchedMemories = parsedMemories.filter(m => {
+    if (searchTerms.length === 0) return true;
+    const combined = `${m.title} ${m.description}`.toLowerCase();
+    return searchTerms.some(term => combined.includes(term));
+  });
+
+  const finalMemories = matchedMemories.length > 0 ? matchedMemories : parsedMemories;
+
+  const relevantDecisions = decisionRows.filter(d => {
+    if (searchTerms.length === 0) return true;
+    const combined = `${d.title} ${d.description} ${d.impactText || ''}`.toLowerCase();
+    return searchTerms.some(term => combined.includes(term));
+  });
+
+  // Construct answerSummary
+  let answerSummary = '';
+  if (finalMemories.length > 0) {
+    const top = finalMemories[0];
+    const d = top.details;
+    answerSummary = `Decision retrieved from company memory: "${top.title}". ` +
+      `Requested by ${d.whoRequested || 'Founder'} to address: ${d.why || top.title}. ` +
+      `Prepared by ${d.whoWorkedOnIt || 'Team'} with ${d.whichAiHelped || 'AI'} assistance. ` +
+      `Approved by ${d.whoApproved || 'Founder'}. Outcome: ${d.outcome || 'Approved and recorded in company memory'}.`;
+  } else if (relevantDecisions.length > 0) {
+    const top = relevantDecisions[0];
+    answerSummary = `Decision retrieved from decision log: "${top.title}". Description: ${top.description}. Status: ${top.status}.`;
+  } else {
+    answerSummary = `No previous decisions found in company memory for query: "${query}".`;
+  }
+
+  return {
+    query,
+    memories: finalMemories,
+    relevantDecisions,
+    answerSummary
   };
 }

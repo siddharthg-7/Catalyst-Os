@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma, safeDbQuery } from '../services/dbService';
 import vaultService from '../services/vaultService';
@@ -48,6 +48,7 @@ import {
   getPlanById,
   ensureAiSpecialistCapability,
   getMissingCapabilitiesAndStaffing,
+  retrieveDecisionMemory,
   TaskDelegationError
 } from '../services/taskDelegationService';
 import {
@@ -2623,6 +2624,114 @@ router.post('/orchestrate/stream', authenticateJWT, orchestrateRateLimiter, asyn
     })}\n\n`);
     res.write('data: [DONE]\n\n');
     res.end();
+  }
+});
+
+// ============================================================================
+// PHASE G — PROACTIVE CATALYSTOS (Insights, Timeline, Memories)
+// ============================================================================
+
+// GET proactive insights for the authenticated founder's company.
+router.get('/proactive/insights', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId || !prisma) {
+    return res.json([]);
+  }
+  try {
+    const { resolveMembership } = await import('../services/membershipService');
+    const membership = await resolveMembership(userId);
+    let startupId = membership?.startupId;
+    if (!startupId) {
+      const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+      startupId = startup?.id;
+    }
+    if (!startupId) return res.json([]);
+
+    const notifs = await prisma.notification.findMany({
+      where: { startupId },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+    res.json(notifs);
+  } catch (err: any) {
+    console.error('[Proactive Insights API] Error:', err.message);
+    res.json([]);
+  }
+});
+
+// POST trigger proactive analysis for the authenticated company.
+router.post('/proactive/analyze', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+  try {
+    const { resolveMembership } = await import('../services/membershipService');
+    const membership = await resolveMembership(userId);
+    let startupId = membership?.startupId;
+    if (!startupId && prisma) {
+      const startup = await prisma.startup.findFirst({ where: { ownerId: userId } });
+      startupId = startup?.id;
+    }
+    if (!startupId) {
+      return res.status(404).json({ error: 'No company workspace found.' });
+    }
+    const { proactiveEngine } = await import('../services/proactiveEngine');
+    const insights = await proactiveEngine.generateAndNotifyInsights(startupId);
+    res.json({
+      success: true,
+      notificationsCreated: insights.length,
+      insightsSummary: insights.map((i) => ({ type: i.category, message: i.recommendation }))
+    });
+  } catch (err: any) {
+    console.error('[Proactive Analyze API] Error:', err.message);
+    res.status(500).json({ error: 'Proactive analysis failed.' });
+  }
+});
+
+// GET F2 — Company Timeline (5-stage sequential execution lifecycle).
+router.get('/timeline', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.json([]);
+  }
+  try {
+    const items = await approvalService.getTimelineForUser(userId);
+    res.json(items);
+  } catch (err: any) {
+    console.error('[Timeline API] Error:', err.message);
+    res.json([]);
+  }
+});
+
+// GET F1 — Company Decision Memories.
+router.get('/memories', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.json([]);
+  }
+  try {
+    const memories = await approvalService.getMemoriesForUser(userId);
+    res.json(memories);
+  } catch (err: any) {
+    console.error('[Memories API] Error:', err.message);
+    res.json([]);
+  }
+});
+
+// GET F3 — Decision Memory Retrieval by query (close WORK->DECISION->MEMORY->FUTURE loop).
+router.get('/memories/search', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  const query = (req.query.q as string) || '';
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+  try {
+    const result = await retrieveDecisionMemory({ userId, query });
+    res.json(result);
+  } catch (err: any) {
+    console.error('[Memory Search API] Error:', err.message);
+    res.status(500).json({ error: 'Memory retrieval failed.' });
   }
 });
 

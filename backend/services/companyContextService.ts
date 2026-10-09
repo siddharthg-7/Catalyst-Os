@@ -138,6 +138,13 @@ export interface CompanyContext {
     status: string;
     createdAt: string;
   }>;
+  memories?: Array<{
+    id: string;
+    category: string;
+    title: string;
+    description: string;
+    createdAt: string;
+  }>;
   pendingApprovals: Array<{
     id: string;
     title: string;
@@ -440,6 +447,14 @@ export class CompanyContextService {
       createdAt: d.createdAt instanceof Date ? d.createdAt.toISOString() : String(d.createdAt)
     }));
 
+    const memoriesList = (startup.memories || []).map((m: any) => ({
+      id: m.id,
+      category: m.category,
+      title: m.title,
+      description: m.description,
+      createdAt: m.createdAt instanceof Date ? m.createdAt.toISOString() : String(m.createdAt)
+    }));
+
     const documents = (startup.documents || []).map((d: any) => ({
       id: d.id,
       name: d.name,
@@ -552,6 +567,7 @@ export class CompanyContextService {
       priorities,
       milestones,
       recentDecisions,
+      memories: memoriesList,
       pendingApprovals,
       documents,
       agents: executiveAgents

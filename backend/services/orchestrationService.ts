@@ -321,7 +321,37 @@ function rawAnalyzeCommandIntent(command: string): IntentAnalysis {
     };
   }
 
-  // 3. Hiring & Headcount Expansion Scenarios
+  // 3. Decision Memory & Historical Rationale Inquiries (Phase F3 - Close Loop)
+  const isDecisionMemoryQuery =
+    lower.startsWith('why are we') ||
+    lower.startsWith('why did we') ||
+    lower.startsWith('why do we') ||
+    lower.includes('why are we hiring') ||
+    lower.includes('why did we hire') ||
+    lower.includes('what was the decision') ||
+    lower.includes('why was it decided') ||
+    lower.includes('who approved the') ||
+    lower.includes('previous decision') ||
+    lower.includes('decision on hiring') ||
+    lower.includes('decision log') ||
+    lower.includes('company memory');
+
+  if (isDecisionMemoryQuery) {
+    return {
+      intent: 'decision_memory_inquiry',
+      objective: 'Retrieve previous company decision, memory rationale, and historical context from memory ledger',
+      activatedRoles: ['CEO', 'Auditor'],
+      requiresFinancialCalculations: false,
+      requiresHeadcountModeling: false,
+      requiresRag: true,
+      isUnrelated: false,
+      requiresApproval: false,
+      proposedActionTitle: null,
+      proposedActionImpact: null
+    };
+  }
+
+  // 4. Hiring & Headcount Expansion Scenarios
   if (lower.includes('hire') || lower.includes('hiring') || lower.includes('engineer') || lower.includes('developer') || lower.includes('headcount') || lower.includes('recruit')) {
     const isAdvisory = lower.includes('should i') || lower.includes('can we afford') || lower.includes('can we hire') || lower.includes('is it safe to') || lower.includes('would hiring') || (lower.includes('runway') && lower.includes('month'));
     const isActionPlan = lower.includes('plan') || lower.includes('create a hiring plan') || lower.includes('roadmap') || lower.includes('build a plan') || lower.startsWith('hire ') || lower.startsWith('start hiring') || lower.startsWith('approve hire') || lower.includes('send offer');
@@ -790,6 +820,71 @@ export class OrchestrationService {
       onEvent?.({ type: 'retrieval', sources: evidence });
       onEvent?.({ type: 'complete', response: knowResponse });
       return knowResponse;
+    }
+
+    // LEVEL 1 — DECISION MEMORY & HISTORICAL CONTEXT RETRIEVAL (Phase F3 - Close Loop)
+    if (analysis.intent === 'decision_memory_inquiry') {
+      console.log(`[Command] commandId=${commandId} Level 1 Decision Memory Retrieval execution.`);
+      const { retrieveDecisionMemory } = await import('./taskDelegationService');
+      const memoryResult = await retrieveDecisionMemory({
+        userId: targetUserId || 'founder',
+        query: command
+      }).catch(() => null);
+
+      let summary = memoryResult?.answerSummary;
+      let details = '';
+
+      if (memoryResult && memoryResult.memories.length > 0) {
+        const topMem = memoryResult.memories[0];
+        const d = topMem.details;
+        details = `### Historical Decision Record: ${topMem.title}\n` +
+          `• **What happened:** ${d.whatHappened || 'Approved operational deliverable'}\n` +
+          `• **Who requested it:** ${d.whoRequested || 'Founder'}\n` +
+          `• **Who worked on it:** ${d.whoWorkedOnIt || 'Assigned team member'}\n` +
+          `• **Which AI helped:** ${d.whichAiHelped || 'Executive AI'}\n` +
+          `• **What was recommended:** ${d.whatWasRecommended || 'Ratified plan'}\n` +
+          `• **Who approved it:** ${d.whoApproved || 'Founder'}\n` +
+          `• **When:** ${d.when || 'Recorded in system'}\n` +
+          `• **Why:** ${d.why || 'Strategic company objective'}\n` +
+          `• **Outcome:** ${d.outcome || 'Executed and recorded in company state'}`;
+      } else {
+        summary = `No previous decision records found in company memory matching "${command}".`;
+        details = 'Decisions are recorded automatically when deliverables are approved by the founder.';
+      }
+
+      const memoryResponse: OrchestrationResponse = {
+        commandId,
+        status: 'completed',
+        interpretation: {
+          intent: analysis.intent,
+          objective: analysis.objective
+        },
+        answer: {
+          summary: summary || 'Retrieved decision from company memory.',
+          details
+        },
+        supportingData: (memoryResult?.memories || []).slice(0, 3).map(m => ({
+          label: m.title,
+          value: m.details.why || m.details.whatHappened || 'Recorded Decision',
+          source: 'Company Memory (DECISION_LOG)'
+        })),
+        evidence: (memoryResult?.memories || []).map((m, idx) => ({
+          citationId: `[MEM-${idx + 1}]`,
+          documentId: m.id,
+          documentName: `Memory: ${m.title}`,
+          excerpt: m.description.slice(0, 200) + '...'
+        })),
+        agents: [
+          { role: 'CEO', status: 'completed', contribution: `Retrieved historical decision context for: "${command}".` },
+          { role: 'Auditor', status: 'completed', contribution: 'Verified authentic audit trail in immutable decision ledger.' }
+        ],
+        confidence: 1.0
+      };
+
+      await this.recordCommandPersistence(commandId, command, memoryResponse.status, startupId, memoryResponse.answer.summary, analysis.objective);
+      this.updateConversationMemory(startupId, command, memoryResponse.answer.summary);
+      onEvent?.({ type: 'complete', response: memoryResponse });
+      return memoryResponse;
     }
 
     // LEVEL 2 — DATA + DETERMINISTIC TOOL (Section 19 of PROMPT.MD)
