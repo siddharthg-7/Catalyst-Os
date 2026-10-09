@@ -671,40 +671,48 @@ export class CompanyContextService {
   public toPromptContext(context: CompanyContext, role = 'CEO', currentTask?: string): string {
     const c = context;
     const scoped = this.getAgentScopedContext(context, role);
+    const identity = c.identity || (c as any).startup || { name: 'Company', industry: 'Software', stage: 'Early', description: '' };
+    const founder = c.founder || { name: 'Founder', role: 'Founder', email: '' };
+    const business = c.business || { targetIcp: '', primaryProduct: '', problem: '', model: '' };
+    const financial = c.financial || (c as any).financials || { cashBalance: 0, monthlyBurn: 0, runwayMonths: 0, healthScore: 80 };
+    const goalsList = Array.isArray(c.goals) ? c.goals : ((c.goals as any)?.strategicGoals || []);
+    const priorities = c.growth?.currentPriorities || (c.goals as any)?.currentPriorities || [];
+    const timeline = c.growth?.targetTimeline || '90 days';
+    const ops = c.operations || { teamSize: 5, biggestChallenge: 'Capacity', pendingApprovalsCount: 0 };
 
     const lines: string[] = [
       `### COMPANY IDENTITY (STARTUP CONTEXT)`,
-      `- Company Name: "${c.identity.name}"`,
-      `- Industry: ${c.identity.industry}`,
-      `- Stage: ${c.identity.stage}`,
-      `- Description: "${c.identity.description}"`,
+      `- Company Name: "${identity.name}"`,
+      `- Industry: ${identity.industry}`,
+      `- Stage: ${identity.stage}`,
+      `- Description: "${identity.description}"`,
       ``,
       `### OPERATING FOUNDER (CURRENT USER)`,
-      `- Founder Name: ${c.founder.name}`,
-      `- Founder Role: ${c.founder.role}`,
-      `- Email: ${c.founder.email}`,
+      `- Founder Name: ${founder.name}`,
+      `- Founder Role: ${founder.role}`,
+      `- Email: ${founder.email}`,
       ``,
       `### BUSINESS MODEL & TARGET MARKET`,
-      `- Target ICP: "${c.business.targetIcp}"`,
-      `- Primary Product: "${c.business.primaryProduct}"`,
-      `- Problem Solved: "${c.business.problem}"`,
-      `- Monetization: ${c.business.model}`,
+      `- Target ICP: "${business.targetIcp}"`,
+      `- Primary Product: "${business.primaryProduct}"`,
+      `- Problem Solved: "${business.problem}"`,
+      `- Monetization: ${business.model}`,
       ``,
       `### FINANCIAL SNAPSHOT (DETERMINISTIC GROUND TRUTH)`,
-      `- Treasury Cash: $${c.financial.cashBalance.toLocaleString('en-US')}`,
-      `- Monthly Net Burn: $${c.financial.monthlyBurn.toLocaleString('en-US')}/mo`,
-      `- Verified Runway: ${c.financial.runwayMonths} months`,
-      `- Platform Health Score: ${c.financial.healthScore}/100`,
+      `- Treasury Cash: $${(financial.cashBalance || 0).toLocaleString('en-US')}`,
+      `- Monthly Net Burn: $${(financial.monthlyBurn || 0).toLocaleString('en-US')}/mo`,
+      `- Verified Runway: ${financial.runwayMonths || 0} months`,
+      `- Platform Health Score: ${financial.healthScore || 80}/100`,
       ``,
       `### STRATEGIC GOALS & PRIORITIES`,
-      `- Goals: ${c.goals.strategicGoals.join(' | ')}`,
-      `- Active Priorities: ${c.growth.currentPriorities.join(' | ')}`,
-      `- Target Timeline: ${c.growth.targetTimeline}`,
+      `- Goals: ${goalsList.join(' | ')}`,
+      `- Active Priorities: ${priorities.join(' | ')}`,
+      `- Target Timeline: ${timeline}`,
       ``,
       `### OPERATIONAL CONSTRAINTS`,
-      `- Team Structure: ${c.operations.teamSize}`,
-      `- Primary Challenge: "${c.operations.biggestChallenge}"`,
-      `- Pending Approvals Count: ${c.operations.pendingApprovalsCount}`
+      `- Team Structure: ${ops.teamSize}`,
+      `- Primary Challenge: "${ops.biggestChallenge}"`,
+      `- Pending Approvals Count: ${ops.pendingApprovalsCount}`
     ];
 
     if (c.documents && c.documents.length > 0) {

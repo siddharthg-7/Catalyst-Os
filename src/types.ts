@@ -174,6 +174,7 @@ export interface KnowledgeFile {
   uploadDate: string;
   summary: string;
   insights: string[];
+  startupId?: string;
 }
 
 export type UserRole =

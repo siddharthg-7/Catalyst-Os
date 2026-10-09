@@ -1,6 +1,12 @@
 import { ai } from './geminiService';
 import { prisma, safeDbQuery } from './dbService';
-import { performHybridSearch, buildContext } from './ragEngine';
+import { 
+  performHybridSearch, 
+  buildContext, 
+  retrieveRelevantKnowledge, 
+  filterKnowledgeForAgent, 
+  AgentKnowledgeSlice 
+} from './ragEngine';
 import { 
   startupProfile, 
   approvals, 
@@ -113,20 +119,107 @@ function extractHeadcountDetails(command: string): HeadcountExtraction {
   return { hasHiringQuery: true, count, role, estimatedAnnualSalary: salary };
 }
 
-interface IntentAnalysis {
+export interface KnowledgeNeedDecision {
+  needsDocuments: boolean;
+  needsKnowledge: boolean;
+  reason: string;
+  searchQueries: string[];
+}
+
+export function evaluateKnowledgeNeed(command: string, intent: string): KnowledgeNeedDecision {
+  const lower = command.toLowerCase().trim();
+
+  // If greeting or completely unrelated, no company documents needed
+  if (intent === 'greeting' || intent === 'unrelated_inquiry') {
+    return {
+      needsDocuments: false,
+      needsKnowledge: false,
+      reason: 'Conversational greeting or out of scope inquiry.',
+      searchQueries: []
+    };
+  }
+
+  // 1. Explicit references to governance, policies, handbooks, contracts, or strategies
+  const hasPolicyRef = lower.includes('policy') || lower.includes('handbook') || lower.includes('guideline') ||
+    lower.includes('contract') || lower.includes('agreement') || lower.includes('strategy') ||
+    lower.includes('roadmap') || lower.includes('pitch deck') || lower.includes('document') ||
+    lower.includes('knowledge') || lower.includes('rule') || lower.includes('according to');
+
+  // 2. Planning or structural actions that require corporate grounding
+  const isActionPlan = lower.includes('plan') || lower.includes('create a hiring plan') ||
+    lower.includes('hiring plan') || lower.includes('compliance') || lower.includes('legal review') ||
+    lower.includes('onboarding');
+
+  // 3. Knowledge base inquiries or company identity
+  const isKnowledgeQuery = intent === 'knowledge_inquiry' || intent === 'startup_identity';
+
+  if (hasPolicyRef || isActionPlan || isKnowledgeQuery) {
+    const searchQueries: string[] = [command];
+
+    if (lower.includes('hiring') || lower.includes('hire') || lower.includes('engineer') || lower.includes('talent')) {
+      searchQueries.push('Hiring Policy');
+      searchQueries.push('Employee Handbook');
+      searchQueries.push('Company Strategy');
+    }
+
+    if (lower.includes('contract') || lower.includes('legal') || lower.includes('nda') || lower.includes('agreement') || lower.includes('handbook')) {
+      searchQueries.push('Employee Handbook');
+      searchQueries.push('Hiring Policy');
+    }
+
+    if (lower.includes('growth') || lower.includes('marketing') || lower.includes('gtm') || lower.includes('icp')) {
+      searchQueries.push('Company Strategy');
+      searchQueries.push('Pitch Deck');
+    }
+
+    return {
+      needsDocuments: true,
+      needsKnowledge: true,
+      reason: 'Command requires grounding in company policy, corporate strategy, and handbooks.',
+      searchQueries
+    };
+  }
+
+  return {
+    needsDocuments: false,
+    needsKnowledge: false,
+    reason: 'Command relies on deterministic treasury telemetry and financial metrics.',
+    searchQueries: [command]
+  };
+}
+
+export interface IntentAnalysis {
   intent: string;
   objective: string;
   activatedRoles: string[];
   requiresFinancialCalculations: boolean;
   requiresHeadcountModeling: boolean;
   requiresRag: boolean;
+  needsCompanyKnowledge?: boolean;
+  knowledgeReason?: string;
+  searchQueries?: string[];
   isUnrelated: boolean;
   requiresApproval: boolean;
   proposedActionTitle: string | null;
   proposedActionImpact: string | null;
 }
 
+function finalizeIntent(analysis: IntentAnalysis, command: string): IntentAnalysis {
+  const kDecision = evaluateKnowledgeNeed(command, analysis.intent);
+  analysis.needsCompanyKnowledge = kDecision.needsDocuments;
+  analysis.knowledgeReason = kDecision.reason;
+  analysis.searchQueries = kDecision.searchQueries;
+  if (kDecision.needsDocuments) {
+    analysis.requiresRag = true;
+  }
+  return analysis;
+}
+
 export function analyzeCommandIntent(command: string): IntentAnalysis {
+  return finalizeIntent(rawAnalyzeCommandIntent(command), command);
+}
+
+function rawAnalyzeCommandIntent(command: string): IntentAnalysis {
   const lower = command.toLowerCase().trim();
 
   // 0. Conversational Greeting & Executive Readiness
@@ -398,7 +491,7 @@ export class OrchestrationService {
    */
   async executeCommand(
     command: string,
-    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string },
+    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string; context?: any },
     onEvent?: (event: any) => void
   ): Promise<OrchestrationResponse> {
     const userId = typeof userIdOrContext === 'string' 
@@ -425,7 +518,7 @@ export class OrchestrationService {
     command: string,
     commandId: string,
     userId: string | undefined,
-    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string },
+    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string; context?: any },
     onEvent?: (event: any) => void
   ): Promise<OrchestrationResponse> {
     console.log(`[Command] commandId=${commandId} userId=${userId || 'anonymous'} command="${command}"`);
@@ -435,8 +528,11 @@ export class OrchestrationService {
     const targetUserId = userId || (typeof userIdOrContext === 'object' ? userIdOrContext?.userId : undefined);
     const targetStartupId = typeof userIdOrContext === 'object' ? userIdOrContext?.startupId : undefined;
 
-    let canonical: CompanyContext | null = null;
-    if (targetStartupId && targetUserId) {
+    let canonical: CompanyContext | null = (typeof userIdOrContext === 'object' && userIdOrContext?.context)
+      ? userIdOrContext.context
+      : null;
+
+    if (!canonical && targetStartupId && targetUserId) {
       canonical = await companyContextService.getContextForStartup(targetStartupId, targetUserId);
     }
     if (!canonical && targetUserId) {
@@ -817,28 +913,32 @@ export class OrchestrationService {
     // 5. User-Scoped Hybrid RAG Retrieval (Grounded in Verified Company Files)
     let evidence: OrchestrationEvidence[] = [];
     let retrievedContextText = 'No specific internal documents were indexed or retrieved.';
+    const agentKnowledgeMap = new Map<string, AgentKnowledgeSlice>();
 
-    if (analysis.requiresRag) {
+    if (analysis.needsCompanyKnowledge || analysis.requiresRag) {
       try {
-        console.log(`[RAG] Searching hybrid indexed base for: "${command}" (startupId: ${startupId})`);
-        const retrievedChunks = await performHybridSearch(command, startupId, 4);
-        if (retrievedChunks.length > 0) {
-          // Verify relevance: ensure the query and chunk share meaningful terms or semantic threshold
-          const queryTokens = command.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !['what', 'have', 'with', 'about', 'this', 'that', 'from'].includes(w));
-          const relevantChunks = retrievedChunks.filter(c => {
-            const contentLower = c.content.toLowerCase();
-            return queryTokens.some(t => contentLower.includes(t)) || c.similarityScore > 0.45;
-          });
+        console.log(`[RAG] Searching company knowledge base for: "${command}" (startupId: ${startupId}, reason: ${analysis.knowledgeReason || 'domain analysis'})`);
+        const retrievedChunks = await retrieveRelevantKnowledge({
+          startupId,
+          command,
+          subQueries: analysis.searchQueries || [],
+          limit: 6,
+          minSimilarity: 0.35
+        });
 
-          if (relevantChunks.length > 0) {
-            const { contextText, citations } = buildContext(relevantChunks);
-            retrievedContextText = contextText;
-            evidence = citations.map((c, idx) => ({
-              citationId: `[CIT-${idx + 1}]`,
-              documentId: c.documentId,
-              documentName: c.documentName,
-              excerpt: c.chunkContent.slice(0, 200) + '...'
-            }));
+        if (retrievedChunks.length > 0) {
+          const { contextText, citations } = buildContext(retrievedChunks);
+          retrievedContextText = contextText;
+          evidence = citations.map(c => ({
+            citationId: c.citationId,
+            documentId: c.documentId,
+            documentName: c.documentName,
+            excerpt: c.chunkContent.slice(0, 200) + '...'
+          }));
+
+          // Route domain-scoped knowledge to each active specialist agent (safeguards context size and relevance)
+          for (const role of analysis.activatedRoles) {
+            agentKnowledgeMap.set(role, filterKnowledgeForAgent(role, retrievedChunks));
           }
         }
       } catch (err: any) {
@@ -879,7 +979,10 @@ export class OrchestrationService {
       command,
       canonical,
       evidence.map(e => e.excerpt),
-      { activatedRoles: analysis.activatedRoles }
+      { 
+        activatedRoles: analysis.activatedRoles,
+        agentKnowledgeMap
+      }
     );
 
     // Phase A3: persist the CEO decomposition as assignable Task rows so the work

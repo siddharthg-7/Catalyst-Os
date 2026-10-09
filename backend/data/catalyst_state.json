@@ -15,7 +15,7 @@
       "growthRate": 65,
       "operationsEfficiency": 82
     },
-    "teamSize": 12
+    "teamSize": 14
   },
   "initiatives": [
     {
@@ -120,6 +120,24 @@
   ],
   "approvals": [
     {
+      "id": "appr_1791506697662_947f",
+      "initiativeId": "init_executive",
+      "title": "Migrate Core Cluster to Bare-Metal Data Center",
+      "description": "Infrastructure relocation commitment.",
+      "type": "contract",
+      "content": "Infrastructure relocation commitment.",
+      "impact": "Requires founder verification.",
+      "financialChange": -50000,
+      "status": "pending_review",
+      "metricChanges": {
+        "velocity": 0,
+        "financialHealth": 0,
+        "legalCompliance": 0,
+        "growthRate": 0,
+        "operationsEfficiency": 0
+      }
+    },
+    {
       "id": "appr_1791499129128_h7xo",
       "initiativeId": "init_executive",
       "title": "Migrate Core Cluster to Bare-Metal Data Center",
@@ -175,6 +193,46 @@
     }
   ],
   "decisionLog": [
+    {
+      "id": "dec_1791506746568",
+      "title": "Approve: Strategic Angel Seed Extension Tranche",
+      "description": "Closing $250,000 strategic angel extension from robotics syndicate.",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T00:45:46.568Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 250000,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791506731121",
+      "title": "Approve: Approve Enterprise Sales One-Pager & Pitch Deck",
+      "description": "Marketing and customer collateral review for upcoming industry summit.",
+      "category": "DOCUMENT",
+      "timestamp": "2026-10-09T00:45:31.121Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 0,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791506695100",
+      "title": "Reject: Procure 10x Industrial Edge GPU Nodes",
+      "description": "Rejected by founder with feedback: \"Postpone capital expenditure until Series A financing.\"",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T00:44:55.100Z",
+      "impactText": "No operational metrics modified.",
+      "financialImpact": 0,
+      "status": "rejected"
+    },
+    {
+      "id": "dec_1791506673034",
+      "title": "Approve: Hire 2x Senior Robotics Systems Engineer",
+      "description": "Expands core perception stack and automated navigation throughput.",
+      "category": "CONTRACT",
+      "timestamp": "2026-10-09T00:44:33.034Z",
+      "impactText": "Increases monthly burn by $16,000/mo. Projected runway: 12.2 months.",
+      "financialImpact": -16000,
+      "status": "approved"
+    },
     {
       "id": "dec_1791499177890",
       "title": "Approve: Strategic Angel Seed Extension Tranche",
@@ -268,6 +326,36 @@
   ],
   "knowledgeFiles": [
     {
+      "id": "doc_profile_41f02a30-786b-42f9-a9a9-bbedb9262285",
+      "name": "[Company Profile] BioGen Systems",
+      "type": "business_plan",
+      "size": "1.5 KB",
+      "uploadDate": "2026-10-09T00:44:00.862Z",
+      "summary": "BioGen Systems is an emerging Pre-Seed venture in the Biotechnology space addressing \"Slow clinical turnaround for genome sequencing\". With $2,00,000 in capital and a 20 month runway, the company is positioned to scale execution toward its 120 Days milestone.",
+      "insights": [
+        "ICP Precision: Focus sales and marketing specifically on Genomics Diagnostic Labs to optimize initial CAC.",
+        "Runway Management: Maintain strict governance over the $10,000/mo burn rate to secure 20 months of operational runway.",
+        "Core Challenge Mitigation: Deploy dedicated sprints toward resolving: \"Market customer acquisition and MVP delivery\".",
+        "Milestone Velocity: Align executive agents to deliver initial deliverables within the 120 Days window."
+      ],
+      "startupId": "41f02a30-786b-42f9-a9a9-bbedb9262285"
+    },
+    {
+      "id": "doc_profile_762e75cc-3f61-48a5-b195-11d81e93eae6",
+      "name": "[Company Profile] Apex Robotics Inc",
+      "type": "business_plan",
+      "size": "1.5 KB",
+      "uploadDate": "2026-10-09T00:43:37.617Z",
+      "summary": "Apex Robotics Inc is an emerging Seed venture in the Robotics & Automation space addressing \"Inefficient manual forklift routing in high-throughput fulfillment hubs\". With $5,00,000 in capital and a 20 month runway, the company is positioned to scale execution toward its 90 Days milestone.",
+      "insights": [
+        "ICP Precision: Focus sales and marketing specifically on 3PL Logistics Operations to optimize initial CAC.",
+        "Runway Management: Maintain strict governance over the $25,000/mo burn rate to secure 20 months of operational runway.",
+        "Core Challenge Mitigation: Deploy dedicated sprints toward resolving: \"Market customer acquisition and MVP delivery\".",
+        "Milestone Velocity: Align executive agents to deliver initial deliverables within the 90 Days window."
+      ],
+      "startupId": "762e75cc-3f61-48a5-b195-11d81e93eae6"
+    },
+    {
       "id": "doc_profile_6a32c538-edfb-4046-b345-fd82f788a974",
       "name": "[Company Profile] BioGen Systems",
       "type": "business_plan",
@@ -328,11 +416,57 @@
       "startupId": "9a162f00-7d49-4eee-9d84-a13cd84da0b9"
     },
     {
+      "id": "doc_hiring_policy",
+      "name": "Hiring Policy.pdf",
+      "type": "policy",
+      "size": "24.2 KB",
+      "uploadDate": "2026-10-06T09:00:00.000Z",
+      "startupId": "st_catalystos",
+      "summary": "Official Talent Acquisition & Hiring Policy. Defines recruitment standards, engineering interview loops, 90-day probation review, and salary compensation benchmarks.",
+      "insights": [
+        "All full-time engineering candidates must complete a 4-round technical assessment and cultural interview.",
+        "Base salaries for Senior Engineers are benchmarked at $130,000 - $150,000/yr with standard 0.25% - 0.75% equity incentives.",
+        "Mandatory structured 90-day performance milestone review before full tenure confirmation.",
+        "All hiring offers require dual approval from Talent lead and Finance (CFO)."
+      ]
+    },
+    {
+      "id": "doc_employee_handbook",
+      "name": "Employee Handbook.pdf",
+      "type": "handbook",
+      "size": "38.6 KB",
+      "uploadDate": "2026-10-06T09:30:00.000Z",
+      "startupId": "st_catalystos",
+      "summary": "Company Employee Handbook & Governance Guide. Details employment standards, intellectual property protection covenants, standard 20-day PTO, at-will terms, and onboarding compliance.",
+      "insights": [
+        "All employees and contractors must execute standard Proprietary Information and Inventions Agreement (PIIA) prior to start date.",
+        "Employment is at-will; all offers are contingent upon background verification and signed compliance acknowledgment.",
+        "Standard benefits package includes 20 days paid time off (PTO) and comprehensive health insurance coverage.",
+        "Equipment stipend of $2,500 allocated per engineer for developer workstation and hardware setup."
+      ]
+    },
+    {
+      "id": "doc_company_strategy",
+      "name": "Company Strategy.docx",
+      "type": "strategy",
+      "size": "42.1 KB",
+      "uploadDate": "2026-10-06T10:00:00.000Z",
+      "startupId": "st_catalystos",
+      "summary": "Strategic Master Plan & Operational Roadmap. Details the 6-month product roadmap, target enterprise launch milestones, runway guardrails, and customer acquisition priorities.",
+      "insights": [
+        "Core corporate objective: Deliver production enterprise workflow orchestration engine within 90 days.",
+        "Runway preservation guardrail: Maintain a minimum 6-month operational runway buffer at all times before approving non-essential headcount expansion.",
+        "Target ICP: Mid-market B2B SaaS engineering teams with 20-100 developers building microservices.",
+        "Engineering capacity is the primary delivery bottleneck; strategic technical hiring is prioritized over sales expansion."
+      ]
+    },
+    {
       "id": "doc_novatech_strategy",
       "name": "NovaTech_Enterprise_Strategy.md",
       "type": "pitch_deck",
       "size": "18.4 KB",
       "uploadDate": "2026-10-05T09:00:00.000Z",
+      "startupId": "st_catalystos",
       "summary": "Executive roadmap for NovaTech Enterprise Orchestrator. Documents our 6-week launch timeline with 5 pilot enterprise customers, 3 developers bandwidth bottleneck, and ₹8L/mo burn boundary.",
       "insights": [
         "Enterprise launch is firmly committed in 6 weeks with 5 pilot partner contracts.",
