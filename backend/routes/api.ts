@@ -90,6 +90,7 @@ import { agentRunService } from '../services/agentRunService';
 import { companyPolicyService } from '../services/companyPolicyService';
 import { agentRuleService } from '../services/agentRuleService';
 import { activityLogService } from '../services/activityLogService';
+import { multiAgentOrchestratorService } from '../services/multiAgentOrchestratorService';
 
 const router = Router();
 const idempotencyCache = new Map<string, { status: number; body: any; timestamp: number }>();
@@ -2928,6 +2929,18 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
       commandId
     });
 
+    // Enrich with 5-Step Multi-Agent Orchestration & Resource Allocation
+    let multiAgentAssessment: any = null;
+    try {
+      multiAgentAssessment = await multiAgentOrchestratorService.orchestrateTask({
+        userRequirement: inputCmd,
+        startupId: context?.startupId || run.startupId,
+        userId: req.user!.id
+      });
+    } catch (e: any) {
+      console.warn('[Orchestrate API] 5-Step assessment notice:', e.message);
+    }
+
     // Format response to be 100% compatible with OrchestrationResponse
     const responsePayload = {
       commandId: run.runId,
@@ -2966,7 +2979,10 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
       confidence: run.status === 'completed' ? 0.98 : 0.85,
       dagPlan: run.plan,
       dagTasks: run.tasks,
-      createdRecords: run.createdRecords
+      createdRecords: run.createdRecords,
+      multiAgentAssessment,
+      monitoringBlueprint: multiAgentAssessment?.monitoringBlueprint || [],
+      headAlerts: multiAgentAssessment?.alerts || []
     };
 
     res.json(responsePayload);
@@ -2976,6 +2992,111 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
       error: 'I could not complete the executive analysis right now. Reason: AI orchestration pipeline encountered an error. Please try again.',
       details: err.message
     });
+  }
+});
+
+// ============================================================================
+// 5-STEP MULTI-AGENT ORCHESTRATION & RESOURCE ALLOCATION
+// [ Input Task ] ──► (1. Select Agents) ──► (2. Check Employee DB) 
+//                                                  │
+//                      ┌───────────────────────────┴───────────┐
+//                      ▼ (Available)                           ▼ (Not Available)
+//              (3A. Assign Work)                       (3B. Notify Head to Hire)
+//                      │                                       │
+//                      ▼                                       ▼
+//              (4. Generate Plan)                     (Suggest Domain Specs)
+//                      │
+//                      ▼
+//         (5. Live Monitoring Dashboard)
+// ============================================================================
+
+// POST /api/orchestrate/assess - Analyze task requirement, check workers, allocate or alert
+router.post('/orchestrate/assess', authenticateJWT, orchestrateRateLimiter, async (req: AuthenticatedRequest, res) => {
+  const { userRequirement, task, requirement, startupId } = req.body || {};
+  const inputPrompt = (userRequirement || task || requirement || '').trim();
+
+  if (!inputPrompt) {
+    return res.status(400).json({ error: 'A valid project requirement or task is required.' });
+  }
+
+  try {
+    const callerStartupId = startupId || (await resolveCallerStartupId(req, res)) || 'default_startup';
+    const assessment = await multiAgentOrchestratorService.orchestrateTask({
+      userRequirement: inputPrompt,
+      startupId: callerStartupId,
+      userId: req.user?.id
+    });
+
+    return res.json(assessment);
+  } catch (err: any) {
+    console.error('[Orchestrate Assess API] Error:', err.message);
+    return res.status(500).json({ error: 'Failed to process multi-agent assessment: ' + err.message });
+  }
+});
+
+// GET /api/orchestrate/assessments/latest - Retrieve latest assessment or create default
+router.get('/orchestrate/assessments/latest', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const latest = multiAgentOrchestratorService.getLatestAssessment();
+    if (latest) {
+      return res.json(latest);
+    }
+
+    const defaultAssessment = await multiAgentOrchestratorService.orchestrateTask({
+      userRequirement: 'We need an email marketing system with a React dashboard and a secure Python SMTP background processing worker.',
+      startupId: req.user?.id || 'default_startup',
+      userId: req.user?.id
+    });
+
+    return res.json(defaultAssessment);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch assessment: ' + err.message });
+  }
+});
+
+// POST /api/orchestrate/slot/assign - Head assigns or hires a worker to unblock a slot
+router.post('/orchestrate/slot/assign', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
+  const { assessmentId, domain, workerName, workerEmail, startupId } = req.body || {};
+
+  if (!assessmentId || !domain || !workerName) {
+    return res.status(400).json({ error: 'assessmentId, domain, and workerName are required.' });
+  }
+
+  try {
+    const callerStartupId = startupId || (await resolveCallerStartupId(req, res)) || 'default_startup';
+    const updated = await multiAgentOrchestratorService.assignWorkerToSlot({
+      assessmentId,
+      domain,
+      workerName,
+      workerEmail,
+      startupId: callerStartupId
+    });
+
+    return res.json(updated);
+  } catch (err: any) {
+    console.error('[Slot Assign API] Error:', err.message);
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/orchestrate/slot/control - Head controls slot (pause, resume, revoke)
+router.post('/orchestrate/slot/control', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
+  const { assessmentId, domain, action } = req.body || {};
+
+  if (!assessmentId || !domain || !['pause', 'resume', 'revoke'].includes(action)) {
+    return res.status(400).json({ error: 'assessmentId, domain, and valid action (pause, resume, revoke) are required.' });
+  }
+
+  try {
+    const updated = multiAgentOrchestratorService.controlSlot({
+      assessmentId,
+      domain,
+      action
+    });
+
+    return res.json(updated);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
   }
 });
 

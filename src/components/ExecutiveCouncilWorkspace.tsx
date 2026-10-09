@@ -25,9 +25,10 @@ import {
   Settings, ArrowRight, ShieldCheck, Activity, Layers,
   ChevronRight, Calendar, UserCheck, Scale, Compass, Check,
   Bot, Play, RefreshCw, Send, Sparkles, MessageSquare, AlertCircle,
-  HelpCircle, Eye, ArrowDown, ChevronDown, CheckSquare, Zap, X
+  HelpCircle, Eye, ArrowDown, ChevronDown, CheckSquare, Zap, X, Cpu
 } from 'lucide-react';
 import Section from './Section';
+import MultiAgentOrchestrationDashboard from './MultiAgentOrchestrationDashboard';
 
 interface ExecutiveCouncilWorkspaceProps {
   agents: Agent[];
@@ -92,8 +93,8 @@ export default function ExecutiveCouncilWorkspace({
   onNavigate,
   apiFetch
 }: ExecutiveCouncilWorkspaceProps) {
-  // Top level phase mode: B1 (Workspace), B2 (Deliberation), B3 (Live Meeting)
-  const [activeMode, setActiveMode] = useState<'workspace' | 'deliberation' | 'meeting'>('workspace');
+  // Top level phase mode: B1 (Workspace), B2 (Deliberation), B3 (Live Meeting), 5-Step Orchestration
+  const [activeMode, setActiveMode] = useState<'workspace' | 'deliberation' | 'meeting' | 'orchestration'>('workspace');
   
   // Selected executive for detail inspection in B1
   const [selectedExecutiveRole, setSelectedExecutiveRole] = useState<string>('CEO');
@@ -660,6 +661,7 @@ export default function ExecutiveCouncilWorkspace({
             { id: 'workspace' as const, label: 'B1 — Council Workspace', icon: Users },
             { id: 'deliberation' as const, label: 'B2 — Deliberation', icon: Layers },
             { id: 'meeting' as const, label: 'B3 — Live Meeting', icon: Bot },
+            { id: 'orchestration' as const, label: '5-Step Orchestration', icon: Cpu },
           ].map((tab) => {
             const isActive = activeMode === tab.id;
             const Icon = tab.icon;
@@ -1370,6 +1372,13 @@ export default function ExecutiveCouncilWorkspace({
           </div>
 
         </div>
+      )}
+
+      {activeMode === 'orchestration' && (
+        <MultiAgentOrchestrationDashboard
+          apiFetch={apiFetch}
+          onNavigate={onNavigate}
+        />
       )}
 
     </div>

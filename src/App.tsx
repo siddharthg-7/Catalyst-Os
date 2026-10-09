@@ -20,6 +20,7 @@ import AcceptInvitation from './components/AcceptInvitation';
 import EmployeeWorkspace from './components/EmployeeWorkspace';
 import ExecutiveCouncilWorkspace from './components/ExecutiveCouncilWorkspace';
 import RoleAwareDashboard from './components/RoleAwareDashboard';
+import MultiAgentOrchestrationDashboard from './components/MultiAgentOrchestrationDashboard';
 import { 
   Bell,
   CheckSquare, 
@@ -50,7 +51,8 @@ import {
   SlidersHorizontal,
   Settings,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Cpu
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -175,7 +177,8 @@ export default function App() {
   };
 
   // ── Derive activeTab from URL pathname ───────────────────────────────────────
-  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people' => {
+  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people' | 'orchestration' => {
+    if (pathname.includes('/orchestration')) return 'orchestration';
     if (pathname.includes('/council')) return 'council';
     if (pathname.includes('/workspace')) return 'workspace';
     if (pathname.includes('/approvals')) return 'approvals';
@@ -204,7 +207,7 @@ export default function App() {
     }
   }, [location.pathname]);
 
-  const handleTabChange = (tab: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people', agentId?: string) => {
+  const handleTabChange = (tab: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people' | 'orchestration', agentId?: string) => {
     if (tab === 'agents') {
       const targetAgent = agentId || selectedAgentId || 'ceo';
       setSelectedAgentId(targetAgent);
@@ -897,11 +900,12 @@ export default function App() {
       {
         title: 'Intelligence',
         items: [
+          { id: 'orchestration' as const, label: 'Multi-Agent Orchestrator', Icon: Cpu, badge: '5-Step', badgeColor: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
           { id: 'knowledge' as const, label: 'Company Knowledge', Icon: BookOpen },
           { id: 'workflows' as const, label: 'Workflows', Icon: GitMerge },
           { id: 'scenarios' as const, label: 'Scenario Planning', Icon: SlidersHorizontal },
           { id: 'council' as const,   label: 'Executive Council', Icon: Sparkles },
-        ].filter(item => item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
+        ].filter(item => item.id === 'orchestration' || item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
         title: 'Governance',
@@ -1259,6 +1263,13 @@ export default function App() {
                     onUpdateStartup={handleUpdateStartup} 
                     selectedAgentId={selectedAgentId}
                     onSelectAgent={handleSelectAgent}
+                  />
+                )}
+
+                {activeTab === 'orchestration' && (
+                  <MultiAgentOrchestrationDashboard
+                    apiFetch={apiFetch}
+                    onNavigate={(tab) => handleTabChange(tab as any)}
                   />
                 )}
 
