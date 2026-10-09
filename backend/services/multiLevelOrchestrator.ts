@@ -539,10 +539,17 @@ export class MultiLevelOrchestrator {
     if (hasPrioritiesInGoals || hasEvidence) {
       summary = `Based on verified company records for **${startupName}**, our primary product and strategic priorities are:`;
       if (hasPrioritiesInGoals) {
-        goals.forEach(g => keyFindings.push(`• **${g}** (Sourced from company strategic goals)`));
+        goals.forEach(g => keyFindings.push(`**${g}** (Sourced from company strategic goals)`));
       }
       if (hasEvidence) {
-        evidence.forEach(e => keyFindings.push(`• **${e.documentName}**: ${e.excerpt.slice(0, 160)}...`));
+        evidence.forEach(e => {
+          const cleanExcerpt = (e.excerpt || '')
+            .replace(/^#+\s+/gm, '')
+            .replace(/[\r\n]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          keyFindings.push(`**${e.documentName}**: ${cleanExcerpt.slice(0, 160)}...`);
+        });
       }
     } else {
       // Truthfully report missing information without fabricating!

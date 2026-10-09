@@ -2764,10 +2764,10 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
       answer: {
         summary: run.result.summary,
         details: [
-          run.result.completedWork.length > 0 ? `### Completed Work\n${run.result.completedWork.map(w => `• ${w}`).join('\n')}` : '',
-          run.result.keyFindings.length > 0 ? `### Key Findings\n${run.result.keyFindings.map(k => `• ${k}`).join('\n')}` : '',
+          run.result.completedWork.length > 0 ? `### Completed Work\n${run.result.completedWork.map(w => `• ${w.replace(/^[•\s\-\*]+/, '').trim()}`).join('\n')}` : '',
+          run.result.keyFindings.length > 0 ? `### Key Findings\n${run.result.keyFindings.map(k => `• ${k.replace(/^[•\s\-\*]+/, '').trim()}`).join('\n')}` : '',
           run.result.failedOrBlockedSteps.length > 0 ? `### Blocked / Failed Steps\n${run.result.failedOrBlockedSteps.map(f => `• **${f.title}**: ${f.reason}`).join('\n')}` : '',
-          run.result.founderDecisions.length > 0 ? `### Required Founder Decisions\n${run.result.founderDecisions.map(d => `• ${d}`).join('\n')}` : ''
+          run.result.founderDecisions.length > 0 ? `### Required Founder Decisions\n${run.result.founderDecisions.map(d => `• ${d.replace(/^[•\s\-\*]+/, '').trim()}`).join('\n')}` : ''
         ].filter(Boolean).join('\n\n')
       },
       agents: run.tasks.length > 0
@@ -2839,10 +2839,10 @@ router.post('/orchestrate/stream', authenticateJWT, orchestrateRateLimiter, asyn
       answer: {
         summary: run.result.summary,
         details: [
-          run.result.completedWork.length > 0 ? `### Completed Work\n${run.result.completedWork.map(w => `• ${w}`).join('\n')}` : '',
-          run.result.keyFindings.length > 0 ? `### Key Findings\n${run.result.keyFindings.map(k => `• ${k}`).join('\n')}` : '',
+          run.result.completedWork.length > 0 ? `### Completed Work\n${run.result.completedWork.map(w => `• ${w.replace(/^[•\s\-\*]+/, '').trim()}`).join('\n')}` : '',
+          run.result.keyFindings.length > 0 ? `### Key Findings\n${run.result.keyFindings.map(k => `• ${k.replace(/^[•\s\-\*]+/, '').trim()}`).join('\n')}` : '',
           run.result.failedOrBlockedSteps.length > 0 ? `### Blocked / Failed Steps\n${run.result.failedOrBlockedSteps.map(f => `• **${f.title}**: ${f.reason}`).join('\n')}` : '',
-          run.result.founderDecisions.length > 0 ? `### Required Founder Decisions\n${run.result.founderDecisions.map(d => `• ${d}`).join('\n')}` : ''
+          run.result.founderDecisions.length > 0 ? `### Required Founder Decisions\n${run.result.founderDecisions.map(d => `• ${d.replace(/^[•\s\-\*]+/, '').trim()}`).join('\n')}` : ''
         ].filter(Boolean).join('\n\n')
       },
       agents: run.tasks.length > 0

@@ -44,6 +44,176 @@ const SUGGESTED_DIRECTIVES = [
   { label: 'Create Operational Tasks', prompt: 'Create three tasks from this approved product plan.' }
 ];
 
+/**
+ * Parses bold **text**, document tags **[Tag]**, italics *text*, and inline `code`.
+ * Ensures NO raw asterisks or markdown symbols leak into the UI.
+ */
+function renderInlineMarkdown(text: string): React.ReactNode {
+  // First clean any internal markdown headings like "## " inside excerpts
+  const sanitized = text.replace(/##+\s+/g, '').replace(/^[•\s\-\*]+/, '').trim();
+
+  // Split on bold **...**, italics *...*, or inline code `...`
+  const tokens = sanitized.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+
+  return tokens.map((token, i) => {
+    if (token.startsWith('**') && token.endsWith('**') && token.length >= 4) {
+      const inner = token.slice(2, -2).trim();
+      // If it's a bracketed document tag like [Company Profile]
+      if (inner.startsWith('[') && inner.includes(']')) {
+        const closeIdx = inner.indexOf(']');
+        const tag = inner.slice(1, closeIdx);
+        const rest = inner.slice(closeIdx + 1).trim();
+        return (
+          <span key={i} className="inline-flex items-baseline gap-1">
+            <span className="px-1.5 py-0.5 rounded bg-slate-200/90 text-slate-700 font-semibold text-[10px] mr-1 inline-block align-middle">
+              {tag}
+            </span>
+            <strong className="font-semibold text-slate-900">{rest}</strong>
+          </span>
+        );
+      }
+      return (
+        <strong key={i} className="font-semibold text-slate-900">
+          {inner}
+        </strong>
+      );
+    }
+
+    if (token.startsWith('*') && token.endsWith('*') && token.length >= 2 && !token.startsWith('**')) {
+      const inner = token.slice(1, -1).trim();
+      return (
+        <em key={i} className="italic text-slate-600">
+          {inner}
+        </em>
+      );
+    }
+
+    if (token.startsWith('`') && token.endsWith('`') && token.length >= 2) {
+      return (
+        <code key={i} className="px-1.5 py-0.5 rounded bg-slate-100 text-indigo-700 font-mono text-[11px] border border-slate-200">
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+
+    return token;
+  });
+}
+
+/**
+ * Renders executive responses with clean markdown parsing, eliminating raw asterisks ('**'),
+ * hashes ('###'), double bullets ('• •'), and unstyled markdown artifacts.
+ */
+function ExecutiveSummaryRenderer({ content }: { content: string }) {
+  if (!content) return null;
+
+  // Split by markdown sections: ### Title
+  const rawSections = content.split(/(?=###\s+)/g);
+
+  return (
+    <div className="space-y-3.5 text-xs text-slate-800 leading-relaxed">
+      {rawSections.map((section, sIdx) => {
+        const trimmed = section.trim();
+        if (!trimmed) return null;
+
+        if (trimmed.startsWith('### ')) {
+          const lines = trimmed.split('\n');
+          const headingLine = lines[0].replace(/^###\s+/, '').trim();
+          const bodyLines = lines.slice(1).filter(l => l.trim().length > 0);
+
+          let icon = <Sparkles className="w-3.5 h-3.5 text-indigo-500" />;
+          let headerBadgeBg = 'bg-indigo-50/80 border-indigo-100 text-indigo-900';
+          let dotColor = 'bg-indigo-500';
+
+          const lowerHeading = headingLine.toLowerCase();
+          if (lowerHeading.includes('completed')) {
+            icon = <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
+            headerBadgeBg = 'bg-emerald-50/80 border-emerald-100 text-emerald-900';
+            dotColor = 'bg-emerald-500';
+          } else if (lowerHeading.includes('blocked') || lowerHeading.includes('failed')) {
+            icon = <AlertCircle className="w-3.5 h-3.5 text-rose-500" />;
+            headerBadgeBg = 'bg-rose-50/80 border-rose-100 text-rose-900';
+            dotColor = 'bg-rose-500';
+          } else if (lowerHeading.includes('decision') || lowerHeading.includes('approval')) {
+            icon = <Shield className="w-3.5 h-3.5 text-amber-500" />;
+            headerBadgeBg = 'bg-amber-50/80 border-amber-100 text-amber-900';
+            dotColor = 'bg-amber-500';
+          }
+
+          return (
+            <div key={sIdx} className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3 space-y-2">
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${headerBadgeBg}`}>
+                {icon}
+                <span>{headingLine}</span>
+              </div>
+
+              <div className="space-y-1.5 pl-1">
+                {bodyLines.map((line, lIdx) => {
+                  const cleanedLine = line.trim();
+                  // Check if numbered list (e.g. "1. Atlas...")
+                  const numberedMatch = cleanedLine.match(/^(\d+)\.\s+(.*)/);
+                  if (numberedMatch) {
+                    return (
+                      <div key={lIdx} className="flex items-start gap-2 text-xs text-slate-800">
+                        <span className="font-semibold text-slate-500 text-[11px] shrink-0 min-w-4">{numberedMatch[1]}.</span>
+                        <div className="flex-1">{renderInlineMarkdown(numberedMatch[2])}</div>
+                      </div>
+                    );
+                  }
+
+                  // Strip all leading bullets/asterisks/dashes to prevent double bullets
+                  const strippedText = cleanedLine.replace(/^[•\s\-\*]+/, '').trim();
+                  if (!strippedText) return null;
+
+                  return (
+                    <div key={lIdx} className="flex items-start gap-2 text-xs text-slate-800">
+                      <span className={`w-1.5 h-1.5 rounded-full ${dotColor} mt-1.5 shrink-0`} />
+                      <div className="flex-1 leading-relaxed">{renderInlineMarkdown(strippedText)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        // Non-heading content: intro paragraphs or notes
+        const paragraphs = trimmed.split('\n\n').filter(p => p.trim());
+        return (
+          <div key={sIdx} className="space-y-2">
+            {paragraphs.map((p, pIdx) => {
+              // If paragraph starts with bullet
+              if (p.trim().startsWith('•') || p.trim().startsWith('-') || p.trim().startsWith('*')) {
+                const bulletLines = p.split('\n').filter(l => l.trim());
+                return (
+                  <div key={pIdx} className="space-y-1.5 pl-1">
+                    {bulletLines.map((bl, blIdx) => {
+                      const stripped = bl.replace(/^[•\s\-\*]+/, '').trim();
+                      if (!stripped) return null;
+                      return (
+                        <div key={blIdx} className="flex items-start gap-2 text-xs text-slate-800">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+                          <div className="flex-1 leading-relaxed">{renderInlineMarkdown(stripped)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+              return (
+                <p key={pIdx} className="text-xs text-slate-800 leading-relaxed font-normal">
+                  {renderInlineMarkdown(p)}
+                </p>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
 export const ExecutiveDirectiveDispatcher: React.FC<ExecutiveDirectiveDispatcherProps> = ({
   messages,
   isTyping,
@@ -416,8 +586,14 @@ export const ExecutiveDirectiveDispatcher: React.FC<ExecutiveDirectiveDispatcher
                 </h3>
               </div>
 
-              <div className="text-xs text-slate-800 leading-relaxed whitespace-pre-wrap">
-                {latestAssistantMessage.content || (isTyping ? 'Synthesizing verified multi-agent domain recommendations...' : 'Directive processed.')}
+              <div>
+                {latestAssistantMessage.content ? (
+                  <ExecutiveSummaryRenderer content={latestAssistantMessage.content} />
+                ) : (
+                  <p className="text-xs text-slate-500 italic">
+                    {isTyping ? 'Synthesizing verified multi-agent domain recommendations...' : 'Directive processed.'}
+                  </p>
+                )}
               </div>
 
               {/* Created Records Links (Real Tasks / Approvals / Decisions) */}
@@ -504,7 +680,9 @@ export const ExecutiveDirectiveDispatcher: React.FC<ExecutiveDirectiveDispatcher
                     <span className="font-semibold text-slate-700">{msg.intent || 'Directive'}</span>
                     <span>{msg.timestamp}</span>
                   </div>
-                  <p className="text-slate-800 line-clamp-2">{msg.content}</p>
+                  <div className="text-slate-800 line-clamp-2">
+                    {renderInlineMarkdown(msg.content)}
+                  </div>
                 </div>
               ))}
             </div>
