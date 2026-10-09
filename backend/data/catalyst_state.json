@@ -1,13 +1,13 @@
 {
   "startupProfile": {
-    "name": "CW Co B 1791570632727",
-    "industry": "SaaS",
-    "description": "Community and Workspace test company",
+    "name": "KitePay Technologies India",
+    "industry": "FinTech / Payments Infrastructure",
+    "description": "Unified UPI 2.0 Recurring Autopay Engine for D2C Brands",
     "fundingStage": "pre-seed",
-    "cashBalance": 65000,
-    "burnRate": 33750,
-    "runwayMonths": 1.9,
-    "healthScore": 83,
+    "cashBalance": 8500000,
+    "burnRate": 750000,
+    "runwayMonths": 11.3,
+    "healthScore": 78,
     "metrics": {
       "velocity": 80,
       "financialHealth": 90,
@@ -29,76 +29,69 @@
       "tasks": [
         {
           "id": "task_f1",
-          "title": "Stress test runway impact of 2 new senior hires (-₹4L/mo) vs 1 senior hire (-₹2L/mo) against ₹72L reserves",
+          "title": "Model runway impact of new headcount against $1,00,000 cash reserves",
           "assignedTo": "Finance",
           "status": "completed",
-          "result": "Aura (Finance) runway audit: Our startup holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway."
+          "result": "Aura (Finance) runway audit: Our venture holds $1,00,000 in liquid reserves with a $10,000/month burn rate (10 months runway). Expanding headcount increases burn by $5,000/mo (6.7 mos runway). Authorizing phased hiring of 1 role increases burn by only $2,500/mo, preserving a healthy 8 months of runway."
         },
         {
           "id": "task_o1",
-          "title": "Evaluate 3-developer bandwidth bottleneck and onboarding mentorship drag on 6-week launch sprint",
+          "title": "Evaluate team capacity, mentoring bandwidth, and onboarding ramp for Should we hire 2 engineers before our next product launch?",
           "assignedTo": "Operations",
           "status": "completed",
-          "result": "Helix (Operations) delivery audit: Reviewed workflow bottlenecks and confirmed operational pipeline is capable of absorbing this initiative."
+          "result": "Helix (Operations) capacity audit: Existing team bandwidth is operating near full capacity. Phased onboarding allows rapid integration with minimal mentorship overhead and immediate velocity gains for Our venture."
         },
         {
           "id": "task_g1",
-          "title": "Quantify delivery commitments for 5 enterprise pilot partners and ₹25L ARR launch milestone",
+          "title": "Align headcount capacity with key customer delivery and revenue roadmap milestones",
           "assignedTo": "Growth",
           "status": "completed",
-          "result": "Vector (Growth) market audit: Verified customer acquisition trajectory. Initiative directly accelerates qualified pipeline conversion."
+          "result": "Vector (Growth) market impact audit: Unlocking additional capacity directly supports meeting customer delivery milestones and accelerating revenue conversion for Our venture."
         }
       ],
       "messages": [
         {
-          "id": "msg_ceo_start_1791494660938",
+          "id": "msg_ceo_start_1791574044577",
           "sender": "CEO",
           "receiver": "All",
           "content": "Team, we are launching an important initiative: \"Determine whether adding 2 senior engineers before the 6-week enterprise launch is financially and operationally justified, balancing sprint capacity against runway burn.\". I have decomposed our objectives and assigned concrete tasks. Let's coordinate immediately to secure quality execution.",
-          "timestamp": "2026-10-08T21:24:20.938Z"
+          "timestamp": "2026-10-09T19:27:24.577Z"
         },
         {
-          "id": "msg_finance_1791494661753",
+          "id": "msg_finance_1791574060512",
           "sender": "Finance",
           "receiver": "CEO",
-          "content": "Aura (Finance) runway audit: Our startup holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway.\n\n**Recommendations:**\n- **Approve 1 Senior Hire (Defer Second Hire to Post-Launch)**: Authorizes 1 senior platform engineer. Preserves 7.8 months of operational runway while unlocking core backend throughput. (Est. Impact: $-200000)",
-          "timestamp": "2026-10-08T21:24:21.753Z",
-          "isConflict": true
+          "content": "Aura (Finance) runway audit: Our venture holds $1,00,000 in liquid reserves with a $10,000/month burn rate (10 months runway). Expanding headcount increases burn by $5,000/mo (6.7 mos runway). Authorizing phased hiring of 1 role increases burn by only $2,500/mo, preserving a healthy 8 months of runway.\n\n**Recommendations:**\n- **Authorize Phased Headcount Addition**: Authorizes 1 role initially, preserving 8 months of operational runway while unlocking critical execution throughput. (Est. Impact: $-2500)",
+          "timestamp": "2026-10-09T19:27:40.512Z",
+          "isConflict": false
         },
         {
-          "id": "msg_operations_1791494662015",
+          "id": "msg_operations_1791574062169",
           "sender": "Operations",
           "receiver": "CEO",
-          "content": "Helix (Operations) delivery audit: Reviewed workflow bottlenecks and confirmed operational pipeline is capable of absorbing this initiative.\n\n**Recommendations:**\n- **Optimize Delivery Pipeline**: Streamline operational procedures and eliminate handoff bottlenecks across modules. (Est. Impact: $0)",
-          "timestamp": "2026-10-08T21:24:22.015Z",
+          "content": "Helix (Operations) capacity audit: Existing team bandwidth is operating near full capacity. Phased onboarding allows rapid integration with minimal mentorship overhead and immediate velocity gains for Our venture.\n\n**Recommendations:**\n- **Targeted Operational Integration**: Integrate new specialist directly into sprint milestones with structured 30-day onboarding goals. (Est. Impact: $0)",
+          "timestamp": "2026-10-09T19:27:42.169Z",
           "isConflict": false
         },
         {
-          "id": "msg_growth_1791494662160",
+          "id": "msg_growth_1791574063851",
           "sender": "Growth",
           "receiver": "CEO",
-          "content": "Vector (Growth) market audit: Verified customer acquisition trajectory. Initiative directly accelerates qualified pipeline conversion.\n\n**Recommendations:**\n- **Deploy Growth Acceleration Loop**: Launch targeted acquisition campaigns to capture high-intent enterprise pipeline. (Est. Impact: $2500000)",
-          "timestamp": "2026-10-08T21:24:22.160Z",
+          "content": "Vector (Growth) market impact audit: Unlocking additional capacity directly supports meeting customer delivery milestones and accelerating revenue conversion for Our venture.\n\n**Recommendations:**\n- **Accelerate Product & Customer Milestones**: Deploy unlocked capacity to fulfill pending feature requests and protect customer retention. (Est. Impact: $0)",
+          "timestamp": "2026-10-09T19:27:43.851Z",
           "isConflict": false
         },
         {
-          "id": "msg_resolver_1791494662613",
-          "sender": "ConflictResolver",
-          "receiver": "All",
-          "content": "### Conflict Mediated Successfully\n\n**Resolution:** Executive Consensus: Proceed with hiring ONE senior platform engineer immediately. Defer second hire to post-launch.\n\n**Compromise Details:** Balances Aura's runway preservation goals (maintaining 7.8 months of runway) with Helix's onboarding bandwidth and Vector's 5 enterprise pilot SLA commitments.",
-          "timestamp": "2026-10-08T21:24:22.614Z"
-        },
-        {
-          "id": "msg_ceo_final_1791494662717",
+          "id": "msg_ceo_final_1791574064192",
           "sender": "CEO",
           "receiver": "All",
           "content": "Our strategic planning session has completed successfully. Loom-V Director has packaged our final corporate deliverable: **\"Executive Decision: Hire 1 Senior Platform Infrastructure Engineer\"**. I have directed this to the Founder Approval Queue for high-fidelity review.",
-          "timestamp": "2026-10-08T21:24:22.717Z"
+          "timestamp": "2026-10-09T19:27:44.192Z"
         }
       ],
       "deliverables": [
         {
-          "id": "del_1791494662717",
+          "id": "del_1791574064192",
           "initiativeId": "init_demo_hiring",
           "title": "Executive Decision: Hire 1 Senior Platform Infrastructure Engineer",
           "description": "Synthesized council resolution approving 1 senior engineer to eliminate the 6-week launch bottleneck while preserving 7.8 months of runway.",
@@ -119,6 +112,24 @@
     }
   ],
   "approvals": [
+    {
+      "id": "del_1791574064192",
+      "initiativeId": "init_demo_hiring",
+      "title": "Executive Decision: Hire 1 Senior Platform Infrastructure Engineer",
+      "description": "Synthesized council resolution approving 1 senior engineer to eliminate the 6-week launch bottleneck while preserving 7.8 months of runway.",
+      "type": "contract",
+      "status": "pending_review",
+      "content": "# EXECUTIVE COUNCIL DECISION CHARTER: HIRING AUTHORIZATION\n\n### Strategic Recommendation\n**Proceed with hiring ONE senior platform engineer immediately.** Defer the second engineering hire to the post-launch milestone.\n\n### Council Consensus Analysis\n- **Atlas (CEO / Strategy):** Aligned with the 6-week enterprise launch sprint; resolves core backend delivery bottleneck.\n- **Aura (Finance):** Rejects 2 hires (runway collapses from 9.0m to 5.5m). Approves 1 hire (burn increases to ₹10L/mo, runway safely preserved at 7.8m).\n- **Helix (Operations):** 1 senior engineer integrates in 10 days; avoids the 25% mentorship overhead of onboarding 2 developers during active sprint.\n- **Vector (Growth):** Protects launch SLAs for 5 enterprise pilot partners and unlocks ₹25,00,000 in ARR.\n\n### Financial & Operational Impact\n- **Headcount:** +1 (Engineering team grows from 3 to 4, total team to 9)\n- **Monthly Burn:** Increases by ₹2,00,000 / month\n- **Cash Runway:** 7.8 Months (Above 6-month safety buffer)\n- **Sprint Velocity:** +20%\n- **Risk Rating:** Low-Medium\n- **Confidence:** 94% High",
+      "impact": "Eliminates the 6-week enterprise launch bottleneck while preserving 7.8 months of cash runway.",
+      "financialChange": -200000,
+      "metricChanges": {
+        "velocity": 20,
+        "financialHealth": -2,
+        "legalCompliance": 5,
+        "growthRate": 12,
+        "operationsEfficiency": 15
+      }
+    },
     {
       "id": "appr_1791571931520_b8od",
       "title": "Strategic Authorization: Headcount Addition for QueueLess",
