@@ -80,6 +80,14 @@ app.get('/ready', async (req, res) => {
 // Mount modularized backend API routes
 app.use('/api', apiRouter);
 
+// Support root /onboarding and /startup/onboarding API aliases for headless/programmatic requests
+app.use(['/onboarding', '/startup/onboarding'], (req, res, next) => {
+  if (req.headers['content-type']?.includes('application/json') || req.headers['accept']?.includes('application/json') || req.method !== 'GET') {
+    return apiRouter(req, res, next);
+  }
+  next();
+});
+
 import http from 'http';
 
 // ==================================================

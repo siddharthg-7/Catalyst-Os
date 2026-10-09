@@ -523,6 +523,66 @@ router.post('/dev/reset', async (req, res) => {
 // WORKSPACE & CANONICAL STARTUP CONTEXT (Sections 3, 4, 5, 8, 9, 34 & 35)
 // ============================================================================
 
+// GET startup onboarding status & progress (supports /startup/onboarding, /onboarding, and /onboarding/status)
+router.get(['/startup/onboarding', '/onboarding', '/onboarding/status'], authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required for onboarding status.' });
+    return;
+  }
+
+  try {
+    const canonicalContext = await companyContextService.getContextForUser(userId);
+    const hasCompany = !!(canonicalContext && canonicalContext.startupId && canonicalContext.identity?.name);
+
+    if (!hasCompany) {
+      res.json({
+        onboarded: false,
+        status: 'pending',
+        message: 'Founder onboarding has not been completed for this account.',
+        requiredFields: [
+          'startupName',
+          'industry',
+          'description',
+          'stage',
+          'cashBalance',
+          'monthlyBurn'
+        ]
+      });
+      return;
+    }
+
+    const profile = {
+      id: canonicalContext.startupId,
+      name: canonicalContext.identity.name,
+      industry: canonicalContext.identity.industry,
+      description: canonicalContext.identity.description,
+      fundingStage: canonicalContext.identity.stage,
+      cashBalance: canonicalContext.financial.cashBalance,
+      burnRate: canonicalContext.financial.monthlyBurn,
+      runwayMonths: canonicalContext.financial.runwayMonths,
+      healthScore: canonicalContext.financial.healthScore || 80,
+      metrics: canonicalContext.financial.metrics,
+      targetIcp: canonicalContext.business.targetIcp,
+      primaryProduct: canonicalContext.business.primaryProduct,
+      goals: canonicalContext.growth.goals,
+      priorities: canonicalContext.growth.currentPriorities,
+      onboarded: true
+    };
+
+    res.json({
+      success: true,
+      onboarded: true,
+      status: 'completed',
+      startup: profile,
+      context: canonicalContext
+    });
+  } catch (err: any) {
+    console.error('[Startup Onboarding API] GET error:', err.message);
+    res.status(500).json({ error: 'Failed to retrieve onboarding status: ' + err.message });
+  }
+});
+
 // POST complete startup onboarding (supports both /startup/onboarding and /onboarding)
 router.post(['/startup/onboarding', '/onboarding'], authenticateJWT, async (req: AuthenticatedRequest, res) => {
   const userId = req.user?.id;
