@@ -45,17 +45,42 @@ interface ExecutiveCouncilWorkspaceProps {
   onRefreshTasks?: () => Promise<void>;
   onNavigate?: (tab: string) => void;
   apiFetch?: (url: string, options?: RequestInit) => Promise<Response>;
+  teamMembers?: Array<{
+    id: string;
+    fullName?: string;
+    name?: string;
+    role?: string;
+    systemRole?: string;
+    department?: string;
+    email?: string;
+    status?: string;
+    avatar?: string;
+  }>;
+  currentUser?: {
+    id?: string;
+    name?: string;
+    email?: string;
+    role?: string;
+  } | null;
 }
 
 // ── B1 Data Models ─────────────────────────────────────────────────────────────
 
 interface ExecutiveCouncilData {
+  id?: string;
   role: string;
   name: string;
   officialTitle: string;
   department: string;
   avatar: string;
   description: string;
+  isRealMember?: boolean;
+  isOpenSlot?: boolean;
+  tasksDone: {
+    count: number;
+    titles: string[];
+  };
+  progress: number;
   currentWorkload: {
     activeTasksCount: number;
     inFlightSummary: string;
@@ -91,7 +116,9 @@ export default function ExecutiveCouncilWorkspace({
   onUpdateStartup,
   onRefreshTasks,
   onNavigate,
-  apiFetch
+  apiFetch,
+  teamMembers = [],
+  currentUser
 }: ExecutiveCouncilWorkspaceProps) {
   // Top level phase mode: B1 (Workspace), B2 (Deliberation), B3 (Live Meeting), 5-Step Orchestration
   const [activeMode, setActiveMode] = useState<'workspace' | 'deliberation' | 'meeting' | 'orchestration'>('workspace');
@@ -131,35 +158,74 @@ export default function ExecutiveCouncilWorkspace({
     ? startup.runwayMonths 
     : (burnRate > 0 ? Number((cashBalance / burnRate).toFixed(1)) : 12);
 
-  // ── B1: Canonical Council Profiles & Real Workload Association ────────────────
+  // ── B1: Dynamic Council Profiles & Real Workload Association ─────────────────
   const councilProfiles: Record<string, ExecutiveCouncilData> = useMemo(() => {
-    const getTasksForDept = (dept: string) => {
-      return tasks.filter(t => 
-        (t.department && t.department.toUpperCase() === dept.toUpperCase()) ||
-        (t.agent && t.agent.toLowerCase().includes(dept.toLowerCase())) ||
-        (t.ownerRole && t.ownerRole.toUpperCase() === dept.toUpperCase())
-      );
+    const getTasksForDeptOrMember = (dept: string, memberName?: string, memberRole?: string) => {
+      return tasks.filter(t => {
+        const assignee = (t.assignedUserName || t.ownerRole || '').toLowerCase();
+        const mName = (memberName || '').toLowerCase();
+        const mRole = (memberRole || '').toLowerCase();
+        const tDept = (t.department || '').toLowerCase();
+        const tAgent = (t.agent || '').toLowerCase();
+        const tOwner = (t.ownerRole || '').toLowerCase();
+        const d = dept.toLowerCase();
+
+        const matchName = mName && assignee && (assignee.includes(mName) || mName.includes(assignee));
+        const matchDept = d && ((tDept && (tDept === d || tDept.includes(d) || d.includes(tDept))) ||
+                                (tAgent && (tAgent.includes(d) || d.includes(tAgent))));
+        const matchRole = mRole && tOwner && (mRole === tOwner || mRole.includes(tOwner) || tOwner.includes(mRole));
+
+        return matchName || matchDept || matchRole;
+      });
     };
 
-    const talentTasks = getTasksForDept('TALENT');
-    const financeTasks = getTasksForDept('FINANCE');
-    const growthTasks = getTasksForDept('GROWTH');
-    const legalTasks = getTasksForDept('LEGAL');
-    const opsTasks = getTasksForDept('OPERATIONS');
-    const ceoTasks = tasks.filter(t => t.ownerRole === 'FOUNDER' || t.department === 'GENERAL');
+    const getProgressData = (taskList: DelegatedTask[]) => {
+      const completed = taskList.filter(t => t.status === 'approved');
+      const active = taskList.filter(t => t.status !== 'approved');
+      const count = completed.length;
+      const total = taskList.length;
+      const progress = total > 0 ? Math.round((count / total) * 100) : (count > 0 ? 100 : 0);
+      return {
+        completed,
+        active,
+        count,
+        total,
+        progress,
+        titles: completed.map(t => t.title)
+      };
+    };
 
-    return {
+    const founderName = (currentUser?.name || (startup as any).founderName || 'The Founder').trim();
+    const ceoTasks = tasks.filter(t => 
+      t.ownerRole === 'FOUNDER' || 
+      t.ownerRole === 'CEO' || 
+      t.department === 'GENERAL' || 
+      t.department === 'EXECUTIVE' ||
+      (t.assignedUserName && t.assignedUserName.toLowerCase().includes(founderName.toLowerCase()))
+    );
+    const ceoProgress = getProgressData(ceoTasks);
+
+    const profiles: Record<string, ExecutiveCouncilData> = {
       CEO: {
         role: 'CEO',
-        name: 'Sophia Vance (Atlas)',
-        officialTitle: 'Chief Executive Officer & Orchestrator',
+        name: founderName,
+        officialTitle: 'Founder & Chief Executive Officer',
         department: 'EXECUTIVE',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-        description: 'Autonomous corporate strategist coordinating cross-functional multi-agent governance and founder decisions.',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        description: 'Venture founder and executive orchestrator coordinating cross-functional team governance and strategic roadmap.',
+        isRealMember: true,
+        isOpenSlot: false,
+        tasksDone: {
+          count: ceoProgress.count,
+          titles: ceoProgress.titles
+        },
+        progress: ceoProgress.progress || (ceoProgress.count > 0 ? 100 : 85),
         currentWorkload: {
-          activeTasksCount: ceoTasks.length || 3,
-          inFlightSummary: 'Decomposing founder directives & balancing departmental resource priorities',
-          velocityScore: `${startup.metrics?.velocity ?? 78}%`
+          activeTasksCount: ceoProgress.active.length || (ceoProgress.count > 0 ? 0 : 2),
+          inFlightSummary: ceoProgress.active.length > 0 
+            ? `Overseeing: ${ceoProgress.active.map(t => t.title).slice(0, 2).join(', ')}`
+            : 'Decomposing strategic venture directives & balancing departmental resource priorities',
+          velocityScore: `${startup.metrics?.velocity ?? 84}%`
         },
         recommendations: [
           {
@@ -188,35 +254,55 @@ export default function ExecutiveCouncilWorkspace({
         keyMetrics: [
           { label: 'Strategic Velocity', value: `${startup.metrics?.velocity ?? 78}%`, trend: '+4% this cycle' },
           { label: 'Council Health', value: `${startup.healthScore ?? 84}/100`, trend: 'Optimal' },
-          { label: 'Active Directives', value: `${tasks.length} Persisted`, trend: 'Audited' }
+          { label: 'Completed Deliverables', value: `${ceoProgress.count} Done`, trend: 'Audited' }
         ]
-      },
-      Finance: {
-        role: 'Finance',
-        name: 'Marcus Sterling (Aura)',
-        officialTitle: 'Chief Financial Officer (CFO)',
+      }
+    };
+
+    // Helper to find real team member matching department
+    const findTeamMemberForDept = (deptRegex: RegExp) => {
+      return (teamMembers || []).find(m => {
+        const d = (m.department || '').toLowerCase();
+        const r = (m.role || '').toLowerCase();
+        return deptRegex.test(d) || deptRegex.test(r);
+      });
+    };
+
+    // ── FINANCE MEMBER ────────────────────────────────────────────────────────
+    const financeMember = findTeamMemberForDept(/finan|account|budget|cfo|treasury/);
+    const financeTasks = getTasksForDeptOrMember('FINANCE', financeMember?.fullName || financeMember?.name, financeMember?.role);
+    const finProgress = getProgressData(financeTasks);
+
+    if (financeMember) {
+      const fName = (financeMember.fullName || financeMember.name || 'Finance Lead').trim();
+      profiles['Finance'] = {
+        role: financeMember.role || 'Finance Lead',
+        name: fName,
+        officialTitle: `${financeMember.role || 'Finance Manager'} · ${financeMember.department || 'Finance'}`,
         department: 'FINANCE',
-        avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
-        description: 'Mathematical CFO agent enforcing deterministic zero-hallucination runway rules and cash burn gates.',
+        avatar: financeMember.avatar || 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+        description: `Directs ${startup.name}'s financial modeling, treasury reconciliations, burn management, and unit economics.`,
+        isRealMember: true,
+        isOpenSlot: false,
+        tasksDone: {
+          count: finProgress.count,
+          titles: finProgress.titles
+        },
+        progress: finProgress.progress || (finProgress.count > 0 ? 100 : 75),
         currentWorkload: {
-          activeTasksCount: financeTasks.length || 2,
-          inFlightSummary: 'Unit economics modeling, subscription cost reclaim, and headcount sensitivity stress-tests',
+          activeTasksCount: finProgress.active.length || (finProgress.count > 0 ? 0 : 1),
+          inFlightSummary: finProgress.active.length > 0 
+            ? `Executing: ${finProgress.active.map(t => t.title).slice(0, 2).join(', ')}`
+            : 'Auditing cash runway, unit economics models, and monthly expenditure velocity',
           velocityScore: '92%'
         },
         recommendations: [
           {
             id: 'rec_cfo_1',
-            title: 'Enforce Salary Cap of ₹25,00,000 for Immediate Engineering Roles',
-            summary: 'Benchmarking loaded cost to ₹25L prevents monthly burn from accelerating past the ₹8,00,000 safety threshold.',
-            impact: 'Preserves runway above 12.0 months',
+            title: 'Enforce Compensation Banding on Next Sprint Requisitions',
+            summary: `Benchmark loaded compensation cost to preserve monthly burn under $${burnRate.toLocaleString()}/mo.`,
+            impact: `Preserves runway above ${runwayMonths} months`,
             urgency: 'high'
-          },
-          {
-            id: 'rec_cfo_2',
-            title: 'Reclaim Redundant Cloud SaaS Subscriptions',
-            summary: 'Audit identified 14 inactive seats across staging tools representing ₹12,500/mo in reclaimable burn.',
-            impact: 'Saves ₹1,50,000 annualized',
-            urgency: 'medium'
           }
         ],
         risks: [
@@ -224,40 +310,91 @@ export default function ExecutiveCouncilWorkspace({
             id: 'risk_cfo_1',
             title: 'Runway Compression Below Critical 4-Month Threshold',
             severity: 'critical',
-            mitigation: 'Automatic CFO VETO triggered if projected runway drops under 4.0 months'
+            mitigation: 'Automatic CFO veto triggered if projected runway drops under 4.0 months'
           }
         ],
         keyMetrics: [
           { label: 'Treasury Balance', value: `$${cashBalance.toLocaleString()}`, trend: 'Neon Verified' },
           { label: 'Monthly Burn', value: `$${burnRate.toLocaleString()}/mo`, trend: 'Baseline' },
-          { label: 'Active Runway', value: `${runwayMonths} Months`, trend: 'Deterministic' }
+          { label: 'Tasks Done', value: `${finProgress.count} Done`, trend: 'Audited' }
         ]
-      },
-      Talent: {
-        role: 'Talent',
-        name: 'Evelyn Brooks (Echo)',
-        officialTitle: 'Head of People & Recruiting',
-        department: 'TALENT',
-        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
-        description: 'Specialist recruiter and organizational designer handling headcount roadmaps, role scorecards, and hiring.',
+      };
+    } else {
+      profiles['Finance'] = {
+        role: 'Chief Financial Officer',
+        name: 'Open Seat (Finance)',
+        officialTitle: 'Position Open · Click to Appoint or Add Member',
+        department: 'FINANCE',
+        avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+        description: 'Mathematical CFO seat enforcing deterministic zero-hallucination runway rules and cash burn gates. Open position awaiting appointment.',
+        isRealMember: false,
+        isOpenSlot: true,
+        tasksDone: { count: 0, titles: [] },
+        progress: 0,
         currentWorkload: {
-          activeTasksCount: talentTasks.length || 2,
-          inFlightSummary: 'Candidate scorecard formulation, senior engineer market benchmarking, and onboarding schedules',
-          velocityScore: '86%'
+          activeTasksCount: 0,
+          inFlightSummary: 'Position open. Add a team member under Finance to allocate this executive seat.',
+          velocityScore: 'Unfilled'
+        },
+        recommendations: [
+          {
+            id: 'rec_cfo_open',
+            title: 'Appoint or Hire a Finance Lead',
+            summary: 'Ensure a dedicated finance operator governs accounting, burn rate, and financial runway.',
+            impact: 'Fills vital council governance seat',
+            urgency: 'high'
+          }
+        ],
+        risks: [
+          {
+            id: 'risk_cfo_open',
+            title: 'Unmonitored Burn Risk',
+            severity: 'high',
+            mitigation: 'Add a worker under Finance domain in People workspace'
+          }
+        ],
+        keyMetrics: [
+          { label: 'Treasury Balance', value: `$${cashBalance.toLocaleString()}`, trend: 'Ledger' },
+          { label: 'Monthly Burn', value: `$${burnRate.toLocaleString()}/mo`, trend: 'Unmonitored' },
+          { label: 'Status', value: 'Open Seat', trend: 'Needs Hire' }
+        ]
+      };
+    }
+
+    // ── TALENT & HR MEMBER ───────────────────────────────────────────────────
+    const talentMember = findTeamMemberForDept(/talent|hr|people|recruit/);
+    const talentTasks = getTasksForDeptOrMember('TALENT', talentMember?.fullName || talentMember?.name, talentMember?.role);
+    const talProgress = getProgressData(talentTasks);
+
+    if (talentMember) {
+      const tName = (talentMember.fullName || talentMember.name || 'Talent Lead').trim();
+      profiles['Talent'] = {
+        role: talentMember.role || 'Head of People',
+        name: tName,
+        officialTitle: `${talentMember.role || 'HR Lead'} · ${talentMember.department || 'People & Talent'}`,
+        department: 'TALENT',
+        avatar: talentMember.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+        description: `Oversees ${startup.name}'s recruiting roadmap, candidate scorecards, compensation bands, and onboarding.`,
+        isRealMember: true,
+        isOpenSlot: false,
+        tasksDone: {
+          count: talProgress.count,
+          titles: talProgress.titles
+        },
+        progress: talProgress.progress || (talProgress.count > 0 ? 100 : 70),
+        currentWorkload: {
+          activeTasksCount: talProgress.active.length || (talProgress.count > 0 ? 0 : 1),
+          inFlightSummary: talProgress.active.length > 0 
+            ? `In flight: ${talProgress.active.map(t => t.title).slice(0, 2).join(', ')}`
+            : 'Candidate screening, market compensation benchmarking, and onboarding workflows',
+          velocityScore: '88%'
         },
         recommendations: [
           {
             id: 'rec_talent_1',
-            title: 'Open 2x Senior Full-Stack Engineer Requisitions',
-            summary: 'Engineering capacity is currently at 94% utilization; 2 senior developers are required to hit the Q3 beta milestone.',
-            impact: '+45% sprint throughput',
-            urgency: 'high'
-          },
-          {
-            id: 'rec_talent_2',
-            title: 'Implement 4-Year Vesting with 1-Year Cliff Standard',
-            summary: 'Align prospective engineering hires with market standard equity incentives to minimize cash compensation demand.',
-            impact: 'Reduces required base salary by 12%',
+            title: 'Calibrate Engineering Scorecards to Sprint Velocity',
+            summary: 'Align prospective hires directly with technical domain requirements to reduce onboarding ramp time.',
+            impact: '+35% sprint throughput',
             urgency: 'medium'
           }
         ],
@@ -266,32 +403,90 @@ export default function ExecutiveCouncilWorkspace({
             id: 'risk_talent_1',
             title: 'Extended Time-to-Hire Bottleneck',
             severity: 'moderate',
-            mitigation: 'Automated candidate screening and pre-vetted referral networks'
+            mitigation: 'Automated candidate screening and pre-vetted domain scorecards'
           }
         ],
         keyMetrics: [
-          { label: 'Target Hires', value: '2 Roles', trend: 'Scoped' },
-          { label: 'Time to Hire Target', value: '28 Days', trend: 'Benchmarked' },
-          { label: 'Offer Acceptance Rate', value: '88%', trend: 'Market Leading' }
+          { label: 'Team Size', value: `${(teamMembers || []).length + 1} People`, trend: 'Active' },
+          { label: 'Tasks Done', value: `${talProgress.count} Done`, trend: 'Audited' },
+          { label: 'Progress', value: `${talProgress.progress}%`, trend: 'Tracking' }
         ]
-      },
-      Growth: {
-        role: 'Growth',
-        name: 'Dax Ramirez (Vector)',
-        officialTitle: 'VP of Growth & Customer Acquisition',
-        department: 'GROWTH',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-        description: 'GTM strategist tracking customer acquisition loops, ICP positioning, CAC/LTV, and product launches.',
+      };
+    } else {
+      profiles['Talent'] = {
+        role: 'Head of People',
+        name: 'Open Seat (People & HR)',
+        officialTitle: 'Position Open · Click to Appoint or Add Member',
+        department: 'TALENT',
+        avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+        description: 'People and talent seat handling hiring roadmaps, role scorecards, and cultural engineering. Open position awaiting appointment.',
+        isRealMember: false,
+        isOpenSlot: true,
+        tasksDone: { count: 0, titles: [] },
+        progress: 0,
         currentWorkload: {
-          activeTasksCount: growthTasks.length || 1,
-          inFlightSummary: 'Developer evangelism funnel modeling and initial ICP conversion optimization',
-          velocityScore: '80%'
+          activeTasksCount: 0,
+          inFlightSummary: 'Position open. Add an HR or Talent specialist to fill this council seat.',
+          velocityScore: 'Unfilled'
+        },
+        recommendations: [
+          {
+            id: 'rec_talent_open',
+            title: 'Appoint People & Talent Lead',
+            summary: 'Structured recruiting processes ensure rapid scaling without founder distraction.',
+            impact: 'Accelerates headcount scaling',
+            urgency: 'medium'
+          }
+        ],
+        risks: [
+          {
+            id: 'risk_talent_open',
+            title: 'Unstructured Hiring Ramp',
+            severity: 'moderate',
+            mitigation: 'Add a worker under Talent & HR in People workspace'
+          }
+        ],
+        keyMetrics: [
+          { label: 'Target Hires', value: 'Open', trend: 'Scoped' },
+          { label: 'Status', value: 'Open Seat', trend: 'Needs Hire' },
+          { label: 'Progress', value: '0%', trend: 'Pending' }
+        ]
+      };
+    }
+
+    // ── GROWTH & MARKETING MEMBER ────────────────────────────────────────────
+    const growthMember = findTeamMemberForDept(/growth|market|sales|commercial|seo/);
+    const growthTasks = getTasksForDeptOrMember('GROWTH', growthMember?.fullName || growthMember?.name, growthMember?.role);
+    const groProgress = getProgressData(growthTasks);
+
+    if (growthMember) {
+      const gName = (growthMember.fullName || growthMember.name || 'Growth Lead').trim();
+      profiles['Growth'] = {
+        role: growthMember.role || 'VP of Growth',
+        name: gName,
+        officialTitle: `${growthMember.role || 'Growth Lead'} · ${growthMember.department || 'Growth & Marketing'}`,
+        department: 'GROWTH',
+        avatar: growthMember.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+        description: `Directs customer acquisition funnels, ICP market positioning, GTM loops, and conversion metrics.`,
+        isRealMember: true,
+        isOpenSlot: false,
+        tasksDone: {
+          count: groProgress.count,
+          titles: groProgress.titles
+        },
+        progress: groProgress.progress || (groProgress.count > 0 ? 100 : 80),
+        currentWorkload: {
+          activeTasksCount: groProgress.active.length || (groProgress.count > 0 ? 0 : 1),
+          inFlightSummary: groProgress.active.length > 0 
+            ? `Active: ${groProgress.active.map(t => t.title).slice(0, 2).join(', ')}`
+            : 'Optimizing ICP conversion funnels, developer evangelism loops, and organic pilot onboarding',
+          velocityScore: '85%'
         },
         recommendations: [
           {
             id: 'rec_growth_1',
             title: 'Focus Beta Program Exclusively on Developer CTOs',
-            summary: 'Refining ICP to high-velocity technical founders reduces sales cycle from 45 days to 14 days.',
+            summary: 'Refining ICP to high-velocity technical founders reduces sales cycle length.',
             impact: 'Lowers CAC by 34%',
             urgency: 'medium'
           }
@@ -299,126 +494,221 @@ export default function ExecutiveCouncilWorkspace({
         risks: [
           {
             id: 'risk_growth_1',
-            title: 'Premature Marketing Spend Before Product-Market Fit',
+            title: 'Premature Marketing Spend',
             severity: 'moderate',
             mitigation: 'Cap paid marketing until 20 organic design partners are onboarded'
           }
         ],
         keyMetrics: [
           { label: 'Growth Velocity', value: `${startup.metrics?.growthRate ?? 65}%`, trend: 'Traction' },
-          { label: 'Target ICP', value: startup.industry || 'B2B SaaS', trend: 'Refined' },
-          { label: 'Launch Readiness', value: '84%', trend: 'On Schedule' }
+          { label: 'Tasks Done', value: `${groProgress.count} Done`, trend: 'Audited' },
+          { label: 'Progress', value: `${groProgress.progress}%`, trend: 'Active' }
         ]
-      },
-      Operations: {
-        role: 'Operations',
-        name: 'Felix Torres (Helix)',
-        officialTitle: 'Chief Operating Officer (COO)',
-        department: 'OPERATIONS',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-        description: 'Operational coordinator governing milestone velocity, sprint dependencies, and workflow execution.',
+      };
+    } else {
+      profiles['Growth'] = {
+        role: 'VP of Growth',
+        name: 'Open Seat (Growth & GTM)',
+        officialTitle: 'Position Open · Click to Appoint or Add Member',
+        department: 'GROWTH',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+        description: 'Customer acquisition and commercial officer governing demand generation and viral loops. Open position.',
+        isRealMember: false,
+        isOpenSlot: true,
+        tasksDone: { count: 0, titles: [] },
+        progress: 0,
         currentWorkload: {
-          activeTasksCount: opsTasks.length || 2,
-          inFlightSummary: 'Milestone dependency mapping and employee workspace task dispatching',
-          velocityScore: '89%'
+          activeTasksCount: 0,
+          inFlightSummary: 'Position open. Add a Growth or Marketing specialist to fill this seat.',
+          velocityScore: 'Unfilled'
+        },
+        recommendations: [
+          {
+            id: 'rec_growth_open',
+            title: 'Appoint Growth & Marketing Lead',
+            summary: 'Target initial enterprise ICP cohorts and build repeatable conversion funnels.',
+            impact: 'Expands pipeline velocity',
+            urgency: 'medium'
+          }
+        ],
+        risks: [
+          {
+            id: 'risk_growth_open',
+            title: 'Lack of Cohesive ICP Messaging',
+            severity: 'moderate',
+            mitigation: 'Add a worker under Growth in People workspace'
+          }
+        ],
+        keyMetrics: [
+          { label: 'Target ICP', value: startup.industry || 'B2B SaaS', trend: 'Defined' },
+          { label: 'Status', value: 'Open Seat', trend: 'Needs Hire' },
+          { label: 'Progress', value: '0%', trend: 'Pending' }
+        ]
+      };
+    }
+
+    // ── OPERATIONS / ENGINEERING MEMBER ──────────────────────────────────────
+    const opsMember = findTeamMemberForDept(/operat|ops|eng|tech|dev|backend|front/);
+    const opsTasks = getTasksForDeptOrMember('OPERATIONS', opsMember?.fullName || opsMember?.name, opsMember?.role);
+    const opsProgress = getProgressData(opsTasks);
+
+    if (opsMember) {
+      const oName = (opsMember.fullName || opsMember.name || 'Operations Lead').trim();
+      profiles['Operations'] = {
+        role: opsMember.role || 'COO / Operations',
+        name: oName,
+        officialTitle: `${opsMember.role || 'Operations Lead'} · ${opsMember.department || 'Operations'}`,
+        department: 'OPERATIONS',
+        avatar: opsMember.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+        description: `Coordinates sprint cadences, system dependencies, infrastructure uptime, and cross-functional deliverables.`,
+        isRealMember: true,
+        isOpenSlot: false,
+        tasksDone: {
+          count: opsProgress.count,
+          titles: opsProgress.titles
+        },
+        progress: opsProgress.progress || (opsProgress.count > 0 ? 100 : 85),
+        currentWorkload: {
+          activeTasksCount: opsProgress.active.length || (opsProgress.count > 0 ? 0 : 2),
+          inFlightSummary: opsProgress.active.length > 0
+            ? `Active: ${opsProgress.active.map(t => t.title).slice(0, 2).join(', ')}`
+            : 'Milestone dependency mapping, employee workspace dispatching, and CI/CD reliability',
+          velocityScore: '90%'
         },
         recommendations: [
           {
             id: 'rec_ops_1',
-            title: 'Decompose Hiring Workflow into 6 Deterministic Phases',
-            summary: 'Mandate ordered sequence: Capacity Analysis -> Requirements -> Policy Check -> Budget Impact -> Plan Draft -> Founder Review.',
-            impact: 'Zero execution steps missed',
+            title: 'Decompose Cross-Functional Sprint Dependencies',
+            summary: 'Ensure prerequisite data models complete before UI binding phases commence.',
+            impact: 'Zero blocking delays',
             urgency: 'high'
           }
         ],
         risks: [
           {
             id: 'risk_ops_1',
-            title: 'Cross-Functional Dependency Blocking',
+            title: 'Cross-Functional Blocking',
             severity: 'moderate',
             mitigation: 'Automated task delegation and clear role assignment rules'
           }
         ],
         keyMetrics: [
           { label: 'Ops Efficiency', value: `${startup.metrics?.operationsEfficiency ?? 80}%`, trend: 'Throughput' },
-          { label: 'Active Sprints', value: `${initiatives.length || 2} In Flight`, trend: 'Active' },
-          { label: 'System Uptime', value: '99.9%', trend: 'Operational' }
+          { label: 'Tasks Done', value: `${opsProgress.count} Done`, trend: 'Audited' },
+          { label: 'Progress', value: `${opsProgress.progress}%`, trend: 'Active' }
         ]
-      },
-      Legal: {
-        role: 'Legal',
-        name: 'Helena Vance, Esq. (Nexus)',
-        officialTitle: 'General Counsel & Chief Compliance Officer',
-        department: 'LEGAL',
-        avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
-        description: 'General counsel overseeing IP assignment, non-solicits, regulatory compliance, and commercial safeguards.',
+      };
+    } else {
+      profiles['Operations'] = {
+        role: 'Chief Operating Officer',
+        name: 'Open Seat (Operations)',
+        officialTitle: 'Position Open · Click to Appoint or Add Member',
+        department: 'OPERATIONS',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+        description: 'Operations director governing cross-functional delivery, sprint cadences, and system reliability.',
+        isRealMember: false,
+        isOpenSlot: true,
+        tasksDone: { count: 0, titles: [] },
+        progress: 0,
         currentWorkload: {
-          activeTasksCount: legalTasks.length || 1,
-          inFlightSummary: 'Standard employment agreement clauses, IP assignment covenants, and Delaware corporate compliance',
-          velocityScore: '94%'
+          activeTasksCount: 0,
+          inFlightSummary: 'Position open. Add an operations or technical specialist to fill this seat.',
+          velocityScore: 'Unfilled'
         },
         recommendations: [
           {
-            id: 'rec_legal_1',
-            title: 'Include Standard Proprietary Information & Inventions Agreement (PIIA)',
-            summary: 'All engineering hires must execute IP assignment covenants prior to source repository access.',
-            impact: 'Guarantees 100% clean corporate IP chain of custody',
+            id: 'rec_ops_open',
+            title: 'Appoint Operations Director',
+            summary: 'Drive cross-functional milestone rhythm and remove dependencies across departments.',
+            impact: 'Eliminates sprint friction',
             urgency: 'high'
           }
         ],
         risks: [
           {
-            id: 'risk_legal_1',
-            title: 'Missing Employee Human Role in Company Model',
-            severity: 'high',
-            mitigation: 'Never invent human employee; flag for Founder/Admin assignment or invite'
+            id: 'risk_ops_open',
+            title: 'Sprint Drift',
+            severity: 'moderate',
+            mitigation: 'Add an Operations specialist in People workspace'
           }
         ],
         keyMetrics: [
-          { label: 'Compliance Index', value: `${startup.metrics?.legalCompliance ?? 92}%`, trend: 'High Guardrails' },
-          { label: 'Contracts Scanned', value: '14 Agreements', trend: 'Verified' },
-          { label: 'IP Hygiene', value: 'Protected', trend: 'C-Corp Standard' }
+          { label: 'Ops Efficiency', value: 'Unmonitored', trend: 'Pending' },
+          { label: 'Status', value: 'Open Seat', trend: 'Needs Hire' },
+          { label: 'Progress', value: '0%', trend: 'Pending' }
         ]
-      },
-      Auditor: {
-        role: 'Auditor',
-        name: 'Sentry (Auditor)',
-        officialTitle: 'Chief Verification Officer & Proof Auditor',
-        department: 'AUDITOR',
-        avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
-        description: 'Deterministic proof checker verifying arithmetic accuracy, citations, and hallucination prevention.',
-        currentWorkload: {
-          activeTasksCount: 1,
-          inFlightSummary: 'Mathematical verification of burn calculations and document citation proof checking',
-          velocityScore: '100%'
-        },
-        recommendations: [
-          {
-            id: 'rec_auditor_1',
-            title: 'Audit All Runway Figures Deterministically Against Database Ledger',
-            summary: 'Verify cash balance (₹72,00,000) divided by burn rate (₹8,00,000) equals 9.0 months without estimation.',
-            impact: 'Zero mathematical hallucinations',
-            urgency: 'high'
-          }
-        ],
-        risks: [
-          {
-            id: 'risk_auditor_1',
-            title: 'Unverified Financial Assertions',
-            severity: 'critical',
-            mitigation: 'Automated proof validation gate blocks unverified deliverables'
-          }
-        ],
-        keyMetrics: [
-          { label: 'Proof Accuracy', value: '100%', trend: 'Deterministic' },
-          { label: 'Grounding Score', value: '98/100', trend: 'Strict RAG' },
-          { label: 'Auditor Gate', value: 'Enforcing', trend: 'Active' }
-        ]
-      }
-    };
-  }, [tasks, startup, cashBalance, burnRate, runwayMonths, initiatives.length]);
+      };
+    }
 
-  const activeProfile = councilProfiles[selectedExecutiveRole] || councilProfiles['CEO'];
+    // ── DYNAMICALLY APPEND ANY ADDITIONAL REAL TEAM MEMBERS ADDED BY THE USER ──
+    const alreadyMappedIds = new Set([
+      financeMember?.id,
+      talentMember?.id,
+      growthMember?.id,
+      opsMember?.id
+    ].filter(Boolean));
+
+    (teamMembers || []).forEach((m, idx) => {
+      if (!alreadyMappedIds.has(m.id)) {
+        const mTasks = getTasksForDeptOrMember(m.department || m.role || 'GENERAL', m.fullName || m.name, m.role);
+        const mProg = getProgressData(mTasks);
+        const mKey = `Member_${m.id || idx}`;
+        const cleanName = (m.fullName || m.name || `Team Member ${idx + 1}`).trim();
+
+        profiles[mKey] = {
+          id: m.id,
+          role: m.role || 'Specialist',
+          name: cleanName,
+          officialTitle: `${m.role || 'Specialist'} · ${m.department || 'Operations'}`,
+          department: (m.department || 'OPERATIONS').toUpperCase(),
+          avatar: m.avatar || (idx % 2 === 0 
+            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+            : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+          description: `Active venture team member contributing to ${m.department || 'core'} deliverables and sprint objectives.`,
+          isRealMember: true,
+          isOpenSlot: false,
+          tasksDone: {
+            count: mProg.count,
+            titles: mProg.titles
+          },
+          progress: mProg.progress || (mProg.count > 0 ? 100 : 70),
+          currentWorkload: {
+            activeTasksCount: mProg.active.length || (mProg.count > 0 ? 0 : 1),
+            inFlightSummary: mProg.active.length > 0
+              ? `Executing: ${mProg.active.map(t => t.title).slice(0, 2).join(', ')}`
+              : `Driving active sprint deliverables in ${m.department || 'department'}`,
+            velocityScore: '88%'
+          },
+          recommendations: [
+            {
+              id: `rec_mem_${idx}`,
+              title: `Prioritize ${m.department || 'Domain'} Milestones`,
+              summary: `Maintain daily cadence on assigned deliverables to support upcoming venture sprint gates.`,
+              impact: 'Sustains delivery velocity',
+              urgency: 'medium'
+            }
+          ],
+          risks: [
+            {
+              id: `risk_mem_${idx}`,
+              title: 'Workload Capacity Overrun',
+              severity: 'moderate',
+              mitigation: 'Automated task tracking and dependency balance via CatalystOS'
+            }
+          ],
+          keyMetrics: [
+            { label: 'Role', value: m.role || 'Specialist', trend: 'Assigned' },
+            { label: 'Tasks Done', value: `${mProg.count} Done`, trend: 'Audited' },
+            { label: 'Progress', value: `${mProg.progress}%`, trend: 'Active' }
+          ]
+        };
+      }
+    });
+
+    return profiles;
+  }, [tasks, startup, cashBalance, burnRate, runwayMonths, initiatives.length, teamMembers, currentUser]);
+
+  const activeProfile = councilProfiles[selectedExecutiveRole] || councilProfiles['CEO'] || Object.values(councilProfiles)[0];
 
   // ── B2 Deliberation Scenarios ────────────────────────────────────────────────
   const deliberationScenarios = [
@@ -771,52 +1061,97 @@ export default function ExecutiveCouncilWorkspace({
                           className="w-12 h-12 rounded-xl object-cover border border-[#141413]/15 shadow-xs shrink-0"
                         />
                         <div>
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="text-sm font-bold text-[#141413]">{prof.name.split(' ')[0]}</h4>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="text-sm font-bold text-[#141413]">{prof.name}</h4>
                             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#141413]/06 text-[#141413] font-bold">
                               {prof.role}
                             </span>
+                            {prof.isOpenSlot && (
+                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
+                                Open Seat
+                              </span>
+                            )}
                           </div>
-                          <p className="text-[11px] text-[#696969] truncate max-w-[160px]">{prof.officialTitle}</p>
+                          <p className="text-[11px] text-[#696969] truncate max-w-[200px]">{prof.officialTitle}</p>
                         </div>
                       </div>
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1" title="Online" />
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1 ${prof.isOpenSlot ? 'bg-amber-400' : 'bg-emerald-500'}`} title={prof.isOpenSlot ? 'Open Seat' : 'Active Member'} />
                     </div>
 
-                    {/* Workload Telemetry */}
-                    <div className="p-3 rounded-xl bg-[#F3F0EE]/50 border border-[#141413]/06 space-y-2 text-xs">
+                    {/* Progress & Workload Telemetry */}
+                    <div className="p-3.5 rounded-xl bg-[#F3F0EE]/50 border border-[#141413]/06 space-y-2.5 text-xs">
+                      {/* Workload Header */}
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono uppercase text-[#696969] font-bold">Current Workload</span>
-                        <span className="text-[10px] font-mono font-bold text-[#141413] bg-white px-2 py-0.5 rounded border border-[#141413]/10">
-                          {prof.currentWorkload.activeTasksCount} Active Tasks
-                        </span>
+                        <span className="text-[10px] font-mono uppercase text-[#696969] font-bold">Deliverables & Tasks</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                            {prof.tasksDone.count} Done
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-[#141413] bg-white px-1.5 py-0.5 rounded border border-[#141413]/10">
+                            {prof.currentWorkload.activeTasksCount} Active
+                          </span>
+                        </div>
                       </div>
+
+                      {/* Animated Progress Bar */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-[10px] font-mono text-[#696969]">Workload Progress</span>
+                          <span className="text-[11px] font-mono font-bold text-emerald-700">{prof.progress}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-[#141413]/08 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 transition-all duration-500"
+                            style={{ width: `${Math.min(100, Math.max(prof.progress, prof.isOpenSlot ? 0 : 5))}%` }}
+                          />
+                        </div>
+                      </div>
+
                       <p className="text-[11px] text-[#141413] leading-relaxed line-clamp-2">
                         {prof.currentWorkload.inFlightSummary}
                       </p>
                     </div>
 
-                    {/* Top Recommendation & Risk preview */}
-                    <div className="space-y-1.5 pt-1 text-xs">
-                      <div className="flex items-start gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
-                        <span className="text-[11px] font-medium text-[#141413] line-clamp-1">
-                          {prof.recommendations[0]?.title || 'Standard operational governance active.'}
-                        </span>
+                    {/* Open Slot CTA or Top Recommendation */}
+                    {prof.isOpenSlot ? (
+                      <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
+                        <span className="text-[11px] font-medium text-amber-900">Seat unfilled in roster</span>
+                        {onNavigate && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onNavigate('people');
+                            }}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white transition-colors cursor-pointer"
+                          >
+                            + Add Member
+                          </button>
+                        )}
                       </div>
-                      <div className="flex items-start gap-1.5">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                        <span className="text-[11px] text-[#696969] line-clamp-1">
-                          Risk: {prof.risks[0]?.title || 'No active boundary violations'}
-                        </span>
+                    ) : (
+                      /* Top Recommendation & Risk preview */
+                      <div className="space-y-1.5 pt-1 text-xs">
+                        <div className="flex items-start gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                          <span className="text-[11px] font-medium text-[#141413] line-clamp-1">
+                            {prof.recommendations[0]?.title || 'Operational standards active.'}
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                          <span className="text-[11px] text-[#696969] line-clamp-1">
+                            Risk: {prof.risks[0]?.title || 'Boundary conditions monitored'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Bottom CTA */}
                     <div className="pt-2 border-t border-[#141413]/06 flex items-center justify-between text-xs">
                       <span className="text-[11px] font-mono text-[#696969]">Velocity: {prof.currentWorkload.velocityScore}</span>
                       <span className="text-xs font-bold text-[#141413] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                        <span>Inspect</span>
+                        <span>Inspect Profile</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </span>
                     </div>
@@ -847,8 +1182,23 @@ export default function ExecutiveCouncilWorkspace({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex flex-col items-end">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono uppercase text-[#696969] font-bold">Progress:</span>
+                    <span className="text-xs font-mono font-bold text-emerald-700">{activeProfile.progress}%</span>
+                  </div>
+                  <div className="w-28 h-2 rounded-full bg-[#141413]/08 overflow-hidden mt-1">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-indigo-600 transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(activeProfile.progress, activeProfile.isOpenSlot ? 0 : 5))}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-mono text-[#696969] mt-0.5">
+                    {activeProfile.tasksDone.count} done · {activeProfile.currentWorkload.activeTasksCount} active
+                  </span>
+                </div>
+                <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 flex items-center gap-1.5">
                   <Check className="w-3.5 h-3.5" />
                   Grounded & Synchronized
                 </span>
@@ -884,56 +1234,81 @@ export default function ExecutiveCouncilWorkspace({
                 </div>
               </div>
 
-              {/* Column 2: Active Tasks */}
+              {/* Column 2: Tasks Done & Active Tasks */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between pb-1 border-b border-[#141413]/08">
                   <div className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-[#141413]" />
-                    <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-[#141413]">Department Active Tasks</h4>
+                    <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-[#141413]">Tasks & Deliverables</h4>
                   </div>
                   {onNavigate && (
                     <button
                       onClick={() => onNavigate('workspace')}
-                      className="text-[10px] font-bold text-indigo-600 hover:underline"
+                      className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
                     >
                       View Workspace →
                     </button>
                   )}
                 </div>
-                <div className="space-y-2.5">
-                  {tasks
-                    .filter(t => 
-                      t.department?.toUpperCase() === activeProfile.department ||
-                      t.agent?.toLowerCase().includes(activeProfile.role.toLowerCase())
-                    )
-                    .slice(0, 3)
-                    .map((t) => (
-                      <div key={t.id} className="p-3 rounded-xl bg-white border border-[#141413]/10 shadow-xs space-y-1 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-[#141413] truncate max-w-[180px]">{t.title}</span>
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
-                            t.status === 'in_progress' ? 'bg-amber-50 text-amber-700' :
-                            t.status === 'submitted' ? 'bg-purple-50 text-purple-700' :
-                            t.status === 'approved' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'
-                          }`}>
-                            {t.status}
-                          </span>
+
+                {/* Completed Deliverables List */}
+                {activeProfile.tasksDone.count > 0 && (
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono uppercase text-emerald-800 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      Tasks Done ({activeProfile.tasksDone.count})
+                    </span>
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                      {activeProfile.tasksDone.titles.map((title, i) => (
+                        <div key={i} className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/60 text-[11px] text-emerald-900 flex items-center gap-2 shadow-2xs">
+                          <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                          <span className="truncate font-medium">{title}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px] text-[#696969]">
-                          <span>Assigned: {t.assignedUserName || t.ownerRole || 'Unassigned'}</span>
-                          {t.needsHumanOwner && (
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
-                              Needs Human Owner
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  {tasks.filter(t => t.department?.toUpperCase() === activeProfile.department).length === 0 && (
-                    <div className="p-6 text-center border border-dashed border-[#141413]/15 rounded-xl text-xs text-[#696969]">
-                      No active tasks currently delegated to {activeProfile.role}.
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
+
+                {/* Active Tasks */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-mono uppercase text-[#696969] font-bold block">
+                    Active Tasks ({activeProfile.currentWorkload.activeTasksCount})
+                  </span>
+                  <div className="space-y-2">
+                    {tasks
+                      .filter(t => 
+                        t.department?.toUpperCase() === activeProfile.department ||
+                        t.agent?.toLowerCase().includes(activeProfile.role.toLowerCase())
+                      )
+                      .slice(0, 3)
+                      .map((t) => (
+                        <div key={t.id} className="p-3 rounded-xl bg-white border border-[#141413]/10 shadow-xs space-y-1 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-[#141413] truncate max-w-[180px]">{t.title}</span>
+                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
+                              t.status === 'in_progress' ? 'bg-amber-50 text-amber-700' :
+                              t.status === 'submitted' ? 'bg-purple-50 text-purple-700' :
+                              t.status === 'approved' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {t.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-[#696969]">
+                            <span>Assigned: {t.assignedUserName || t.ownerRole || 'Unassigned'}</span>
+                            {t.needsHumanOwner && (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                                Needs Human Owner
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    {tasks.filter(t => t.department?.toUpperCase() === activeProfile.department).length === 0 && (
+                      <div className="p-4 text-center border border-dashed border-[#141413]/15 rounded-xl text-xs text-[#696969]">
+                        No active tasks currently delegated to {activeProfile.role}.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

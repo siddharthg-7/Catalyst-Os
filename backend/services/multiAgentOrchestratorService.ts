@@ -119,7 +119,55 @@ const DOMAIN_AGENT_MAP: Record<string, { name: string; role: string; avatar: str
     name: 'CFO Agent',
     role: 'Chief Financial Officer (Aura)',
     avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
-    description: 'Financial modeling, burn runway governance, and compensation modeling.'
+    description: 'Financial modeling, burn runway governance, budget allocations, and compensation modeling.'
+  },
+  'financial modeling': {
+    name: 'CFO Agent',
+    role: 'Chief Financial Officer (Aura)',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+    description: 'Financial modeling, burn runway governance, and valuation forecasting.'
+  },
+  'accounting': {
+    name: 'CFO Agent',
+    role: 'Chief Financial Officer (Aura)',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+    description: 'General ledger, reconciliations, cashflow analysis, and expense management.'
+  },
+  'talent & hr': {
+    name: 'Chief People Officer',
+    role: 'HR & Talent Architect (Echo)',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+    description: 'Talent acquisition, candidate scorecarding, onboarding, and team scaling.'
+  },
+  'hr': {
+    name: 'Chief People Officer',
+    role: 'HR & Talent Architect (Echo)',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+    description: 'People operations, recruiting pipeline, and headcount governance.'
+  },
+  'growth & marketing': {
+    name: 'Growth Lead Agent',
+    role: 'Chief Commercial Officer (Vector)',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    description: 'User acquisition, viral loops, conversion funnels, and enterprise sales positioning.'
+  },
+  'growth': {
+    name: 'Growth Lead Agent',
+    role: 'Chief Commercial Officer (Vector)',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    description: 'GTM loops, acquisition campaigns, and conversion optimization.'
+  },
+  'operations': {
+    name: 'Chief Operating Officer',
+    role: 'Operations & Execution Director (Helix)',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+    description: 'Cross-functional milestone execution, sprint dependencies, and workflow tracking.'
+  },
+  'legal': {
+    name: 'General Counsel',
+    role: 'Legal & Compliance Officer (Nexus)',
+    avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
+    description: 'Corporate contracts, IP assignment, governance, and regulatory safeguards.'
   }
 };
 
@@ -166,35 +214,127 @@ const DEFAULT_EMPLOYEES: EmployeeRecord[] = [
 export class MultiAgentOrchestratorService {
   private activeAssessments = new Map<string, MultiAgentAssessmentResult>();
   private customEmployees = new Map<string, EmployeeRecord[]>();
+  private liveRegisteredEmployees = new Map<string, EmployeeRecord[]>();
+
+  /**
+   * Registers a live employee/worker in-memory so they are immediately accessible
+   * to the Multi-Agent Orchestration engine.
+   */
+  public registerLiveWorker(worker: {
+    id?: string;
+    startupId?: string;
+    userId?: string;
+    name: string;
+    domain: string;
+    role?: string;
+    email?: string;
+    status?: 'Available' | 'Busy';
+    skills?: string[];
+  }): EmployeeRecord {
+    const rawStatus = (worker.status || 'Available').toLowerCase();
+    const status: 'Available' | 'Busy' = (rawStatus === 'busy' || rawStatus === 'occupied') ? 'Busy' : 'Available';
+
+    const record: EmployeeRecord = {
+      id: worker.id || `emp_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      name: worker.name.trim(),
+      domain: worker.domain.trim(),
+      status,
+      email: worker.email || `${worker.name.toLowerCase().replace(/\s+/g, '.')}@company.internal`,
+      role: worker.role || `${worker.domain} Specialist`,
+      skills: worker.skills || [worker.domain, worker.role || ''].filter(Boolean)
+    };
+
+    const key = worker.startupId || 'default_startup';
+    const list = this.liveRegisteredEmployees.get(key) || [];
+    const idx = list.findIndex(e => (worker.id && e.id === worker.id) || e.name.toLowerCase() === record.name.toLowerCase());
+    if (idx !== -1) {
+      list[idx] = record;
+    } else {
+      list.unshift(record);
+    }
+    this.liveRegisteredEmployees.set(key, list);
+    return record;
+  }
+
+  /**
+   * Removes a worker from the live in-memory registry
+   */
+  public removeLiveWorker(id: string) {
+    for (const [key, list] of this.liveRegisteredEmployees.entries()) {
+      this.liveRegisteredEmployees.set(key, list.filter(e => e.id !== id));
+    }
+  }
 
   /**
    * Domain fuzzy matching helper:
    * Maps 'React', 'Frontend', 'Web' -> 'Frontend'
    * Maps 'Python Backend', 'Python', 'SMTP Worker', 'Backend' -> 'Python Backend'
+   * Maps 'Finance', 'Financial Analysis', 'Budget', 'Accountant', 'CFO' -> 'Finance'
    */
-  public matchDomain(workerDomain: string, requiredDomain: string): boolean {
+  public matchDomain(workerDomain: string, requiredDomain: string, workerRole?: string, workerSkills?: string[]): boolean {
     const w = (workerDomain || '').toLowerCase().trim();
     const r = (requiredDomain || '').toLowerCase().trim();
+    const role = (workerRole || '').toLowerCase().trim();
+    const skills = (workerSkills || []).map(s => (s || '').toLowerCase().trim());
 
     if (w === r) return true;
-    if (w.includes(r) || r.includes(w)) return true;
+    if (w && r && (w.includes(r) || r.includes(w))) return true;
 
-    // Semantic domain synonym clusters
-    if ((r.includes('front') || r.includes('react') || r.includes('ui')) && (w.includes('front') || w.includes('react') || w.includes('ui'))) {
+    // Check role match
+    if (role && (role.includes(r) || (r && role.split(' ').some(part => part.length > 2 && r.includes(part))))) {
       return true;
     }
-    if ((r.includes('python') || r.includes('smtp') || r.includes('worker')) && (w.includes('python') || w.includes('backend'))) {
+
+    // Check skills
+    if (skills.some(s => s && (s.includes(r) || r.includes(s)))) {
       return true;
     }
-    if (r.includes('backend') && w.includes('backend')) {
-      return true;
-    }
-    if (r.includes('devops') && (w.includes('devops') || w.includes('infra') || w.includes('cloud'))) {
-      return true;
-    }
-    if ((r.includes('qa') || r.includes('test')) && (w.includes('qa') || w.includes('test'))) {
-      return true;
-    }
+
+    // Finance cluster
+    const isFinReq = r.includes('finan') || r.includes('account') || r.includes('budget') || r.includes('cfo') || r.includes('treasury') || r.includes('audit') || r.includes('tax') || r.includes('fiscal') || r.includes('bookkeep');
+    const isFinWorker = w.includes('finan') || w.includes('account') || w.includes('budget') || w.includes('cfo') || w.includes('treasury') || w.includes('audit') || w.includes('tax') || w.includes('fiscal') || w.includes('bookkeep') ||
+      role.includes('finan') || role.includes('account') || role.includes('cfo') || skills.some(s => s.includes('finan') || s.includes('account') || s.includes('budget'));
+    if (isFinReq && isFinWorker) return true;
+
+    // Frontend cluster
+    const isFrontReq = r.includes('front') || r.includes('react') || r.includes('ui') || r.includes('web') || r.includes('client');
+    const isFrontWorker = w.includes('front') || w.includes('react') || w.includes('ui') || w.includes('web') || w.includes('client') ||
+      role.includes('front') || role.includes('react') || role.includes('ui');
+    if (isFrontReq && isFrontWorker) return true;
+
+    // Python / Backend cluster
+    const isPythonReq = r.includes('python') || r.includes('smtp') || r.includes('fastapi') || r.includes('flask') || r.includes('django');
+    const isPythonWorker = w.includes('python') || role.includes('python') || skills.includes('python');
+    if (isPythonReq && isPythonWorker) return true;
+
+    const isBackReq = r.includes('backend') || r.includes('api') || r.includes('server') || r.includes('database') || r.includes('systems');
+    const isBackWorker = w.includes('backend') || role.includes('backend') || w.includes('python') || w.includes('node') || w.includes('systems');
+    if (isBackReq && isBackWorker) return true;
+
+    // DevOps cluster
+    const isDevOpsReq = r.includes('devops') || r.includes('infra') || r.includes('cloud') || r.includes('docker') || r.includes('k8s') || r.includes('kubernetes');
+    const isDevOpsWorker = w.includes('devops') || w.includes('infra') || w.includes('cloud') || role.includes('devops');
+    if (isDevOpsReq && isDevOpsWorker) return true;
+
+    // QA cluster
+    const isQAReq = r.includes('qa') || r.includes('test') || r.includes('quality');
+    const isQAWorker = w.includes('qa') || w.includes('test') || role.includes('qa') || role.includes('tester');
+    if (isQAReq && isQAWorker) return true;
+
+    // Talent & HR cluster
+    const isHRReq = r.includes('hr') || r.includes('talent') || r.includes('people') || r.includes('recruit') || r.includes('hiring') || r.includes('culture');
+    const isHRWorker = w.includes('hr') || w.includes('talent') || w.includes('people') || w.includes('recruit') || role.includes('hr') || role.includes('recruiter');
+    if (isHRReq && isHRWorker) return true;
+
+    // Growth & Marketing cluster
+    const isGrowthReq = r.includes('growth') || r.includes('market') || r.includes('sales') || r.includes('seo') || r.includes('campaign') || r.includes('commercial');
+    const isGrowthWorker = w.includes('growth') || w.includes('market') || w.includes('sales') || role.includes('growth') || role.includes('marketing');
+    if (isGrowthReq && isGrowthWorker) return true;
+
+    // Operations cluster
+    const isOpsReq = r.includes('operat') || r.includes('ops') || r.includes('logistics') || r.includes('supply');
+    const isOpsWorker = w.includes('operat') || w.includes('ops') || role.includes('operations');
+    if (isOpsReq && isOpsWorker) return true;
 
     return false;
   }
@@ -202,17 +342,82 @@ export class MultiAgentOrchestratorService {
   /**
    * Retrieves active employees for the startup from database + persistent memory + default roster
    */
-  public async getEmployees(startupId?: string): Promise<EmployeeRecord[]> {
-    const list: EmployeeRecord[] = [...DEFAULT_EMPLOYEES];
+  public async getEmployees(startupId?: string, userId?: string): Promise<EmployeeRecord[]> {
+    const roster: EmployeeRecord[] = [];
 
-    // Merge in any dynamically registered employees for this startup
-    if (startupId && this.customEmployees.has(startupId)) {
-      list.push(...(this.customEmployees.get(startupId) || []));
+    // 1. Check Prisma Memory for real TEAM_MEMBER records
+    try {
+      if (prisma) {
+        const query: any = {
+          where: { category: 'TEAM_MEMBER' },
+          orderBy: { createdAt: 'desc' }
+        };
+        if (startupId && startupId !== 'default_startup') {
+          query.where.startupId = startupId;
+        }
+        const memories = await safeDbQuery(() => (prisma as any).memory.findMany(query));
+        if (Array.isArray(memories) && memories.length > 0) {
+          for (const m of memories) {
+            try {
+              const parsed = JSON.parse(m.description);
+              const name = parsed.fullName || parsed.name || m.title;
+              const rawStatus = (parsed.status || 'Active').toLowerCase();
+              const status: 'Available' | 'Busy' = (rawStatus === 'busy' || rawStatus === 'occupied') ? 'Busy' : 'Available';
+              const role = parsed.role || 'Specialist';
+              const domain = parsed.department || parsed.systemRole || role;
+
+              if (name && !roster.some(e => e.name.toLowerCase() === name.toLowerCase())) {
+                roster.push({
+                  id: m.id,
+                  name,
+                  domain,
+                  role,
+                  status,
+                  email: parsed.email,
+                  skills: [parsed.department, role, parsed.systemRole].filter(Boolean)
+                });
+              }
+            } catch {
+              if (m.title && !roster.some(e => e.name.toLowerCase() === m.title.toLowerCase())) {
+                roster.push({
+                  id: m.id,
+                  name: m.title,
+                  domain: m.description || 'General',
+                  role: m.description || 'Specialist',
+                  status: 'Available'
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn('[MultiAgentOrchestrator] Database TEAM_MEMBER lookup error:', err.message);
     }
 
-    // Attempt to merge from Prisma database memberships if available
+    // 2. Merge in live dynamically registered employees
+    const keysToCheck = [startupId, 'default_startup'].filter(Boolean) as string[];
+    for (const k of keysToCheck) {
+      const liveList = this.liveRegisteredEmployees.get(k) || [];
+      for (const emp of liveList) {
+        if (!roster.some(e => e.name.toLowerCase() === emp.name.toLowerCase())) {
+          roster.push(emp);
+        }
+      }
+    }
+
+    // 3. Merge customEmployees (from assignWorkerToSlot / registerHiredWorker)
+    if (startupId && this.customEmployees.has(startupId)) {
+      for (const emp of (this.customEmployees.get(startupId) || [])) {
+        if (!roster.some(e => e.name.toLowerCase() === emp.name.toLowerCase())) {
+          roster.push(emp);
+        }
+      }
+    }
+
+    // 4. Merge Prisma active memberships if available
     try {
-      if (prisma && startupId) {
+      if (prisma && startupId && startupId !== 'default_startup') {
         const memberships = await safeDbQuery(() => (prisma as any).membership.findMany({
           where: { startupId, status: 'ACTIVE' },
           include: { user: true }
@@ -223,16 +428,14 @@ export class MultiAgentOrchestratorService {
             const userName = m.user?.name || m.user?.email?.split('@')[0] || 'Team Member';
             const userRole = m.role || 'Member';
             
-            // Map RBAC role to technical domain
             let domain = 'Engineering';
             if (userRole === 'HR') domain = 'Talent & HR';
             else if (userRole === 'FINANCE') domain = 'Finance';
             else if (userRole === 'GROWTH') domain = 'Growth & Marketing';
             else if (userRole === 'OPERATIONS') domain = 'Operations';
 
-            // Avoid duplicating default seed names
-            if (!list.some(e => e.name.toLowerCase() === userName.toLowerCase())) {
-              list.push({
+            if (!roster.some(e => e.name.toLowerCase() === userName.toLowerCase())) {
+              roster.push({
                 id: m.userId,
                 name: userName,
                 domain,
@@ -245,10 +448,17 @@ export class MultiAgentOrchestratorService {
         }
       }
     } catch (err: any) {
-      console.warn('[MultiAgentOrchestrator] Database employee lookup fallback:', err.message);
+      console.warn('[MultiAgentOrchestrator] Database membership lookup fallback:', err.message);
     }
 
-    return list;
+    // 5. Append DEFAULT_EMPLOYEES for unstaffed base domains so standard templates work
+    for (const seed of DEFAULT_EMPLOYEES) {
+      if (!roster.some(e => e.name.toLowerCase() === seed.name.toLowerCase())) {
+        roster.push(seed);
+      }
+    }
+
+    return roster;
   }
 
   /**
@@ -266,7 +476,7 @@ export class MultiAgentOrchestratorService {
       domain: worker.domain.trim(),
       status: 'Available',
       email: worker.email || `${worker.name.toLowerCase().replace(/\s+/g, '.')}@company.internal`,
-      role: worker.role || `${worker.domain} Engineer`
+      role: worker.role || `${worker.domain} Specialist`
     };
 
     const current = this.customEmployees.get(startupId) || [];
@@ -277,24 +487,36 @@ export class MultiAgentOrchestratorService {
   }
 
   /**
-   * Step 1: AI analyzes user requirement and decomposes into technical domains & sub-tasks.
+   * Step 1: AI analyzes user requirement and decomposes into technical & business domains and sub-tasks.
    */
   public async analyzeRequirementWithAI(userRequirement: string): Promise<{
     projectName: string;
     allocations: Array<{ required_domain: string; sub_task_title: string; task_scope: string }>;
   }> {
-    const prompt = `You are a Principal Software Architect.
-Analyze this project requirement and list the technical domains and sub-modules needed:
+    const prompt = `You are an Executive Multi-Agent Technical & Operations Architect.
+Analyze this user task or project requirement and decompose it into required domains and actionable sub-tasks:
 "${userRequirement}"
+
+Supported domains:
+- Finance (Financial Modeling, Budgeting, Valuation, Accounting, Burn Governance, Audit)
+- Frontend (React, UI Components, Client State, Dashboard)
+- Python Backend (APIs, SMTP background workers, Queue Workers, Python services)
+- Backend (APIs, Microservices, Transactional DB Models)
+- DevOps (Infrastructure, CI/CD, Cloud Deployment, Docker, Kubernetes)
+- QA Testing (Verification, Security Regression, End-to-End Testing)
+- UI/UX Design (Figma, Design Systems, UX Wireframes)
+- Talent & HR (Recruiting, Scorecards, Compensation Modeling)
+- Growth & Marketing (Go-to-market, User Acquisition, Conversion Optimization)
+- Operations (Milestones, Cross-functional Execution)
 
 Return a JSON object conforming to:
 {
   "projectName": "Short Title",
   "allocations": [
     {
-      "required_domain": "Technical domain (e.g., Frontend, Python Backend, DevOps, QA Testing)",
-      "sub_task_title": "Short title of sub-task (e.g. UI Dashboard, SMTP Backend Worker)",
-      "task_scope": "Detailed instructions for this specific sub-module (e.g. 1. Design HTML Form. 2. Bind states with APIs.)"
+      "required_domain": "Domain name (e.g. Finance, Frontend, Python Backend, DevOps, etc.)",
+      "sub_task_title": "Short title of sub-task",
+      "task_scope": "1. Step 1 instructions... 2. Step 2 instructions..."
     }
   ]
 }`;
@@ -323,7 +545,20 @@ Return a JSON object conforming to:
       const lower = userRequirement.toLowerCase();
       const allocations: Array<{ required_domain: string; sub_task_title: string; task_scope: string }> = [];
 
-      if (lower.includes('email') || lower.includes('smtp') || lower.includes('react') || lower.includes('dashboard')) {
+      if (lower.includes('finan') || lower.includes('budget') || lower.includes('account') || lower.includes('cfo') || lower.includes('runway') || lower.includes('revenue') || lower.includes('expense') || lower.includes('tax') || lower.includes('audit')) {
+        allocations.push({
+          required_domain: 'Finance',
+          sub_task_title: 'Financial Analysis & Budget Modeling',
+          task_scope: '1. Prepare financial statements & cashflow model. 2. Analyze burn rate, budget allocations and projections. 3. Finalize audit reports.'
+        });
+        if (lower.includes('dash') || lower.includes('ui') || lower.includes('app') || lower.includes('system') || lower.includes('software') || lower.includes('react')) {
+          allocations.push({
+            required_domain: 'Frontend',
+            sub_task_title: 'Financial Dashboard UI',
+            task_scope: '1. Render financial charts and KPI widgets. 2. Bind ledger and reporting APIs.'
+          });
+        }
+      } else if (lower.includes('email') || lower.includes('smtp') || lower.includes('react') || lower.includes('dashboard')) {
         allocations.push({
           required_domain: 'Frontend',
           sub_task_title: 'UI Dashboard',
@@ -333,6 +568,18 @@ Return a JSON object conforming to:
           required_domain: 'Python Backend',
           sub_task_title: 'SMTP Backend Worker',
           task_scope: '1. Configure SMTP credentials and smtplib. 2. Implement background worker queue. 3. Expose Flask/FastAPI routing endpoints.'
+        });
+      } else if (lower.includes('hr') || lower.includes('talent') || lower.includes('people') || lower.includes('recruit')) {
+        allocations.push({
+          required_domain: 'Talent & HR',
+          sub_task_title: 'Talent Acquisition & Headcount Strategy',
+          task_scope: '1. Formulate role scorecard. 2. Screen qualified candidates. 3. Finalize compensation bands.'
+        });
+      } else if (lower.includes('growth') || lower.includes('market') || lower.includes('sales')) {
+        allocations.push({
+          required_domain: 'Growth & Marketing',
+          sub_task_title: 'GTM Campaign & Customer Acquisition',
+          task_scope: '1. Target enterprise ICP cohorts. 2. Launch campaign pipeline. 3. Measure CAC/LTV conversions.'
         });
       } else {
         allocations.push({
@@ -348,7 +595,7 @@ Return a JSON object conforming to:
       }
 
       return {
-        projectName: userRequirement.slice(0, 48) + '...',
+        projectName: userRequirement.slice(0, 48) + (userRequirement.length > 48 ? '...' : ''),
         allocations
       };
     };
@@ -375,25 +622,40 @@ Return a JSON object conforming to:
     startupId?: string;
     userId?: string;
   }): Promise<MultiAgentAssessmentResult> {
-    const { userRequirement, startupId = 'default_startup' } = params;
+    const { userRequirement, startupId = 'default_startup', userId } = params;
     const assessmentId = `orch_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
     console.log(`[MultiAgentOrchestrator] Processing requirement: "${userRequirement}"`);
 
-    // Step 1: AI decomposes requirement into technical domains
+    // Step 1: AI decomposes requirement into technical & business domains
     const aiAssessment = await this.analyzeRequirementWithAI(userRequirement);
 
     // Step 2: Check real employee database for active workers
-    const employees = await this.getEmployees(startupId);
+    const employees = await this.getEmployees(startupId, userId);
 
     const allocations: AgentTaskAllocation[] = [];
     const alerts: MultiAgentAssessmentResult['alerts'] = [];
     let assignedCount = 0;
     let hireRequiredCount = 0;
 
+    const isAvailable = (s?: string) => {
+      const norm = (s || '').toLowerCase().trim();
+      return norm === 'available' || norm === 'active' || norm === 'idle' || norm === 'ready' || norm === '';
+    };
+    const isBusy = (s?: string) => {
+      const norm = (s || '').toLowerCase().trim();
+      return norm === 'busy' || norm === 'occupied' || norm === 'in_progress';
+    };
+
     for (const alloc of aiAssessment.allocations) {
       const domainKey = alloc.required_domain.toLowerCase().trim();
       const matchedAgent = DOMAIN_AGENT_MAP[domainKey] || 
+        (domainKey.includes('finan') || domainKey.includes('account') || domainKey.includes('budget') ? DOMAIN_AGENT_MAP['finance'] : undefined) ||
+        (domainKey.includes('front') || domainKey.includes('react') || domainKey.includes('ui') ? DOMAIN_AGENT_MAP['frontend'] : undefined) ||
+        (domainKey.includes('python') || domainKey.includes('smtp') ? DOMAIN_AGENT_MAP['python backend'] : undefined) ||
+        (domainKey.includes('hr') || domainKey.includes('talent') || domainKey.includes('people') ? DOMAIN_AGENT_MAP['talent & hr'] : undefined) ||
+        (domainKey.includes('growth') || domainKey.includes('market') ? DOMAIN_AGENT_MAP['growth & marketing'] : undefined) ||
+        (domainKey.includes('ops') || domainKey.includes('operat') ? DOMAIN_AGENT_MAP['operations'] : undefined) ||
         DOMAIN_AGENT_MAP['backend'] || {
           name: 'Core Agent',
           role: 'Domain Specialist',
@@ -403,12 +665,12 @@ Return a JSON object conforming to:
 
       // Match against employee DB
       const matchedWorker = employees.find(emp => 
-        this.matchDomain(emp.domain, alloc.required_domain) && emp.status === 'Available'
+        this.matchDomain(emp.domain, alloc.required_domain, emp.role, emp.skills) && isAvailable(emp.status)
       );
 
       // Check if employee exists but is busy
       const busyWorker = employees.find(emp => 
-        this.matchDomain(emp.domain, alloc.required_domain) && emp.status === 'Busy'
+        this.matchDomain(emp.domain, alloc.required_domain, emp.role, emp.skills) && isBusy(emp.status)
       );
 
       // Parse plan steps from task_scope

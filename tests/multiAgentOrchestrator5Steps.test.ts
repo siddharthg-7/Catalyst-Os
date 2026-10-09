@@ -151,3 +151,76 @@ test('Multi-Agent 5-Step Orchestration: Step 5 Head Controls (Hire Worker & Unbl
 
   console.log('✅ PASS: Multi-Agent Step 5 Head Controls (Hire, Unblock, Pause, Resume, Revoke) verified');
 });
+
+test('Multi-Agent Orchestration: Available Finance worker is assigned directly without asking permission to hire', async () => {
+  const startupId = 'startup_finance_test_' + Date.now();
+
+  // 1. User adds a worker under Finance domain
+  multiAgentOrchestratorService.registerLiveWorker({
+    startupId,
+    name: 'Rohan Gupta',
+    domain: 'Finance',
+    role: 'Financial Analyst & Budget Lead',
+    status: 'Available',
+    email: 'rohan.gupta@company.internal',
+    skills: ['Financial Modeling', 'Budget Planning', 'Runway Governance', 'Valuation']
+  });
+
+  // 2. User submits a task in Multi-Agent Orchestration under Finance domain
+  const financeTask = 'Build quarterly financial budget model, valuation sensitivity, and runway cashflow audit.';
+  const assessment = await multiAgentOrchestratorService.orchestrateTask({
+    userRequirement: financeTask,
+    startupId
+  });
+
+  // 3. Verify allocation: Assigned to Rohan Gupta (Case 3A: ASSIGNED), NOT asking permission to hire
+  const financeAlloc = assessment.allocations.find(a =>
+    multiAgentOrchestratorService.matchDomain(a.requiredDomain, 'Finance')
+  );
+
+  assert.ok(financeAlloc, 'Finance allocation must exist in the assessment');
+  assert.strictEqual(financeAlloc.status, 'ASSIGNED', 'Finance worker must be ASSIGNED, not asking permission to hire');
+  assert.strictEqual(financeAlloc.assignedWorker?.name, 'Rohan Gupta', 'Must assign the available employee Rohan Gupta');
+  assert.strictEqual(financeAlloc.assignedWorker?.domain, 'Finance', 'Worker domain must match Finance');
+  assert.strictEqual(financeAlloc.assignedWorker?.status, 'Available', 'Worker must be available');
+  assert.strictEqual(financeAlloc.executionStatus, 'IN_PROGRESS', 'Execution status must be IN_PROGRESS for tracking');
+  assert.strictEqual(financeAlloc.monitoringStatus, 'Pending Approval', 'Monitoring status must be active');
+  assert.strictEqual(assessment.hireRequiredCount, 0, 'No hire should be required since an active Finance employee exists');
+  assert.strictEqual(assessment.executionGated, false, 'Pipeline must not be blocked when employee is available');
+
+  // Verify monitoring blueprint tracks Rohan Gupta
+  const financeRow = assessment.monitoringBlueprint.find(r => 
+    r.subTask.toLowerCase().includes('finan') || r.subTask.toLowerCase().includes('budget')
+  );
+  assert.ok(financeRow, 'Finance task must exist in master tracking blueprint');
+  assert.ok(financeRow?.humanEmployee.includes('Rohan Gupta'), 'Monitoring table tracks Rohan Gupta (Available)');
+  assert.strictEqual(financeRow?.executionStatus, '⏳ In Progress', 'Monitoring table tracks status as in progress');
+  assert.deepStrictEqual(financeRow?.headControls, ['Pause', 'Revoke'], 'Controls for assigned employee are Pause, Revoke');
+
+  // 4. Now test that if worker is BUSY or NO worker is available, ONLY THEN does it ask to hire
+  multiAgentOrchestratorService.registerLiveWorker({
+    startupId: startupId + '_busy',
+    name: 'Rohan Gupta',
+    domain: 'Finance',
+    role: 'Financial Analyst',
+    status: 'Busy', // Currently occupied with another sprint
+    email: 'rohan.gupta@company.internal'
+  });
+
+  const busyAssessment = await multiAgentOrchestratorService.orchestrateTask({
+    userRequirement: financeTask,
+    startupId: startupId + '_busy'
+  });
+
+  const busyFinanceAlloc = busyAssessment.allocations.find(a =>
+    multiAgentOrchestratorService.matchDomain(a.requiredDomain, 'Finance')
+  );
+
+  assert.ok(busyFinanceAlloc, 'Finance allocation must exist for busy test');
+  assert.strictEqual(busyFinanceAlloc.status, 'HIRE_REQUIRED', 'When no employee is available, only then ask permission to hire');
+  assert.strictEqual(busyFinanceAlloc.assignedWorker, null, 'No worker assigned when busy');
+  assert.strictEqual(busyFinanceAlloc.executionStatus, 'BLOCKED', 'Execution status blocked until hire');
+  assert.ok(busyFinanceAlloc.systemAlert?.includes('ACTION REQUIRED: You need to hire a contractor or full-time employee'), 'Must notify head to hire');
+
+  console.log('✅ PASS: Multi-Agent Orchestration assigns available employee & only requests hire when unavailable');
+});

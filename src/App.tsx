@@ -256,7 +256,7 @@ export default function App() {
   const DEFAULT_AGENTS: Agent[] = [
     {
       id: 'ceo',
-      name: 'Sophia Vance (Atlas)',
+      name: 'CEO Orchestrator (Atlas)',
       role: 'CEO',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
       description: 'Autonomous corporate strategist. Formulates broad roadmaps and coordinates specialist executives.',
@@ -267,7 +267,7 @@ export default function App() {
     },
     {
       id: 'finance',
-      name: 'Marcus Sterling (Aura)',
+      name: 'Chief Financial Officer (Aura)',
       role: 'Finance',
       avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
       description: 'Automated Chief Financial Officer. Optimizes unit economics, burn rates, and deterministic runways.',
@@ -278,7 +278,7 @@ export default function App() {
     },
     {
       id: 'talent',
-      name: 'Evelyn Brooks (Echo)',
+      name: 'Head of People & HR (Echo)',
       role: 'Talent',
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
       description: 'AI Recruiting and HR Executive. Strategizes resource allocation and compensation structures.',
@@ -289,7 +289,7 @@ export default function App() {
     },
     {
       id: 'growth',
-      name: 'Dax Ramirez (Vector)',
+      name: 'VP of Growth (Vector)',
       role: 'Growth',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
       description: 'Autonomous Marketing and Acquisition Officer. Focuses on customer acquisition and GTM loops.',
@@ -300,7 +300,7 @@ export default function App() {
     },
     {
       id: 'legal',
-      name: 'Helena Vance, Esq. (Nexus)',
+      name: 'General Counsel (Nexus)',
       role: 'Legal',
       avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
       description: 'Automated General Counsel. Drafts contracts, assesses IP protection, and reviews compliance.',
@@ -311,7 +311,7 @@ export default function App() {
     },
     {
       id: 'operations',
-      name: 'Felix Torres (Helix)',
+      name: 'Chief Operating Officer (Helix)',
       role: 'Operations',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
       description: 'Chief Operating Officer. Orchestrates milestone deliveries, sprint cadences, and systems reliability.',
@@ -322,7 +322,7 @@ export default function App() {
     },
     {
       id: 'investment',
-      name: 'Sarah Chen (Apex)',
+      name: 'Head of Capital (Apex)',
       role: 'Investment',
       avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150',
       description: 'Investor Relations & Capital Executive. Formulates cap table simulations and fundraising models.',
@@ -333,7 +333,7 @@ export default function App() {
     },
     {
       id: 'auditor',
-      name: 'Sentry Core (Auditor)',
+      name: 'Verification Auditor (Sentry)',
       role: 'Auditor',
       avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
       description: 'Governance & Verification Officer. Audits calculations, checks evidence grounding, and enforces gates.',
@@ -1251,6 +1251,8 @@ export default function App() {
                     onRefreshTasks={hydrateTasks}
                     onNavigate={(tab) => handleTabChange(tab as any)}
                     apiFetch={apiFetch}
+                    teamMembers={teamMembers}
+                    currentUser={user}
                   />
                 )}
 

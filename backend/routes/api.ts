@@ -1832,6 +1832,19 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
           }
         }
 
+        // Register worker directly with multiAgentOrchestratorService
+        multiAgentOrchestratorService.registerLiveWorker({
+          id: memory.id,
+          startupId: startup.id,
+          userId,
+          name: memberName,
+          domain: memberDept || memberRole,
+          role: memberRole,
+          email: memberEmail,
+          status: (status as any) || 'Available',
+          skills: [memberDept, memberRole, canonicalRole]
+        });
+
         return res.json({
           id: memory.id,
           fullName: memberName,
@@ -1861,6 +1874,19 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
       joinedAt: new Date().toISOString()
     };
     inMemoryTeamMembers.unshift(memMember);
+
+    multiAgentOrchestratorService.registerLiveWorker({
+      id: memMember.id,
+      startupId: 'default_startup',
+      userId,
+      name: memberName,
+      domain: memberDept || memberRole,
+      role: memberRole,
+      email: memberEmail,
+      status: (status as any) || 'Available',
+      skills: [memberDept, memberRole, canonicalRole]
+    });
+
     res.json(memMember);
   } catch (err: any) {
     console.error('[Team API] POST error:', err.message);
@@ -1878,6 +1904,8 @@ router.delete('/team/:id', authenticateJWT, requireActiveMembership, requirePerm
   }
 
   try {
+    multiAgentOrchestratorService.removeLiveWorker(id);
+
     if (isDbAvailable && prisma) {
       // Scope the delete to the caller's own startup so one tenant cannot
       // remove another tenant's team member by guessing a Memory id.
