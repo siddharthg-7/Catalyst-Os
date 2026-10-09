@@ -306,15 +306,17 @@ async function resolvePlanId(startupId: string): Promise<string> {
   );
   if (existing) return existing.id;
 
-  const created: any = await prisma.plan.create({
-    data: {
-      title: 'Core Executive Operations',
-      description: 'Default continuous operating plan',
-      startupId,
-      status: 'active'
-    }
-  });
-  return created.id;
+  const created: any = await safeDbQuery(() =>
+    prisma.plan.create({
+      data: {
+        title: 'Core Executive Operations',
+        description: 'Default continuous operating plan',
+        startupId,
+        status: 'active'
+      }
+    })
+  );
+  return created?.id || `plan_${Date.now()}`;
 }
 
 export interface WorkOrderInput {

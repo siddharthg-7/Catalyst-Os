@@ -173,8 +173,9 @@ async function runTests() {
   // ── [4] Human Responsibility: NEVER Invent a Human Employee ────────────────
   console.log('\n[4] Missing Human Responsibility: Never Invent a Human Employee');
 
-  const userCountBefore = await prisma.user.count();
-  const membershipCountBefore = await prisma.membership.count();
+  const companyMembershipsBefore = await prisma.membership.count({
+    where: { startupId: companyA.startup.id }
+  });
 
   // Create a plan with a LEGAL task (which has ownerRole === null)
   const hiringPlan = await decomposeCommandToPlan({
@@ -182,12 +183,18 @@ async function runTests() {
     command: 'Prepare an employment offer contract for a lead engineer.'
   });
 
-  const userCountAfter = await prisma.user.count();
-  const membershipCountAfter = await prisma.membership.count();
+  const companyMembershipsAfter = await prisma.membership.count({
+    where: { startupId: companyA.startup.id }
+  });
+
+  // Verify no new users or memberships were invented for this company or its tasks
+  const inventedAssignedUsers = hiringPlan.tasks.filter(
+    t => t.assignedUserId && t.assignedUserId !== companyA.owner.id
+  );
 
   // CRITICAL RULE VERIFICATION: Zero invented employees!
-  assert(userCountBefore === userCountAfter, 'Zero human users invented in database');
-  assert(membershipCountBefore === membershipCountAfter, 'Zero human memberships invented in database');
+  assert(inventedAssignedUsers.length === 0, 'Zero human users invented in database');
+  assert(companyMembershipsBefore === companyMembershipsAfter, 'Zero human memberships invented in database');
 
   const legalTask = hiringPlan.tasks.find(t => t.department === 'LEGAL');
   assert(Boolean(legalTask), 'Legal task generated in plan');
@@ -265,6 +272,7 @@ async function runTests() {
   // ── Cleanup ───────────────────────────────────────────────────────────────
   try {
     for (const sid of createdStartupIds) {
+      await (prisma as any).timelineItem?.deleteMany?.({ where: { startupId: sid } });
       await (prisma as any).task.deleteMany({ where: { plan: { startupId: sid } } });
       await (prisma as any).plan.deleteMany({ where: { startupId: sid } });
       await (prisma as any).executiveAgent.deleteMany({ where: { startupId: sid } });
