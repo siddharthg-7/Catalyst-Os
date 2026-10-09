@@ -1863,8 +1863,9 @@ export async function getRoleScopedContext(params: {
   // Retrieve role-scoped documents with ZERO cross-department leaks
   const allDocs = await safeDbQuery(async () => {
     try {
-      if ((prisma as any).document) {
-        return await (prisma as any).document.findMany({
+      const docModel = (prisma as any).startupDocument || (prisma as any).document;
+      if (docModel) {
+        return await docModel.findMany({
           where: { startupId: membership.startupId }
         });
       }
