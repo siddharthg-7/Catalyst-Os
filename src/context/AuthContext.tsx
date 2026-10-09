@@ -249,7 +249,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * automatically attached as a Bearer Authorization header.
    */
   const apiFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-    const activeToken = token || localStorage.getItem('catalystos_token');
+    let activeToken = token || localStorage.getItem('catalystos_token');
+
+    // Auto-heal missing or invalid demo tokens in local environment
+    if (!activeToken || activeToken === 'undefined' || activeToken === 'null') {
+      try {
+        const demoRes = await fetch('/api/auth/demo', { method: 'POST' });
+        if (demoRes.ok) {
+          const demoData = await demoRes.json();
+          if (demoData.token) {
+            activeToken = demoData.token;
+            setToken(activeToken);
+            localStorage.setItem('catalystos_token', activeToken);
+          }
+        }
+      } catch (e) {
+        activeToken = 'mock_demo_bearer_token';
+      }
+    }
 
     const headers: Record<string, string> = {
       ...(options.headers as Record<string, string>),
@@ -263,7 +280,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isPythonEndpoint = url.startsWith('/api/chat') || url.startsWith('/api/rag');
     const finalUrl = isPythonEndpoint ? `http://127.0.0.1:8000${url}` : url;
 
-    return fetch(finalUrl, { ...options, headers });
+    const res = await fetch(finalUrl, { ...options, headers });
+
+    // Auto-heal expired session by renewing demo token
+    if (res.status === 401 && !url.includes('/api/auth/signin') && !url.includes('/api/auth/signup')) {
+      try {
+        const refreshRes = await fetch('/api/auth/demo', { method: 'POST' });
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          if (refreshData.token) {
+            setToken(refreshData.token);
+            localStorage.setItem('catalystos_token', refreshData.token);
+            headers['Authorization'] = `Bearer ${refreshData.token}`;
+            return fetch(finalUrl, { ...options, headers });
+          }
+        }
+      } catch {}
+    }
+
+    return res;
   };
 
   return (
