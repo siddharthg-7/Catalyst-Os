@@ -733,7 +733,7 @@ export default function PeopleDirectory({
               <div>
                 <h3 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>Invite Team Member</h3>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>
-                  Sends an access link to join {companyName} with role-based permissions.
+                  Sends an invitation email via Gmail SMTP with a secure token to join {companyName}.
                 </p>
               </div>
               <button
@@ -833,8 +833,13 @@ export default function PeopleDirectory({
               border: '1px solid var(--c-border)'
             }}
           >
-            <div className="flex items-center justify-between pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
-              <h3 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>Add Team Member</h3>
+            <div className="flex items-start justify-between pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
+              <div>
+                <h3 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>Add Team Member</h3>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>
+                  Adds member to venture roster and automatically dispatches onboarding email via Gmail SMTP.
+                </p>
+              </div>
               <button
                 onClick={handleCloseModal}
                 className="p-1 rounded-full cursor-pointer"

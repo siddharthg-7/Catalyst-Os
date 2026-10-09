@@ -1463,7 +1463,8 @@ export class ApprovalService {
     const existingDecision = await prisma.decisionLog.findFirst({
       where: {
         startupId: startup.id,
-        title: { contains: cleanTitle }
+        title: { contains: cleanTitle },
+        status: 'approved'
       }
     });
 

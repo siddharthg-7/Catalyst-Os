@@ -65,7 +65,7 @@ export function validateInvitableRole(role: string | undefined | null): Role {
 }
 
 export function buildInvitationUrl(rawToken: string): string {
-  const base = (process.env.APP_BASE_URL || 'http://localhost:5173').replace(/\/+$/, '');
+  const base = (process.env.APP_URL || process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
   return `${base}/accept-invitation?token=${rawToken}`;
 }
 

@@ -505,7 +505,12 @@ export default function App() {
           }
           return updated;
         });
-        showToast(`Team member "${memberName}" successfully added.`, 'success');
+        await refreshInvitations();
+        if (created.emailDelivered) {
+          showToast(`Team member "${memberName}" added & invitation emailed via Gmail.`, 'success');
+        } else {
+          showToast(`Team member "${memberName}" successfully added.`, 'success');
+        }
         return;
       }
     } catch (err) {
@@ -614,7 +619,7 @@ export default function App() {
         showToast(`Invitation created for ${invite.email}. Copy the link from the server log.`, 'info');
       }
     } else {
-      showToast(`Invitation emailed to ${invite.email}.`, 'success');
+      showToast(`Invitation emailed to ${invite.email} via Gmail.`, 'success');
     }
   };
 
