@@ -519,9 +519,14 @@ export default function EmployeeWorkspace({
                               <UserCheck className="w-3 h-3" />
                               <span>{task.assignedUserName || 'Assigned to You'}</span>
                             </span>
+                          ) : task.needsHumanOwner ? (
+                            <span className="flex items-center gap-1 text-amber-500 font-medium">
+                              <AlertCircle className="w-3 h-3" />
+                              <span>Needs Human Owner</span>
+                            </span>
                           ) : (
                             <span style={{ color: 'var(--c-muted)' }}>
-                              Unclaimed
+                              Role Pool ({task.ownerRole || 'General'})
                             </span>
                           )}
                         </div>
@@ -651,6 +656,28 @@ export default function EmployeeWorkspace({
                 <div className="p-3.5 rounded-xl flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>Approved by Founder • Deliverable signed off and archived</span>
+                </div>
+              )}
+
+              {/* Missing Human Responsibility Banner (Phase A6) */}
+              {selectedTask.needsHumanOwner && (
+                <div 
+                  className="p-3.5 rounded-xl flex items-start sm:items-center justify-between gap-3 text-xs font-medium"
+                  style={{
+                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    color: '#f59e0b'
+                  }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <div>
+                      <span className="font-semibold">Missing Human Responsibility:</span> No employee is assigned for {selectedTask.department}. CatalystOS never invents placeholder employees.
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold shrink-0">
+                    Staffing Required
+                  </span>
                 </div>
               )}
 

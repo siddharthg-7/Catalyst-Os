@@ -62,12 +62,130 @@ const DEPARTMENT_AGENT: Record<Department, string> = {
   AUDITOR: 'Auditor'
 };
 
+export interface CapabilityDefinition {
+  department: string;
+  role: string;
+  name: string;
+  avatar: string;
+  description: string;
+}
+
+export const CANONICAL_CAPABILITIES: Record<string, CapabilityDefinition> = {
+  TALENT: {
+    department: 'TALENT',
+    role: 'Talent',
+    name: 'Echo',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+    description: 'Head of People & Recruiting: talent acquisition, hiring roadmaps, compensation.'
+  },
+  FINANCE: {
+    department: 'FINANCE',
+    role: 'Finance',
+    name: 'Aura',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+    description: 'Chief Financial Officer: unit economics, cash burn, and runway governance.'
+  },
+  GROWTH: {
+    department: 'GROWTH',
+    role: 'Growth',
+    name: 'Vector',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    description: 'VP of Growth & Marketing: ICP positioning, CAC/LTV, demand generation.'
+  },
+  LEGAL: {
+    department: 'LEGAL',
+    role: 'Legal',
+    name: 'Nexus',
+    avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
+    description: 'General Counsel: IP protection, compliance, commercial contracts, regulatory safeguards.'
+  },
+  OPERATIONS: {
+    department: 'OPERATIONS',
+    role: 'Operations',
+    name: 'Helix',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+    description: 'VP of Operations: cross-functional milestone tracking, delivery, workflow velocity.'
+  },
+  AUDITOR: {
+    department: 'AUDITOR',
+    role: 'Auditor',
+    name: 'Sentry',
+    avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
+    description: 'Compliance & Verification Auditor: math accuracy, evidence grounding, hallucination prevention.'
+  },
+  INVESTMENT: {
+    department: 'INVESTMENT',
+    role: 'Investment',
+    name: 'Apex',
+    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150',
+    description: 'Head of Capital & Investor Relations: fundraising strategy, cap table modeling.'
+  },
+  SECURITY: {
+    department: 'SECURITY',
+    role: 'Security',
+    name: 'Aegis',
+    avatar: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=150',
+    description: 'Chief Information Security Officer: data protection, IAM, security compliance.'
+  },
+  DATA: {
+    department: 'DATA',
+    role: 'Data',
+    name: 'Cipher',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+    description: 'Head of Data Science: analytics pipeline, predictive modeling, metric fidelity.'
+  },
+  CEO: {
+    department: 'EXECUTIVE',
+    role: 'CEO',
+    name: 'Atlas',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+    description: 'Autonomous corporate strategist & CEO orchestrator.'
+  }
+};
+
+export interface CapabilityProvisioningResult {
+  capability: string;
+  agentRole: string;
+  agentName: string;
+  provisioned: boolean;
+  agentId?: string;
+  description: string;
+}
+
+export interface HumanRoleRequirement {
+  taskId?: string;
+  taskTitle?: string;
+  department: string;
+  missingRole: string | null;
+  status: 'UNFILLED' | 'ASSIGNED' | 'INVITATION_PENDING';
+  reason: string;
+  actionRequired: 'ASSIGN_EXISTING' | 'INVITE_PERSON';
+  suggestedAction: {
+    type: 'assign' | 'invite';
+    description: string;
+    assignableUsers?: Array<{
+      userId: string;
+      name: string;
+      email: string;
+      role: string;
+    }>;
+    recommendedInviteRole?: string;
+  };
+}
+
 export function ownerRoleForDepartment(dept: string): Role | null {
   return DEPARTMENT_OWNER[(dept || '').toUpperCase() as Department] ?? null;
 }
 
 export function agentForDepartment(dept: string): string {
-  return DEPARTMENT_AGENT[(dept || '').toUpperCase() as Department] || 'CEO';
+  const norm = (dept || '').toUpperCase();
+  if (DEPARTMENT_AGENT[norm as Department]) {
+    return DEPARTMENT_AGENT[norm as Department];
+  }
+  if (CANONICAL_CAPABILITIES[norm]) {
+    return CANONICAL_CAPABILITIES[norm].name;
+  }
+  return 'CEO';
 }
 
 export class TaskDelegationError extends Error {
@@ -102,6 +220,7 @@ export interface DelegatedTask {
   result: string | null;
   /** True when no human role owns this yet — the founder must assign or invite. */
   needsHumanOwner: boolean;
+  humanRequirement?: HumanRoleRequirement | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -139,6 +258,8 @@ export interface DecomposedPlanResult {
   tasks: DelegatedTask[];
   explicitSteps: string[];
   formattedPlanText: string;
+  provisionedAiCapabilities?: CapabilityProvisioningResult[];
+  missingHumanRequirements?: HumanRoleRequirement[];
 }
 
 function decodeTask(row: any): DelegatedTask {
@@ -228,6 +349,13 @@ export async function delegateWorkOrders(
       const agent = agentForDepartment(dept);
       const title = encodeTitle(dept, agent, owner, order.objective);
 
+      // Phase A6: If company does not have this AI specialist, auto-provision it
+      try {
+        await ensureAiSpecialistCapability(startupId, dept);
+      } catch (capErr: any) {
+        console.warn('[taskDelegationService] ensureAiSpecialistCapability warning:', capErr.message);
+      }
+
       const duplicate: any = await safeDbQuery(() =>
         (prisma as any).task.findFirst({ where: { planId, title } })
       );
@@ -254,6 +382,250 @@ export async function delegateWorkOrders(
     console.warn('[taskDelegationService] delegateWorkOrders note:', err.message);
     return [];
   }
+}
+
+/**
+ * Phase A6: Checks if the startup has an appropriate AI specialist for the required capability.
+ * If YES: returns existing agent without duplication.
+ * If NO: automatically provisions the AI capability in the database as an ExecutiveAgent row,
+ * records the event, and allows the task to continue immediately without delay.
+ * Never invents a human employee.
+ */
+export async function ensureAiSpecialistCapability(
+  startupId: string,
+  requiredCapability: string
+): Promise<CapabilityProvisioningResult> {
+  const norm = (requiredCapability || 'GENERAL').toUpperCase();
+  const capDef = CANONICAL_CAPABILITIES[norm] || {
+    department: norm,
+    role: norm.charAt(0) + norm.slice(1).toLowerCase(),
+    name: `${norm.charAt(0) + norm.slice(1).toLowerCase()}Specialist`,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    description: `Specialized autonomous AI agent for ${norm}.`
+  };
+
+  if (!startupId || !prisma) {
+    return {
+      capability: norm,
+      agentRole: capDef.role,
+      agentName: capDef.name,
+      provisioned: false,
+      description: capDef.description
+    };
+  }
+
+  // 1. Check existing agents for this company
+  const existingAgents = await safeDbQuery(async () => {
+    return await (prisma as any).executiveAgent.findMany({
+      where: { startupId }
+    });
+  }) || [];
+
+  const found = existingAgents.find((a: any) => {
+    const roleUpper = (a.role || '').toUpperCase();
+    const nameUpper = (a.name || '').toUpperCase();
+    return (
+      roleUpper === capDef.role.toUpperCase() ||
+      nameUpper === capDef.name.toUpperCase() ||
+      (capDef.department && roleUpper === capDef.department.toUpperCase())
+    );
+  });
+
+  if (found) {
+    return {
+      capability: norm,
+      agentRole: found.role,
+      agentName: found.name,
+      provisioned: false,
+      agentId: found.id,
+      description: capDef.description
+    };
+  }
+
+  // 2. NO -> Provision AI capability in database as a genuine ExecutiveAgent
+  const created: any = await safeDbQuery(async () => {
+    return await (prisma as any).executiveAgent.create({
+      data: {
+        role: capDef.role,
+        name: capDef.name,
+        avatar: capDef.avatar,
+        status: 'idle',
+        startupId
+      }
+    });
+  });
+
+  // Record timeline event if available
+  try {
+    if ((prisma as any).timelineItem) {
+      await safeDbQuery(() =>
+        (prisma as any).timelineItem.create({
+          data: {
+            startupId,
+            type: 'CAPABILITY_PROVISIONED',
+            title: `AI Capability Provisioned: ${capDef.name} (${capDef.role})`,
+            content: `Auto-provisioned AI specialist for ${norm} continuous operations.`
+          }
+        })
+      );
+    }
+  } catch {}
+
+  return {
+    capability: norm,
+    agentRole: capDef.role,
+    agentName: capDef.name,
+    provisioned: true,
+    agentId: created?.id,
+    description: capDef.description
+  };
+}
+
+/**
+ * Phase A6: Resolves the human responsibility requirement for a task.
+ * Crucial rule: Never automatically invent a human employee.
+ * If the human responsibility is missing:
+ *  - creates an explicit HumanRoleRequirement
+ *  - surfaces it for the Founder/Admin to assign an existing member or invite a new person.
+ */
+export async function resolveHumanRoleRequirement(params: {
+  startupId: string;
+  task: DelegatedTask;
+}): Promise<HumanRoleRequirement | null> {
+  const { startupId, task } = params;
+
+  // If task is already claimed or assigned to a specific user, requirement is filled
+  if (task.assignedUserId) {
+    return null;
+  }
+
+  // Retrieve active members for this company
+  const members: any[] = await safeDbQuery(async () => {
+    if (!prisma) return [];
+    return await (prisma as any).membership.findMany({
+      where: { startupId, status: 'ACTIVE' },
+      include: { user: true }
+    });
+  }) || [];
+
+  const assignableUsers = members.map((m: any) => ({
+    userId: m.userId,
+    name: m.user?.name || m.user?.email || 'Team Member',
+    email: m.user?.email || '',
+    role: m.role
+  }));
+
+  // Case 1: Department has NO human role in company model (e.g. LEGAL, AUDITOR)
+  if (task.ownerRole === null) {
+    return {
+      taskId: task.id,
+      taskTitle: task.title,
+      department: task.department,
+      missingRole: task.department,
+      status: 'UNFILLED',
+      reason: `Company model has no designated employee role for ${task.department}. Never inventing a placeholder employee.`,
+      actionRequired: 'ASSIGN_EXISTING',
+      suggestedAction: {
+        type: 'assign',
+        description: `Founder or Admin should review or assign this ${task.department} task to an executive or invite a dedicated specialist.`,
+        assignableUsers,
+        recommendedInviteRole: 'OPERATIONS'
+      }
+    };
+  }
+
+  // Case 2: Department maps to a human role (e.g. HR, FINANCE, GROWTH), but no employee exists with this role
+  const hasRoleMember = members.some((m: any) => m.role === task.ownerRole);
+  if (!hasRoleMember) {
+    return {
+      taskId: task.id,
+      taskTitle: task.title,
+      department: task.department,
+      missingRole: task.ownerRole,
+      status: 'UNFILLED',
+      reason: `Company currently has no active team members with the ${task.ownerRole} role. CatalystOS never invents an employee.`,
+      actionRequired: 'INVITE_PERSON',
+      suggestedAction: {
+        type: 'invite',
+        description: `Invite a new ${task.ownerRole} team member to own this work order, or assign an existing executive.`,
+        recommendedInviteRole: task.ownerRole,
+        assignableUsers
+      }
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Phase A6: Scans a startup's active tasks and directory to report all missing human role requirements.
+ * Never invents human employees.
+ */
+export async function getHumanRoleRequirementsForStartup(
+  startupId: string
+): Promise<HumanRoleRequirement[]> {
+  if (!startupId || !prisma) return [];
+
+  const tasks = await safeDbQuery(async () => {
+    return await (prisma as any).task.findMany({
+      where: {
+        plan: { startupId },
+        status: { in: ['pending', 'in_progress'] }
+      },
+      include: { plan: true },
+      orderBy: { createdAt: 'desc' }
+    });
+  }) || [];
+
+  const decodedTasks = tasks.map(decodeTask);
+  const requirements: HumanRoleRequirement[] = [];
+
+  for (const task of decodedTasks) {
+    const req = await resolveHumanRoleRequirement({ startupId, task });
+    if (req) {
+      requirements.push(req);
+    }
+  }
+
+  return requirements;
+}
+
+/**
+ * Phase A6: Diagnostic scan for a startup:
+ *  - AI specialist agents present
+ *  - Missing human staffing requirements
+ */
+export async function getMissingCapabilitiesAndStaffing(startupId: string): Promise<{
+  aiSpecialists: Array<{ role: string; name: string; status: string; avatar: string }>;
+  provisionedAiCapabilities: CapabilityProvisioningResult[];
+  missingHumanRequirements: HumanRoleRequirement[];
+}> {
+  if (!startupId || !prisma) {
+    return {
+      aiSpecialists: [],
+      provisionedAiCapabilities: [],
+      missingHumanRequirements: []
+    };
+  }
+
+  const existingAgents = await safeDbQuery(async () => {
+    return await (prisma as any).executiveAgent.findMany({
+      where: { startupId }
+    });
+  }) || [];
+
+  const missingHumanRequirements = await getHumanRoleRequirementsForStartup(startupId);
+
+  return {
+    aiSpecialists: existingAgents.map((a: any) => ({
+      role: a.role,
+      name: a.name,
+      status: a.status,
+      avatar: a.avatar
+    })),
+    provisionedAiCapabilities: [],
+    missingHumanRequirements
+  };
 }
 
 /**
@@ -599,6 +971,22 @@ export async function decomposeCommandToPlan(params: {
   const tasks: DelegatedTask[] = [];
 
   // 2. Persist Task rows linked to this Plan
+  // Phase A6: Ensure AI specialist capability is provisioned for each plan step
+  const provisionedAiCapabilities: CapabilityProvisioningResult[] = [];
+  if (startupId && prisma) {
+    for (const step of planData.steps) {
+      try {
+        const capRes = await ensureAiSpecialistCapability(startupId, step.department);
+        if (capRes.provisioned) {
+          provisionedAiCapabilities.push(capRes);
+        }
+      } catch (err: any) {
+        console.warn('[taskDelegationService] ensureAiSpecialistCapability warning:', err.message);
+      }
+    }
+  }
+
+  // 2. Persist Task rows linked to this Plan
   for (const step of planData.steps) {
     const encodedTitle = encodeTitle(step.department, step.agent, step.ownerRole, step.title);
     let taskRow: any = null;
@@ -646,6 +1034,22 @@ export async function decomposeCommandToPlan(params: {
     }
   }
 
+  // Phase A6: Resolve missing human responsibility requirements
+  const missingHumanRequirements: HumanRoleRequirement[] = [];
+  if (startupId && prisma) {
+    for (const task of tasks) {
+      try {
+        const req = await resolveHumanRoleRequirement({ startupId, task });
+        if (req) {
+          task.humanRequirement = req;
+          missingHumanRequirements.push(req);
+        }
+      } catch (err: any) {
+        console.warn('[taskDelegationService] resolveHumanRoleRequirement warning:', err.message);
+      }
+    }
+  }
+
   return {
     plan: {
       id: effectivePlanId,
@@ -658,7 +1062,9 @@ export async function decomposeCommandToPlan(params: {
     },
     tasks,
     explicitSteps,
-    formattedPlanText
+    formattedPlanText,
+    provisionedAiCapabilities,
+    missingHumanRequirements
   };
 }
 

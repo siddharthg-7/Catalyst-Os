@@ -45,6 +45,8 @@ import {
   getAgentDraftForTask,
   listPlansForUser,
   getPlanById,
+  ensureAiSpecialistCapability,
+  getMissingCapabilitiesAndStaffing,
   TaskDelegationError
 } from '../services/taskDelegationService';
 import {
@@ -1215,6 +1217,35 @@ router.get('/plans', authenticateJWT, requireActiveMembership, requirePermission
 router.get('/plans/:id', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   try {
     res.json(await getPlanById(req.user!.id, req.params.id));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// GET missing human role requirements & AI capability staffing diagnostic (Phase A6).
+router.get('/tasks/requirements', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const membership = await resolveMembership(req.user!.id);
+    if (!membership) {
+      return res.status(403).json({ error: 'No active membership', code: 'NO_MEMBERSHIP' });
+    }
+    const diagnostic = await getMissingCapabilitiesAndStaffing(membership.startupId);
+    res.json(diagnostic);
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// POST provision an AI specialist capability on demand (Phase A6).
+router.post('/agents/provision', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const membership = await resolveMembership(req.user!.id);
+    if (!membership) {
+      return res.status(403).json({ error: 'No active membership', code: 'NO_MEMBERSHIP' });
+    }
+    const capability = req.body?.capability || req.body?.role || 'GENERAL';
+    const result = await ensureAiSpecialistCapability(membership.startupId, capability);
+    res.json(result);
   } catch (err) {
     sendTaskError(res, err);
   }

@@ -1011,9 +1011,23 @@ export class OrchestrationService {
         description: decomposedPlan.plan.description,
         status: decomposedPlan.plan.status,
         steps: decomposedPlan.explicitSteps,
-        tasks: decomposedPlan.tasks
-      }
+        tasks: decomposedPlan.tasks,
+        provisionedAiCapabilities: decomposedPlan.provisionedAiCapabilities,
+        missingHumanRequirements: decomposedPlan.missingHumanRequirements
+      } as any
     });
+
+    if (decomposedPlan.provisionedAiCapabilities && decomposedPlan.provisionedAiCapabilities.length > 0) {
+      for (const cap of decomposedPlan.provisionedAiCapabilities) {
+        console.log(`[Capability] Auto-provisioned AI specialist: ${cap.agentName} (${cap.agentRole}) for startup ${startupId}`);
+        onEvent?.({
+          type: 'capability_provisioned',
+          capability: cap.capability,
+          agentName: cap.agentName,
+          agentRole: cap.agentRole
+        } as any);
+      }
+    }
 
     const agents: OrchestrationAgentActivity[] = [];
     const allRoles = ['CEO', 'Finance', 'Talent', 'Growth', 'Operations', 'Legal', 'Auditor'];

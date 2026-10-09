@@ -28,6 +28,36 @@ export interface StartupProfile {
   };
 }
 
+export interface HumanRoleRequirement {
+  taskId?: string;
+  taskTitle?: string;
+  department: string;
+  missingRole: string | null;
+  status: 'UNFILLED' | 'ASSIGNED' | 'INVITATION_PENDING';
+  reason: string;
+  actionRequired: 'ASSIGN_EXISTING' | 'INVITE_PERSON';
+  suggestedAction: {
+    type: 'assign' | 'invite';
+    description: string;
+    assignableUsers?: Array<{
+      userId: string;
+      name: string;
+      email: string;
+      role: string;
+    }>;
+    recommendedInviteRole?: string;
+  };
+}
+
+export interface CapabilityProvisioningResult {
+  capability: string;
+  agentRole: string;
+  agentName: string;
+  provisioned: boolean;
+  agentId?: string;
+  description: string;
+}
+
 export interface DelegatedTask {
   id: string;
   planId?: string;
@@ -40,6 +70,7 @@ export interface DelegatedTask {
   status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'rejected';
   result: string | null;
   needsHumanOwner: boolean;
+  humanRequirement?: HumanRoleRequirement | null;
   createdAt: string;
   updatedAt: string;
 }
