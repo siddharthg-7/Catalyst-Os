@@ -18,6 +18,7 @@ import PeopleDirectory from './components/PeopleDirectory';
 import AcceptInvitation from './components/AcceptInvitation';
 import EmployeeWorkspace from './components/EmployeeWorkspace';
 import ExecutiveCouncilWorkspace from './components/ExecutiveCouncilWorkspace';
+import RoleAwareDashboard from './components/RoleAwareDashboard';
 import { 
   Bell,
   CheckSquare, 
@@ -181,6 +182,7 @@ export default function App() {
   const [notificationsOpen, setNotificationsOpen] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [selectedTaskIdForWorkspace, setSelectedTaskIdForWorkspace] = useState<string | null>(null);
 
   // Sync selected agent with URL if on /dashboard/agents/:agentId
   useEffect(() => {
@@ -816,14 +818,45 @@ export default function App() {
       items: NavItem[];
     }
 
+    const isPrivileged = user?.role === 'FOUNDER' || user?.role === 'ADMIN' || user?.role === 'Founder' || permissions.role === 'FOUNDER' || permissions.role === 'ADMIN';
+    const normRole = (user?.role || permissions.role || 'FOUNDER').toUpperCase();
+
     const navSections: NavSection[] = [
       {
-        title: 'Core Workspace',
+        title: isPrivileged ? 'Core Workspace' : `${normRole} Command`,
         items: [
-          { id: 'dashboard' as const,  label: 'Executive Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
-          { id: 'council' as const,    label: 'Executive Council', Icon: Sparkles, badge: 'Phase B', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
-          { id: 'workspace' as const,  label: 'Employee Workspace', Icon: Briefcase, badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', badgeColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
-          { id: 'approvals' as const,  label: 'Approval Queue',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
+          { 
+            id: 'dashboard' as const,  
+            label: isPrivileged 
+              ? 'Executive Dashboard' 
+              : normRole === 'HR' ? 'People Command' 
+              : normRole === 'FINANCE' ? 'Finance Command' 
+              : normRole === 'GROWTH' ? 'Growth Command' 
+              : normRole === 'OPERATIONS' ? 'Operations Command' 
+              : 'Department Command',  
+            Icon: Activity,    
+            badge: `${startup.healthScore}%`, 
+            badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' 
+          },
+          ...(isPrivileged ? [
+            { id: 'council' as const, label: 'Executive Council', Icon: Sparkles, badge: 'Phase B', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' }
+          ] : []),
+          { 
+            id: 'workspace' as const,  
+            label: isPrivileged 
+              ? 'Employee Workspace' 
+              : normRole === 'HR' ? 'Assigned Tasks (Echo)' 
+              : normRole === 'FINANCE' ? 'Assigned Tasks (Aura)' 
+              : normRole === 'GROWTH' ? 'Assigned Tasks (Vector)' 
+              : normRole === 'OPERATIONS' ? 'Assigned Tasks (Helix)' 
+              : 'Assigned Tasks', 
+            Icon: Briefcase, 
+            badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', 
+            badgeColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20' 
+          },
+          ...(isPrivileged ? [
+            { id: 'approvals' as const, label: 'Approval Queue', Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20' }
+          ] : []),
         ].filter(item => item.id === 'workspace' || item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
@@ -1263,24 +1296,41 @@ export default function App() {
                 transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
               >
                 {activeTab === 'dashboard' && startup && (
-                  <SaaSDashboard 
-                    startup={startup}
-                    agents={agents}
-                    initiatives={initiatives}
-                    approvals={approvals}
-                    decisions={decisions}
-                    knowledge={knowledge}
-                    tasks={tasks}
-                    memberships={memberships}
-                    invitations={invitations}
-                    onReviewItem={handleReviewItem}
-                    onUploadDoc={handleUploadDoc}
-                    onLaunchInitiative={handleLaunchInitiative}
-                    onSimulateInitiative={handleSimulateInitiative}
-                    onUpdateStartup={handleUpdateStartup}
-                    onRefreshTasks={hydrateTasks}
-                    onNavigate={(tab) => handleTabChange(tab as any)}
-                  />
+                  isPrivileged ? (
+                    <SaaSDashboard 
+                      startup={startup}
+                      agents={agents}
+                      initiatives={initiatives}
+                      approvals={approvals}
+                      decisions={decisions}
+                      knowledge={knowledge}
+                      tasks={tasks}
+                      memberships={memberships}
+                      invitations={invitations}
+                      onReviewItem={handleReviewItem}
+                      onUploadDoc={handleUploadDoc}
+                      onLaunchInitiative={handleLaunchInitiative}
+                      onSimulateInitiative={handleSimulateInitiative}
+                      onUpdateStartup={handleUpdateStartup}
+                      onRefreshTasks={hydrateTasks}
+                      onNavigate={(tab) => handleTabChange(tab as any)}
+                    />
+                  ) : (
+                    <RoleAwareDashboard 
+                      userRole={user?.role || permissions.role}
+                      userName={user?.name || 'Team Member'}
+                      companyName={startup?.name}
+                      tasks={tasks}
+                      teamMembers={teamMembers}
+                      onOpenTask={(taskId) => {
+                        setSelectedTaskIdForWorkspace(taskId);
+                        handleTabChange('workspace');
+                      }}
+                      onNavigate={(tab) => handleTabChange(tab as any)}
+                      onRefreshTasks={hydrateTasks}
+                      apiFetch={apiFetch}
+                    />
+                  )
                 )}
 
                 {activeTab === 'workspace' && (
@@ -1288,6 +1338,7 @@ export default function App() {
                     userRole={user?.role}
                     userName={user?.name}
                     companyName={startup?.name}
+                    initialTaskId={selectedTaskIdForWorkspace}
                     onRefreshTasks={hydrateTasks}
                     onNavigateToApprovals={() => handleTabChange('approvals')}
                   />

@@ -4,7 +4,7 @@ import {
   Users, CheckCircle2, Clock, Send, Sparkles, FileText,
   Shield, AlertCircle, ArrowRight, RefreshCw, Copy, Check,
   BookOpen, Lock, UserCheck, ChevronRight, Search, Filter,
-  Building2, Award, Eye
+  Building2, Award, Eye, Edit3, Bot
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,6 +12,7 @@ interface EmployeeWorkspaceProps {
   userRole?: string;
   userName?: string;
   companyName?: string;
+  initialTaskId?: string | null;
   onRefreshTasks?: () => Promise<void>;
   onNavigateToApprovals?: () => void;
 }
@@ -20,6 +21,7 @@ export default function EmployeeWorkspace({
   userRole: propUserRole,
   userName: propUserName,
   companyName = 'Catalyst Venture',
+  initialTaskId,
   onRefreshTasks,
   onNavigateToApprovals
 }: EmployeeWorkspaceProps) {
@@ -28,7 +30,7 @@ export default function EmployeeWorkspace({
   const userName = propUserName || user?.name || 'Team Member';
   const [loading, setLoading] = useState<boolean>(true);
   const [workspaceData, setWorkspaceData] = useState<EmployeeWorkspacePayload | null>(null);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(initialTaskId || null);
   const [activeTaskDraft, setActiveTaskDraft] = useState<{
     draftContent: string;
     guidelines: string[];
@@ -42,6 +44,25 @@ export default function EmployeeWorkspace({
   const [isClaiming, setIsClaiming] = useState<boolean>(false);
   const [copiedDraft, setCopiedDraft] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+
+  // C5: AI Agent as Employee Assistant state
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const [isAssistantOpen, setIsAssistantOpen] = useState<boolean>(false);
+  const [assistantQuery, setAssistantQuery] = useState<string>('');
+  const [assistantLoading, setAssistantLoading] = useState<boolean>(false);
+  const [assistantResult, setAssistantResult] = useState<{
+    reply: string;
+    suggestedEdits?: string;
+    explanation: string;
+    agentName: string;
+    agentRole: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (initialTaskId) {
+      setSelectedTaskId(initialTaskId);
+    }
+  }, [initialTaskId]);
 
   // Fetch employee workspace context
   const loadWorkspace = async () => {
@@ -245,6 +266,43 @@ export default function EmployeeWorkspace({
       setCopiedDraft(true);
       setTimeout(() => setCopiedDraft(false), 2000);
       setStatusMessage({ type: 'info', text: 'AI Companion draft copied into deliverable editor.' });
+    }
+  };
+
+  const handleAskCompanion = async (queryText?: string) => {
+    if (!selectedTaskId) return;
+    const query = queryText || assistantQuery;
+    if (!query.trim()) return;
+
+    try {
+      setAssistantLoading(true);
+      setIsAssistantOpen(true);
+      const res = await apiFetch(`/api/tasks/${selectedTaskId}/assistant`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: query,
+          currentDraft: editorText
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAssistantResult({
+          reply: data.reply,
+          suggestedEdits: data.suggestedEdits,
+          explanation: data.explanation,
+          agentName: data.agentName || workspaceData?.companionAgent?.name || 'Companion Agent',
+          agentRole: data.agentRole || workspaceData?.companionAgent?.role || 'Executive Partner'
+        });
+      } else {
+        const err = await res.json();
+        setStatusMessage({ type: 'error', text: err?.error || 'AI Assistant consultation failed.' });
+      }
+    } catch {
+      setStatusMessage({ type: 'error', text: 'Network error consulting AI Companion.' });
+    } finally {
+      setAssistantLoading(false);
     }
   };
 
@@ -681,17 +739,40 @@ export default function EmployeeWorkspace({
                 </div>
               )}
 
-              {/* Companion AI Draft Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold font-sans flex items-center gap-2" style={{ color: 'var(--c-fg)' }}>
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>{companion?.name}'s Initial Working Draft</span>
-                  </h4>
+              {/* Companion AI Draft Section (C5 Top Box) */}
+              <div 
+                className="p-5 rounded-2xl space-y-3.5 border relative overflow-hidden"
+                style={{
+                  backgroundColor: 'var(--c-surface-2)',
+                  borderColor: 'rgba(245, 158, 11, 0.3)'
+                }}
+              >
+                <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={companion?.avatar || 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150'} 
+                      alt={companion?.name}
+                      className="w-10 h-10 rounded-xl object-cover ring-2 ring-amber-500/30"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold font-sans" style={{ color: 'var(--c-fg)' }}>
+                          {companion?.name} — {selectedTask.department === 'TALENT' || selectedTask.department === 'HR' ? 'HR Assistant' : selectedTask.department === 'FINANCE' ? 'Finance Assistant' : selectedTask.department === 'GROWTH' ? 'Growth Assistant' : 'Operations Assistant'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                          AI Partner
+                        </span>
+                      </div>
+                      <p className="text-[11px] font-sans mt-0.5" style={{ color: 'var(--c-muted)' }}>
+                        I've reviewed the authorized {selectedTask.department} policies. Here's my suggested plan:
+                      </p>
+                    </div>
+                  </div>
+
                   <button
                     onClick={copyDraftToEditor}
-                    className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg transition-all cursor-pointer"
-                    style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+                    className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg transition-all cursor-pointer border"
+                    style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}
                     title="Copy AI draft to your deliverable editor"
                   >
                     {copiedDraft ? (
@@ -702,15 +783,15 @@ export default function EmployeeWorkspace({
                     ) : (
                       <>
                         <Copy className="w-3 h-3" />
-                        <span>Copy to Editor</span>
+                        <span>Copy to Work Area</span>
                       </>
                     )}
                   </button>
                 </div>
 
                 <div 
-                  className="p-4 rounded-xl text-xs font-sans leading-relaxed max-h-[220px] overflow-y-auto whitespace-pre-wrap select-text"
-                  style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+                  className="p-4 rounded-xl text-xs font-sans leading-relaxed max-h-[220px] overflow-y-auto whitespace-pre-wrap select-text border"
+                  style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
                 >
                   {activeTaskDraft?.draftContent || 'Generating initial AI executive draft...'}
                 </div>
@@ -733,22 +814,25 @@ export default function EmployeeWorkspace({
                 )}
               </div>
 
-              {/* Employee Interactive Deliverable Editor */}
-              <div className="space-y-3 pt-4" style={{ borderTop: '1px solid var(--c-border)' }}>
+              {/* Employee Work Area (C5 Main Area) */}
+              <div className="space-y-3.5 pt-4" style={{ borderTop: '1px solid var(--c-border)' }}>
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold font-sans flex items-center gap-2" style={{ color: 'var(--c-fg)' }}>
-                    <FileText className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>Your Final Deliverable (Employee Review & Edit)</span>
-                  </h4>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-emerald-500" />
+                    <h3 className="text-sm font-bold font-sans" style={{ color: 'var(--c-fg)' }}>
+                      Employee Work Area
+                    </h3>
+                  </div>
                   <span className="text-[10px] font-mono" style={{ color: 'var(--c-faint)' }}>
                     {editorText.length} characters
                   </span>
                 </div>
 
                 <textarea
+                  ref={textareaRef}
                   value={editorText}
                   onChange={(e) => setEditorText(e.target.value)}
-                  placeholder="Review, edit, and finalize your department's deliverable here..."
+                  placeholder="Review, edit, and formulate your department's deliverable here..."
                   rows={8}
                   disabled={selectedTask.status === 'approved'}
                   className="w-full p-4 rounded-xl text-xs font-sans outline-none leading-relaxed transition-colors resize-y font-mono"
@@ -759,24 +843,49 @@ export default function EmployeeWorkspace({
                   }}
                 />
 
-                {/* Action Buttons */}
-                <div className="flex items-center justify-between pt-2">
+                {/* Action Buttons: [ Edit ] [ Ask Echo ] [ Submit ] */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                   <div className="flex items-center gap-2">
+                    {/* [ Edit ] */}
+                    <button
+                      onClick={() => {
+                        textareaRef.current?.focus();
+                        setStatusMessage({ type: 'info', text: 'Work area active for editing.' });
+                      }}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border"
+                      style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Edit</span>
+                    </button>
+
+                    {/* [ Ask Echo / Ask Partner ] */}
+                    <button
+                      onClick={() => setIsAssistantOpen(prev => !prev)}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-indigo-500/30 text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 shadow-xs"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Ask {companion?.name || 'Partner'}</span>
+                    </button>
+
+                    {/* Save Draft Progress */}
                     <button
                       onClick={handleSaveDraft}
                       disabled={isSaving || selectedTask.status === 'approved'}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
-                      style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-fg)' }}
+                      className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border"
+                      style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}
+                      title="Save draft"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isSaving ? 'animate-spin' : ''}`} />
-                      <span>Save Draft</span>
+                      <span className="hidden sm:inline">Save</span>
                     </button>
                   </div>
 
+                  {/* [ Submit ] */}
                   <button
                     onClick={handleSubmitDeliverable}
                     disabled={isSubmitting || selectedTask.status === 'submitted' || selectedTask.status === 'approved'}
-                    className="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-md"
+                    className="px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer shadow-md"
                     style={{
                       backgroundColor: selectedTask.status === 'approved' 
                         ? 'var(--c-surface-2)' 
@@ -787,9 +896,121 @@ export default function EmployeeWorkspace({
                     }}
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{selectedTask.status === 'submitted' ? 'Resubmit to Founder' : 'Submit for Founder Approval'}</span>
+                    <span>{selectedTask.status === 'submitted' ? 'Resubmit Deliverable' : 'Submit'}</span>
                   </button>
                 </div>
+
+                {/* Interactive Assistant Drawer / Studio */}
+                {isAssistantOpen && (
+                  <div 
+                    className="p-5 rounded-2xl border space-y-3.5 mt-3 animate-fade-in"
+                    style={{
+                      backgroundColor: 'var(--c-surface-2)',
+                      borderColor: 'rgba(99, 102, 241, 0.35)'
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-indigo-400" />
+                        <h4 className="text-xs font-bold font-sans" style={{ color: 'var(--c-fg)' }}>
+                          Collaborate with {companion?.name} on this Deliverable
+                        </h4>
+                      </div>
+                      <button 
+                        onClick={() => setIsAssistantOpen(false)}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded cursor-pointer opacity-75 hover:opacity-100"
+                        style={{ color: 'var(--c-muted)' }}
+                      >
+                        Close
+                      </button>
+                    </div>
+
+                    <p className="text-[11px] font-sans" style={{ color: 'var(--c-muted)' }}>
+                      Ask {companion?.name} to refine specific sections, verify policy compliance, adjust leveling bands, or explain recommendations.
+                    </p>
+
+                    {/* Quick Suggestion Chips */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        `Review alignment with ${selectedTask.department} policies`,
+                        'Tighten interview loop to 3 stages',
+                        'Explain recommended compensation benchmark',
+                        'Add operational risk mitigations'
+                      ].map((chip, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setAssistantQuery(chip);
+                            handleAskCompanion(chip);
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-sans border transition-colors cursor-pointer hover:border-indigo-400"
+                          style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}
+                        >
+                          {chip}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Input Bar */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder={`Ask ${companion?.name} for help with this deliverable...`}
+                        value={assistantQuery}
+                        onChange={(e) => setAssistantQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAskCompanion()}
+                        className="flex-1 px-3.5 py-2 rounded-xl text-xs font-sans outline-none border transition-colors"
+                        style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
+                      />
+                      <button
+                        onClick={() => handleAskCompanion()}
+                        disabled={assistantLoading || !assistantQuery.trim()}
+                        className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+                      >
+                        {assistantLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        <span>Ask</span>
+                      </button>
+                    </div>
+
+                    {/* AI Partner Result */}
+                    {assistantResult && (
+                      <div 
+                        className="p-4 rounded-xl border space-y-2.5 text-xs font-sans"
+                        style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}
+                      >
+                        <div className="flex items-center justify-between text-indigo-400 font-mono text-[11px] font-semibold">
+                          <span>{assistantResult.agentName} ({assistantResult.agentRole}):</span>
+                          <span className="text-[10px] text-emerald-400">Policy Verified</span>
+                        </div>
+                        <div className="text-slate-300 leading-relaxed whitespace-pre-wrap">
+                          {assistantResult.reply}
+                        </div>
+                        {assistantResult.explanation && (
+                          <div className="text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800">
+                            <strong>Rationale:</strong> {assistantResult.explanation}
+                          </div>
+                        )}
+                        {assistantResult.suggestedEdits && (
+                          <div className="pt-2 flex justify-end">
+                            <button
+                              onClick={() => {
+                                if (assistantResult.suggestedEdits) {
+                                  setEditorText(assistantResult.suggestedEdits);
+                                  setStatusMessage({ type: 'success', text: 'Suggestion inserted into Employee Work Area!' });
+                                }
+                              }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 cursor-pointer shadow-sm transition-colors"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Apply Suggestion to Work Area</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
             </div>

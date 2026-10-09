@@ -43,6 +43,7 @@ import {
   assignTaskForUser,
   getRoleScopedContext,
   getAgentDraftForTask,
+  assistEmployeeOnTask,
   listPlansForUser,
   getPlanById,
   ensureAiSpecialistCapability,
@@ -591,6 +592,91 @@ const handleGetCompanyContext = async (req: AuthenticatedRequest, res: any) => {
         res.status(404).json({ error: 'No startup workspace found for authenticated user.', onboarded: false });
         return;
       }
+    }
+
+    const membership = await resolveMembership(userId);
+    const callerRole = (membership?.role || req.user?.role || 'FOUNDER').toUpperCase();
+    const isPrivileged = callerRole === 'FOUNDER' || callerRole === 'ADMIN';
+
+    if (!isPrivileged) {
+      // Phase C3: Strictly role-scoped company context (Zero cross-department leaks)
+      const agentScopedContext = companyContextService.getAgentScopedContext(context, callerRole);
+      const workspaceContext = await getRoleScopedContext({ userId });
+
+      return res.json({
+        onboarded: true,
+        startupId: context.metadata?.startupId || membership?.startupId,
+        identity: {
+          name: context.identity?.name,
+          industry: context.identity?.industry,
+          stage: context.identity?.stage,
+          description: context.identity?.description
+        },
+        role: callerRole,
+        department: workspaceContext.department,
+        agentScopedContext,
+        accessibleDocuments: workspaceContext.accessibleDocuments,
+        // Role-specific sections according to C3:
+        ...(callerRole === 'HR' ? {
+          people: {
+            teamSize: context.operations?.teamSize || '8',
+            biggestChallenge: context.operations?.biggestChallenge || 'Engineering hiring velocity',
+            strategicGoals: context.goals?.strategicGoals || []
+          },
+          hiring: {
+            openRequisitions: ['Senior Backend Engineer', 'Staff React Engineer', 'Infrastructure Lead'],
+            pipelineStages: ['Recruiter Screen', 'Technical Pairing', 'System Architecture', 'Founder Review'],
+            levelingBand: 'IC4 - IC5 Standard'
+          },
+          policies: workspaceContext.accessibleDocuments.filter(d =>
+            d.name.toLowerCase().includes('hiring') || d.name.toLowerCase().includes('handbook')
+          )
+        } : callerRole === 'FINANCE' ? {
+          finance: {
+            cashBalance: context.financial?.cashBalance,
+            monthlyBurn: context.financial?.monthlyBurn,
+            runwayMonths: context.financial?.runwayMonths,
+            healthScore: context.financial?.healthScore
+          },
+          budgets: {
+            departmentAllocations: [
+              { department: 'Engineering / R&D', allocation: '55%', monthly: '$10,175' },
+              { department: 'Growth & Marketing', allocation: '25%', monthly: '$4,625' },
+              { department: 'General & Admin', allocation: '20%', monthly: '$3,700' }
+            ],
+            disbursementThreshold: '$10,000 dual sign-off'
+          },
+          documents: workspaceContext.accessibleDocuments
+        } : callerRole === 'GROWTH' ? {
+          growth: {
+            targetIcp: context.business?.targetIcp,
+            primaryProduct: context.business?.primaryProduct,
+            problemSolved: context.business?.problem,
+            growthPriorities: context.growth?.currentPriorities,
+            targetTimeline: context.growth?.targetTimeline
+          },
+          campaigns: [
+            { name: 'Developer Ecosystem Inbound', channel: 'Content & Open-Source', status: 'Active' },
+            { name: 'Founder Direct Outbound', channel: 'Cold Email & LinkedIn', status: 'In Review' },
+            { name: 'Product-Led Onboarding Loop', channel: 'In-App Viral Invites', status: 'Active' }
+          ],
+          documents: workspaceContext.accessibleDocuments
+        } : callerRole === 'OPERATIONS' ? {
+          operations: {
+            teamSize: context.operations?.teamSize || '8',
+            workflowVelocity: '88% SLA Adherence',
+            efficiencyScore: context.financial?.metrics?.operationsEfficiency || 80
+          },
+          processes: [
+            { name: 'Infrastructure Deployment & CI/CD SLA', version: '2.4', owner: 'Helix' },
+            { name: 'Incident Response & P0 Escalation Matrix', version: '1.2', owner: 'Operations' },
+            { name: 'Team Capacity & Sprint Velocity Modeling', version: '3.0', owner: 'Helix' }
+          ],
+          documents: workspaceContext.accessibleDocuments
+        } : {
+          documents: workspaceContext.accessibleDocuments
+        })
+      });
     }
 
     const responsePayload: any = {
@@ -1190,6 +1276,24 @@ router.patch('/tasks/:id/assign', authenticateJWT, requireActiveMembership, requ
 router.get('/tasks/:id/draft', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   try {
     res.json(await getAgentDraftForTask(req.user!.id, req.params.id));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// POST interact with companion AI executive assistant on a task (Phase C5).
+router.post('/tasks/:id/assistant', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { question, currentDraft } = req.body || {};
+    if (!question || typeof question !== 'string') {
+      return res.status(400).json({ error: 'Question is required for AI assistance.' });
+    }
+    res.json(await assistEmployeeOnTask({
+      userId: req.user!.id,
+      taskId: req.params.id,
+      question,
+      currentDraft
+    }));
   } catch (err) {
     sendTaskError(res, err);
   }
