@@ -40,7 +40,15 @@ import {
   Sun,
   Moon,
   Building,
-  Command
+  Command,
+  LayoutDashboard,
+  ShieldCheck,
+  BookOpen,
+  GitMerge,
+  SlidersHorizontal,
+  Settings,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -52,6 +60,7 @@ import MouseSpotlight from './components/MouseSpotlight';
 import AuroraBackground from './components/AuroraBackground';
 import Footer from './components/Footer';
 import VoiceStudioPanel from './components/voice/VoiceStudioPanel';
+import SettingsModal from './components/SettingsModal';
 
 export default function App() {
   const navigate = useNavigate();
@@ -74,6 +83,8 @@ export default function App() {
   const [isCheckingStartup, setIsCheckingStartup] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState<boolean>(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -818,90 +829,89 @@ export default function App() {
 
     const navSections: NavSection[] = [
       {
-        title: 'Core Workspace',
+        title: 'Workspace',
         items: [
-          { id: 'dashboard' as const,  label: 'Executive Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
-          { id: 'council' as const,    label: 'Executive Council', Icon: Sparkles, badge: 'Phase B', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
-          { id: 'workspace' as const,  label: 'Employee Workspace', Icon: Briefcase, badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', badgeColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
-          { id: 'approvals' as const,  label: 'Approval Queue',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
-        ].filter(item => item.id === 'workspace' || item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
+          { id: 'dashboard' as const, label: 'Overview', Icon: LayoutDashboard },
+          { id: 'workspace' as const, label: 'Tasks & Projects', Icon: CheckSquare },
+          { 
+            id: 'approvals' as const, 
+            label: 'Approvals', 
+            Icon: ShieldCheck, 
+            badge: approvals.length > 0 ? String(approvals.length) : undefined,
+            badgeColor: 'text-rose-600 bg-rose-50 border-rose-200' 
+          },
+        ].filter(item => item.id === 'workspace' || permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
-        title: 'Intelligence & Strategy',
+        title: 'Intelligence',
         items: [
-          { id: 'workflows' as const,  label: 'Workflows & DAG',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
-          { id: 'knowledge' as const,  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-sky-500 bg-sky-500/10 border-sky-500/20' },
-          { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },
-        ].filter(item => permissions.areas.includes(item.id as any)) as NavItem[]
+          { id: 'knowledge' as const, label: 'Company Knowledge', Icon: BookOpen },
+          { id: 'workflows' as const, label: 'Workflows', Icon: GitMerge },
+          { id: 'scenarios' as const, label: 'Scenario Planning', Icon: SlidersHorizontal },
+          { id: 'council' as const,   label: 'Executive Council', Icon: Sparkles },
+        ].filter(item => item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
-        title: 'Governance & Team',
+        title: 'Governance',
         items: [
-          { id: 'decisions' as const,  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-slate-400 bg-slate-500/10 border-slate-500/20' },
-          { id: 'people' as const,     label: 'People & Access',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : '', badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+          { id: 'decisions' as const, label: 'Decision Log', Icon: FileText },
+          { id: 'people' as const,    label: 'Team & Access', Icon: Users },
         ].filter(item => permissions.areas.includes(item.id as any)) as NavItem[]
       }
     ];
 
     const allNavItems: NavItem[] = navSections.flatMap(s => s.items);
-    const currentNavItem = allNavItems.find(n => n.id === activeTab) || (activeTab === 'agents' ? { label: 'Executive Agents', id: 'agents', Icon: Users } : { label: activeTab, id: activeTab as any, Icon: Activity });
+    const currentNavItem = allNavItems.find(n => n.id === activeTab) || (activeTab === 'agents' ? { label: 'Executive Agents', id: 'agents', Icon: Users } : { label: activeTab, id: activeTab as any, Icon: LayoutDashboard });
     const tabLabel = currentNavItem.label;
 
     return (
-      <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
-        {/* ── AMBIENT DREAMY BACKGROUND (PORTFOLIO REFERENCE) ── */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[55vw] h-[55vw] rounded-full bg-indigo-200/25 dark:bg-indigo-900/15 blur-[120px]" />
-          <div className="absolute top-[25%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-200/20 dark:bg-purple-900/15 blur-[140px]" />
-          <div className="absolute bottom-[-10%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-sky-200/20 dark:bg-blue-950/20 blur-[130px]" />
-        </div>
-        <MouseSpotlight />
-      
-      {/* ── Desktop Sidebar (Linear / Apple Refinement) ───────────────────── */}
+      <div className="flex h-screen overflow-hidden font-sans bg-slate-50 text-slate-900">
+      {/* ── Desktop Sidebar (Clean, Minimal, Aura Template Structure) ───────────────────── */}
       <aside 
-        className="hidden md:flex flex-col border-r shrink-0 justify-between select-none z-20 backdrop-blur-xl" 
-        style={{ 
-          width: 'var(--sidebar-width)', 
-          backgroundColor: 'var(--glass-bg)', 
-          borderColor: 'var(--c-border)'
-        }}
+        className="hidden md:flex flex-col border-r border-slate-200 bg-white shrink-0 justify-between select-none z-20 transition-all duration-200" 
+        style={{ width: sidebarCollapsed ? '68px' : '240px' }}
       >
         <div className="flex flex-col flex-1 min-h-0">
           
-          {/* Workspace Identity & Switcher Header */}
-          <div className="p-4 border-b" style={{ borderColor: 'var(--c-border)' }}>
-            <div className="flex items-center justify-between p-2 rounded-2xl transition-all hover:bg-[var(--c-surface-2)] cursor-pointer group">
-              <div className="flex items-center gap-3 min-w-0">
-                <div 
-                  className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-md text-white group-hover:scale-105 transition-transform"
-                >
-                  <CatalystLogo className="w-5 h-5 text-white" />
+          {/* Workspace Identity & Switcher */}
+          <div className="p-3.5 border-b border-slate-200">
+            <div 
+              onClick={() => setIsSettingsOpen(true)}
+              className={`flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-slate-50 cursor-pointer group ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}
+              title={sidebarCollapsed ? `${startup?.name || 'CatalystOS'} - Workspace Settings` : undefined}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xs shrink-0 text-white shadow-xs">
+                  <CatalystLogo className="w-4 h-4 text-white" />
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-sm truncate block tracking-tight" style={{ color: 'var(--c-fg)' }}>
+                {!sidebarCollapsed && (
+                  <div className="min-w-0">
+                    <span className="font-semibold text-xs text-slate-900 truncate block">
                       {startup?.name || 'CatalystOS'}
                     </span>
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs" title="System Operational" />
+                    <span className="text-[11px] block truncate text-slate-500 font-normal">
+                      {startup?.stage || 'Seed'} Workspace
+                    </span>
                   </div>
-                  <span className="text-[11px] block truncate font-medium text-slate-400">
-                    {startup?.stage || 'Seed'} · {startup?.healthScore}% Health
-                  </span>
-                </div>
+                )}
               </div>
-              <ChevronDown className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" style={{ color: 'var(--c-fg)' }} />
+              {!sidebarCollapsed && (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
+              )}
             </div>
           </div>
 
           {/* Grouped Navigation */}
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+          <nav className="flex-1 overflow-y-auto p-2.5 space-y-5">
             {navSections.map((section, idx) => {
               if (section.items.length === 0) return null;
               return (
-                <div key={idx} className="space-y-1">
-                  <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider font-mono text-slate-400">
-                    {section.title}
-                  </div>
+                <div key={idx} className="space-y-0.5">
+                  {!sidebarCollapsed && (
+                    <div className="px-2.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                      {section.title}
+                    </div>
+                  )}
                   <div className="space-y-0.5">
                     {section.items.map(({ id, label, Icon, badge, badgeColor }) => {
                       const isActive = activeTab === id;
@@ -909,43 +919,27 @@ export default function App() {
                         <button
                           key={id}
                           onClick={() => handleTabChange(id)}
-                          className="relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all font-sans cursor-pointer group text-left"
-                          style={{ 
-                            color: isActive ? 'var(--c-fg)' : 'var(--c-muted)',
-                            backgroundColor: isActive ? 'var(--c-surface-2)' : 'transparent',
-                          }}
-                          onMouseEnter={(e) => { 
-                            if (!isActive) { 
-                              e.currentTarget.style.color = 'var(--c-fg)'; 
-                              e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; 
-                            }
-                          }}
-                          onMouseLeave={(e) => { 
-                            if (!isActive) { 
-                              e.currentTarget.style.color = 'var(--c-muted)'; 
-                              e.currentTarget.style.backgroundColor = 'transparent'; 
-                            }
-                          }}
+                          title={sidebarCollapsed ? label : undefined}
+                          className={`w-full flex items-center rounded-lg text-xs font-medium transition-colors cursor-pointer text-left ${
+                            sidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-2'
+                          } ${
+                            isActive
+                              ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                          }`}
                         >
-                          {isActive && (
-                            <motion.span
-                              layoutId="sidebar-active-indicator"
-                              className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600"
-                              transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
-                            />
-                          )}
                           <span className="flex items-center gap-2.5 min-w-0">
                             <Icon 
-                              className="w-4 h-4 shrink-0 transition-colors" 
-                              style={{ 
-                                color: isActive ? 'var(--c-accent)' : 'inherit',
-                                opacity: isActive ? 1 : 0.7 
-                              }} 
+                              className={`w-4 h-4 shrink-0 transition-colors ${
+                                isActive ? 'text-indigo-600' : 'text-slate-400'
+                              }`} 
                             />
-                            <span className={`truncate ${isActive ? 'font-semibold' : ''}`}>{label}</span>
+                            {!sidebarCollapsed && (
+                              <span className="truncate">{label}</span>
+                            )}
                           </span>
-                          {badge && (
-                            <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border shrink-0 ${badgeColor}`}>
+                          {!sidebarCollapsed && badge && (
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0 ${badgeColor}`}>
                               {badge}
                             </span>
                           )}
@@ -956,292 +950,166 @@ export default function App() {
                 </div>
               );
             })}
-
-            {/* ── Executive Agents Roster ── */}
-            <div className="space-y-1">
-              <button
-                onClick={() => setAgentsExpanded(prev => !prev)}
-                className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider font-mono transition-colors cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                <span className="flex items-center gap-1.5">
-                  <Users className="w-3 h-3 opacity-70" />
-                  <span>Executive Council</span>
-                </span>
-                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${agentsExpanded ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {agentsExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-0.5 pt-1">
-                      {agents.map((ag) => {
-                        const isSelected = activeTab === 'agents' && selectedAgentId === ag.id;
-                        return (
-                          <button
-                            key={ag.id}
-                            onClick={() => handleSelectAgent(ag.id)}
-                            className="w-full flex items-center justify-between px-3.5 py-1.5 rounded-lg text-xs transition-all font-sans cursor-pointer text-left"
-                            style={{
-                              backgroundColor: isSelected ? 'var(--c-surface-2)' : 'transparent',
-                              color: isSelected ? 'var(--c-fg)' : 'var(--c-muted)',
-                            }}
-                            onMouseEnter={(e) => { 
-                              if (!isSelected) { 
-                                e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; 
-                                e.currentTarget.style.color = 'var(--c-fg)'; 
-                              }
-                            }}
-                            onMouseLeave={(e) => { 
-                              if (!isSelected) { 
-                                e.currentTarget.style.backgroundColor = 'transparent'; 
-                                e.currentTarget.style.color = 'var(--c-muted)'; 
-                              }
-                            }}
-                          >
-                            <span className="flex items-center gap-2 truncate">
-                              <span 
-                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${ag.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} 
-                              />
-                              <span className="truncate font-medium">{ag.name.split(' ')[0]}</span>
-                            </span>
-                            <span 
-                              className="text-[10px] font-mono shrink-0 px-2 py-0.5 rounded-full border" 
-                              style={{ 
-                                backgroundColor: 'var(--c-bg)', 
-                                borderColor: 'var(--c-border)', 
-                                color: isSelected ? 'var(--c-accent)' : 'var(--c-muted)' 
-                              }}
-                            >
-                              {ag.role}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
           </nav>
 
-          {/* Sidebar Footer Controls */}
-          <div className="p-3 border-t space-y-2" style={{ borderColor: 'var(--c-border)' }}>
+          {/* Administration & User Profile Footer */}
+          <div className="p-2.5 border-t border-slate-200 space-y-1 bg-white">
             
-            {/* Voice Studio Quick Launch */}
+            {/* Voice Studio Action */}
             <button
               onClick={() => setIsVoiceStudioOpen(true)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
-              style={{
-                backgroundColor: 'var(--c-surface-2)',
-                borderColor: 'var(--c-border)',
-                color: 'var(--c-fg)'
-              }}
-              title="Open Voice Studio & Neural Voice Stream"
+              className={`w-full flex items-center rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer ${
+                sidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-2'
+              }`}
+              title="Voice Studio"
             >
-              <span className="flex items-center gap-2">
-                <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                <span>Voice Studio</span>
+              <span className="flex items-center gap-2.5 min-w-0">
+                <Radio className="w-4 h-4 text-indigo-600 shrink-0" />
+                {!sidebarCollapsed && <span>Voice Studio</span>}
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 font-bold">
-                Neural Live
+              {!sidebarCollapsed && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
+                  Live
+                </span>
+              )}
+            </button>
+
+            {/* Workspace Settings Action */}
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className={`w-full flex items-center rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer ${
+                sidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-2'
+              }`}
+              title="Settings"
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <Settings className="w-4 h-4 text-slate-400 shrink-0" />
+                {!sidebarCollapsed && <span>Settings</span>}
               </span>
             </button>
             
-            {/* User Profile & Session Sign Out */}
-            <div 
-              className="p-2.5 rounded-2xl flex items-center justify-between gap-2 border" 
-              style={{ 
-                backgroundColor: 'var(--c-surface-2)', 
-                borderColor: 'var(--c-border)' 
-              }}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div 
-                  className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 uppercase font-mono shadow-xs bg-gradient-to-tr from-indigo-500 to-purple-600 text-white" 
-                >
-                  {user?.name?.slice(0, 2) || 'US'}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold truncate" style={{ color: 'var(--c-fg)' }}>{user?.name || 'Venture User'}</div>
-                  <div className="text-[10px] truncate capitalize flex items-center gap-1 font-mono text-slate-400">
-                    <Shield className="w-2.5 h-2.5 shrink-0 opacity-50" />
-                    <span>{user?.role || 'Founder'}</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  logout();
-                  navigate('/');
-                }}
-                title="Sign Out Session"
-                className="p-1.5 rounded-full transition-all cursor-pointer shrink-0 border hover:bg-rose-50 hover:text-rose-600"
-                style={{ 
-                  backgroundColor: 'var(--c-surface)', 
-                  borderColor: 'var(--c-border)', 
-                  color: 'var(--c-muted)' 
-                }}
+            {/* User Profile Card */}
+            <div className={`mt-1.5 pt-2 border-t border-slate-100 flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between px-1'}`}>
+              <div 
+                onClick={() => setIsSettingsOpen(true)}
+                className={`flex items-center gap-2 min-w-0 cursor-pointer ${sidebarCollapsed ? 'justify-center' : ''}`}
+                title={sidebarCollapsed ? `${user?.name || 'Founder'} (${user?.role || 'Founder'})` : undefined}
               >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
+                <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  {user?.name?.slice(0, 2).toUpperCase() || 'AD'}
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-slate-900 truncate">{user?.name || 'Founder'}</div>
+                    <div className="text-[10px] text-slate-500 truncate capitalize">{user?.role || 'Founder'}</div>
+                  </div>
+                )}
+              </div>
+              {!sidebarCollapsed && (
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                  title="Sign Out"
+                  className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </aside>
 
       {/* ── Main Content Area ──────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-slate-50">
         
-        {/* Top Navbar (Floating Pill Aesthetic Aligned with Landing Page) */}
-        <header className="shrink-0 z-30 px-4 sm:px-8 pt-3 pb-1">
-          <div 
-            className="w-full flex items-center justify-between px-4 sm:px-6 py-2.5 rounded-2xl sm:rounded-full border backdrop-blur-xl shadow-[0_4px_25px_rgba(0,0,0,0.03)] transition-all duration-300"
-            style={{ 
-              backgroundColor: 'var(--glass-bg)', 
-              borderColor: 'var(--c-border)'
-            }}
-          >
-            {/* Breadcrumb Path & Mobile Menu */}
+        {/* Top Navbar */}
+        <header className="shrink-0 z-30 px-6 py-2.5 bg-white border-b border-slate-200">
+          <div className="flex items-center justify-between w-full">
+            {/* Left: Mobile Menu, Sidebar Toggle, Breadcrumbs */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden p-1.5 rounded-full transition-colors border"
-                style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
+                className="md:hidden p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
               >
                 <Menu className="w-4 h-4" />
               </button>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-xs tracking-tight" style={{ color: 'var(--c-muted)' }}>
+
+              <button
+                onClick={() => setSidebarCollapsed(prev => !prev)}
+                className="hidden md:flex p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              >
+                {sidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              </button>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-medium text-slate-500">
                   {startup?.name || 'CatalystOS'}
                 </span>
                 <span className="text-slate-300">/</span>
-                <span className="font-extrabold text-xs text-indigo-600 dark:text-indigo-400">
+                <span className="font-semibold text-slate-900">
                   {tabLabel}
                 </span>
               </div>
             </div>
 
-            {/* Right Action Bar */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
-              {/* Raycast ⌘K Command Palette Trigger */}
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2">
+              {/* Search ⌘K */}
               <button
                 onClick={() => setCommandPaletteOpen(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-sans border hover:border-indigo-400"
-                style={{ 
-                  backgroundColor: 'var(--c-surface-2)', 
-                  borderColor: 'var(--c-border)', 
-                  color: 'var(--c-muted)' 
-                }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-white text-slate-600 transition-colors cursor-pointer shadow-xs"
               >
-                <Search className="w-3.5 h-3.5" />
+                <Search className="w-3.5 h-3.5 text-slate-400" />
                 <span className="hidden sm:inline">Search...</span>
-                <kbd 
-                  className="text-[10px] font-mono px-1.5 py-0.2 rounded-full border" 
-                  style={{ 
-                    backgroundColor: 'var(--c-surface)', 
-                    borderColor: 'var(--c-border)', 
-                    color: 'var(--c-faint)' 
-                  }}
-                >
+                <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-500">
                   ⌘K
                 </kbd>
-              </button>
-
-              {/* Theme Toggle (Instant 1-Click Access) */}
-              <button
-                onClick={() => {
-                  const html = document.documentElement;
-                  const current = html.getAttribute('data-theme');
-                  const next = current === 'dark' ? 'light' : 'dark';
-                  html.setAttribute('data-theme', next);
-                  localStorage.setItem('catalystos-theme', next);
-                  localStorage.setItem('theme', next);
-                }}
-                className="p-2 rounded-full border transition-all cursor-pointer shadow-xs hover:border-indigo-400"
-                style={{ 
-                  backgroundColor: 'var(--c-surface-2)', 
-                  borderColor: 'var(--c-border)', 
-                  color: 'var(--c-muted)' 
-                }}
-                title="Toggle Light / Dark Theme"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              </button>
-
-              {/* Company Knowledge Quick Access */}
-              <button
-                onClick={() => handleTabChange('knowledge')}
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
-                style={{
-                  backgroundColor: activeTab === 'knowledge' ? 'var(--c-accent)' : 'var(--c-surface-2)',
-                  color: activeTab === 'knowledge' ? '#FFFFFF' : 'var(--c-fg)',
-                  borderColor: activeTab === 'knowledge' ? 'var(--c-accent)' : 'var(--c-border)',
-                }}
-                title="Company Knowledge Base"
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span className="text-[11px]">Knowledge</span>
-                <span 
-                  className="text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold" 
-                  style={{ 
-                    backgroundColor: activeTab === 'knowledge' ? 'rgba(255,255,255,0.25)' : 'var(--c-accent-subtle)', 
-                    color: activeTab === 'knowledge' ? '#FFFFFF' : 'var(--c-accent)' 
-                  }}
-                >
-                  {knowledge.length}
-                </span>
               </button>
 
               {/* Voice Studio Button */}
               <button
                 onClick={() => setIsVoiceStudioOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
-                style={{
-                  backgroundColor: 'var(--c-surface-2)',
-                  borderColor: 'var(--c-border)',
-                  color: 'var(--c-fg)',
-                }}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors cursor-pointer shadow-xs"
                 title="Voice Studio"
               >
-                <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                <span className="text-[11px]">Voice</span>
+                <Radio className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Voice</span>
               </button>
 
-              {/* Notifications Bell */}
+              {/* Notifications */}
               <button 
                 onClick={() => setNotificationsOpen(true)}
-                className="relative p-2 rounded-full transition-colors cursor-pointer border hover:border-indigo-400"
-                style={{ 
-                  backgroundColor: 'var(--c-surface-2)', 
-                  borderColor: 'var(--c-border)', 
-                  color: 'var(--c-muted)' 
-                }}
+                className="relative p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer shadow-xs"
                 title="Open Operational Alerts"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full animate-pulse bg-indigo-600" />
+                {approvals.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500" />
+                )}
               </button>
 
-              {/* User Profile Badge */}
-              <div 
-                className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border" 
-                style={{ 
-                  backgroundColor: 'var(--c-surface-2)', 
-                  borderColor: 'var(--c-border)' 
-                }}
+              {/* Settings */}
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer shadow-xs"
+                title="Workspace Settings"
               >
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold uppercase font-mono bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xs" 
-                >
-                  {user?.name?.slice(0, 2) || 'US'}
+                <Settings className="w-4 h-4" />
+              </button>
+
+              {/* User Avatar */}
+              <div 
+                onClick={() => setIsSettingsOpen(true)}
+                className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors cursor-pointer shadow-xs"
+              >
+                <div className="w-6 h-6 rounded-md bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center">
+                  {user?.name?.slice(0, 2).toUpperCase() || 'AD'}
                 </div>
-                <span className="text-xs font-semibold font-sans hidden sm:inline" style={{ color: 'var(--c-fg)' }}>{user?.name}</span>
+                <span className="text-xs font-semibold text-slate-800 hidden sm:inline">{user?.name}</span>
               </div>
             </div>
           </div>
@@ -1449,55 +1317,76 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-72 md:hidden flex flex-col justify-between"
-              style={{ backgroundColor: 'var(--c-surface)', borderRight: '1px solid var(--c-border)', boxShadow: 'var(--shadow-xl)' }}
+              className="fixed top-0 left-0 bottom-0 z-50 w-72 md:hidden flex flex-col justify-between bg-white border-r border-slate-200 shadow-xl"
               onClick={e => e.stopPropagation()}
             >
-              <div className="p-6 space-y-6">
+              <div className="p-5 space-y-5 flex-1 overflow-y-auto">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
-                      <CatalystLogo className="w-4 h-4" />
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-xs text-white shadow-xs">
+                      <CatalystLogo className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-sm font-bold font-sans" style={{ letterSpacing: '-0.02em', color: 'var(--c-fg)' }}>CatalystOS</span>
+                    <div>
+                      <span className="text-xs font-semibold text-slate-900 block">{startup?.name || 'CatalystOS'}</span>
+                      <span className="text-[10px] text-slate-500 font-normal">{startup?.stage || 'Seed'} Workspace</span>
+                    </div>
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-1.5 rounded-lg transition-colors"
-                    style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+                    className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <nav className="space-y-1">
-                  {allNavItems.map(({ id, label, Icon, badge, badgeColor }, i) => (
-                    <motion.button
-                      key={id}
-                      initial={{ opacity: 0, x: -16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium font-sans transition-all text-left"
-                      style={{
-                        backgroundColor: activeTab === id ? 'var(--c-surface-2)' : 'transparent',
-                        color: activeTab === id ? 'var(--c-fg)' : 'var(--c-muted)',
-                      }}
-                    >
-                      <span className="flex items-center gap-2.5">
-                        <Icon className="w-4 h-4" style={{ color: activeTab === id ? 'var(--c-accent)' : 'inherit' }} />
-                        <span>{label}</span>
-                      </span>
-                      {badge && <span className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded border ${badgeColor}`}>{badge}</span>}
-                    </motion.button>
+                <nav className="space-y-4">
+                  {navSections.map((section, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="px-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                        {section.title}
+                      </div>
+                      <div className="space-y-0.5">
+                        {section.items.map(({ id, label, Icon, badge, badgeColor }) => (
+                          <button
+                            key={id}
+                            onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
+                            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left ${
+                              activeTab === id
+                                ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2.5">
+                              <Icon className={`w-4 h-4 ${activeTab === id ? 'text-indigo-600' : 'text-slate-400'}`} />
+                              <span>{label}</span>
+                            </span>
+                            {badge && <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${badgeColor}`}>{badge}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </nav>
               </div>
 
-              <div className="p-6" style={{ borderTop: '1px solid var(--c-border)' }}>
-                <div className="text-center text-label" style={{ color: 'var(--c-faint)' }}>
-                  AI Executive Council
-                </div>
+              <div className="p-4 border-t border-slate-200 bg-slate-50 space-y-2">
+                <button
+                  onClick={() => { setIsVoiceStudioOpen(true); setMobileMenuOpen(false); }}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    <Radio className="w-4 h-4 text-indigo-600" />
+                    <span>Voice Studio</span>
+                  </span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 font-medium">Live</span>
+                </button>
+                <button
+                  onClick={() => { setIsSettingsOpen(true); setMobileMenuOpen(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                >
+                  <Settings className="w-4 h-4 text-slate-500" />
+                  <span>Settings</span>
+                </button>
               </div>
             </motion.div>
           </>
@@ -1518,6 +1407,15 @@ export default function App() {
       <VoiceStudioPanel
         isOpen={isVoiceStudioOpen}
         onClose={() => setIsVoiceStudioOpen(false)}
+      />
+
+      {/* Global Workspace Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        startup={startup}
+        onUpdateStartup={handleUpdateStartup}
+        user={user}
       />
 
     </div>

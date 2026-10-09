@@ -486,23 +486,15 @@ export default function EmployeeWorkspace({
                         
                         {/* Status Badge */}
                         <span 
-                          className="text-[9px] font-mono px-2 py-0.5 rounded uppercase tracking-wider font-semibold"
-                          style={{
-                            backgroundColor: task.status === 'approved' 
-                              ? 'rgba(16, 185, 129, 0.12)' 
+                          className={`text-[9px] font-mono px-2 py-0.5 rounded uppercase tracking-wider font-semibold ${
+                            task.status === 'approved' 
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
                               : task.status === 'submitted' 
-                                ? 'rgba(59, 130, 246, 0.12)' 
+                                ? 'bg-sky-50 text-sky-700 border border-sky-200' 
                                 : task.status === 'in_progress' 
-                                  ? 'rgba(245, 158, 11, 0.12)' 
-                                  : 'rgba(156, 163, 175, 0.1)',
-                            color: task.status === 'approved' 
-                              ? 'rgb(16, 185, 129)' 
-                              : task.status === 'submitted' 
-                                ? 'rgb(59, 130, 246)' 
-                                : task.status === 'in_progress' 
-                                  ? '#f59e0b' 
-                                  : 'var(--c-muted)'
-                          }}
+                                  ? 'bg-amber-50 text-amber-700 border border-amber-200' 
+                                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                          }`}
                         >
                           {task.status.replace('_', ' ')}
                         </span>
@@ -647,13 +639,13 @@ export default function EmployeeWorkspace({
 
               {/* Status Alert Banner */}
               {selectedTask.status === 'submitted' && (
-                <div className="p-3.5 rounded-xl flex items-center gap-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-medium">
-                  <Clock className="w-4 h-4 shrink-0 animate-pulse" />
+                <div className="p-3.5 rounded-xl flex items-center gap-3 bg-sky-50 border border-sky-200 text-sky-700 text-xs font-medium">
+                  <Clock className="w-4 h-4 shrink-0" />
                   <span>Deliverable Submitted • Awaiting Founder Review in Approval Inbox</span>
                 </div>
               )}
               {selectedTask.status === 'approved' && (
-                <div className="p-3.5 rounded-xl flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
+                <div className="p-3.5 rounded-xl flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>Approved by Founder • Deliverable signed off and archived</span>
                 </div>
@@ -661,21 +653,14 @@ export default function EmployeeWorkspace({
 
               {/* Missing Human Responsibility Banner (Phase A6) */}
               {selectedTask.needsHumanOwner && (
-                <div 
-                  className="p-3.5 rounded-xl flex items-start sm:items-center justify-between gap-3 text-xs font-medium"
-                  style={{
-                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
-                    border: '1px solid rgba(245, 158, 11, 0.25)',
-                    color: '#f59e0b'
-                  }}
-                >
+                <div className="p-3.5 rounded-xl flex items-start sm:items-center justify-between gap-3 text-xs font-medium bg-amber-50 border border-amber-200 text-amber-800">
                   <div className="flex items-center gap-2.5">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
                     <div>
                       <span className="font-semibold">Missing Human Responsibility:</span> No employee is assigned for {selectedTask.department}. CatalystOS never invents placeholder employees.
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold shrink-0">
+                  <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-bold shrink-0">
                     Staffing Required
                   </span>
                 </div>

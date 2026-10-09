@@ -328,9 +328,9 @@ export default function ApprovalQueue({
                 {/* Risk / Reversibility (2 cols) */}
                 <div className="md:col-span-2 space-y-1">
                   <span className={`inline-flex px-2 py-0.5 text-[9px] font-mono font-bold rounded-full ${
-                    gov.risk === 'CRITICAL' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/25' :
-                    gov.risk === 'HIGH' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
-                    'bg-sky-500/10 text-sky-500 border border-sky-500/25'
+                    gov.risk === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                    gov.risk === 'HIGH' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    'bg-sky-50 text-sky-700 border border-sky-200'
                   }`}>
                     {gov.risk} Risk
                   </span>
@@ -384,7 +384,7 @@ export default function ApprovalQueue({
 
       {/* ── FOCUSED EVALUATION DRAWER / MODAL ──────────────────────────────── */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/20 backdrop-blur-xs">
           <div 
             className="w-full max-w-2xl h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-fade-in"
             style={{ 
@@ -415,9 +415,9 @@ export default function ApprovalQueue({
                   </span>
                   {selectedGovernance && (
                     <span className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full ${
-                      selectedGovernance.risk === 'CRITICAL' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/25' :
-                      selectedGovernance.risk === 'HIGH' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
-                      'bg-sky-500/10 text-sky-500 border border-sky-500/25'
+                      selectedGovernance.risk === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                      selectedGovernance.risk === 'HIGH' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                      'bg-sky-50 text-sky-700 border border-sky-200'
                     }`}>
                       {selectedGovernance.risk} Risk
                     </span>

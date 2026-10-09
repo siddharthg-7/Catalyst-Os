@@ -360,9 +360,9 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
                 {/* 5. Status (Col 1) */}
                 <div className="lg:col-span-1">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
-                    isApproved ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25' :
-                    isFailed ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
-                    'bg-rose-500/10 text-rose-500 border border-rose-500/25'
+                    isApproved ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                    isFailed ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    'bg-rose-50 text-rose-700 border border-rose-200'
                   }`}>
                     {isApproved ? <Check className="w-2.5 h-2.5" /> : null}
                     {record.status}
@@ -387,7 +387,7 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
 
       {/* ── FOCUSED DETAIL DRAWER ─────────────────────────────────────────── */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/20 backdrop-blur-xs">
           <div 
             className="w-full max-w-xl h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-fade-in"
             style={{
@@ -412,7 +412,7 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
                     {selectedRecord.category}
                   </span>
                   <span className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase ${
-                    selectedRecord.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25' : 'bg-rose-500/10 text-rose-500 border border-rose-500/25'
+                    selectedRecord.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
                   }`}>
                     {selectedRecord.status}
                   </span>

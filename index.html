@@ -4,23 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CatalystOS — From Idea to Launch. One AI Operating System.</title>
-    <!-- Sofia Sans: Mastercard design system open-source font substitute for MarkForMC -->
+    <!-- Modern Typography: Inter & Plus Jakarta Sans for Aura clean SaaS aesthetics -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,wght@0,1..1000;1,1..1000&display=swap" rel="stylesheet" />
-    <!-- Theme initialization to prevent flash before hydration -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <!-- Theme initialization: Light-themed by default (#F8FAFC) as per Aura reference -->
     <script>
       (function() {
         try {
           var saved = localStorage.getItem('catalystos-theme');
-          var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          var theme = saved || 'light';
           document.documentElement.setAttribute('data-theme', theme);
         } catch (e) {}
       })();
     </script>
     <style>
-      body { background-color: #F3F0EE; margin: 0; }
-      [data-theme="dark"] body { background-color: #0C0C0C; }
+      body { background-color: #F8FAFC; margin: 0; }
     </style>
   </head>
   <body>

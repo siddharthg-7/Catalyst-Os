@@ -614,9 +614,9 @@ export default function ScenarioSimulator({
                 <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Risk Assessment</span>
                 <div className="pt-1">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase ${
-                    simulation.riskRating === 'CRITICAL' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/25' :
-                    simulation.riskRating === 'HIGH' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
-                    'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25'
+                    simulation.riskRating === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                    simulation.riskRating === 'HIGH' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   }`}>
                     {simulation.riskRating}
                   </span>
@@ -680,16 +680,16 @@ export default function ScenarioSimulator({
               className="p-6 rounded-2xl space-y-4 transition-all"
               style={{
                 backgroundColor: simulation.riskRating === 'CRITICAL' 
-                  ? 'rgba(239, 68, 68, 0.08)' 
+                  ? '#FEF2F2' 
                   : simulation.riskRating === 'HIGH' 
-                    ? 'rgba(245, 158, 11, 0.08)' 
-                    : 'rgba(16, 185, 129, 0.08)',
+                    ? '#FFFBEB' 
+                    : '#F0FDF4',
                 border: `1px solid ${
                   simulation.riskRating === 'CRITICAL' 
-                    ? 'rgba(239, 68, 68, 0.3)' 
+                    ? '#FECACA' 
                     : simulation.riskRating === 'HIGH' 
-                      ? 'rgba(245, 158, 11, 0.3)' 
-                      : 'rgba(16, 185, 129, 0.3)'
+                      ? '#FDE68A' 
+                      : '#BBF7D0'
                 }`
               }}
             >

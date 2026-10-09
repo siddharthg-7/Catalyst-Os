@@ -10,10 +10,10 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-/* ── Light Theme (Aligned with Hackathon Landing Page: Clean, Airy, Dreamy) ── */
+/* ── Refined Light Theme (Aura Template: Minimal, Clean, Enterprise SaaS) ── */
 :root {
   /* Surfaces */
-  --c-bg:           #FAFAFD;
+  --c-bg:           #F8FAFC;
   --c-surface:      #FFFFFF;
   --c-surface-2:    #F1F5F9;
   --c-surface-3:    #E2E8F0;
@@ -25,16 +25,16 @@
   --c-faint:        #94A3B8;
 
   /* Borders & Dividers */
-  --c-border:       rgba(226, 232, 240, 0.8);
-  --c-border-strong: rgba(203, 213, 225, 0.9);
-  --c-divider:      rgba(226, 232, 240, 0.6);
+  --c-border:       #E2E8F0;
+  --c-border-strong: #CBD5E1;
+  --c-divider:      #E2E8F0;
 
-  /* Accents */
+  /* Accents (Restrained Indigo) */
   --c-accent:       #4F46E5;
   --c-accent-hover: #4338CA;
-  --c-accent-subtle: rgba(79, 70, 229, 0.08);
-  --c-accent-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-  --c-accent-2:     #7C3AED;
+  --c-accent-subtle: #EEF2FF;
+  --c-accent-gradient: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+  --c-accent-2:     #6366F1;
   --c-accent-3:     #0284C7;
 
   /* Semantic */
@@ -43,58 +43,58 @@
   --c-danger:       #EF4444;
   --c-info:         #3B82F6;
 
-  /* Glassmorphism */
-  --glass-bg:       rgba(255, 255, 255, 0.85);
-  --glass-light-bg: rgba(255, 255, 255, 0.65);
-  --glass-border:   rgba(226, 232, 240, 0.8);
-  --glass-blur:     20px;
+  /* Glassmorphism / Clean Surfaces */
+  --glass-bg:       #FFFFFF;
+  --glass-light-bg: #F8FAFC;
+  --glass-border:   #E2E8F0;
+  --glass-blur:     12px;
 
   /* Spotlight */
-  --spotlight-color: rgba(79, 70, 229, 0.04);
+  --spotlight-color: transparent;
 
-  /* Elevation Shadows */
-  --shadow-xs:      0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-sm:      0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md:      0 8px 30px rgba(0, 0, 0, 0.06);
-  --shadow-lg:      0 14px 40px -5px rgba(0, 0, 0, 0.08);
-  --shadow-xl:      0 20px 50px -10px rgba(0, 0, 0, 0.10);
-  --shadow-card:    0 4px 20px rgba(0, 0, 0, 0.03);
-  --shadow-glow:    0 0 25px rgba(79, 70, 229, 0.15);
+  /* Elevation Shadows (Crisp, Clean Enterprise SaaS) */
+  --shadow-xs:      0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sm:      0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md:      0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  --shadow-lg:      0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+  --shadow-xl:      0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+  --shadow-card:    0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  --shadow-glow:    none;
 
   /* Card hover */
-  --card-hover-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
-  --card-hover-y: -2px;
+  --card-hover-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.07);
+  --card-hover-y: -1px;
 
   /* Form Inputs */
-  --input-bg:       rgba(0, 0, 0, 0.02);
-  --input-border:   rgba(0, 0, 0, 0.10);
-  --input-focus-border: rgba(99, 102, 241, 0.6);
-  --input-focus-ring: rgba(99, 102, 241, 0.12);
+  --input-bg:       #FFFFFF;
+  --input-border:   #E2E8F0;
+  --input-focus-border: #4F46E5;
+  --input-focus-ring: rgba(79, 70, 229, 0.12);
 
   /* Badges */
-  --badge-bg:       rgba(0, 0, 0, 0.04);
-  --badge-border:   rgba(0, 0, 0, 0.08);
-  --badge-color:    var(--c-fg);
+  --badge-bg:       #F1F5F9;
+  --badge-border:   #E2E8F0;
+  --badge-color:    #334155;
 
   /* Scrollbar */
-  --scrollbar-track: var(--c-bg);
-  --scrollbar-thumb: #D1D5DB;
-  --scrollbar-thumb-hover: #9CA3AF;
+  --scrollbar-track: #F8FAFC;
+  --scrollbar-thumb: #CBD5E1;
+  --scrollbar-thumb-hover: #94A3B8;
 
   /* Aurora overlay */
-  --aurora-opacity: 0.18;
+  --aurora-opacity: 0;
 
   /* App Shell Geometry */
-  --sidebar-width: 256px;
+  --sidebar-width: 240px;
   --sidebar-collapsed-width: 68px;
   --topbar-height: 56px;
 
   /* Transitions */
-  --ease-smooth: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 0.15s;
-  --duration-normal: 0.22s;
-  --duration-slow: 0.35s;
+  --duration-normal: 0.2s;
+  --duration-slow: 0.3s;
 }
 
 /* ── Dark Theme (Midnight Slate with Indigo-Purple Glows) ─────────────── */
@@ -274,10 +274,9 @@ html {
 body {
   font-family: var(--font-sans);
   background-color: var(--c-bg);
-  background-image: radial-gradient(ellipse at 10% 8%, rgba(105, 91, 240, 0.05), transparent 35%), radial-gradient(ellipse at 90% 30%, rgba(84, 174, 220, 0.035), transparent 32%);
   color: var(--c-fg);
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 ::selection {

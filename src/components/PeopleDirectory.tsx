@@ -721,7 +721,7 @@ export default function PeopleDirectory({
 
       {/* ── INVITE MODAL ───────────────────────────────────────────────────── */}
       {inviteOpen && onInviteMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs">
           <div 
             className="w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-5 animate-scale-up"
             style={{
@@ -825,7 +825,7 @@ export default function PeopleDirectory({
 
       {/* ── ADD TEAM MEMBER MODAL ──────────────────────────────────────────── */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs">
           <div 
             className="rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-scale-up"
             style={{

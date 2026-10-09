@@ -123,7 +123,7 @@ export default function VoiceStudioPanel({ isOpen, onClose }: VoiceStudioPanelPr
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-xs">
+      <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/20 backdrop-blur-xs">
         <motion.div
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
