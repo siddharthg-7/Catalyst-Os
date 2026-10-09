@@ -7,15 +7,15 @@
     "cashBalance": 450000,
     "burnRate": 26000,
     "runwayMonths": 17.3,
-    "healthScore": 86,
+    "healthScore": 92,
     "metrics": {
       "velocity": 85,
-      "financialHealth": 88,
-      "legalCompliance": 90,
+      "financialHealth": 95,
+      "legalCompliance": 80,
       "growthRate": 60,
       "operationsEfficiency": 82
     },
-    "teamSize": 30
+    "teamSize": 32
   },
   "initiatives": [
     {
@@ -229,6 +229,46 @@
     }
   ],
   "decisionLog": [
+    {
+      "id": "dec_1791537748844",
+      "title": "Approve: Strategic Angel Seed Extension Tranche",
+      "description": "Closing $250,000 strategic angel extension from robotics syndicate.",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T09:22:28.844Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 250000,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791537724760",
+      "title": "Approve: Approve Enterprise Sales One-Pager & Pitch Deck",
+      "description": "Marketing and customer collateral review for upcoming industry summit.",
+      "category": "DOCUMENT",
+      "timestamp": "2026-10-09T09:22:04.760Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 0,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791537681172",
+      "title": "Reject: Procure 10x Industrial Edge GPU Nodes",
+      "description": "Rejected by founder with feedback: \"Postpone capital expenditure until Series A financing.\"",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T09:21:21.172Z",
+      "impactText": "No operational metrics modified.",
+      "financialImpact": 0,
+      "status": "rejected"
+    },
+    {
+      "id": "dec_1791537659745",
+      "title": "Approve: Hire 2x Senior Robotics Systems Engineer",
+      "description": "Expands core perception stack and automated navigation throughput.",
+      "category": "CONTRACT",
+      "timestamp": "2026-10-09T09:20:59.745Z",
+      "impactText": "Increases monthly burn by $16,000/mo. Projected runway: 12.2 months.",
+      "financialImpact": -16000,
+      "status": "approved"
+    },
     {
       "id": "dec_1791535990868",
       "title": "Approve: Strategic Angel Seed Extension Tranche",
@@ -661,6 +701,36 @@
     }
   ],
   "knowledgeFiles": [
+    {
+      "id": "doc_profile_786318c0-368f-49a0-a0b5-afce184248b7",
+      "name": "[Company Profile] BioGen Systems",
+      "type": "business_plan",
+      "size": "3.2 KB",
+      "uploadDate": "2026-10-09T09:20:19.825Z",
+      "summary": "BioGen Systems is a pre-seed biotechnology startup developing an AI genomic analysis platform to address slow clinical turnaround for genome sequencing. With a robust 20-month runway, the immediate strategic focus is on achieving MVP delivery within 120 days and initiating market customer acquisition among Genomics Diagnostic Labs. This strong financial position provides a solid foundation for product development and initial market entry.",
+      "insights": [
+        "The target ICP of Genomics Diagnostic Labs is well-defined, but market customer acquisition is identified as a key challenge, indicating a need for a robust go-to-market strategy post-MVP.",
+        "With a $200,000 cash balance and a $10,000 monthly burn, BioGen Systems boasts an excellent 20-month runway, providing ample time to develop the MVP and begin initial market penetration without immediate financial pressure.",
+        "The core product, an AI genomic analysis platform, directly addresses a critical pain point (slow clinical turnaround), but successful MVP delivery within 120 days is paramount to validate the solution and initiate market engagement.",
+        "As a pre-seed company, the 120-day milestone for MVP delivery is aggressive but achievable, requiring focused execution to transition from idea to a tangible product for initial customer feedback and acquisition efforts."
+      ],
+      "startupId": "786318c0-368f-49a0-a0b5-afce184248b7"
+    },
+    {
+      "id": "doc_profile_5b62580f-b144-4bf3-9856-9fd5c18e116f",
+      "name": "[Company Profile] Apex Robotics Inc",
+      "type": "business_plan",
+      "size": "1.5 KB",
+      "uploadDate": "2026-10-09T09:19:45.038Z",
+      "summary": "Apex Robotics Inc is an emerging Seed venture in the Robotics & Automation space addressing \"Inefficient manual forklift routing in high-throughput fulfillment hubs\". With $5,00,000 in capital and a 20 month runway, the company is positioned to scale execution toward its 90 Days milestone.",
+      "insights": [
+        "ICP Precision: Focus sales and marketing specifically on 3PL Logistics Operations to optimize initial CAC.",
+        "Runway Management: Maintain strict governance over the $25,000/mo burn rate to secure 20 months of operational runway.",
+        "Core Challenge Mitigation: Deploy dedicated sprints toward resolving: \"Market customer acquisition and MVP delivery\".",
+        "Milestone Velocity: Align executive agents to deliver initial deliverables within the 90 Days window."
+      ],
+      "startupId": "5b62580f-b144-4bf3-9856-9fd5c18e116f"
+    },
     {
       "id": "doc_profile_6ffcbeab-5153-4be7-8cfd-1c55015a73ad",
       "name": "[Company Profile] BioGen Systems",

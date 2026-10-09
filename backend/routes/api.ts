@@ -1650,6 +1650,34 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
           }
         }).catch(() => {});
 
+        // Dispatch onboarding invitation and email via Gmail SMTP
+        let emailDelivered = false;
+        try {
+          const invResult = await createInvitation({
+            startupId: startup.id,
+            email: memberEmail,
+            role: canonicalRole,
+            invitedById: userId
+          });
+          emailDelivered = Boolean(invResult.delivery?.delivered);
+        } catch (invErr: any) {
+          try {
+            const { sendTeamWelcomeEmail } = await import('../services/invitationMailer');
+            const welcomeRes = await sendTeamWelcomeEmail({
+              to: memberEmail,
+              companyName: startup.name,
+              fullName: memberName,
+              role: canonicalRole,
+              department: memberDept,
+              addedByName: req.user?.name || req.user?.email || 'The Founder',
+              workspaceUrl: (process.env.APP_URL || process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '')
+            });
+            emailDelivered = Boolean(welcomeRes.delivered);
+          } catch (mailErr: any) {
+            console.warn('[Team API] Welcome mail fallback warning:', mailErr.message);
+          }
+        }
+
         return res.json({
           id: memory.id,
           fullName: memberName,
@@ -1658,7 +1686,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
           department: memberDept,
           email: memberEmail,
           status: status || 'Active',
-          joinedAt: memory.createdAt.toISOString()
+          joinedAt: memory.createdAt.toISOString(),
+          emailDelivered
         });
       }
     }
