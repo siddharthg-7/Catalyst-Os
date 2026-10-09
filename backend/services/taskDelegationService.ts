@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Phase A3 — Task Decomposition & Delegation.
  *
  * The council already decomposes a founder command into work orders, but those
@@ -391,7 +391,20 @@ export async function delegateWorkOrders(
           planId
         }
       });
-      created.push(decodeTask(row));
+      const decodedTask = decodeTask(row);
+      created.push(decodedTask);
+
+      try {
+        await (prisma as any).notification.create({
+          data: {
+            startupId,
+            type: 'TASK',
+            title: `Task Delegated: ${decodedTask.title}`,
+            message: `Assigned to ${dept} department. AI co-pilot ${agent} is ready in your Employee Workspace.`,
+            read: false
+          }
+        });
+      } catch {}
     }
 
     return created;
@@ -1026,6 +1039,19 @@ export async function decomposeCommandToPlan(params: {
               }
             })
           );
+          if (taskRow) {
+            try {
+              await (prisma as any).notification.create({
+                data: {
+                  startupId,
+                  type: 'TASK',
+                  title: `Task Delegated: ${step.title}`,
+                  message: `Assigned to ${step.department} department. AI co-pilot ${step.agent} is ready in your Employee Workspace.`,
+                  read: false
+                }
+              });
+            } catch {}
+          }
         }
       } catch (err: any) {
         console.warn('[taskDelegationService] Error creating task row:', err.message);
@@ -1571,6 +1597,20 @@ export async function updateTaskForUser(params: {
         });
       }
     });
+
+    if (membership?.startupId) {
+      try {
+        await (prisma as any).notification.create({
+          data: {
+            startupId: membership.startupId,
+            type: 'APPROVAL',
+            title: `Deliverable Submitted: ${approvalTitle}`,
+            message: `${preparedByUserName} (${membership.role}) submitted deliverable with ${aiAssistanceName} assistance for Founder approval.`,
+            read: false
+          }
+        });
+      } catch {}
+    }
   }
 
   return decoded;

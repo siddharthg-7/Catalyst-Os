@@ -1022,6 +1022,16 @@ export class ApprovalService {
             }).catch(() => {});
           }
 
+          // Create real-time notification for successful approval
+          await prisma.notification.create({
+            data: {
+              title: `Approved: ${appr.title}`,
+              message: `Founder approved deliverable. Operational state changes committed and saved to company memory.`,
+              type: 'APPROVED',
+              startupId: startup.id
+            }
+          }).catch(() => {});
+
           // CRITICAL: Invalidate Company Context so future AI requests retrieve fresh database state
           companyContextService.invalidate(startup.id);
           companyContextService.invalidate(userId);
