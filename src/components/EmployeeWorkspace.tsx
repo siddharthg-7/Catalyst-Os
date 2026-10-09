@@ -4,7 +4,7 @@ import {
   Users, CheckCircle2, Clock, Send, Sparkles, FileText,
   Shield, AlertCircle, ArrowRight, RefreshCw, Copy, Check,
   BookOpen, Lock, UserCheck, ChevronRight, Search, Filter,
-  Building2, Award, Eye, Edit3, Bot
+  Building2, Award, Eye, Edit3, Bot, RotateCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -704,6 +704,31 @@ export default function EmployeeWorkspace({
               </div>
 
               {/* Status Alert Banner */}
+              {Boolean(selectedTask.status === 'changes_requested' || selectedTask.founderFeedback) && (
+                <div 
+                  className="p-4 rounded-2xl flex items-start gap-3 text-xs font-medium animate-fade-in"
+                  style={{
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid rgba(245, 158, 11, 0.35)',
+                    color: '#f59e0b'
+                  }}
+                >
+                  <RotateCcw className="w-4 h-4 shrink-0 mt-0.5 text-amber-400" />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[10px] font-mono uppercase tracking-wider text-amber-400">
+                        Founder Requested Changes (Phase D3 Collaboration Loop)
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--c-fg)' }}>
+                      "{selectedTask.founderFeedback || 'Please reduce budget and adjust plan parameters per founder review.'}"
+                    </p>
+                    <p className="text-[11px] opacity-80" style={{ color: 'var(--c-muted)' }}>
+                      Collaborate with {companion?.name} to adjust the deliverable, then click "Submit for Founder Approval" to resubmit.
+                    </p>
+                  </div>
+                </div>
+              )}
               {selectedTask.status === 'submitted' && (
                 <div className="p-3.5 rounded-xl flex items-center gap-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-medium">
                   <Clock className="w-4 h-4 shrink-0 animate-pulse" />
@@ -896,7 +921,13 @@ export default function EmployeeWorkspace({
                     }}
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{selectedTask.status === 'submitted' ? 'Resubmit Deliverable' : 'Submit'}</span>
+                    <span>
+                      {selectedTask.status === 'submitted' 
+                        ? 'Resubmit for Founder Approval' 
+                        : selectedTask.status === 'changes_requested' || selectedTask.founderFeedback
+                        ? 'Resubmit for Founder Approval'
+                        : 'Submit for Founder Approval'}
+                    </span>
                   </button>
                 </div>
 
@@ -932,6 +963,7 @@ export default function EmployeeWorkspace({
                     {/* Quick Suggestion Chips */}
                     <div className="flex flex-wrap gap-1.5">
                       {[
+                        ...(selectedTask.founderFeedback ? [`Address founder directive: "${selectedTask.founderFeedback.slice(0, 45)}..."`] : []),
                         `Review alignment with ${selectedTask.department} policies`,
                         'Tighten interview loop to 3 stages',
                         'Explain recommended compensation benchmark',

@@ -275,14 +275,14 @@ router.post('/auth/signin', authRateLimiter, async (req, res) => {
     }
 
     if (user.passwordHash) {
-      const isValid = bcrypt.compareSync(password, user.passwordHash);
+      const isValid = await bcrypt.compare(password, user.passwordHash);
       if (!isValid) {
         res.status(401).json({ error: 'Invalid email or password.' });
         return;
       }
     } else {
       // If legacy or demo account without password, upgrade password
-      const newHash = bcrypt.hashSync(password, 10);
+      const newHash = await bcrypt.hash(password, 10);
       user.passwordHash = newHash;
       if (isDbAvailable && prisma) {
         await safeDbQuery(() => (prisma as any).user.update({
@@ -292,24 +292,37 @@ router.post('/auth/signin', authRateLimiter, async (req, res) => {
       }
     }
 
-    // Check if user already has an onboarded startup workspace
+    // Fast-path check if user already has an onboarded startup workspace
     let userStartup: any = null;
     let isOnboarded = false;
     if (isDbAvailable && prisma) {
       try {
-        const canonical = await workspaceService.getCanonicalContext(user.id);
-        if (canonical && canonical.startup && canonical.startup.name) {
+        let startup = await safeDbQuery(() => prisma.startup.findFirst({
+          where: { ownerId: user.id }
+        }));
+        if (!startup) {
+          const mem: any = await safeDbQuery(() => (prisma as any).membership.findFirst({
+            where: { userId: user.id, status: 'ACTIVE' },
+            select: { startupId: true }
+          }));
+          if (mem?.startupId) {
+            startup = await safeDbQuery(() => prisma.startup.findUnique({
+              where: { id: mem.startupId }
+            }));
+          }
+        }
+        if (startup && startup.name) {
           isOnboarded = true;
           userStartup = {
-            id: canonical.startupId,
-            name: canonical.startup.name,
-            industry: canonical.startup.industry,
-            description: canonical.startup.description,
-            fundingStage: canonical.startup.stage,
-            cashBalance: canonical.financials.cashBalance,
-            burnRate: canonical.financials.monthlyBurn,
-            runwayMonths: canonical.financials.runwayMonths,
-            healthScore: 80,
+            id: startup.id,
+            name: startup.name,
+            industry: startup.industry,
+            description: startup.description,
+            fundingStage: startup.fundingStage,
+            cashBalance: startup.cashBalance,
+            burnRate: startup.burnRate,
+            runwayMonths: startup.burnRate > 0 ? parseFloat((startup.cashBalance / startup.burnRate).toFixed(1)) : 999,
+            healthScore: startup.healthScore || 80,
             metrics: {
               velocity: 85,
               financialHealth: 90,
@@ -317,10 +330,6 @@ router.post('/auth/signin', authRateLimiter, async (req, res) => {
               growthRate: 45,
               operationsEfficiency: 88,
             },
-            targetIcp: canonical.business.targetIcp,
-            primaryProduct: canonical.business.primaryProduct,
-            goals: canonical.goals,
-            priorities: canonical.priorities,
             onboarded: true
           };
         }
@@ -441,19 +450,32 @@ router.get('/auth/me', authenticateJWT, async (req: AuthenticatedRequest, res) =
   let isOnboarded = false;
   if (user?.id && isDbAvailable && prisma) {
     try {
-      const canonical = await workspaceService.getCanonicalContext(user.id);
-      if (canonical && canonical.startup && canonical.startup.name) {
+      let startup = await safeDbQuery(() => prisma.startup.findFirst({
+        where: { ownerId: user.id }
+      }));
+      if (!startup) {
+        const mem: any = await safeDbQuery(() => (prisma as any).membership.findFirst({
+          where: { userId: user.id, status: 'ACTIVE' },
+          select: { startupId: true }
+        }));
+        if (mem?.startupId) {
+          startup = await safeDbQuery(() => prisma.startup.findUnique({
+            where: { id: mem.startupId }
+          }));
+        }
+      }
+      if (startup && startup.name) {
         isOnboarded = true;
         userStartup = {
-          id: canonical.startupId,
-          name: canonical.startup.name,
-          industry: canonical.startup.industry,
-          description: canonical.startup.description,
-          fundingStage: canonical.startup.stage,
-          cashBalance: canonical.financials.cashBalance,
-          burnRate: canonical.financials.monthlyBurn,
-          runwayMonths: canonical.financials.runwayMonths,
-          healthScore: 80,
+          id: startup.id,
+          name: startup.name,
+          industry: startup.industry,
+          description: startup.description,
+          fundingStage: startup.fundingStage,
+          cashBalance: startup.cashBalance,
+          burnRate: startup.burnRate,
+          runwayMonths: startup.burnRate > 0 ? parseFloat((startup.cashBalance / startup.burnRate).toFixed(1)) : 999,
+          healthScore: startup.healthScore || 80,
           metrics: {
             velocity: 85,
             financialHealth: 90,
@@ -461,10 +483,6 @@ router.get('/auth/me', authenticateJWT, async (req: AuthenticatedRequest, res) =
             growthRate: 45,
             operationsEfficiency: 88,
           },
-          targetIcp: canonical.business.targetIcp,
-          primaryProduct: canonical.business.primaryProduct,
-          goals: canonical.goals,
-          priorities: canonical.priorities,
           onboarded: true
         };
       }
@@ -1815,8 +1833,9 @@ router.post('/approvals/:id/review', authenticateJWT, requireActiveMembership, r
     }
   }
 
-  if (!action || !['approve', 'modify', 'reject'].includes(action)) {
-    return res.status(400).json({ error: 'Valid action ("approve" | "modify" | "reject") is required.' });
+  const normalizedAction = (action === 'request-changes' || action === 'changes_requested') ? 'request_changes' : action;
+  if (!normalizedAction || !['approve', 'modify', 'reject', 'request_changes'].includes(normalizedAction)) {
+    return res.status(400).json({ error: 'Valid action ("approve" | "modify" | "reject" | "request_changes") is required.' });
   }
 
   try {
@@ -1824,7 +1843,7 @@ router.post('/approvals/:id/review', authenticateJWT, requireActiveMembership, r
       approvalId: id,
       userId: req.user!.id,
       userRole: req.user!.role,
-      action: action as any,
+      action: normalizedAction as any,
       feedback,
       modifications,
       idempotencyKey

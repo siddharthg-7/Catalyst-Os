@@ -27,13 +27,14 @@ export type Department =
 
 export type TaskStatus =
   | 'pending'      // delegated, nobody has picked it up
-  | 'in_progress'  // an employee is working on it with their AI teammate
-  | 'submitted'    // employee submitted; awaits founder approval
+  | 'in_progress'        // an employee is working on it with their AI teammate
+  | 'submitted'          // employee submitted; awaits founder approval
+  | 'changes_requested'  // founder reviewed and asked for revisions
   | 'approved'
   | 'rejected';
 
 export const TASK_STATUSES: TaskStatus[] = [
-  'pending', 'in_progress', 'submitted', 'approved', 'rejected'
+  'pending', 'in_progress', 'submitted', 'changes_requested', 'approved', 'rejected'
 ];
 
 /**
@@ -218,6 +219,8 @@ export interface DelegatedTask {
   assignedUserName?: string | null;
   status: TaskStatus;
   result: string | null;
+  founderFeedback?: string | null;
+  changesRequested?: boolean;
   /** True when no human role owns this yet — the founder must assign or invite. */
   needsHumanOwner: boolean;
   humanRequirement?: HumanRoleRequirement | null;
@@ -282,6 +285,16 @@ function decodeTask(row: any): DelegatedTask {
   const isAssigned = Boolean(assignedUserId);
   const needsHumanOwner = isAssigned ? false : (!hasRole || assigned === 'UNASSIGNED');
 
+  let founderFeedback: string | null = null;
+  let changesRequested = (row.status === 'changes_requested');
+  if (row.result && typeof row.result === 'string') {
+    const feedbackMatch = row.result.match(/\[FOUNDER_(?:DIRECTIVE|FEEDBACK)\]:\s*([^\n]+)/);
+    if (feedbackMatch) {
+      founderFeedback = feedbackMatch[1].trim();
+      changesRequested = true;
+    }
+  }
+
   return {
     id: row.id,
     planId: row.planId,
@@ -291,8 +304,10 @@ function decodeTask(row: any): DelegatedTask {
     ownerRole: ownerRole ? normalizeRole(ownerRole) : null,
     assignedUserId,
     assignedUserName: row.assignedUserName || null,
-    status: (row.status || 'pending') as TaskStatus,
+    status: (row.status || 'pending') as any,
     result: row.result ?? null,
+    founderFeedback,
+    changesRequested,
     needsHumanOwner,
     createdAt: row.createdAt?.toISOString?.() ?? String(row.createdAt),
     updatedAt: row.updatedAt?.toISOString?.() ?? String(row.updatedAt)
@@ -1460,12 +1475,70 @@ export async function updateTaskForUser(params: {
 
   const decoded = decodeTask(updated);
 
-  // If status is 'submitted', route deliverable directly to the Founder Approval queue (Phase B)
+  // If status is 'submitted', route deliverable directly to the Founder Approval queue (Phase B & D)
   if (data.status === 'submitted') {
     const approvalId = `appr_task_${row.id}`;
-    const approvalTitle = `Deliverable Review: ${decoded.title}`;
-    const approvalDescription = params.result || updated.result || `Completed deliverable for ${decoded.department} task: ${decoded.title}`;
-    const approvalImpact = `Submitted by ${membership.role} (${decoded.agent}). Awaiting founder verification.`;
+    const approvalTitle = decoded.title;
+    const rawContent = params.result || updated.result || '';
+    
+    // Formulate concise executive summary from submitted text
+    const textLines = rawContent.split('\n').filter((l: string) => l.trim() && !l.startsWith('#')).map((l: string) => l.trim());
+    const summary = textLines.length > 0 
+      ? (textLines.slice(0, 2).join(' ').slice(0, 240) + (textLines.join(' ').length > 240 ? '...' : ''))
+      : `Comprehensive ${decoded.title} prepared in collaboration with ${decoded.agent}.`;
+
+    let impact = `Submitted by ${membership.role} Employee with ${decoded.agent} co-pilot verification.`;
+    if (decoded.department === 'TALENT' || decoded.department === 'HR') {
+      impact = 'Recruiting velocity accelerated; structured leveling scorecards enforce hiring bar without budget overrun.';
+    } else if (decoded.department === 'FINANCE') {
+      impact = 'Preserves 6+ months liquid runway buffer while establishing audit ledger accountability.';
+    } else if (decoded.department === 'GROWTH') {
+      impact = 'Targets developer organic loop expansion with blended CAC payback horizon < 6 months.';
+    } else if (decoded.department === 'OPERATIONS') {
+      impact = 'Guarantees 99.9% uptime SLA adherence and automated runbook escalation.';
+    }
+
+    const recommendation = `Approve ${decoded.title} deliverable and authorize operational execution.`;
+    const approvalType = decoded.department === 'TALENT' || decoded.department === 'HR'
+      ? 'contract'
+      : decoded.department === 'FINANCE'
+      ? 'financials'
+      : decoded.department === 'GROWTH'
+      ? 'marketing_plan'
+      : 'document';
+
+    const userRecord: any = await safeDbQuery(() =>
+      (prisma as any).user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true }
+      })
+    );
+    const preparedByUserName = userRecord?.name || userRecord?.email || `${membership.role} Team Member`;
+
+    const companion = getCompanionAgent(decoded.department || decoded.agent);
+    const aiAssistanceName = companion.name || decoded.agent || 'AI Assistant';
+
+    const metricChangesPayload = {
+      taskId: row.id,
+      taskTitle: decoded.title,
+      preparedBy: `${membership.role} Employee`,
+      preparedByUserName,
+      preparedByRole: membership.role,
+      aiAssistance: aiAssistanceName,
+      summary,
+      impact,
+      recommendation,
+      workAreaContent: rawContent,
+      submittedAt: new Date().toISOString()
+    };
+
+    // Import processedApprovalsMap to clear any previous review cache so the founder can review the new submission
+    try {
+      const { processedApprovalsMap } = await import('./approvalService');
+      processedApprovalsMap.delete(approvalId);
+    } catch {
+      // ignore
+    }
 
     await safeDbQuery(async () => {
       const existing = await (prisma as any).approval.findUnique({ where: { id: approvalId } });
@@ -1474,14 +1547,14 @@ export async function updateTaskForUser(params: {
           data: {
             id: approvalId,
             title: approvalTitle,
-            description: approvalDescription,
-            type: 'document',
-            content: approvalDescription,
-            impact: approvalImpact,
+            description: summary,
+            type: approvalType,
+            content: rawContent,
+            impact: impact,
             financialChange: 0,
-            metricChanges: {},
+            metricChanges: metricChangesPayload as any,
             planId: row.planId,
-            status: 'pending_review'
+            status: 'pending'
           }
         });
       } else {
@@ -1489,10 +1562,11 @@ export async function updateTaskForUser(params: {
           where: { id: approvalId },
           data: {
             title: approvalTitle,
-            description: approvalDescription,
-            content: approvalDescription,
-            impact: approvalImpact,
-            status: 'pending_review'
+            description: summary,
+            content: rawContent,
+            impact: impact,
+            metricChanges: metricChangesPayload as any,
+            status: 'pending'
           }
         });
       }
@@ -1981,6 +2055,7 @@ export async function assistEmployeeOnTask(params: {
 
   const permittedDocs = workspaceContext.accessibleDocuments;
   const docNames = permittedDocs.map(d => d.name);
+  const founderFeedback = task.founderFeedback || (row.result && typeof row.result === 'string' ? row.result.match(/\[FOUNDER_(?:DIRECTIVE|FEEDBACK)\]:\s*([^\n]+)/)?.[1] : null);
 
   // Check for forbidden cross-department disclosure requests (Zero Leak Boundary)
   const qLower = question.toLowerCase();
@@ -2018,6 +2093,10 @@ TASK DEPARTMENT: ${task.department}
 PERMITTED POLICIES & DOCUMENTS (ZERO DATA LEAKS):
 ${permittedDocs.map(d => `- ${d.name}: ${d.summary}`).join('\n')}
 
+${founderFeedback ? `FOUNDER DIRECTIVE / REVISION REQUEST (PHASE D3 COLLABORATION LOOP):
+The founder reviewed this deliverable and requested: "${founderFeedback}".
+Your primary goal is to guide the employee in revising the deliverable to address this directive (e.g. reducing budget, adjusting requisitions, adding constraints).\n` : ''}
+
 CURRENT WORKING DRAFT IN EMPLOYEE WORK AREA:
 """
 ${currentDraft || task.result || '(Draft not yet started)'}
@@ -2031,9 +2110,10 @@ ${question}
 INSTRUCTIONS:
 1. Act as a supportive, expert, and professional AI executive partner.
 2. Directly answer the employee's question or fulfill their request grounded in the permitted policies.
-3. If the employee asks to edit, refine, or add to their draft, provide concrete, ready-to-use text in a designated suggestions section.
-4. Explain the rationale for your recommendation clearly and concisely.
-5. Return your response in JSON format with fields:
+3. If founder feedback is present, ensure the advice explicitly satisfies the founder's directive.
+4. If the employee asks to edit, refine, or add to their draft, provide concrete, ready-to-use text in a designated suggestions section.
+5. Explain the rationale for your recommendation clearly and concisely.
+6. Return your response in JSON format with fields:
    - "reply": string (conversational response to the employee)
    - "explanation": string (brief justification or policy grounding)
    - "suggestedEdits": string (optional concrete snippet or improved deliverable section to apply)
@@ -2071,13 +2151,23 @@ INSTRUCTIONS:
   if (!aiGenerated) {
     const dept = (task.department || '').toUpperCase();
     if (dept === 'TALENT' || dept === 'HR') {
-      aiGenerated = {
-        reply: `I have reviewed your request regarding "${question}". Based on our Engineering Hiring Policy & Leveling Rubric, all senior IC positions should be evaluated through our standardized 4-stage loop to ensure bar consistency while keeping candidate turnaround under 14 days.`,
-        explanation: `Grounded in Engineering Hiring Policy: standardizes interview scorecards and enforces market 75th-percentile compensation boundaries.`,
-        suggestedEdits: currentDraft
-          ? currentDraft + `\n\n#### Updated Policy Compliance Note\n- **Interview Loop Turnaround:** Target 14 calendar days from screen to offer.\n- **Scorecard Alignment:** Requires 2 Strong Hires and zero Leaning No votes.`
-          : `### Refined Hiring Plan\n- Aligned with Engineering Hiring Policy\n- Level: Senior Engineer (IC4/IC5)\n- Target Start: Within 45 days.`
-      };
+      if (founderFeedback && (founderFeedback.toLowerCase().includes('budget') || founderFeedback.toLowerCase().includes('reduce'))) {
+        aiGenerated = {
+          reply: `I have reviewed the founder's directive: "${founderFeedback}". To adjust the hiring plan per founder feedback, I recommend lowering the target base compensation range by 15% and replacing sign-on cash bonuses with performance milestones. This reduces annualized hiring cost to $125,000 per IC while remaining aligned with our hiring policy.`,
+          explanation: `Incorporated founder directive ("${founderFeedback}") while standardizing interview scorecards and complying with Engineering Hiring Policy.`,
+          suggestedEdits: currentDraft
+            ? currentDraft + `\n\n#### Revised Hiring Budget (Post Founder Feedback)\n- **Founder Directive:** "${founderFeedback}"\n- **Target Base Range:** $120,000 - $130,000 (reduced per founder directive)\n- **Performance Milestone Bonus:** $10,000 upon 6-month delivery\n- **Hiring Loop:** 14-day standardized 4-stage process maintained.`
+            : `### Revised Hiring Plan\n- Aligned with Founder Directive: "${founderFeedback}"\n- Level: Senior Engineer\n- Capped Budget: $125,000 base compensation.`
+        };
+      } else {
+        aiGenerated = {
+          reply: `I have reviewed your request regarding "${question}". Based on our Engineering Hiring Policy & Leveling Rubric, all senior IC positions should be evaluated through our standardized 4-stage loop to ensure bar consistency while keeping candidate turnaround under 14 days.`,
+          explanation: `Grounded in Engineering Hiring Policy: standardizes interview scorecards and enforces market 75th-percentile compensation boundaries.`,
+          suggestedEdits: currentDraft
+            ? currentDraft + `\n\n#### Updated Policy Compliance Note\n- **Interview Loop Turnaround:** Target 14 calendar days from screen to offer.\n- **Scorecard Alignment:** Requires 2 Strong Hires and zero Leaning No votes.`
+            : `### Refined Hiring Plan\n- Aligned with Engineering Hiring Policy\n- Level: Senior Engineer (IC4/IC5)\n- Target Start: Within 45 days.`
+        };
+      }
     } else if (dept === 'FINANCE') {
       aiGenerated = {
         reply: `I have analyzed the financial parameters for "${question}". According to our Treasury Allocation & Financial Governance standards, any recurring expenditure must preserve a minimum 6-month liquid runway buffer.`,

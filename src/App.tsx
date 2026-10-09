@@ -406,6 +406,31 @@ export default function App() {
   const hydrateState = async () => {
     if (!user) return;
     try {
+      const userRoleUpper = (user.role || '').toUpperCase();
+      const isEmployee = ['HR', 'FINANCE', 'GROWTH', 'OPERATIONS'].includes(userRoleUpper);
+
+      // Fast-path role-scoped loading for employees: avoids 7 unauthorized founder roundtrips
+      if (isEmployee) {
+        const [startupRes, agentsRes, permissionsRes, tasksRes] = await Promise.allSettled([
+          apiFetch('/api/startup'),
+          apiFetch('/api/agents'),
+          apiFetch('/api/permissions/me'),
+          apiFetch('/api/tasks'),
+        ]);
+
+        if (tasksRes.status === 'fulfilled' && tasksRes.value.ok) {
+          const taskData = await tasksRes.value.json();
+          if (Array.isArray(taskData)) setTasks(taskData);
+        }
+        if (permissionsRes.status === 'fulfilled' && permissionsRes.value.ok) {
+          const perms = await permissionsRes.value.json();
+          if (perms && Array.isArray(perms.areas) && Array.isArray(perms.actions)) setPermissions(perms);
+        }
+        if (startupRes.status === 'fulfilled' && startupRes.value.ok) setStartup(await startupRes.value.json());
+        if (agentsRes.status === 'fulfilled' && agentsRes.value.ok) setAgents(await agentsRes.value.json());
+        return;
+      }
+
       const results = await Promise.allSettled([
         apiFetch('/api/startup'),
         apiFetch('/api/agents'),
@@ -728,7 +753,7 @@ export default function App() {
 
   const handleReviewItem = async (
     id: string, 
-    action: 'approve' | 'modify' | 'reject', 
+    action: 'approve' | 'modify' | 'reject' | 'request_changes', 
     feedback?: string,
     modifications?: any
   ) => {
@@ -751,11 +776,16 @@ export default function App() {
         const decRes = await apiFetch('/api/decisions');
         if (decRes.ok) setDecisions(await decRes.json());
 
+        // Refresh task status across the shared application shell
+        await hydrateTasks();
+
         const toastMsg = 
           action === 'approve'
             ? 'Deliverable signed off. System metrics and ledger adjusted.'
             : action === 'modify'
             ? 'Deliverable approved with modified parameters. Metrics adjusted.'
+            : action === 'request_changes'
+            ? 'Revision requested. Deliverable returned to employee workspace with founder directives.'
             : 'Deliverable rejected with founder directives and returned to council.';
         showToast(toastMsg, action === 'reject' ? 'info' : 'success');
       } else {

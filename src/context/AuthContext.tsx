@@ -34,7 +34,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => {
+    try {
+      const demo = localStorage.getItem('catalystos_demo_user');
+      if (demo) return false;
+      const storedToken = localStorage.getItem('catalystos_token');
+      const savedUser = localStorage.getItem('catalystos_user');
+      return !(storedToken && savedUser);
+    } catch {
+      return false;
+    }
+  });
 
   // Validate or refresh session on mount
   useEffect(() => {
