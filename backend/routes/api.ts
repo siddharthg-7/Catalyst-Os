@@ -822,8 +822,9 @@ router.get('/startup', authenticateJWT, async (req: AuthenticatedRequest, res) =
     console.warn('[Startup API] Database query warning:', dbErr.message);
   }
 
-  // Graceful fallback to seeded company state (NovaTech)
-  if (startupProfile && startupProfile.name && startupProfile.name.trim() !== '') {
+  // Graceful fallback to seeded company state (NovaTech) ONLY for demo account
+  const isDemoUser = userId === 'usr_founder_demo' || (req.query.demo === 'true');
+  if (isDemoUser && startupProfile && startupProfile.name && startupProfile.name.trim() !== '') {
     return res.json({
       id: 'startup_catalyst_demo',
       name: startupProfile.name,

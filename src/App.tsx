@@ -98,8 +98,7 @@ export default function App() {
 
     if (user) {
       const isAlreadyMarked = localStorage.getItem(`catalystos_onboarding_completed_${user.id}`) === 'true';
-      setOnboardingCompleted(isAlreadyMarked);
-      setIsCheckingStartup(!isAlreadyMarked);
+      setIsCheckingStartup(true);
 
       apiFetch('/api/startup')
         .then(res => res.json())
