@@ -309,11 +309,48 @@ async function runTests() {
   console.log('========================================================================\n');
 
   if (failed > 0) {
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 
-runTests().catch(err => {
-  console.error('Fatal error during Phase C test execution:', err);
-  process.exit(1);
-});
+/**
+ * Fixture cleanup must run even when an assertion throws, or the suite leaves
+ * orphan companies and users behind in the shared development database.
+ */
+async function cleanupFixtures() {
+  try {
+    if (createdStartupIds.length) {
+      const plans = await prisma.plan.findMany({
+        where: { startupId: { in: createdStartupIds } }, select: { id: true }
+      });
+      const planIds = plans.map(p => p.id);
+      if (planIds.length) {
+        await prisma.task.deleteMany({ where: { planId: { in: planIds } } });
+        await prisma.approval.deleteMany({ where: { planId: { in: planIds } } });
+        await prisma.plan.deleteMany({ where: { id: { in: planIds } } });
+      }
+      await prisma.memory.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.timelineItem.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.invitation.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.membership.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.startup.deleteMany({ where: { id: { in: createdStartupIds } } });
+    }
+    if (createdUserIds.length) {
+      await prisma.membership.deleteMany({ where: { userId: { in: createdUserIds } } });
+      await prisma.invitation.deleteMany({ where: { invitedById: { in: createdUserIds } } });
+      await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } });
+    }
+  } catch (err: any) {
+    console.warn('Cleanup note:', err.message);
+  }
+}
+
+runTests()
+  .catch(err => {
+    console.error('Fatal error during Phase C test execution:', err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await cleanupFixtures();
+    await prisma.$disconnect();
+  });

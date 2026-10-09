@@ -7,6 +7,8 @@ import { memorySystem } from './memory';
 import { toolRegistry } from './tool-registry';
 import { PlannerOutputDTO, AgentResponseDTO, ConflictResolutionDTO } from '../agents/types';
 
+import { agentRuleService } from '../services/agentRuleService';
+
 // Simple helper to find avatar for roles
 const getAvatarByRole = (role: string): string => {
   switch (role) {
@@ -37,12 +39,13 @@ export async function runOrchestrationLoop(
 
   const startupStateStr = JSON.stringify(startupProfile, null, 2);
 
-  // Load Prompt assets for CEO
+  // Load Prompt assets for CEO with dynamic customized rules
   const ceoSystem = loadPromptAsset('CEO', 'system.md') || 'You are Sophia Vance, the autonomous CEO Planner Agent.';
   const ceoConstraints = loadPromptAsset('CEO', 'constraints.md');
-  const fullCeoSystem = ceoConstraints 
+  const dynamicCeoRules = await agentRuleService.formatRulesPrompt(startupProfile?.id || 'default', 'CEO');
+  const fullCeoSystem = (ceoConstraints 
     ? `${ceoSystem}\n\n### CONSTRAINTS & LIMITATIONS:\n${ceoConstraints}`
-    : ceoSystem;
+    : ceoSystem) + dynamicCeoRules;
 
   const ceoTemplate = loadPromptAsset('CEO', 'prompt.md') || 'Decompose: {{goal}}\nContext: {{context}}';
 
@@ -199,12 +202,13 @@ export async function runOrchestrationLoop(
     const role = task.assignedTo;
     console.log(`[Orchestrator] Running agent: ${role} on task: "${task.title}"`);
 
-    // Load agent prompts
+    // Load agent prompts with dynamic rules
     const agentSystem = loadPromptAsset(role, 'system.md') || `You are the ${role} executive agent.`;
     const agentConstraints = loadPromptAsset(role, 'constraints.md');
-    const fullAgentSystem = agentConstraints 
+    const dynamicAgentRules = await agentRuleService.formatRulesPrompt(startupProfile?.id || 'default', role);
+    const fullAgentSystem = (agentConstraints 
       ? `${agentSystem}\n\n### CONSTRAINTS & LIMITATIONS:\n${agentConstraints}`
-      : agentSystem;
+      : agentSystem) + dynamicAgentRules;
 
     const agentTemplate = loadPromptAsset(role, 'prompt.md') || `Task: {{task}}\nContext: {{context}}`;
 

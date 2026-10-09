@@ -95,6 +95,7 @@ export interface CreateInvitationInput {
   startupId: string;
   email: string;
   role: string;
+  department?: string;
   invitedById: string;
   ttlHours?: number;
 }
@@ -188,7 +189,9 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Cr
     to: email,
     companyName: startup.name,
     role,
+    department: input.department,
     invitedByName: inviter?.name || inviter?.email || 'A teammate',
+    inviterEmail: inviter?.email,
     invitationUrl,
     expiresAt
   });

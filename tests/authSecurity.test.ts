@@ -3,6 +3,9 @@
  * Tests strict fail-closed enforcement, JWT token verification, and role authorization.
  */
 
+process.env.NODE_ENV = 'test';
+process.env.STRICT_AUTH = 'true';
+
 import jwt from 'jsonwebtoken';
 import { authenticateJWT, requireRole, JWT_SECRET, AuthenticatedRequest } from '../backend/services/neonAuthMiddleware';
 import { Response, NextFunction } from 'express';

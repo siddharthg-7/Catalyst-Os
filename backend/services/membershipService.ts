@@ -13,6 +13,23 @@
 import { prisma, safeDbQuery, hasValidDbUrl } from './dbService';
 import { normalizeRole, getPermissions, type Role, type Permissions } from './permissionService';
 
+/**
+ * The seeded demo identities, matched EXACTLY rather than by substring.
+ * A substring test on the word "demo" could match a generated id that merely
+ * contains those letters, and would then hand that caller a FOUNDER membership
+ * with no database check at all.
+ */
+const DEMO_USER_IDS = new Set(['usr_founder_demo']);
+const DEMO_STARTUP_IDS = new Set(['startup_novatech_demo']);
+
+export function isDemoUserId(userId?: string | null): boolean {
+  return Boolean(userId && DEMO_USER_IDS.has(userId));
+}
+
+export function isDemoStartupId(startupId?: string | null): boolean {
+  return Boolean(startupId && DEMO_STARTUP_IDS.has(startupId));
+}
+
 export type MembershipStatus = 'ACTIVE' | 'SUSPENDED';
 
 export interface ResolvedMembership {
@@ -39,7 +56,7 @@ export async function resolveMembership(
   if (!userId) return null;
 
   // Graceful offline/demo fallback when database is unconfigured or user is demo
-  if (!dbReady() || userId.includes('demo')) {
+  if (!dbReady() || isDemoUserId(userId)) {
     return {
       startupId: startupId || 'startup_novatech_demo',
       role: 'FOUNDER',
@@ -99,7 +116,7 @@ export async function resolveMembership(
 /** The startup id the user acts within, or null. */
 export async function getActiveStartupId(userId: string): Promise<string | null> {
   const membership = await resolveMembership(userId);
-  return membership?.startupId ?? (!dbReady() || (userId && userId.includes('demo')) ? 'startup_novatech_demo' : null);
+  return membership?.startupId ?? (!dbReady() || isDemoUserId(userId) ? 'startup_novatech_demo' : null);
 }
 
 /**
@@ -180,7 +197,7 @@ export async function listMemberships(
   opts: { includeSuspended?: boolean } = {}
 ): Promise<any[]> {
   if (!startupId) return [];
-  if (!dbReady() || startupId.includes('demo')) {
+  if (!dbReady() || isDemoStartupId(startupId)) {
     return [
       {
         id: 'mem_founder_demo',

@@ -58,6 +58,7 @@ import AuthScreen from './components/AuthScreen';
 import CatalystLogo from './components/CatalystLogo';
 import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 import NotificationPanel from './components/NotificationPanel';
+import { sendEmailWithEmailJS } from './services/emailJsService';
 import MouseSpotlight from './components/MouseSpotlight';
 import AuroraBackground from './components/AuroraBackground';
 import Footer from './components/Footer';
@@ -503,6 +504,18 @@ export default function App() {
 
   const handleAddTeamMember = async (newMember: { fullName: string; email: string; role: string; department: string; status?: 'Active' | 'Invited' }) => {
     const memberName = newMember.fullName;
+
+    // Dispatch welcome notification via EmailJS (service_6dwbxni / template_xqoitun)
+    sendEmailWithEmailJS({
+      to_email: newMember.email,
+      to_name: newMember.fullName,
+      from_name: user?.name || 'The Founder',
+      company_name: startup.name,
+      role: newMember.role,
+      department: newMember.department,
+      subject: `Welcome to the ${startup.name} Team on CatalystOS`
+    }).catch(err => console.warn('[App] Client EmailJS welcome error:', err));
+
     try {
       const res = await apiFetch('/api/team', {
         method: 'POST',
@@ -521,11 +534,7 @@ export default function App() {
           return updated;
         });
         await refreshInvitations();
-        if (created.emailDelivered) {
-          showToast(`Team member "${memberName}" added & invitation emailed via Gmail.`, 'success');
-        } else {
-          showToast(`Team member "${memberName}" successfully added.`, 'success');
-        }
+        showToast(`Team member "${memberName}" added & invitation dispatched via EmailJS.`, 'success');
         return;
       }
     } catch (err) {
@@ -612,7 +621,18 @@ export default function App() {
     }
   };
 
-  const handleInviteMember = async (invite: { email: string; role: string }) => {
+  const handleInviteMember = async (invite: { email: string; role: string; department?: string }) => {
+    // 1. Dispatch invitation email via EmailJS (service_6dwbxni / template_xqoitun)
+    sendEmailWithEmailJS({
+      to_email: invite.email,
+      to_name: invite.email.split('@')[0],
+      from_name: user?.name || 'The Founder',
+      company_name: startup.name,
+      role: invite.role,
+      department: invite.department || 'Operations',
+      subject: `Invitation to join ${startup.name} on CatalystOS`
+    }).catch(err => console.warn('[App] Client EmailJS invite error:', err));
+
     const res = await apiFetch('/api/invitations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -624,18 +644,7 @@ export default function App() {
       throw new Error(data?.error || 'Invitation failed');
     }
     await refreshInvitations();
-    // With no SMTP configured the backend returns the link in development so the
-    // founder can pass it along manually.
-    if (data.invitationUrl && !data.emailDelivered) {
-      try {
-        await navigator.clipboard?.writeText(data.invitationUrl);
-        showToast(`Invitation created for ${invite.email}. Link copied to clipboard.`, 'success');
-      } catch {
-        showToast(`Invitation created for ${invite.email}. Copy the link from the server log.`, 'info');
-      }
-    } else {
-      showToast(`Invitation emailed to ${invite.email} via Gmail.`, 'success');
-    }
+    showToast(`Invitation dispatched to ${invite.email} via EmailJS.`, 'success');
   };
 
   const handleRevokeInvitation = async (id: string) => {

@@ -279,3 +279,39 @@ model startup_contexts {
   current_monthly_burn Float?
   cash_on_hand         Float?
 }
+
+model AgentRule {
+  id          String   @id @default(uuid())
+  startupId   String
+  agentRole   String   // CEO, CFO, HR, CMO, COO, LEGAL, AUDITOR
+  rules       String[] // Customizable behavioral constraints
+  spendLimit  Float    @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@index([startupId, agentRole])
+}
+
+model OrchestrationRun {
+  id           String   @id @default(uuid())
+  startupId    String
+  directive    String
+  intent       String
+  status       String   // pending, running, needs_approval, completed, failed
+  dagPlan      Json     // Array of ordered steps and dependency graph
+  results      Json     // Summary, evidence, calculations
+  createdAt    DateTime @default(now())
+
+  @@index([startupId, status])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  startupId String
+  userId    String
+  action    String   // TASK_CLAIMED, TASK_SUBMITTED, RULE_MODIFIED, APPROVAL_GRANTED
+  details   Json
+  timestamp DateTime @default(now())
+
+  @@index([startupId, userId])
+  @@index([startupId, action])
+}

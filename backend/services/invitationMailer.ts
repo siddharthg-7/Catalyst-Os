@@ -8,11 +8,15 @@
  * whenever a founder invites or adds a team member.
  */
 
+import { sendBackendEmailJs } from './emailJsService';
+
 export interface InvitationEmail {
   to: string;
   companyName: string;
   role: string;
+  department?: string;
   invitedByName: string;
+  inviterEmail?: string;
   invitationUrl: string;
   expiresAt: Date;
 }
@@ -24,7 +28,17 @@ export interface TeamWelcomeEmail {
   role: string;
   department: string;
   addedByName: string;
+  addedByEmail?: string;
   workspaceUrl: string;
+}
+
+export interface DirectEmailPayload {
+  to: string;
+  subject: string;
+  html?: string;
+  text?: string;
+  senderName?: string;
+  replyTo?: string;
 }
 
 export type DeliveryChannel = 'smtp' | 'console';
@@ -168,37 +182,53 @@ export async function sendInvitationEmail(email: InvitationEmail): Promise<Deliv
       return { delivered: false, channel: 'console', error: 'nodemailer not installed' };
     }
 
-    const transport = (nodemailer.default || nodemailer).createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: Number(process.env.SMTP_PORT || 587) === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 15000
-    });
-
-    const fromAddress = process.env.SMTP_FROM
-      ? `CatalystOS <${process.env.SMTP_FROM}>`
-      : `CatalystOS <${process.env.SMTP_USER}>`;
+    const transport = createSmtpTransport(nodemailer);
+    const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || '';
+    const senderDisplayName = email.invitedByName
+      ? `${email.invitedByName} via CatalystOS`
+      : 'CatalystOS';
+    const fromAddress = `"${senderDisplayName}" <${fromEmail}>`;
 
     const info = await transport.sendMail({
       from: fromAddress,
       to: email.to,
       subject: renderSubject(email),
       text: renderText(email),
-      html: renderHtml(email)
+      html: renderHtml(email),
+      replyTo: email.inviterEmail || fromEmail
     });
 
     console.log(`[invitationMailer] ✅ Email successfully dispatched via Gmail SMTP to ${email.to} (MessageId: ${info?.messageId})`);
+
+    // Dispatch via EmailJS (template_xqoitun) for employee onboarding
+    sendBackendEmailJs({
+      to: email.to,
+      name: email.to.split('@')[0],
+      fromName: email.invitedByName,
+      companyName: email.companyName,
+      role: email.role,
+      department: email.department || 'Operations',
+      inviteLink: email.invitationUrl
+    }).catch(err => console.warn('[invitationMailer] EmailJS dispatch warning:', err?.message));
+
     return { delivered: true, channel: 'smtp' };
   } catch (err: any) {
+    // If SMTP fails, attempt EmailJS fallback delivery
+    try {
+      const emailJsRes = await sendBackendEmailJs({
+        to: email.to,
+        name: email.to.split('@')[0],
+        fromName: email.invitedByName,
+        companyName: email.companyName,
+        role: email.role,
+        department: email.department || 'Operations',
+        inviteLink: email.invitationUrl
+      });
+      if (emailJsRes.success) {
+        return { delivered: true, channel: 'smtp' };
+      }
+    } catch {}
+
     console.error('[invitationMailer] ❌ Gmail SMTP delivery failed:', err.message);
     return { delivered: false, channel: 'smtp', error: err.message };
   }
@@ -220,25 +250,12 @@ export async function sendTeamWelcomeEmail(welcome: TeamWelcomeEmail): Promise<D
       return { delivered: false, channel: 'console', error: 'nodemailer not installed' };
     }
 
-    const transport = (nodemailer.default || nodemailer).createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: Number(process.env.SMTP_PORT || 587) === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 15000
-    });
-
-    const fromAddress = process.env.SMTP_FROM
-      ? `CatalystOS <${process.env.SMTP_FROM}>`
-      : `CatalystOS <${process.env.SMTP_USER}>`;
+    const transport = createSmtpTransport(nodemailer);
+    const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || '';
+    const senderDisplayName = welcome.addedByName
+      ? `${welcome.addedByName} via CatalystOS`
+      : 'CatalystOS';
+    const fromAddress = `"${senderDisplayName}" <${fromEmail}>`;
 
     const subject = `Welcome to the ${welcome.companyName} Team on CatalystOS`;
     const text = [
@@ -278,13 +295,140 @@ export async function sendTeamWelcomeEmail(welcome: TeamWelcomeEmail): Promise<D
       to: welcome.to,
       subject,
       text,
-      html
+      html,
+      replyTo: welcome.addedByEmail || fromEmail
     });
 
     console.log(`[invitationMailer] ✅ Team welcome email delivered via Gmail SMTP to ${welcome.to}`);
+
+    // Dispatch via EmailJS (template_xqoitun)
+    sendBackendEmailJs({
+      to: welcome.to,
+      name: welcome.fullName,
+      fromName: welcome.addedByName,
+      companyName: welcome.companyName,
+      role: welcome.role,
+      department: welcome.department,
+      inviteLink: welcome.workspaceUrl
+    }).catch(err => console.warn('[invitationMailer] EmailJS welcome dispatch warning:', err?.message));
+
     return { delivered: true, channel: 'smtp' };
   } catch (err: any) {
+    try {
+      const emailJsRes = await sendBackendEmailJs({
+        to: welcome.to,
+        name: welcome.fullName,
+        fromName: welcome.addedByName,
+        companyName: welcome.companyName,
+        role: welcome.role,
+        department: welcome.department,
+        inviteLink: welcome.workspaceUrl
+      });
+      if (emailJsRes.success) return { delivered: true, channel: 'smtp' };
+    } catch {}
+
     console.error('[invitationMailer] ❌ Team welcome email error:', err.message);
     return { delivered: false, channel: 'smtp', error: err.message };
+  }
+}
+
+/**
+ * Creates a configured nodemailer transport targeting Gmail / custom SMTP.
+ */
+function createSmtpTransport(nodemailer: any) {
+  return (nodemailer.default || nodemailer).createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: Number(process.env.SMTP_PORT || 587) === 465,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000
+  });
+}
+
+/**
+ * Dispatches a direct email from the founder to a recipient mail address.
+ */
+export async function sendDirectEmail(payload: DirectEmailPayload): Promise<DeliveryResult & { messageId?: string }> {
+  // Always dispatch via EmailJS
+  sendBackendEmailJs({
+    to: payload.to,
+    fromName: payload.senderName,
+    subject: payload.subject,
+    message: payload.text
+  }).catch(err => console.warn('[invitationMailer] Direct EmailJS dispatch warning:', err?.message));
+
+  if (!smtpConfigured()) {
+    console.log(`[invitationMailer] (Console delivery) Direct email to ${payload.to}: ${payload.subject}`);
+    return { delivered: false, channel: 'console' };
+  }
+
+  try {
+    const moduleName = 'nodemailer';
+    const nodemailer: any = await import(/* @vite-ignore */ moduleName).catch(() => null);
+    if (!nodemailer) {
+      return { delivered: false, channel: 'console', error: 'nodemailer not installed' };
+    }
+
+    const transport = createSmtpTransport(nodemailer);
+    const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER || '';
+    const senderName = payload.senderName ? `${payload.senderName} via CatalystOS` : 'CatalystOS Founder';
+    const fromAddress = `"${senderName}" <${fromEmail}>`;
+
+    const info = await transport.sendMail({
+      from: fromAddress,
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.text || '',
+      html: payload.html || (payload.text ? `<p style="font-family: sans-serif; line-height: 1.6; color: #1e293b;">${payload.text.replace(/\n/g, '<br>')}</p>` : ''),
+      replyTo: payload.replyTo || fromEmail
+    });
+
+    console.log(`[invitationMailer] ✅ Direct email successfully dispatched via Gmail SMTP to ${payload.to} (MessageId: ${info?.messageId})`);
+    return { delivered: true, channel: 'smtp', messageId: info?.messageId };
+  } catch (err: any) {
+    console.error(`[invitationMailer] ❌ Direct email to ${payload.to} failed:`, err.message);
+    return { delivered: false, channel: 'smtp', error: err.message };
+  }
+}
+
+/**
+ * Verifies live connectivity with the Gmail SMTP server.
+ */
+export async function verifySmtpConnection(): Promise<{ ok: boolean; message: string; host?: string; user?: string }> {
+  if (!smtpConfigured()) {
+    return {
+      ok: false,
+      message: 'SMTP credentials (SMTP_HOST, SMTP_USER, SMTP_PASS) are not fully configured in .env.'
+    };
+  }
+
+  try {
+    const moduleName = 'nodemailer';
+    const nodemailer: any = await import(/* @vite-ignore */ moduleName).catch(() => null);
+    if (!nodemailer) {
+      return { ok: false, message: 'nodemailer package is not installed.' };
+    }
+
+    const transport = createSmtpTransport(nodemailer);
+    await transport.verify();
+    return {
+      ok: true,
+      message: `Verified connection with ${process.env.SMTP_HOST || 'smtp.gmail.com'} as ${process.env.SMTP_USER}`,
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      user: process.env.SMTP_USER
+    };
+  } catch (err: any) {
+    return {
+      ok: false,
+      message: err.message || 'SMTP connection verification failed.'
+    };
   }
 }

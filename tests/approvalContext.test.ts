@@ -18,6 +18,9 @@ import { companyContextService } from '../backend/services/companyContextService
 import { prisma, safeDbQuery } from '../backend/services/dbService';
 import { workspaceService } from '../backend/services/workspaceService';
 
+const apCreatedUserIds: string[] = [];
+const apCreatedStartupIds: string[] = [];
+
 let testsPassed = 0;
 let testsFailed = 0;
 
@@ -37,7 +40,9 @@ async function runTests() {
   console.log('========================================================================\n');
 
   const testUserAId = `usr_test_a_${Date.now()}`;
+  apCreatedUserIds.push(testUserAId);
   const testUserBId = `usr_test_b_${Date.now()}`;
+  apCreatedUserIds.push(testUserBId);
   let startupAId = '';
   let startupBId = '';
   let dbFixturesCreated = false;
@@ -85,6 +90,7 @@ async function runTests() {
       additionalInfo: 'Tier-1 enterprise pilots signed'
     });
     startupAId = contextA.startupId;
+    apCreatedStartupIds.push(startupAId);
 
     // ── Setup Tenant B (BioGen Systems) ─────────────────────────────────────────
     await safeDbQuery(() =>
@@ -112,6 +118,7 @@ async function runTests() {
       teamSize: '2 engineers'
     });
     startupBId = contextB.startupId;
+    apCreatedStartupIds.push(startupBId);
 
     // ──────────────────────────────────────────────────────────────────────────
     // Helper unit check: incrementTeamSize
@@ -458,8 +465,57 @@ async function runTests() {
   console.log('========================================================================\n');
 
   if (testsFailed > 0) {
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 
-runTests();
+/**
+ * This suite previously created two companies per run and never removed them,
+ * which is why the shared development database accumulated orphan fixtures.
+ */
+async function cleanupFixtures() {
+  try {
+    if (apCreatedStartupIds.length) {
+      const plans = await prisma.plan.findMany({
+        where: { startupId: { in: apCreatedStartupIds } }, select: { id: true }
+      });
+      const planIds = plans.map(p => p.id);
+      if (planIds.length) {
+        await prisma.task.deleteMany({ where: { planId: { in: planIds } } });
+        await prisma.approval.deleteMany({ where: { planId: { in: planIds } } });
+        await prisma.plan.deleteMany({ where: { id: { in: planIds } } });
+      }
+      for (const m of ['memory','timelineItem','decisionLog','notification','healthScore','command','executiveAgent'] as const) {
+        await (prisma as any)[m].deleteMany({ where: { startupId: { in: apCreatedStartupIds } } }).catch(() => {});
+      }
+      const docs = await prisma.startupDocument.findMany({
+        where: { startupId: { in: apCreatedStartupIds } }, select: { id: true }
+      });
+      if (docs.length) {
+        const chunks = await prisma.knowledgeChunk.findMany({
+          where: { documentId: { in: docs.map(d => d.id) } }, select: { id: true }
+        });
+        if (chunks.length) {
+          await prisma.embedding.deleteMany({ where: { chunkId: { in: chunks.map(c => c.id) } } }).catch(() => {});
+          await prisma.knowledgeChunk.deleteMany({ where: { id: { in: chunks.map(c => c.id) } } }).catch(() => {});
+        }
+        await prisma.startupDocument.deleteMany({ where: { id: { in: docs.map(d => d.id) } } }).catch(() => {});
+      }
+      await prisma.membership.deleteMany({ where: { startupId: { in: apCreatedStartupIds } } }).catch(() => {});
+      await prisma.startup.deleteMany({ where: { id: { in: apCreatedStartupIds } } }).catch(() => {});
+    }
+    if (apCreatedUserIds.length) {
+      await prisma.membership.deleteMany({ where: { userId: { in: apCreatedUserIds } } }).catch(() => {});
+      await prisma.user.deleteMany({ where: { id: { in: apCreatedUserIds } } }).catch(() => {});
+    }
+  } catch (err: any) {
+    console.warn('Cleanup note:', err.message);
+  }
+}
+
+runTests()
+  .catch(err => {
+    console.error('Test suite crashed:', err);
+    process.exitCode = 1;
+  })
+  .finally(cleanupFixtures);

@@ -279,24 +279,49 @@ async function runTests() {
   console.log(`  RESULTS: ${passed} passed, ${failed} failed`);
   console.log('========================================================================\n');
 
-  // Cleanup fixtures
+  if (failed > 0) {
+    process.exitCode = 1;
+  }
+}
+
+/**
+ * Fixture cleanup must run even when an assertion throws, or the suite leaves
+ * orphan companies and users behind in the shared development database.
+ */
+async function cleanupFixtures() {
   try {
-    for (const sid of createdStartupIds) {
-      await prisma.startup.delete({ where: { id: sid } }).catch(() => {});
+    if (createdStartupIds.length) {
+      const plans = await prisma.plan.findMany({
+        where: { startupId: { in: createdStartupIds } }, select: { id: true }
+      });
+      const planIds = plans.map(p => p.id);
+      if (planIds.length) {
+        await prisma.task.deleteMany({ where: { planId: { in: planIds } } });
+        await prisma.approval.deleteMany({ where: { planId: { in: planIds } } });
+        await prisma.plan.deleteMany({ where: { id: { in: planIds } } });
+      }
+      await prisma.memory.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.timelineItem.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.invitation.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.membership.deleteMany({ where: { startupId: { in: createdStartupIds } } });
+      await prisma.startup.deleteMany({ where: { id: { in: createdStartupIds } } });
     }
-    for (const uid of createdUserIds) {
-      await prisma.user.delete({ where: { id: uid } }).catch(() => {});
+    if (createdUserIds.length) {
+      await prisma.membership.deleteMany({ where: { userId: { in: createdUserIds } } });
+      await prisma.invitation.deleteMany({ where: { invitedById: { in: createdUserIds } } });
+      await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } });
     }
   } catch (err: any) {
     console.warn('Cleanup note:', err.message);
   }
-
-  if (failed > 0) {
-    process.exit(1);
-  }
 }
 
-runTests().catch(err => {
-  console.error('Test suite crashed:', err);
-  process.exit(1);
-});
+runTests()
+  .catch(err => {
+    console.error('Test suite crashed:', err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await cleanupFixtures();
+    await prisma.$disconnect();
+  });
