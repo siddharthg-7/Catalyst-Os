@@ -62,7 +62,7 @@ export default function ChatWindow({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="fixed bottom-24 right-6 z-50 w-[92vw] sm:w-[420px] h-[620px] max-h-[82vh] rounded-[28px] bg-[#090909]/95 border border-white/10 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden font-sans border-t-white/20"
+          className="fixed bottom-24 right-6 z-50 w-[92vw] sm:w-[420px] h-[620px] max-h-[82vh] rounded-[28px] bg-white border border-[#151A2D]/10 backdrop-blur-2xl shadow-xl flex flex-col overflow-hidden font-sans border-t-white/20"
         >
           {/* Header */}
           <ChatHeader

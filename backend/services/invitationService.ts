@@ -12,10 +12,14 @@
  * define a second role system.
  */
 import crypto from 'crypto';
-import { prisma, safeDbQuery } from './dbService';
+import { prisma, safeDbQuery, hasValidDbUrl } from './dbService';
 import { ROLES, type Role } from './permissionService';
 import { ensureMembership } from './membershipService';
 import { sendInvitationEmail, type DeliveryResult } from './invitationMailer';
+
+function dbReady(): boolean {
+  return Boolean(hasValidDbUrl && prisma);
+}
 
 export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'REVOKED';
 
@@ -199,13 +203,19 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Cr
 
 /** All invitations for one company. The caller must already have verified tenancy. */
 export async function listInvitations(startupId: string) {
-  const rows = await safeDbQuery(() =>
-    (prisma as any).invitation.findMany({
-      where: { startupId },
-      orderBy: { createdAt: 'desc' }
-    })
-  ) as any[];
-  return (rows || []).map(toPublicInvitation);
+  if (!startupId || !dbReady()) return [];
+  try {
+    const rows = await safeDbQuery(() =>
+      (prisma as any).invitation.findMany({
+        where: { startupId },
+        orderBy: { createdAt: 'desc' }
+      })
+    ) as any[];
+    return (rows || []).map(toPublicInvitation);
+  } catch (err: any) {
+    console.warn('[invitationService] listInvitations fallback:', err?.message);
+    return [];
+  }
 }
 
 /**

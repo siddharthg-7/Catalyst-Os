@@ -34,7 +34,8 @@ import {
   TrendingUp,
   Layers,
   Database,
-  Briefcase
+  Briefcase,
+  Radio
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -45,6 +46,7 @@ import NotificationPanel from './components/NotificationPanel';
 import MouseSpotlight from './components/MouseSpotlight';
 import AuroraBackground from './components/AuroraBackground';
 import Footer from './components/Footer';
+import VoiceStudioPanel from './components/voice/VoiceStudioPanel';
 
 export default function App() {
   const navigate = useNavigate();
@@ -66,6 +68,7 @@ export default function App() {
 
   const [isCheckingStartup, setIsCheckingStartup] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -845,7 +848,7 @@ export default function App() {
                     <motion.span
                       layoutId="sidebar-active"
                       className="absolute inset-0 rounded-xl -z-0"
-                      style={{ backgroundColor: 'var(--c-fg)', boxShadow: 'var(--shadow-sm)' }}
+                      style={{ backgroundColor: 'var(--c-accent)', boxShadow: 'var(--shadow-sm)' }}
                       transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
                     />
                   )}
@@ -1025,6 +1028,21 @@ export default function App() {
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold" style={{ backgroundColor: 'rgba(79,70,229,0.1)', color: 'var(--c-accent)' }}>
                 {knowledge.length}
               </span>
+            </button>
+
+            {/* Voice Studio Quick Access */}
+            <button
+              onClick={() => setIsVoiceStudioOpen(true)}
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:border-indigo-500/50"
+              style={{
+                backgroundColor: 'var(--c-surface-2)',
+                color: 'var(--c-fg)',
+                border: '1px solid var(--c-border)',
+              }}
+              title="Voice Studio & Neural Voice Management"
+            >
+              <Radio className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
+              <span className="font-sans text-[11px] font-semibold">Voice Studio</span>
             </button>
 
             {/* Notifications bell */}
@@ -1296,6 +1314,12 @@ export default function App() {
         isOpen={notificationsOpen} 
         onClose={() => setNotificationsOpen(false)} 
         onNavigate={(tab) => handleTabChange(tab)} 
+      />
+
+      {/* Global Voice Studio Management Panel */}
+      <VoiceStudioPanel
+        isOpen={isVoiceStudioOpen}
+        onClose={() => setIsVoiceStudioOpen(false)}
       />
 
     </div>

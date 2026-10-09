@@ -18,12 +18,16 @@ import {
   FileText, ExternalLink, Calculator, Layers, Loader2,
   BookOpen, UploadCloud, Database, Target, Zap, BarChart3,
   Shield, CheckCircle2, ChevronDown, Settings2, Edit3, X, SlidersHorizontal,
-  AlertTriangle, UserCheck, UserPlus, Compass, ArrowUpRight, Landmark, Rocket
+  Rocket, ArrowUpRight, Bot, Cpu, Landmark, Radio,
+  AlertTriangle, UserCheck, UserPlus, Compass
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../hooks/useChat';
 import MarkdownRenderer from './chatbot/MarkdownRenderer';
 import Section from './Section';
+import VoiceMicButton from './voice/VoiceMicButton';
+import VoiceModeModal from './voice/VoiceModeModal';
+import VoiceStudioPanel from './voice/VoiceStudioPanel';
 
 interface SaaSDashboardProps {
   startup: StartupProfile;
@@ -172,6 +176,10 @@ export default function SaaSDashboard({
   const [editCash, setEditCash] = useState<number>(startup.cashBalance || 245000);
   const [editBurn, setEditBurn] = useState<number>(startup.burnRate || 18500);
   const [isSavingTreasury, setIsSavingTreasury] = useState(false);
+
+  // Voice Studio & Conversational Voice Mode State
+  const [isVoiceModeOpen, setIsVoiceModeOpen] = useState(false);
+  const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState(false);
 
   // Reviewing approval spinner state
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -643,7 +651,27 @@ export default function SaaSDashboard({
             <span className="font-bold text-white/90">ORCHESTRATOR</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <button
+              type="button"
+              onClick={() => setIsVoiceModeOpen(true)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all cursor-pointer"
+              title="Launch Hands-Free Voice Mode"
+            >
+              <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+              <span>Voice Mode</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsVoiceStudioOpen(true)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-semibold text-white/80 hover:text-white border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
+              title="Configure Voice Studio Neural Models"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
+              <span>Voice Studio</span>
+            </button>
+
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
             <span className="text-[10px] font-mono text-white/70">SSE Real-Time Stream</span>
           </div>
         </div>
@@ -1849,6 +1877,22 @@ export default function SaaSDashboard({
           </div>
         )}
       </Section>
+
+      {/* ── CONVERSATIONAL VOICE MODE MODAL ── */}
+      <VoiceModeModal
+        isOpen={isVoiceModeOpen}
+        onClose={() => setIsVoiceModeOpen(false)}
+        onSendCommand={sendMessage}
+        lastAssistantResponse={messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content}
+        isOrchestrating={isTyping}
+        onOpenVoiceStudio={() => setIsVoiceStudioOpen(true)}
+      />
+
+      {/* ── VOICE STUDIO MANAGEMENT PANEL ── */}
+      <VoiceStudioPanel
+        isOpen={isVoiceStudioOpen}
+        onClose={() => setIsVoiceStudioOpen(false)}
+      />
 
       {/* ── 12. TREASURY & RUNWAY CALIBRATION MODAL ───────────────────── */}
       {isCalibratingTreasury && (

@@ -36,7 +36,18 @@ export async function resolveMembership(
   userId: string,
   startupId?: string
 ): Promise<ResolvedMembership | null> {
-  if (!userId || !dbReady()) return null;
+  if (!userId) return null;
+
+  // Graceful offline/demo fallback when database is unconfigured or user is demo
+  if (!dbReady() || userId.includes('demo')) {
+    return {
+      startupId: startupId || 'startup_novatech_demo',
+      role: 'FOUNDER',
+      status: 'ACTIVE',
+      viaOwnership: true,
+      isOwner: true
+    };
+  }
 
   try {
     const membership: any = await safeDbQuery(() =>
@@ -88,7 +99,7 @@ export async function resolveMembership(
 /** The startup id the user acts within, or null. */
 export async function getActiveStartupId(userId: string): Promise<string | null> {
   const membership = await resolveMembership(userId);
-  return membership?.startupId ?? null;
+  return membership?.startupId ?? (!dbReady() || (userId && userId.includes('demo')) ? 'startup_novatech_demo' : null);
 }
 
 /**
@@ -168,7 +179,24 @@ export async function listMemberships(
   startupId: string,
   opts: { includeSuspended?: boolean } = {}
 ): Promise<any[]> {
-  if (!startupId || !dbReady()) return [];
+  if (!startupId) return [];
+  if (!dbReady() || startupId.includes('demo')) {
+    return [
+      {
+        id: 'mem_founder_demo',
+        startupId: startupId || 'startup_novatech_demo',
+        userId: 'usr_founder_demo',
+        role: 'FOUNDER',
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString(),
+        user: {
+          id: 'usr_founder_demo',
+          name: 'Demo Founder',
+          email: 'founder@catalyst.os'
+        }
+      }
+    ];
+  }
   try {
     return await safeDbQuery(() =>
       (prisma as any).membership.findMany({

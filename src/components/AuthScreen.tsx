@@ -151,7 +151,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
     <div className="min-h-screen bg-[#F3F0EE] text-[#141413] relative font-sans overflow-hidden">
       <WarmBackground />
 
-      <AnimatePresence mode="wait" custom={direction}>
+      <AnimatePresence mode="wait" custom={direction}>jiiiiiiiiiiiiiiii
 
         {/* ── LANDING VIEW (wraps HackathonLandingPage) ─────────────────── */}
         {view === 'landing' && (

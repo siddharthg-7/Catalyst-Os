@@ -160,18 +160,18 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
     <div className={`flex items-start gap-3 my-3 font-sans group ${!isAssistant ? 'flex-row-reverse' : ''}`}>
       <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 shadow-md ${
         isAssistant 
-          ? 'bg-[#111111] border-white/10 text-white' 
-          : 'bg-white text-black border-white'
+          ? 'bg-[#F3F5FB] border-[#151A2D]/10 text-[#151A2D]' 
+          : 'bg-[#5546ED] text-white border-[#5546ED]'
       }`}>
-        {isAssistant ? <Bot className="w-4 h-4 text-white" /> : <User className="w-4 h-4 text-black" />}
+        {isAssistant ? <Bot className="w-4 h-4 text-[#151A2D]" /> : <User className="w-4 h-4 text-white" />}
       </div>
 
       <div className={`max-w-[85%] p-4 rounded-2xl border text-sm relative space-y-2 shadow-sm ${
         isAssistant 
-          ? 'bg-[#111111] border-white/[0.08] text-[#B8B8B8] rounded-tl-sm' 
-          : 'bg-[#181818] border-white/10 text-white rounded-tr-sm'
+          ? 'bg-[#F3F5FB] border-[#151A2D]/10 text-[#536079] rounded-tl-sm' 
+          : 'bg-[#F0EEFF] border-[#DAD5FF] text-[#151A2D] rounded-tr-sm'
       }`}>
-        <div className="flex items-center justify-between gap-4 border-b border-white/[0.05] pb-1.5 text-[10px] font-mono text-[#777777]">
+        <div className="flex items-center justify-between gap-4 border-b border-[#151A2D]/10 pb-1.5 text-[10px] font-mono text-[#68758F]">
           <span className="font-bold uppercase tracking-wider">
             {isAssistant ? 'Catalyst OS AI' : 'You'}
           </span>
@@ -180,7 +180,7 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
             <button
               onClick={handleCopyMessage}
               title="Copy message text"
-              className="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity cursor-pointer"
+              className="opacity-0 group-hover:opacity-100 hover:text-[#151A2D] transition-opacity cursor-pointer"
             >
               {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
             </button>
@@ -194,12 +194,12 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
         )}
 
         {isAssistant && (
-          <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-zinc-500 text-[10px] font-mono">
+          <div className="flex items-center justify-between pt-1 border-t border-[#151A2D]/10 text-zinc-500 text-[10px] font-mono">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleSpeech(false)}
                 title={isPlayingSpeech ? 'Stop Voice Speech' : 'Listen to Voice Speech (TTS)'}
-                className={`flex items-center gap-1 hover:text-white transition-colors cursor-pointer ${
+                className={`flex items-center gap-1 hover:text-[#151A2D] transition-colors cursor-pointer ${
                   isPlayingSpeech ? 'text-emerald-400 font-bold' : ''
                 }`}
               >
@@ -211,7 +211,7 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
                 <button
                   onClick={onRegenerate}
                   title="Regenerate response"
-                  className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
+                  className="flex items-center gap-1 hover:text-[#151A2D] transition-colors cursor-pointer"
                 >
                   <RotateCw className="w-3 h-3" />
                   <span>Regenerate</span>
@@ -222,7 +222,7 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleFeedback('up')}
-                className={`p-1 rounded hover:text-white transition-colors cursor-pointer ${
+                className={`p-1 rounded hover:text-[#151A2D] transition-colors cursor-pointer ${
                   feedback === 'up' ? 'text-emerald-400' : ''
                 }`}
                 title="Helpful"
@@ -231,7 +231,7 @@ export default function MessageBubble({ message, onRegenerate, speechLanguage = 
               </button>
               <button
                 onClick={() => handleFeedback('down')}
-                className={`p-1 rounded hover:text-white transition-colors cursor-pointer ${
+                className={`p-1 rounded hover:text-[#151A2D] transition-colors cursor-pointer ${
                   feedback === 'down' ? 'text-rose-400' : ''
                 }`}
                 title="Not helpful"
