@@ -597,26 +597,23 @@ export default function SaaSDashboard({
   return (
     <div className="space-y-6 pb-12">
 
-      {/* ── 1. Welcome & Status Sentinel (Airy, Cute, Landing Page Style) ──── */}
+      {/* ── 1. Welcome & Status Sentinel (Airy, Clean, High Contrast) ──── */}
       <Section delay={0.03} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 border border-indigo-200/80 shadow-xs" style={{ color: 'var(--c-accent)' }}>
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
               <span>AI Executive Council · Synchronized</span>
             </span>
-            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border text-slate-500 border-slate-200 dark:border-slate-800">
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}>
               {startup.fundingStage || 'Pre-Seed'}
             </span>
-            <span className="text-xs font-medium text-slate-400">
-              {startup.industry || 'Technology'}
-            </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: 'var(--c-fg)' }}>
             {getGreeting()}, {firstName}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
-            Operating command center for <span className="font-semibold text-slate-700 dark:text-slate-200">{startup.name || 'Your Startup'}</span> · 8 autonomous agents monitoring runway, operations, and growth.
+          <p className="text-xs sm:text-sm max-w-xl" style={{ color: 'var(--c-muted)' }}>
+            Operating command center for <span className="font-semibold" style={{ color: 'var(--c-fg)' }}>{startup.name || 'Your Startup'}</span> · 8 autonomous agents monitoring runway, operations, and growth.
           </p>
         </div>
 
@@ -637,20 +634,6 @@ export default function SaaSDashboard({
             <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
             <span>Calibrate Financials</span>
           </button>
-          {onNavigate && (
-            <button
-              onClick={() => onNavigate('scenarios')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-xs font-semibold transition-all cursor-pointer shadow-xs hover:border-indigo-400 hover:text-indigo-600"
-              style={{ 
-                backgroundColor: 'var(--c-surface)', 
-                borderColor: 'var(--c-border)', 
-                color: 'var(--c-fg)' 
-              }}
-            >
-              <Compass className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Scenario Studio</span>
-            </button>
-          )}
         </div>
       </Section>
 
@@ -666,27 +649,12 @@ export default function SaaSDashboard({
               <Bot className="w-4 h-4" />
             </div>
             <div>
-              <span className="font-bold text-xs text-slate-900 dark:text-white block">Sophia Vance · CEO Agent</span>
-              <span className="text-[10px] text-slate-400 font-medium">Autonomous Strategic Dispatcher</span>
+              <span className="font-bold text-xs block" style={{ color: 'var(--c-fg)' }}>Sophia Vance · CEO Agent</span>
+              <span className="text-[10px] font-medium" style={{ color: 'var(--c-muted)' }}>Autonomous Strategic Dispatcher</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsVoiceModeOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer hover:border-indigo-400"
-              style={{ 
-                backgroundColor: 'var(--c-surface)', 
-                borderColor: 'var(--c-border)', 
-                color: 'var(--c-fg)' 
-              }}
-              title="Launch Hands-Free Voice Mode"
-            >
-              <Radio className="w-3 h-3 text-indigo-500 animate-pulse" />
-              <span>Voice Mode</span>
-            </button>
-
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full border text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full border text-emerald-600 bg-emerald-500/10 border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>Live Council</span>
             </span>
@@ -995,27 +963,114 @@ export default function SaaSDashboard({
         )}
       </Section>
 
-      {/* ── 3. IMPORTANT RISKS SENTINEL ───────────────────────────────── */}
+      {/* ── 3. FINANCIAL ENGINE TELEMETRY: Cash, Burn, Runway & Health ─── */}
       <Section delay={0.09} className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <h2 className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
-              Important Risks Sentinel
+            <Wallet className="w-4 h-4 text-indigo-600" />
+            <h2 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>
+              Financial Telemetry & Treasury
             </h2>
           </div>
-          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-            detectedRisks.some(r => r.severity === 'CRITICAL')
-              ? 'bg-rose-500/10 text-rose-500 border-rose-500/30'
-              : detectedRisks.length > 0
-              ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
-              : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-          }`}>
-            {detectedRisks.length > 0 ? `${detectedRisks.length} Risk Flag${detectedRisks.length > 1 ? 's' : ''}` : 'All Clear'}
-          </span>
+          <button
+            onClick={() => {
+              setEditCash(cashBalance);
+              setEditBurn(burnRate);
+              setIsCalibratingTreasury(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border hover:border-indigo-400 transition-all shadow-xs cursor-pointer"
+            style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Calibrate</span>
+          </button>
         </div>
 
-        {detectedRisks.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <KpiCard
+            icon={<Hourglass className="w-5 h-5 text-indigo-600" />}
+            roleTag="CFO AGENT · RUNWAY"
+            accentColor="bg-indigo-50"
+            label="Verified Runway Horizon"
+            value={`${runwayMonths.toFixed(1)} Mo`}
+            delta={
+              isRunwayCritical
+                ? 'Critical (< 4mo)'
+                : isRunwayAdequate
+                ? 'Adequate Runway'
+                : 'Verified (> 12mo)'
+            }
+            deltaPositive={isRunwayHealthy}
+            onClick={() => {
+              setEditCash(cashBalance);
+              setEditBurn(burnRate);
+              setIsCalibratingTreasury(true);
+            }}
+            actionHint="Calibrate"
+          />
+          <KpiCard
+            icon={<Wallet className="w-5 h-5 text-emerald-600" />}
+            roleTag="TREASURY RESERVES"
+            accentColor="bg-emerald-50"
+            label="Total Cash In Treasury"
+            value={formatCurrency(cashBalance)}
+            delta={`${burnRate > 0 ? `${monthlyBurnRatio}% burn/mo` : 'Active Treasury'}`}
+            deltaPositive={burnRate < cashBalance * 0.15}
+            onClick={() => {
+              setEditCash(cashBalance);
+              setEditBurn(burnRate);
+              setIsCalibratingTreasury(true);
+            }}
+            actionHint="Calibrate"
+          />
+          <KpiCard
+            icon={<Flame className="w-5 h-5 text-orange-500" />}
+            roleTag="FINANCE · BURN RATE"
+            accentColor="bg-orange-50"
+            label="Monthly Net Burn"
+            value={formatCurrency(burnRate)}
+            delta={`${isRunwayHealthy ? 'Disciplined Burn' : isRunwayAdequate ? 'Moderate Burn' : 'High Burn'}`}
+            deltaPositive={isRunwayHealthy}
+            onClick={() => {
+              setEditCash(cashBalance);
+              setEditBurn(burnRate);
+              setIsCalibratingTreasury(true);
+            }}
+            actionHint="Calibrate"
+          />
+          <KpiCard
+            icon={<Activity className="w-5 h-5 text-purple-600" />}
+            roleTag="CEO AGENT · VENTURE HEALTH"
+            accentColor="bg-purple-50"
+            label="Composite Health Score"
+            value={`${healthScore} / 100`}
+            delta={`${healthScore >= 70 ? '+' : ''}${(healthScore - 70).toFixed(0)} vs Baseline`}
+            deltaPositive={healthScore >= 70}
+            showBar={true}
+            barValue={healthScore}
+          />
+        </div>
+      </Section>
+
+      {/* ── 4. IMPORTANT RISKS SENTINEL (Only when risks are active) ──── */}
+      {detectedRisks.length > 0 && (
+        <Section delay={0.11} className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+              <h2 className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
+                Important Risks Sentinel
+              </h2>
+            </div>
+            <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+              detectedRisks.some(r => r.severity === 'CRITICAL')
+                ? 'bg-rose-500/10 text-rose-500 border-rose-500/30'
+                : 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+            }`}>
+              {`${detectedRisks.length} Risk Flag${detectedRisks.length > 1 ? 's' : ''}`}
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {detectedRisks.map(risk => (
               <div
@@ -1034,8 +1089,8 @@ export default function SaaSDashboard({
                       {risk.severity} RISK
                     </span>
                   </div>
-                  <h3 className="text-xs font-bold pt-1 text-slate-900 dark:text-white">{risk.title}</h3>
-                  <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{risk.description}</p>
+                  <h3 className="text-xs font-bold pt-1" style={{ color: 'var(--c-fg)' }}>{risk.title}</h3>
+                  <p className="text-[11px] leading-relaxed" style={{ color: 'var(--c-muted)' }}>{risk.description}</p>
                 </div>
 
                 <div className="flex items-center justify-end pt-1">
@@ -1083,97 +1138,8 @@ export default function SaaSDashboard({
               </div>
             ))}
           </div>
-        )}
-      </Section>
-
-      {/* ── 4. FINANCIAL ENGINE TELEMETRY: Cash, Burn, Runway & Health ─── */}
-      <Section delay={0.12} className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-              Financial Telemetry & Treasury
-            </h2>
-          </div>
-          <button
-            onClick={() => {
-              setEditCash(cashBalance);
-              setEditBurn(burnRate);
-              setIsCalibratingTreasury(true);
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border hover:border-indigo-400 transition-all shadow-xs cursor-pointer"
-            style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Calibrate</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard
-            icon={<Hourglass className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
-            roleTag="CFO AGENT · RUNWAY"
-            accentColor="bg-indigo-50 dark:bg-indigo-950/60"
-            label="Verified Runway Horizon"
-            value={`${runwayMonths.toFixed(1)} Mo`}
-            delta={
-              isRunwayCritical
-                ? 'Critical (< 4mo)'
-                : isRunwayAdequate
-                ? 'Adequate Runway'
-                : 'Verified (> 12mo)'
-            }
-            deltaPositive={isRunwayHealthy}
-            onClick={() => {
-              setEditCash(cashBalance);
-              setEditBurn(burnRate);
-              setIsCalibratingTreasury(true);
-            }}
-            actionHint="Calibrate"
-          />
-          <KpiCard
-            icon={<Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
-            roleTag="TREASURY RESERVES"
-            accentColor="bg-emerald-50 dark:bg-emerald-950/60"
-            label="Total Cash In Treasury"
-            value={formatCurrency(cashBalance)}
-            delta={`${burnRate > 0 ? `${monthlyBurnRatio}% burn/mo` : 'Active Treasury'}`}
-            deltaPositive={burnRate < cashBalance * 0.15}
-            onClick={() => {
-              setEditCash(cashBalance);
-              setEditBurn(burnRate);
-              setIsCalibratingTreasury(true);
-            }}
-            actionHint="Calibrate"
-          />
-          <KpiCard
-            icon={<Flame className="w-5 h-5 text-orange-500" />}
-            roleTag="FINANCE · BURN RATE"
-            accentColor="bg-orange-50 dark:bg-orange-950/60"
-            label="Monthly Net Burn"
-            value={formatCurrency(burnRate)}
-            delta={`${isRunwayHealthy ? 'Disciplined Burn' : isRunwayAdequate ? 'Moderate Burn' : 'High Burn'}`}
-            deltaPositive={isRunwayHealthy}
-            onClick={() => {
-              setEditCash(cashBalance);
-              setEditBurn(burnRate);
-              setIsCalibratingTreasury(true);
-            }}
-            actionHint="Calibrate"
-          />
-          <KpiCard
-            icon={<Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
-            roleTag="CEO AGENT · VENTURE HEALTH"
-            accentColor="bg-purple-50 dark:bg-purple-950/60"
-            label="Composite Health Score"
-            value={`${healthScore} / 100`}
-            delta={`${healthScore >= 70 ? '+' : ''}${(healthScore - 70).toFixed(0)} vs Baseline`}
-            deltaPositive={healthScore >= 70}
-            showBar={true}
-            barValue={healthScore}
-          />
-        </div>
-      </Section>
+        </Section>
+      )}
 
       {/* ── 5. STRATEGIC HEALTH RADAR & RUNWAY TRAJECTORY (Two Columns) ──── */}
       <Section delay={0.15} className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
@@ -1181,10 +1147,10 @@ export default function SaaSDashboard({
         <div className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 flex flex-col justify-between gap-5 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
             <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Company Health Matrix (5 Vectors)</h2>
+              <BarChart3 className="w-4 h-4 text-indigo-600" />
+              <h2 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>Company Health Matrix (5 Vectors)</h2>
             </div>
-            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-full">
+            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
               {healthScore}% Composite
             </span>
           </div>
@@ -1199,23 +1165,23 @@ export default function SaaSDashboard({
             ].map(item => (
               <div key={item.label} className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">{item.label}</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white">{item.value}%</span>
+                  <span className="font-semibold" style={{ color: 'var(--c-fg)' }}>{item.label}</span>
+                  <span className="font-mono font-bold" style={{ color: 'var(--c-fg)' }}>{item.value}%</span>
                 </div>
-                <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-2 w-full rounded-full overflow-hidden" style={{ backgroundColor: 'var(--c-surface-2)' }}>
                   <div
                     className={`h-full rounded-full ${item.color} transition-all duration-700`}
                     style={{ width: `${Math.min(Math.max(item.value, 0), 100)}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 font-sans">{item.text}</p>
+                <p className="text-[10px] font-sans" style={{ color: 'var(--c-muted)' }}>{item.text}</p>
               </div>
             ))}
           </div>
 
-          <div className="pt-3 border-t flex items-center justify-between text-xs text-slate-400 font-medium" style={{ borderColor: 'var(--c-border)' }}>
+          <div className="pt-3 border-t flex items-center justify-between text-xs font-medium" style={{ borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}>
             <span>Company Context Grounding</span>
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Continuous Audit Active</span>
+            <span className="font-semibold" style={{ color: 'var(--c-fg)' }}>Continuous Audit Active</span>
           </div>
         </div>
 
@@ -1223,10 +1189,10 @@ export default function SaaSDashboard({
         <div className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 flex flex-col justify-between gap-5 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
             <div className="flex items-center gap-2">
-              <LineChart className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Runway Burn Trajectory (6-Month Projection)</h2>
+              <LineChart className="w-4 h-4 text-indigo-600" />
+              <h2 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>Runway Burn Trajectory (6-Month Projection)</h2>
             </div>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            <span className="text-xs font-semibold px-3 py-1 rounded-full border" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}>
               Burn: {formatCurrency(burnRate)}/mo
             </span>
           </div>
@@ -1236,14 +1202,14 @@ export default function SaaSDashboard({
             <div className="flex items-end justify-between gap-2 h-36 border-b pb-2 px-1" style={{ borderColor: 'var(--c-border)' }}>
               {runwayProjections.map((p) => (
                 <div key={p.month} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                  <span className="text-[10px] font-mono font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
+                  <span className="text-[10px] font-mono font-bold transition-colors group-hover:text-indigo-600" style={{ color: 'var(--c-muted)' }}>
                     {formatCurrency(p.cash)}
                   </span>
                   <div
                     className="w-full rounded-t-xl bg-gradient-to-t from-indigo-600 to-purple-500 group-hover:opacity-90 transition-all duration-300 shadow-xs"
                     style={{ height: `${Math.max(p.percentage, 8)}%` }}
                   />
-                  <span className="text-[10px] font-mono text-slate-400 mt-1">{p.month}</span>
+                  <span className="text-[10px] font-mono mt-1" style={{ color: 'var(--c-muted)' }}>{p.month}</span>
                 </div>
               ))}
             </div>
@@ -1251,13 +1217,13 @@ export default function SaaSDashboard({
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="p-3.5 rounded-2xl border" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
-              <span className="text-[10px] font-medium text-slate-400 block uppercase font-mono">Zero-Cash Horizon</span>
-              <p className="text-sm font-bold font-mono mt-0.5 text-slate-900 dark:text-white">
+              <span className="text-[10px] font-medium block uppercase font-mono" style={{ color: 'var(--c-muted)' }}>Zero-Cash Horizon</span>
+              <p className="text-sm font-bold font-mono mt-0.5" style={{ color: 'var(--c-fg)' }}>
                 {runwayMonths > 24 ? 'Safe (> 24 Months)' : `${runwayMonths.toFixed(1)} Months Left`}
               </p>
             </div>
             <div className="p-3.5 rounded-2xl border" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
-              <span className="text-[10px] font-medium text-slate-400 block uppercase font-mono">Risk Threshold</span>
+              <span className="text-[10px] font-medium block uppercase font-mono" style={{ color: 'var(--c-muted)' }}>Risk Threshold</span>
               <p className={`text-sm font-bold font-mono mt-0.5 ${
                 isRunwayCritical ? 'text-rose-600' : isRunwayAdequate ? 'text-amber-600' : 'text-emerald-600'
               }`}>
@@ -1404,10 +1370,10 @@ export default function SaaSDashboard({
         <div className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 flex flex-col gap-4 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
           <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
             <h2 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--c-fg)' }}>
-              <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <ShieldCheck className="w-4 h-4 text-indigo-600" />
               <span>Pending Approvals (Founder Gates)</span>
             </h2>
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
               {pendingApprovals.length} Awaiting Sign-Off
             </span>
           </div>
@@ -1567,15 +1533,15 @@ export default function SaaSDashboard({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--c-border)' }}>
           <div>
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+              <Layers className="w-4 h-4 text-indigo-600" />
+              <h2 className="text-base font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
                 Active Work & Delegated Council Tasks
               </h2>
-              <span className="px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
+              <span className="px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-bold" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}>
                 {tasks.length} Tasks
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>
               Tasks decomposed by executive council agents from strategic founder directives.
             </p>
           </div>
@@ -1593,8 +1559,8 @@ export default function SaaSDashboard({
             {onRefreshTasks && (
               <button
                 onClick={() => onRefreshTasks()}
-                className="text-xs font-semibold text-slate-600 dark:text-slate-300 px-3.5 py-2 rounded-full border hover:border-indigo-400 transition-all cursor-pointer"
-                style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
+                className="text-xs font-semibold px-3.5 py-2 rounded-full border hover:border-indigo-400 transition-all cursor-pointer"
+                style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
               >
                 Sync
               </button>
@@ -1616,10 +1582,10 @@ export default function SaaSDashboard({
                       {task.department}
                     </span>
                     <span className={`text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full border ${
-                      task.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:border-blue-800' :
-                      task.status === 'submitted' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:border-amber-800' :
-                      task.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:border-emerald-800' :
-                      'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                      task.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                      task.status === 'submitted' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      task.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      'border-slate-200 text-slate-700 bg-slate-100'
                     }`}>
                       {task.status}
                     </span>
@@ -1628,13 +1594,13 @@ export default function SaaSDashboard({
                     {task.title}
                   </h3>
                   {task.result && (
-                    <p className="text-[11px] text-emerald-800 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900 font-sans line-clamp-2">
+                    <p className="text-[11px] text-emerald-800 bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100 font-sans line-clamp-2">
                       Result: {task.result}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-2 border-t flex items-center justify-between text-[10px] text-slate-400 font-mono" style={{ borderColor: 'var(--c-border)' }}>
+                <div className="pt-2 border-t flex items-center justify-between text-[10px] font-mono" style={{ borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}>
                   <span>Assisting: <strong style={{ color: 'var(--c-fg)' }}>{task.agent}</strong></span>
                   <span>
                     Owner: <strong className={task.needsHumanOwner ? 'text-amber-600' : ''} style={{ color: task.needsHumanOwner ? undefined : 'var(--c-fg)' }}>
@@ -1738,7 +1704,7 @@ export default function SaaSDashboard({
 
         {/* Extracted Grounded Strategic Insights Strip */}
         {allGroundedInsights.length > 0 && (
-          <div className="p-4 bg-[var(--c-fg)] text-[var(--c-bg)] text-[var(--c-bg)] rounded-xl border border-white/10 space-y-2">
+          <div className="p-4 bg-[var(--c-fg)] text-[var(--c-bg)] rounded-xl border border-white/10 space-y-2">
             <div className="flex items-center justify-between text-xs border-b border-white/10 pb-1.5">
               <div className="flex items-center gap-1.5 font-semibold text-white/90">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
@@ -1750,7 +1716,7 @@ export default function SaaSDashboard({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
               {allGroundedInsights.slice(0, 4).map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2 bg-[var(--c-surface)]/06 px-3 py-2 rounded-lg border border-white/08">
+                <div key={idx} className="flex items-start gap-2 bg-white/10 px-3 py-2 rounded-lg border border-white/10">
                   <span className="text-emerald-400 text-xs mt-0.5">•</span>
                   <div className="min-w-0">
                     <p className="text-white/90 leading-snug">{item.insight}</p>
@@ -1772,10 +1738,10 @@ export default function SaaSDashboard({
             <div className="text-[10px] font-bold font-mono uppercase tracking-wider text-indigo-600 mb-0.5">
               System Trace
             </div>
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">
+            <h2 className="text-lg font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
               Live Council Execution Timeline
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs" style={{ color: 'var(--c-muted)' }}>
               Real-time audit log of multi-agent decisions, milestones, and governance gates
             </p>
           </div>
@@ -1802,13 +1768,13 @@ export default function SaaSDashboard({
                 <span className="text-[10px] font-bold font-mono text-indigo-600 uppercase tracking-wider">
                   IMMUTABLE AUDIT LOG
                 </span>
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>
                   {activityFeed[0]?.actor || 'Atlas (CEO)'} — {activityFeed[0]?.action || 'Venture Telemetry Synchronized'}
                 </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                   Automated council governance cycle verified across active capital reserves and operational constraints.
                 </p>
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                <div className="flex items-center gap-2 text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
                   <Clock className="w-3 h-3" />
                   <span>Logged: {activityFeed[0]?.time || 'Just now'} · Status: VERIFIED</span>
                 </div>
@@ -1820,11 +1786,11 @@ export default function SaaSDashboard({
                   ))}
                 </div>
               </div>
-              <div className="md:col-span-5 bg-slate-50 p-4 rounded-xl border border-slate-200/60 space-y-1.5">
-                <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+              <div className="md:col-span-5 p-4 rounded-xl border space-y-1.5" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
+                <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--c-fg)' }}>
                   Verification Highlights
                 </h4>
-                <ul className="text-xs text-slate-600 space-y-1.5">
+                <ul className="text-xs space-y-1.5" style={{ color: 'var(--c-muted)' }}>
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
                     <span>Runway calibrated at {runwayMonths.toFixed(1)} months</span>
@@ -1846,13 +1812,13 @@ export default function SaaSDashboard({
                 <span className="text-[10px] font-bold font-mono text-indigo-600 uppercase tracking-wider">
                   STRATEGIC MILESTONE
                 </span>
-                <h3 className="text-sm font-bold text-slate-900">
+                <h3 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>
                   {dynamicEvents[0]?.title || 'Q3 Financial & Governance Audit'}
                 </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                   Scheduled cadence inspection for regulatory filings, compliance certificates, and budget thresholds.
                 </p>
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
+                <div className="flex items-center gap-2 text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
                   <Calendar className="w-3 h-3" />
                   <span>Cadence: {dynamicEvents[0]?.day || 'Upcoming'} · {dynamicEvents[0]?.time || '10:00 AM'}</span>
                 </div>
@@ -1864,11 +1830,11 @@ export default function SaaSDashboard({
                   ))}
                 </div>
               </div>
-              <div className="md:col-span-5 bg-slate-50 p-4 rounded-xl border border-slate-200/60 space-y-1.5">
-                <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+              <div className="md:col-span-5 p-4 rounded-xl border space-y-1.5" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
+                <h4 className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--c-fg)' }}>
                   Cadence Highlights
                 </h4>
-                <ul className="text-xs text-slate-600 space-y-1.5">
+                <ul className="text-xs space-y-1.5" style={{ color: 'var(--c-muted)' }}>
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
                     <span>Synchronized with {startup.name || 'Startup'} roadmap</span>

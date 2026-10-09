@@ -806,7 +806,7 @@ export default function App() {
 
     // ── Navigation Categories (Linear & Notion Information Architecture) ───────
     interface NavItem {
-      id: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people';
+      id: string;
       label: string;
       Icon: any;
       badge?: string;
@@ -826,7 +826,7 @@ export default function App() {
         title: isPrivileged ? 'Core Workspace' : `${normRole} Command`,
         items: [
           { 
-            id: 'dashboard' as const,  
+            id: 'dashboard',  
             label: isPrivileged 
               ? 'Executive Dashboard' 
               : normRole === 'HR' ? 'People Command' 
@@ -839,10 +839,10 @@ export default function App() {
             badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' 
           },
           ...(isPrivileged ? [
-            { id: 'council' as const, label: 'Executive Council', Icon: Sparkles, badge: 'Phase B', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' }
+            { id: 'council', label: 'Executive Council', Icon: Sparkles, badge: 'Phase B', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' }
           ] : []),
           { 
-            id: 'workspace' as const,  
+            id: 'workspace',  
             label: isPrivileged 
               ? 'Employee Workspace' 
               : normRole === 'HR' ? 'Assigned Tasks (Echo)' 
@@ -855,23 +855,23 @@ export default function App() {
             badgeColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20' 
           },
           ...(isPrivileged ? [
-            { id: 'approvals' as const, label: 'Approval Queue', Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20' }
+            { id: 'approvals', label: 'Approval Queue', Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20' }
           ] : []),
         ].filter(item => item.id === 'workspace' || item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
         title: 'Intelligence & Strategy',
         items: [
-          { id: 'workflows' as const,  label: 'Workflows & DAG',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
-          { id: 'knowledge' as const,  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-sky-500 bg-sky-500/10 border-sky-500/20' },
-          { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },
+          { id: 'workflows',  label: 'Workflows & DAG',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
+          { id: 'knowledge',  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-sky-500 bg-sky-500/10 border-sky-500/20' },
+          { id: 'scenarios',  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },
         ].filter(item => permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
         title: 'Governance & Team',
         items: [
-          { id: 'decisions' as const,  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-slate-400 bg-slate-500/10 border-slate-500/20' },
-          { id: 'people' as const,     label: 'People & Access',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : '', badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+          { id: 'decisions',  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-slate-400 bg-slate-500/10 border-slate-500/20' },
+          { id: 'people',     label: 'People & Access',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : '', badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
         ].filter(item => permissions.areas.includes(item.id as any)) as NavItem[]
       }
     ];
@@ -892,9 +892,10 @@ export default function App() {
       
       {/* ── Desktop Sidebar (Linear / Apple Refinement) ───────────────────── */}
       <aside 
-        className="hidden md:flex flex-col border-r shrink-0 justify-between select-none z-20 backdrop-blur-xl" 
+        className="flex flex-col border-r shrink-0 justify-between select-none z-20 backdrop-blur-xl max-md:hidden" 
         style={{ 
-          width: 'var(--sidebar-width)', 
+          width: '256px', 
+          minWidth: '256px',
           backgroundColor: 'var(--glass-bg)', 
           borderColor: 'var(--c-border)'
         }}
@@ -941,7 +942,7 @@ export default function App() {
                       return (
                         <button
                           key={id}
-                          onClick={() => handleTabChange(id)}
+                          onClick={() => handleTabChange(id as any)}
                           className="relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all font-sans cursor-pointer group text-left"
                           style={{ 
                             color: isActive ? 'var(--c-fg)' : 'var(--c-muted)',
@@ -1186,13 +1187,14 @@ export default function App() {
                 </kbd>
               </button>
 
-              {/* Theme Toggle (Instant 1-Click Access) */}
+              {/* Theme Toggle (Instant 1-Click Access with Sun / Moon) */}
               <button
                 onClick={() => {
                   const html = document.documentElement;
-                  const current = html.getAttribute('data-theme');
+                  const current = html.getAttribute('data-theme') || 'light';
                   const next = current === 'dark' ? 'light' : 'dark';
                   html.setAttribute('data-theme', next);
+                  html.classList.toggle('dark', next === 'dark');
                   localStorage.setItem('catalystos-theme', next);
                   localStorage.setItem('theme', next);
                 }}
@@ -1200,50 +1202,12 @@ export default function App() {
                 style={{ 
                   backgroundColor: 'var(--c-surface-2)', 
                   borderColor: 'var(--c-border)', 
-                  color: 'var(--c-muted)' 
+                  color: 'var(--c-fg)' 
                 }}
                 title="Toggle Light / Dark Theme"
               >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              </button>
-
-              {/* Company Knowledge Quick Access */}
-              <button
-                onClick={() => handleTabChange('knowledge')}
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
-                style={{
-                  backgroundColor: activeTab === 'knowledge' ? 'var(--c-accent)' : 'var(--c-surface-2)',
-                  color: activeTab === 'knowledge' ? '#FFFFFF' : 'var(--c-fg)',
-                  borderColor: activeTab === 'knowledge' ? 'var(--c-accent)' : 'var(--c-border)',
-                }}
-                title="Company Knowledge Base"
-              >
-                <Database className="w-3.5 h-3.5" />
-                <span className="text-[11px]">Knowledge</span>
-                <span 
-                  className="text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold" 
-                  style={{ 
-                    backgroundColor: activeTab === 'knowledge' ? 'rgba(255,255,255,0.25)' : 'var(--c-accent-subtle)', 
-                    color: activeTab === 'knowledge' ? '#FFFFFF' : 'var(--c-accent)' 
-                  }}
-                >
-                  {knowledge.length}
-                </span>
-              </button>
-
-              {/* Voice Studio Button */}
-              <button
-                onClick={() => setIsVoiceStudioOpen(true)}
-                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
-                style={{
-                  backgroundColor: 'var(--c-surface-2)',
-                  borderColor: 'var(--c-border)',
-                  color: 'var(--c-fg)',
-                }}
-                title="Voice Studio"
-              >
-                <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                <span className="text-[11px]">Voice</span>
+                <Sun className="w-4 h-4 text-amber-500 hidden dark:block" />
+                <Moon className="w-4 h-4 text-slate-700 block dark:hidden" />
               </button>
 
               {/* Notifications Bell */}
@@ -1528,7 +1492,7 @@ export default function App() {
                       initial={{ opacity: 0, x: -16 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.04 }}
-                      onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
+                      onClick={() => { handleTabChange(id as any); setMobileMenuOpen(false); }}
                       className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium font-sans transition-all text-left"
                       style={{
                         backgroundColor: activeTab === id ? 'var(--c-surface-2)' : 'transparent',
