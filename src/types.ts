@@ -30,6 +30,7 @@ export interface StartupProfile {
 
 export interface DelegatedTask {
   id: string;
+  planId?: string;
   title: string;
   department: string;
   agent: string;
@@ -37,6 +38,18 @@ export interface DelegatedTask {
   status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'rejected';
   result: string | null;
   needsHumanOwner: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Plan {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  startupId: string;
+  tasks?: DelegatedTask[];
+  explicitSteps?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -291,6 +304,14 @@ export interface OrchestrationResponse {
   votes?: AgentVote[];
   boardConsensus?: BoardConsensus;
   approval?: OrchestrationApprovalRequirement;
+  plan?: {
+    id: string;
+    title: string;
+    description: string;
+    status: string;
+    steps: string[];
+    tasks: DelegatedTask[];
+  };
   notifications?: Array<{
     id: string;
     title: string;

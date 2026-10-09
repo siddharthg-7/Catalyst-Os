@@ -40,6 +40,8 @@ import {
 import {
   listTasksForUser,
   updateTaskForUser,
+  listPlansForUser,
+  getPlanById,
   TaskDelegationError
 } from '../services/taskDelegationService';
 import {
@@ -1157,6 +1159,24 @@ router.patch('/tasks/:id', authenticateJWT, requireActiveMembership, requirePerm
       status: req.body?.status,
       result: req.body?.result
     }));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// GET plans for the caller's company (Phase A4).
+router.get('/plans', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    res.json(await listPlansForUser(req.user!.id));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// GET a specific plan with its tasks by id.
+router.get('/plans/:id', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    res.json(await getPlanById(req.user!.id, req.params.id));
   } catch (err) {
     sendTaskError(res, err);
   }

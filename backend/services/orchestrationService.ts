@@ -22,7 +22,7 @@ import {
   Deliverable 
 } from '../../src/types';
 import { multiAgentCouncil, CouncilExecutionResult } from './multiAgentCouncil';
-import { delegateWorkOrders } from './taskDelegationService';
+import { delegateWorkOrders, decomposeCommandToPlan } from './taskDelegationService';
 
 // Benchmark salaries for headcount modeling (annual USD)
 const SALARY_BENCHMARKS: Record<string, number> = {
@@ -985,16 +985,35 @@ export class OrchestrationService {
       }
     );
 
-    // Phase A3: persist the CEO decomposition as assignable Task rows so the work
-    // survives the request and can reach an employee workspace. Delegation must
-    // never fail the founder's command, so this is deliberately non-throwing.
+    // Phase A4 — Explicit Plan Decomposition:
+    // Turn the founder command into an explicit Plan and ordered sequential Task rows.
+    const decomposedPlan = await decomposeCommandToPlan({
+      startupId,
+      command,
+      commandId
+    });
+
+    // Also persist the council's work orders under this plan
     await delegateWorkOrders(
       startupId,
       councilResult.decomposition.workOrders.map(w => ({
         department: w.department,
         objective: w.objective
-      }))
+      })),
+      { planId: decomposedPlan.plan.id }
     );
+
+    onEvent?.({
+      type: 'plan_generated',
+      plan: {
+        id: decomposedPlan.plan.id,
+        title: decomposedPlan.plan.title,
+        description: decomposedPlan.plan.description,
+        status: decomposedPlan.plan.status,
+        steps: decomposedPlan.explicitSteps,
+        tasks: decomposedPlan.tasks
+      }
+    });
 
     const agents: OrchestrationAgentActivity[] = [];
     const allRoles = ['CEO', 'Finance', 'Talent', 'Growth', 'Operations', 'Legal', 'Auditor'];
@@ -1059,14 +1078,18 @@ BOARD CONSENSUS:
 ${councilResult.boardConsensus.summary}
 ${councilResult.boardConsensus.hasUnresolvedVeto ? '⚠️ CRITICAL: Council consensus is BLOCKED by one or more formal executive vetoes.' : '✓ Board consensus satisfied.'}
 
+EXPLICIT OPERATING PLAN:
+${decomposedPlan.formattedPlanText}
+
 INSTRUCTIONS:
 1. Deliver ONE authoritative executive briefing written from the perspective of the CEO synthesizing the real council deliberation above.
 2. If an active veto is present, explain the exact risk and propose alternative restructuring or escalation.
 3. For startup identity questions, state company name, industry, and description.
-4. Return clean JSON matching this exact structure:
+4. Prominently include the explicit PLAN with numbered steps in your response details.
+5. Return clean JSON matching this exact structure:
 {
   "summary": "1-3 sentence decisive executive verdict or direct answer",
-  "details": "Actionable breakdown with specific bullet points and next steps",
+  "details": "Actionable breakdown with specific bullet points and next steps, including the PLAN",
   "confidence": 0.95
 }
 `;
@@ -1192,6 +1215,11 @@ INSTRUCTIONS:
       confidence = 0.5;
     }
 
+    // Ensure the explicit execution plan is cleanly appended to details
+    if (!finalDetails.includes('1.') || !finalDetails.toLowerCase().includes('plan')) {
+      finalDetails = `${finalDetails}\n\n${decomposedPlan.formattedPlanText}`;
+    }
+
     onEvent?.({ type: 'chunk', text: finalSummary });
 
     // 9. Human-in-the-Loop Approval Center Integration
@@ -1237,12 +1265,13 @@ INSTRUCTIONS:
       if (isDbAvailable && prisma) {
         try {
           await safeDbQuery(async () => {
-            let activePlan = await prisma.plan.findFirst({ where: { startupId } });
+            let activePlan = await prisma.plan.findUnique({ where: { id: decomposedPlan.plan.id } });
             if (!activePlan) {
               activePlan = await prisma.plan.create({
                 data: {
-                  title: 'Core Executive Operations',
-                  description: 'Default continuous operating plan',
+                  id: decomposedPlan.plan.id,
+                  title: decomposedPlan.plan.title,
+                  description: decomposedPlan.plan.description,
                   startupId: startupId,
                   status: 'active'
                 }
@@ -1364,6 +1393,14 @@ INSTRUCTIONS:
       votes: councilResult.boardConsensus.votes,
       boardConsensus: councilResult.boardConsensus,
       approval: approvalRequirement,
+      plan: {
+        id: decomposedPlan.plan.id,
+        title: decomposedPlan.plan.title,
+        description: decomposedPlan.plan.description,
+        status: decomposedPlan.plan.status,
+        steps: decomposedPlan.explicitSteps,
+        tasks: decomposedPlan.tasks
+      },
       nextActions,
       confidence,
     };
