@@ -1,16 +1,16 @@
 /**
  * CatalystOS - What-If Scenario Studio (Section 17)
+ * Redesigned with Apple × Linear × Notion aesthetics.
  * Clear founder interaction: "What happens if..." → Scenario Input → Run Scenario
  * Clean 5-phase progression: Current State ↓ Scenario ↓ Executive Analysis ↓ Impact ↓ Recommendation
  */
 
 import React, { useState, useMemo } from 'react';
 import {
-  TrendingUp, TrendingDown, AlertTriangle, ShieldCheck,
-  Users, DollarSign, Calendar, RefreshCw, Sparkles, Check,
-  ArrowRight, ShieldAlert, BarChart3, HelpCircle, ArrowDown,
-  Play, SlidersHorizontal, CheckCircle2, XCircle
+  TrendingUp, TrendingDown, AlertTriangle,
+  RefreshCw, Play, SlidersHorizontal, CheckCircle2, XCircle, ArrowDown
 } from 'lucide-react';
+import Section from './Section';
 
 interface ScenarioSimulatorProps {
   currentCash: number;
@@ -209,41 +209,53 @@ export default function ScenarioSimulator({
     <div id="scenario-studio-container" className="space-y-8 font-sans">
       
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
+      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4" style={{ borderBottom: '1px solid var(--c-border)' }}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#696969]">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--c-accent)' }}>
               Strategic Forecasting
             </span>
-            <span className="w-1 h-1 rounded-full bg-[#141413]/30" />
-            <span className="text-[11px] font-mono text-[#696969]">
+            <span className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--c-border-strong)' }} />
+            <span className="text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
               Deterministic Solvency Engine
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#141413]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
             Scenario Studio
           </h1>
-          <p className="text-sm text-[#696969] mt-1 max-w-2xl">
+          <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--c-muted)' }}>
             Simulate the impact of hiring expansions, market downturns, and capital deployments before committing company cash.
           </p>
         </div>
 
         <button
           onClick={resetToBaseline}
-          className="px-3.5 py-2 rounded-xl bg-white border border-[#141413]/15 text-xs font-semibold text-[#141413] hover:border-[#141413] transition-colors flex items-center gap-1.5 self-start md:self-center"
+          className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 self-start md:self-center transition-colors cursor-pointer"
+          style={{
+            backgroundColor: 'var(--c-surface-2)',
+            border: '1px solid var(--c-border)',
+            color: 'var(--c-fg)'
+          }}
         >
-          <RefreshCw className="w-3.5 h-3.5 text-[#696969]" />
+          <RefreshCw className="w-3.5 h-3.5" style={{ color: 'var(--c-muted)' }} />
           Reset to Baseline
         </button>
-      </div>
+      </Section>
 
       {/* ── PRIMARY INTERACTION: "WHAT HAPPENS IF..." HERO ───────────────── */}
-      <div className="catalyst-card p-6 md:p-8 rounded-2xl space-y-6 shadow-sm border border-[#141413]/10">
+      <div 
+        className="p-6 md:p-8 rounded-2xl space-y-6 shadow-sm transition-all"
+        style={{
+          backgroundColor: 'var(--c-surface)',
+          border: '1px solid var(--c-border)',
+          boxShadow: 'var(--shadow-sm)'
+        }}
+      >
         <div>
-          <span className="text-xs font-bold text-[#696969] uppercase font-mono tracking-wider block mb-2">
+          <span className="text-xs font-bold uppercase font-mono tracking-wider block mb-2" style={{ color: 'var(--c-muted)' }}>
             Main Scenario Prompt
           </span>
-          <label className="text-xl sm:text-2xl font-bold text-[#141413] block">
+          <label className="text-xl sm:text-2xl font-bold block" style={{ color: 'var(--c-fg)' }}>
             What happens if...
           </label>
         </div>
@@ -256,14 +268,23 @@ export default function ScenarioSimulator({
               value={scenarioPrompt}
               onChange={(e) => setScenarioPrompt(e.target.value)}
               placeholder="e.g. We hire 3 engineers and increase growth spend by $15k/mo..."
-              className="w-full px-4 py-3.5 rounded-xl bg-white border border-[#141413]/20 text-sm font-semibold text-[#141413] focus:outline-none focus:border-[#141413] shadow-inner"
+              className="w-full px-4 py-3.5 rounded-xl text-sm font-semibold outline-none transition-colors"
+              style={{
+                backgroundColor: 'var(--c-surface-2)',
+                border: '1px solid var(--c-border)',
+                color: 'var(--c-fg)'
+              }}
             />
           </div>
 
           <button
             onClick={handleRunScenario}
             disabled={isRunning}
-            className="interactive-btn px-6 py-3.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center justify-center gap-2 shadow-sm shrink-0 disabled:opacity-50"
+            className="px-6 py-3.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-sm shrink-0 disabled:opacity-50 cursor-pointer transition-all"
+            style={{
+              backgroundColor: 'var(--c-fg)',
+              color: 'var(--c-bg)'
+            }}
           >
             {isRunning ? (
               <>
@@ -272,7 +293,7 @@ export default function ScenarioSimulator({
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 text-[#F3F0EE]" />
+                <Play className="w-4 h-4" />
                 Run Scenario
               </>
             )}
@@ -281,18 +302,19 @@ export default function ScenarioSimulator({
 
         {/* Preset Chips */}
         <div className="flex items-center gap-2 flex-wrap pt-1">
-          <span className="text-xs text-[#696969] font-medium mr-1">Presets:</span>
+          <span className="text-xs font-medium mr-1" style={{ color: 'var(--c-muted)' }}>Presets:</span>
           {PRESETS.map((p) => {
             const isSelected = activePreset === p.id;
             return (
               <button
                 key={p.id}
                 onClick={() => applyPreset(p)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  isSelected
-                    ? 'bg-[#141413] text-[#F3F0EE]'
-                    : 'bg-[#FCFBFA] border border-[#141413]/10 text-[#696969] hover:text-[#141413] hover:border-[#141413]/30'
-                }`}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                style={{
+                  backgroundColor: isSelected ? 'var(--c-fg)' : 'var(--c-surface-2)',
+                  color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)',
+                  border: `1px solid ${isSelected ? 'var(--c-fg)' : 'var(--c-border)'}`
+                }}
               >
                 {p.title}
               </button>
@@ -301,7 +323,8 @@ export default function ScenarioSimulator({
 
           <button
             onClick={() => setShowVariableSliders(!showVariableSliders)}
-            className="ml-auto text-xs text-[#141413] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+            className="ml-auto text-xs font-bold hover:underline flex items-center gap-1 cursor-pointer"
+            style={{ color: 'var(--c-accent)' }}
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             {showVariableSliders ? 'Hide Variable Controls' : 'Fine-Tune Variables'}
@@ -310,12 +333,15 @@ export default function ScenarioSimulator({
 
         {/* Fine-Tuning Sliders (Collapsible) */}
         {showVariableSliders && (
-          <div className="pt-4 border-t border-[#141413]/10 grid grid-cols-1 sm:grid-cols-3 gap-5 animate-fade-in text-xs">
+          <div 
+            className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-5 animate-fade-in text-xs"
+            style={{ borderTop: '1px solid var(--c-border)' }}
+          >
             {/* Headcount */}
             <div className="space-y-1.5">
               <div className="flex justify-between font-semibold">
-                <span className="text-[#696969]">Headcount Delta</span>
-                <span className="text-[#141413] font-mono font-bold">+{headcount} hires</span>
+                <span style={{ color: 'var(--c-muted)' }}>Headcount Delta</span>
+                <span className="font-mono font-bold" style={{ color: 'var(--c-fg)' }}>+{headcount} hires</span>
               </div>
               <input
                 type="range"
@@ -327,15 +353,15 @@ export default function ScenarioSimulator({
                   setHeadcount(parseInt(e.target.value, 10));
                   setActivePreset(null);
                 }}
-                className="w-full accent-[#141413]"
+                className="w-full accent-indigo-500 cursor-pointer"
               />
             </div>
 
             {/* Growth Spend */}
             <div className="space-y-1.5">
               <div className="flex justify-between font-semibold">
-                <span className="text-[#696969]">Monthly Ad Spend</span>
-                <span className="text-[#141413] font-mono font-bold">
+                <span style={{ color: 'var(--c-muted)' }}>Monthly Ad Spend</span>
+                <span className="font-mono font-bold" style={{ color: 'var(--c-fg)' }}>
                   {adSpendDelta >= 0 ? `+$${adSpendDelta.toLocaleString()}` : `-$${Math.abs(adSpendDelta).toLocaleString()}`}
                 </span>
               </div>
@@ -349,15 +375,15 @@ export default function ScenarioSimulator({
                   setAdSpendDelta(parseInt(e.target.value, 10));
                   setActivePreset(null);
                 }}
-                className="w-full accent-[#141413]"
+                className="w-full accent-indigo-500 cursor-pointer"
               />
             </div>
 
             {/* Revenue Variance */}
             <div className="space-y-1.5">
               <div className="flex justify-between font-semibold">
-                <span className="text-[#696969]">Revenue Shock</span>
-                <span className={`font-mono font-bold ${revenueDeltaPercent < 0 ? 'text-rose-700' : 'text-[#141413]'}`}>
+                <span style={{ color: 'var(--c-muted)' }}>Revenue Shock</span>
+                <span className={`font-mono font-bold ${revenueDeltaPercent < 0 ? 'text-rose-500' : ''}`} style={{ color: revenueDeltaPercent >= 0 ? 'var(--c-fg)' : undefined }}>
                   {revenueDeltaPercent > 0 ? `+${revenueDeltaPercent}%` : `${revenueDeltaPercent}%`}
                 </span>
               </div>
@@ -371,7 +397,7 @@ export default function ScenarioSimulator({
                   setRevenueDeltaPercent(parseInt(e.target.value, 10));
                   setActivePreset(null);
                 }}
-                className="w-full accent-[#141413]"
+                className="w-full accent-indigo-500 cursor-pointer"
               />
             </div>
           </div>
@@ -385,51 +411,73 @@ export default function ScenarioSimulator({
           {/* Phase 1: Current State */}
           <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#141413] text-[#F3F0EE] text-[10px] font-mono font-bold flex items-center justify-center">
+              <span 
+                className="w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center"
+                style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+              >
                 1
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider font-mono text-[#141413]">
+              <h3 className="text-sm font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
                 Current State (Baseline)
               </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="catalyst-card p-4 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-mono font-bold text-[#696969]">Baseline Cash Balance</span>
-                <p className="text-xl font-bold font-mono text-[#141413]">${(currentCash / 1000).toFixed(0)}k</p>
-                <span className="text-[10px] text-[#696969]">Audited Neon Ledger</span>
+              <div 
+                className="p-4 rounded-xl space-y-1 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
+                <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Baseline Cash Balance</span>
+                <p className="text-xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${(currentCash / 1000).toFixed(0)}k</p>
+                <span className="text-[10px]" style={{ color: 'var(--c-muted)' }}>Audited Neon Ledger</span>
               </div>
-              <div className="catalyst-card p-4 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-mono font-bold text-[#696969]">Current Monthly Burn</span>
-                <p className="text-xl font-bold font-mono text-[#141413]">${(currentBurn / 1000).toFixed(0)}k/mo</p>
-                <span className="text-[10px] text-[#696969]">Fixed + Discretionary</span>
+              <div 
+                className="p-4 rounded-xl space-y-1 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
+                <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Current Monthly Burn</span>
+                <p className="text-xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${(currentBurn / 1000).toFixed(0)}k/mo</p>
+                <span className="text-[10px]" style={{ color: 'var(--c-muted)' }}>Fixed + Discretionary</span>
               </div>
-              <div className="catalyst-card p-4 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-mono font-bold text-[#696969]">Baseline Runway</span>
-                <p className="text-xl font-bold font-mono text-emerald-700">{simulation.initialRunway} months</p>
-                <span className="text-[10px] text-[#696969]">At current consumption</span>
+              <div 
+                className="p-4 rounded-xl space-y-1 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
+                <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Baseline Runway</span>
+                <p className="text-xl font-bold font-mono text-emerald-500">{simulation.initialRunway} months</p>
+                <span className="text-[10px]" style={{ color: 'var(--c-muted)' }}>At current consumption</span>
               </div>
             </div>
           </section>
 
-          <div className="flex justify-center text-[#696969]/40"><ArrowDown className="w-4 h-4" /></div>
+          <div className="flex justify-center" style={{ color: 'var(--c-border-strong)' }}><ArrowDown className="w-4 h-4" /></div>
 
           {/* Phase 2: Scenario Tested */}
           <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#141413] text-[#F3F0EE] text-[10px] font-mono font-bold flex items-center justify-center">
+              <span 
+                className="w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center"
+                style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+              >
                 2
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider font-mono text-[#141413]">
+              <h3 className="text-sm font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
                 Scenario Tested
               </h3>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#FCFBFA] border border-[#141413]/10 text-xs text-[#141413] flex items-center justify-between flex-wrap gap-3">
+            <div 
+              className="p-4 rounded-xl text-xs flex items-center justify-between flex-wrap gap-3"
+              style={{
+                backgroundColor: 'var(--c-surface-2)',
+                border: '1px solid var(--c-border)',
+                color: 'var(--c-fg)'
+              }}
+            >
               <span className="font-semibold text-sm">
                 "{scenarioPrompt}"
               </span>
-              <div className="flex items-center gap-2 font-mono text-[11px] text-[#696969]">
+              <div className="flex items-center gap-2 font-mono text-[11px]" style={{ color: 'var(--c-muted)' }}>
                 <span>Headcount: +{headcount}</span>
                 <span>·</span>
                 <span>Ad Spend: ${adSpendDelta}/mo</span>
@@ -439,29 +487,35 @@ export default function ScenarioSimulator({
             </div>
           </section>
 
-          <div className="flex justify-center text-[#696969]/40"><ArrowDown className="w-4 h-4" /></div>
+          <div className="flex justify-center" style={{ color: 'var(--c-border-strong)' }}><ArrowDown className="w-4 h-4" /></div>
 
           {/* Phase 3: Executive Council Analysis */}
           <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#141413] text-[#F3F0EE] text-[10px] font-mono font-bold flex items-center justify-center">
+              <span 
+                className="w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center"
+                style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+              >
                 3
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider font-mono text-[#141413]">
+              <h3 className="text-sm font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
                 Executive Council Analysis
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               {/* CFO Analysis */}
-              <div className="catalyst-card p-4 rounded-xl space-y-2">
+              <div 
+                className="p-4 rounded-xl space-y-2 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#141413] flex items-center gap-1.5">
+                  <span className="font-bold flex items-center gap-1.5" style={{ color: 'var(--c-fg)' }}>
                     Marcus (CFO)
                   </span>
-                  <span className="text-[10px] font-mono text-[#696969]">Treasury</span>
+                  <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>Treasury</span>
                 </div>
-                <p className="text-[#696969] leading-relaxed">
+                <p className="leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                   {simulation.projectedRunway < 4.0
                     ? `Critical runway collapse to ${simulation.projectedRunway} months. Violates solvency floor. Mandatory veto.`
                     : simulation.projectedRunway < 6.0
@@ -471,12 +525,15 @@ export default function ScenarioSimulator({
               </div>
 
               {/* Talent Analysis */}
-              <div className="catalyst-card p-4 rounded-xl space-y-2">
+              <div 
+                className="p-4 rounded-xl space-y-2 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#141413]">Evelyn (Talent)</span>
-                  <span className="text-[10px] font-mono text-[#696969]">People</span>
+                  <span className="font-bold" style={{ color: 'var(--c-fg)' }}>Evelyn (Talent)</span>
+                  <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>People</span>
                 </div>
-                <p className="text-[#696969] leading-relaxed">
+                <p className="leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                   {headcount > 0
                     ? `Adding ${headcount} hires expands loaded compensation burn by $${Math.round(simulation.monthlyHeadcountCost).toLocaleString()}/mo. 30-day hiring cycle expected.`
                     : 'Zero headcount modifications requested in this simulation branch.'}
@@ -484,64 +541,82 @@ export default function ScenarioSimulator({
               </div>
 
               {/* Auditor Analysis */}
-              <div className="catalyst-card p-4 rounded-xl space-y-2">
+              <div 
+                className="p-4 rounded-xl space-y-2 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#141413]">Nexus (Auditor)</span>
-                  <span className="text-[10px] font-mono text-[#696969]">Governance</span>
+                  <span className="font-bold" style={{ color: 'var(--c-fg)' }}>Nexus (Auditor)</span>
+                  <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>Governance</span>
                 </div>
-                <p className="text-[#696969] leading-relaxed">
+                <p className="leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                   Deterministic FinancialEngine calculation verified. Zero generative hallucination in balance projections.
                 </p>
               </div>
             </div>
           </section>
 
-          <div className="flex justify-center text-[#696969]/40"><ArrowDown className="w-4 h-4" /></div>
+          <div className="flex justify-center" style={{ color: 'var(--c-border-strong)' }}><ArrowDown className="w-4 h-4" /></div>
 
           {/* Phase 4: Treasury & Operational Impact */}
           <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#141413] text-[#F3F0EE] text-[10px] font-mono font-bold flex items-center justify-center">
+              <span 
+                className="w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center"
+                style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+              >
                 4
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider font-mono text-[#141413]">
+              <h3 className="text-sm font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
                 Forecasted Impact
               </h3>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="catalyst-card p-4 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-mono font-bold text-[#696969]">Projected Runway</span>
-                <p className="text-2xl font-bold font-mono text-[#141413]">{simulation.projectedRunway} mo</p>
+              <div 
+                className="p-4 rounded-xl space-y-1 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
+                <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Projected Runway</span>
+                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>{simulation.projectedRunway} mo</p>
                 <span className={`text-[11px] font-semibold flex items-center gap-1 ${
-                  simulation.runwayDelta < 0 ? 'text-rose-700' : 'text-emerald-700'
+                  simulation.runwayDelta < 0 ? 'text-rose-500' : 'text-emerald-500'
                 }`}>
                   {simulation.runwayDelta < 0 ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
                   {simulation.runwayDelta > 0 ? `+${simulation.runwayDelta}` : simulation.runwayDelta} mo shift
                 </span>
               </div>
 
-              <div className="catalyst-card p-4 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-mono font-bold text-[#696969]">Projected Monthly Burn</span>
-                <p className="text-2xl font-bold font-mono text-[#141413]">${Math.round(simulation.projectedBurn / 1000)}k/mo</p>
-                <span className="text-[11px] font-mono text-[#696969]">
+              <div 
+                className="p-4 rounded-xl space-y-1 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
+                <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Projected Monthly Burn</span>
+                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${Math.round(simulation.projectedBurn / 1000)}k/mo</p>
+                <span className="text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
                   {simulation.netBurnDelta >= 0 ? `+$${Math.round(simulation.netBurnDelta / 1000)}k` : `-$${Math.round(Math.abs(simulation.netBurnDelta) / 1000)}k`} net delta
                 </span>
               </div>
 
-              <div className="catalyst-card p-4 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-mono font-bold text-[#696969]">Projected Cash</span>
-                <p className="text-2xl font-bold font-mono text-[#141413]">${Math.round(simulation.projectedCash / 1000)}k</p>
-                <span className="text-[11px] text-[#696969]">Available liquidity</span>
+              <div 
+                className="p-4 rounded-xl space-y-1 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
+                <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Projected Cash</span>
+                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${Math.round(simulation.projectedCash / 1000)}k</p>
+                <span className="text-[11px]" style={{ color: 'var(--c-muted)' }}>Available liquidity</span>
               </div>
 
-              <div className="catalyst-card p-4 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-mono font-bold text-[#696969]">Risk Assessment</span>
+              <div 
+                className="p-4 rounded-xl space-y-1 transition-all"
+                style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+              >
+                <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Risk Assessment</span>
                 <div className="pt-1">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase ${
-                    simulation.riskRating === 'CRITICAL' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
-                    simulation.riskRating === 'HIGH' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                    'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    simulation.riskRating === 'CRITICAL' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/25' :
+                    simulation.riskRating === 'HIGH' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
+                    'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25'
                   }`}>
                     {simulation.riskRating}
                   </span>
@@ -550,30 +625,34 @@ export default function ScenarioSimulator({
             </div>
 
             {/* Trajectory visualization */}
-            <div className="catalyst-card p-5 rounded-xl space-y-3">
+            <div 
+              className="p-5 rounded-xl space-y-3 transition-all"
+              style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+            >
               <div className="flex items-center justify-between text-xs">
-                <span className="font-mono font-bold uppercase tracking-wider text-[#141413]">
+                <span className="font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--c-fg)' }}>
                   12-Month Projected Treasury Trajectory
                 </span>
-                <span className="text-[#696969] font-mono">
+                <span className="font-mono" style={{ color: 'var(--c-muted)' }}>
                   Depletion Horizon: {simulation.projectedRunway > 12 ? '> 12 months' : `Month ${Math.ceil(simulation.projectedRunway)}`}
                 </span>
               </div>
 
-              <div className="grid grid-cols-12 gap-1.5 items-end h-24 pt-2 border-b border-[#141413]/05 pb-2">
+              <div className="grid grid-cols-12 gap-1.5 items-end h-24 pt-2 pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
                 {simulation.timeline.map((point) => {
                   const maxCash = Math.max(1, simulation.projectedCash);
                   const heightPct = Math.max(8, Math.min(100, (point.cash / maxCash) * 100));
                   return (
                     <div key={point.month} className="flex flex-col items-center h-full justify-end">
                       <div
-                        style={{ height: `${heightPct}%` }}
-                        className={`w-full rounded-t transition-all ${
-                          point.cash <= 0 ? 'bg-rose-500' : point.cash <= simulation.projectedBurn * 3 ? 'bg-amber-500' : 'bg-[#141413]'
-                        }`}
+                        style={{ 
+                          height: `${heightPct}%`,
+                          backgroundColor: point.cash <= 0 ? 'rgb(239, 68, 68)' : point.cash <= simulation.projectedBurn * 3 ? '#f59e0b' : 'var(--c-fg)'
+                        }}
+                        className="w-full rounded-t transition-all"
                         title={`Month ${point.month}: $${point.cash.toLocaleString()}`}
                       />
-                      <span className="text-[9px] text-[#696969] font-mono mt-1">M{point.month}</span>
+                      <span className="text-[9px] font-mono mt-1" style={{ color: 'var(--c-muted)' }}>M{point.month}</span>
                     </div>
                   );
                 })}
@@ -581,46 +660,59 @@ export default function ScenarioSimulator({
             </div>
           </section>
 
-          <div className="flex justify-center text-[#696969]/40"><ArrowDown className="w-4 h-4" /></div>
+          <div className="flex justify-center" style={{ color: 'var(--c-border-strong)' }}><ArrowDown className="w-4 h-4" /></div>
 
           {/* Phase 5: Recommendation */}
           <section className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#141413] text-[#F3F0EE] text-[10px] font-mono font-bold flex items-center justify-center">
+              <span 
+                className="w-5 h-5 rounded-full text-[10px] font-mono font-bold flex items-center justify-center"
+                style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+              >
                 5
               </span>
-              <h3 className="text-sm font-bold uppercase tracking-wider font-mono text-[#141413]">
+              <h3 className="text-sm font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
                 Council Recommendation & Action Pathway
               </h3>
             </div>
 
-            <div className={`p-6 rounded-2xl border ${
-              simulation.riskRating === 'CRITICAL'
-                ? 'bg-rose-500/05 border-rose-500/30'
-                : simulation.riskRating === 'HIGH'
-                ? 'bg-amber-500/05 border-amber-500/30'
-                : 'bg-emerald-500/05 border-emerald-500/30'
-            } space-y-4`}>
-              <div className="flex items-center gap-2 text-sm font-bold text-[#141413]">
+            <div 
+              className="p-6 rounded-2xl space-y-4 transition-all"
+              style={{
+                backgroundColor: simulation.riskRating === 'CRITICAL' 
+                  ? 'rgba(239, 68, 68, 0.08)' 
+                  : simulation.riskRating === 'HIGH' 
+                    ? 'rgba(245, 158, 11, 0.08)' 
+                    : 'rgba(16, 185, 129, 0.08)',
+                border: `1px solid ${
+                  simulation.riskRating === 'CRITICAL' 
+                    ? 'rgba(239, 68, 68, 0.3)' 
+                    : simulation.riskRating === 'HIGH' 
+                      ? 'rgba(245, 158, 11, 0.3)' 
+                      : 'rgba(16, 185, 129, 0.3)'
+                }`
+              }}
+            >
+              <div className="flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--c-fg)' }}>
                 {simulation.riskRating === 'CRITICAL' ? (
                   <>
-                    <XCircle className="w-5 h-5 text-rose-600" />
+                    <XCircle className="w-5 h-5 text-rose-500" />
                     <span>Adverse Solvency: Executive Veto Recommended</span>
                   </>
                 ) : simulation.riskRating === 'HIGH' ? (
                   <>
-                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
                     <span>Conditional Approval: Requires Compensating Offsets</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                     <span>Solvency Verified: Proceed with Strategic Initiative</span>
                   </>
                 )}
               </div>
 
-              <p className="text-xs text-[#141413] leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--c-fg)' }}>
                 {simulation.riskRating === 'CRITICAL'
                   ? 'Executing this scenario reduces cash runway dangerously close to depletion. The council advises postponing non-essential headcount expansion until institutional seed or revenue milestones close.'
                   : simulation.riskRating === 'HIGH'

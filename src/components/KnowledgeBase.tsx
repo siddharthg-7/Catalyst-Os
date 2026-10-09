@@ -1,7 +1,8 @@
 /**
  * CatalystOS - Company Knowledge Base (Section 16)
- * User-facing presentation framed around Company Knowledge (Documents, Research, Strategy, Financials, Customer & Product Info).
- * Technical RAG concepts nested in clean collapsible system details.
+ * Redesigned with Apple × Notion × Linear aesthetics.
+ * Institutional Memory & Truth (Documents, Research, Strategy, Financials, Customer & Product Info).
+ * Semantic token integration, smooth upload zones, interactive QA hub, and vector status.
  */
 
 import React, { useState, useRef, useMemo } from 'react';
@@ -9,10 +10,10 @@ import { useAuth } from '../context/AuthContext';
 import { KnowledgeFile } from '../types';
 import {
   UploadCloud, FileText, Search, Sparkles, Send, Calendar,
-  HardDrive, Loader2, CheckCircle2, AlertTriangle, X,
-  Globe, Github, Link2, FileUp, BookOpen, ChevronDown,
-  Lightbulb, Clock, ArrowRight, Layers, ShieldCheck, ChevronRight
+  Loader2, CheckCircle2, AlertTriangle, X,
+  ChevronDown, Lightbulb, Layers
 } from 'lucide-react';
+import Section from './Section';
 
 interface KnowledgeBaseProps {
   documents: KnowledgeFile[];
@@ -67,11 +68,6 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
   const [docName, setDocName] = useState('');
   const [docContent, setDocContent] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-
-  // External URLs
-  const [webUrl, setWebUrl] = useState('');
-  const [githubRepo, setGithubRepo] = useState('');
-  const [notionUrl, setNotionUrl] = useState('');
 
   // Selected doc
   const [selectedDocId, setSelectedDocId] = useState<string>(documents[0]?.id || '');
@@ -201,21 +197,21 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
     <div id="company-knowledge-container" className="space-y-6 font-sans">
       
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
+      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4" style={{ borderBottom: '1px solid var(--c-border)' }}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#696969]">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--c-accent)' }}>
               Institutional Memory & Truth
             </span>
-            <span className="w-1 h-1 rounded-full bg-[#141413]/30" />
-            <span className="text-[11px] font-mono text-[#696969]">
+            <span className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--c-border-strong)' }} />
+            <span className="text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
               {documents.length} Grounding Sources
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#141413]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
             Company Knowledge
           </h1>
-          <p className="text-sm text-[#696969] mt-1 max-w-2xl">
+          <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--c-muted)' }}>
             Centralized repository of corporate intelligence. Ground your executive agents with pitch decks, financial sheets, board memos, and strategy documents.
           </p>
         </div>
@@ -223,19 +219,30 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
         {/* Quick Upload Button */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="interactive-btn px-4 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-2 shadow-sm self-start md:self-center"
+          className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm self-start md:self-center transition-all cursor-pointer"
+          style={{
+            backgroundColor: 'var(--c-fg)',
+            color: 'var(--c-bg)'
+          }}
         >
-          <UploadCloud className="w-4 h-4 text-[#F3F0EE]" />
+          <UploadCloud className="w-4 h-4" />
           Upload Document
         </button>
-      </div>
+      </Section>
 
       {/* ── SUCCESS TOAST ─────────────────────────────────────────────────── */}
       {successToast && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white border border-emerald-500/20 shadow-xl rounded-2xl px-5 py-3.5 animate-fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          <p className="text-xs text-[#141413] font-medium">Document ingested & synthesized into executive memory.</p>
-          <button onClick={() => setSuccessToast(false)} className="text-[#696969] hover:text-[#141413]">
+        <div 
+          className="fixed top-6 right-6 z-50 flex items-center gap-3 shadow-xl rounded-2xl px-5 py-3.5 animate-fade-in"
+          style={{
+            backgroundColor: 'var(--c-surface)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            boxShadow: 'var(--shadow-lg)'
+          }}
+        >
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          <p className="text-xs font-medium" style={{ color: 'var(--c-fg)' }}>Document ingested & synthesized into executive memory.</p>
+          <button onClick={() => setSuccessToast(false)} className="cursor-pointer" style={{ color: 'var(--c-muted)' }}>
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -244,29 +251,38 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
       {/* ── CATEGORY PILLS BAR ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 overflow-x-auto pb-1">
         <div className="flex items-center gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                activeCategory === cat.id
-                  ? 'bg-[#141413] text-[#F3F0EE]'
-                  : 'bg-white border border-[#141413]/10 text-[#696969] hover:text-[#141413]'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const isSelected = activeCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer"
+                style={{
+                  backgroundColor: isSelected ? 'var(--c-fg)' : 'var(--c-surface)',
+                  color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)',
+                  border: `1px solid ${isSelected ? 'var(--c-fg)' : 'var(--c-border)'}`
+                }}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="relative w-64 shrink-0 hidden sm:block">
-          <Search className="w-3.5 h-3.5 text-[#696969] absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--c-muted)' }} />
           <input
             type="text"
             placeholder="Search documents..."
             value={searchDocQuery}
             onChange={(e) => setSearchDocQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl bg-white border border-[#141413]/15 text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413]"
+            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              color: 'var(--c-fg)'
+            }}
           />
         </div>
       </div>
@@ -278,52 +294,68 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
         <div className="lg:col-span-5 space-y-6">
           
           {/* Add Knowledge Source Card */}
-          <div className="catalyst-card card-hover glow-border p-5 rounded-2xl space-y-4">
+          <div 
+            className="p-5 rounded-2xl space-y-4 transition-all"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-[#141413]">Add Knowledge Source</h3>
-                <p className="text-[11px] text-[#696969]">Feed context directly into council reasoning.</p>
+                <h3 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>Add Knowledge Source</h3>
+                <p className="text-[11px]" style={{ color: 'var(--c-muted)' }}>Feed context directly into council reasoning.</p>
               </div>
-              <span className="text-[10px] font-mono text-[#696969] uppercase font-bold">Inbound</span>
+              <span className="text-[10px] font-mono uppercase font-bold" style={{ color: 'var(--c-muted)' }}>Inbound</span>
             </div>
 
             {/* Input tabs */}
-            <div className="flex flex-wrap gap-1.5 border-b border-[#141413]/05 pb-3">
+            <div className="flex flex-wrap gap-1.5 pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
               {[
                 { id: 'file', label: 'File Upload' },
                 { id: 'paste', label: 'Paste Text' },
                 { id: 'website', label: 'Website' },
                 { id: 'github', label: 'GitHub' },
                 { id: 'notion', label: 'Notion' },
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setUploadTab(t.id as any)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                    uploadTab === t.id
-                      ? 'bg-[#141413] text-[#F3F0EE]'
-                      : 'bg-[#FCFBFA] border border-[#141413]/08 text-[#696969] hover:text-[#141413]'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
+              ].map((t) => {
+                const isSelected = uploadTab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setUploadTab(t.id as any)}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                    style={{
+                      backgroundColor: isSelected ? 'var(--c-fg)' : 'var(--c-surface-2)',
+                      color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)',
+                      border: `1px solid ${isSelected ? 'var(--c-fg)' : 'var(--c-border)'}`
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Category Type selector */}
             <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#696969] block">Document Domain</label>
+              <label className="text-[11px] font-semibold block" style={{ color: 'var(--c-muted)' }}>Document Domain</label>
               <div className="relative">
                 <select
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FCFBFA] border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413] appearance-none"
+                  className="w-full px-3 py-2 rounded-xl text-xs outline-none appearance-none"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
                 >
                   {DOC_TYPES.map((dt) => (
                     <option key={dt.value} value={dt.value}>{dt.label}</option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-[#696969] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--c-muted)' }} />
               </div>
             </div>
 
@@ -335,17 +367,17 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                   onDragLeave={() => setIsDragging(false)}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
-                    isDragging
-                      ? 'border-[#141413] bg-[#141413]/05'
-                      : 'border-[#141413]/15 bg-[#FCFBFA] hover:border-[#141413]/40'
-                  }`}
+                  className="p-6 rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2"
+                  style={{
+                    borderColor: isDragging ? 'var(--c-accent)' : 'var(--c-border-strong)',
+                    backgroundColor: isDragging ? 'rgba(99, 102, 241, 0.05)' : 'var(--c-surface-2)'
+                  }}
                 >
-                  <UploadCloud className="w-6 h-6 text-[#141413]" />
-                  <p className="text-xs text-[#141413] font-semibold">
+                  <UploadCloud className="w-6 h-6" style={{ color: 'var(--c-fg)' }} />
+                  <p className="text-xs font-semibold" style={{ color: 'var(--c-fg)' }}>
                     Drag & drop files here, or <span className="underline">browse</span>
                   </p>
-                  <p className="text-[10px] text-[#696969]">PDF, DOCX, PPTX, CSV, TXT, MD (Max 15MB)</p>
+                  <p className="text-[10px]" style={{ color: 'var(--c-muted)' }}>PDF, DOCX, PPTX, CSV, TXT, MD (Max 15MB)</p>
                 </div>
                 <input
                   ref={fileInputRef}
@@ -360,19 +392,26 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                 {activeUploads.length > 0 && (
                   <div className="space-y-2">
                     {activeUploads.map((u) => (
-                      <div key={u.id} className="p-3 rounded-xl border border-[#141413]/10 bg-white space-y-1.5 text-xs">
+                      <div 
+                        key={u.id} 
+                        className="p-3 rounded-xl space-y-1.5 text-xs"
+                        style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}
+                      >
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-[#141413] truncate max-w-[70%]">{u.name}</span>
-                          {u.status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                          {u.status === 'failed' && <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />}
+                          <span className="font-semibold truncate max-w-[70%]" style={{ color: 'var(--c-fg)' }}>{u.name}</span>
+                          {u.status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                          {u.status === 'failed' && <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />}
                           {['reading', 'uploading', 'analyzing'].includes(u.status) && (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#141413]" />
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: 'var(--c-accent)' }} />
                           )}
                         </div>
-                        <div className="w-full h-1 bg-[#141413]/08 rounded-full overflow-hidden">
+                        <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--c-border)' }}>
                           <div
-                            className="h-full bg-[#141413] transition-all duration-300"
-                            style={{ width: `${u.progress}%` }}
+                            className="h-full transition-all duration-300"
+                            style={{ 
+                              width: `${u.progress}%`,
+                              backgroundColor: 'var(--c-accent)'
+                            }}
                           />
                         </div>
                       </div>
@@ -390,19 +429,33 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                   placeholder="Document Title (e.g., Q3 Strategy Memo)"
                   value={docName}
                   onChange={(e) => setDocName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413]"
+                  className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
                 />
                 <textarea
                   rows={4}
                   placeholder="Paste context, meeting notes, customer transcripts..."
                   value={docContent}
                   onChange={(e) => setDocContent(e.target.value)}
-                  className="w-full p-3 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413] resize-none"
+                  className="w-full p-3 rounded-xl text-xs resize-none outline-none"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
                 />
                 <button
                   type="submit"
                   disabled={!docName || !docContent || isUploading}
-                  className="w-full py-2 rounded-xl bg-[#141413] text-[#F3F0EE] text-xs font-bold hover:bg-[#262627] disabled:opacity-40"
+                  className="w-full py-2 rounded-xl text-xs font-semibold disabled:opacity-40 cursor-pointer transition-all"
+                  style={{
+                    backgroundColor: 'var(--c-fg)',
+                    color: 'var(--c-bg)'
+                  }}
                 >
                   {isUploading ? 'Ingesting...' : 'Add to Knowledge'}
                 </button>
@@ -418,11 +471,20 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                     uploadTab === 'website' ? 'https://company.com/deck' :
                     uploadTab === 'github' ? 'https://github.com/company/repo' : 'https://notion.so/workspace/doc'
                   }
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413]"
+                  className="w-full px-3 py-2 rounded-xl text-xs outline-none"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
                 />
                 <button
                   type="button"
-                  className="w-full py-2 rounded-xl bg-[#141413] text-[#F3F0EE] text-xs font-bold hover:bg-[#262627]"
+                  className="w-full py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                  style={{
+                    backgroundColor: 'var(--c-fg)',
+                    color: 'var(--c-bg)'
+                  }}
                 >
                   Connect & Sync Source
                 </button>
@@ -431,10 +493,17 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
           </div>
 
           {/* Document Library List */}
-          <div className="catalyst-card card-hover glow-border p-5 rounded-2xl space-y-3">
+          <div 
+            className="p-5 rounded-2xl space-y-3 transition-all"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+          >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-[#141413]">Documents ({filteredDocuments.length})</h3>
-              <span className="text-[10px] font-mono text-[#696969]">Audited</span>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>Documents ({filteredDocuments.length})</h3>
+              <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>Audited</span>
             </div>
 
             <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
@@ -444,18 +513,22 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                   <button
                     key={doc.id}
                     onClick={() => setSelectedDocId(doc.id)}
-                    className={`w-full p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
-                      isSelected
-                        ? 'bg-white border-[#141413] shadow-sm'
-                        : 'bg-[#FCFBFA] border-[#141413]/08 hover:border-[#141413]/25'
-                    }`}
+                    className="w-full p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 cursor-pointer"
+                    style={{
+                      backgroundColor: isSelected ? 'var(--c-surface-2)' : 'var(--c-surface)',
+                      borderColor: isSelected ? 'var(--c-fg)' : 'var(--c-border)',
+                      boxShadow: isSelected ? 'var(--shadow-sm)' : 'none'
+                    }}
                   >
-                    <div className="p-2 rounded-lg bg-[#141413]/05 text-[#141413] shrink-0 mt-0.5">
+                    <div 
+                      className="p-2 rounded-lg shrink-0 mt-0.5"
+                      style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                    >
                       <FileText className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-bold text-[#141413] truncate">{doc.name}</h4>
-                      <div className="flex items-center gap-2 mt-1 text-[10px] text-[#696969] font-mono">
+                      <h4 className="text-xs font-bold truncate" style={{ color: 'var(--c-fg)' }}>{doc.name}</h4>
+                      <div className="flex items-center gap-2 mt-1 text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>
                         <span className="uppercase">{doc.type.replace('_', ' ')}</span>
                         <span>·</span>
                         <span>{doc.size}</span>
@@ -475,15 +548,22 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
         <div className="lg:col-span-7 space-y-6">
           
           {/* Ask Company Knowledge Search Hub */}
-          <div className="catalyst-card p-6 rounded-2xl space-y-4">
+          <div 
+            className="p-6 rounded-2xl space-y-4 transition-all"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              boxShadow: 'var(--shadow-sm)'
+            }}
+          >
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969]">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--c-accent)' }}>
                 Interactive Semantic Intelligence
               </span>
-              <h3 className="text-base font-bold text-[#141413] mt-0.5">
+              <h3 className="text-base font-bold mt-0.5" style={{ color: 'var(--c-fg)' }}>
                 Ask Company Knowledge
               </h3>
-              <p className="text-xs text-[#696969] mt-0.5">
+              <p className="text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>
                 Query grounded corporate facts across all uploaded pitch decks, financials, and transcripts.
               </p>
             </div>
@@ -494,12 +574,21 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                 placeholder="Ask anything about the company, cap table, runway, or roadmap..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full pl-4 pr-12 py-3 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413] shadow-sm"
+                className="w-full pl-4 pr-12 py-3 rounded-xl text-xs outline-none transition-colors"
+                style={{
+                  backgroundColor: 'var(--c-surface-2)',
+                  border: '1px solid var(--c-border)',
+                  color: 'var(--c-fg)'
+                }}
               />
               <button
                 type="submit"
                 disabled={!query.trim() || isQuerying}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-[#141413] text-[#F3F0EE] hover:bg-[#262627] disabled:opacity-40 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg disabled:opacity-40 transition-colors cursor-pointer"
+                style={{
+                  backgroundColor: 'var(--c-fg)',
+                  color: 'var(--c-bg)'
+                }}
               >
                 {isQuerying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               </button>
@@ -514,7 +603,12 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                   onClick={() => {
                     setQuery(qp);
                   }}
-                  className="px-2.5 py-1 rounded-lg bg-[#FCFBFA] border border-[#141413]/08 text-[11px] text-[#696969] hover:text-[#141413] hover:border-[#141413]/30 transition-all font-medium"
+                  className="px-2.5 py-1 rounded-lg text-[11px] transition-all font-medium cursor-pointer"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-muted)'
+                  }}
                 >
                   "{qp}"
                 </button>
@@ -523,31 +617,47 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
 
             {/* Answer Box */}
             {queryAnswer && (
-              <div className="p-4 rounded-xl bg-[#FCFBFA] border border-[#141413]/10 space-y-2 animate-fade-in">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[#141413]">
-                  <Sparkles className="w-4 h-4 text-emerald-600" />
+              <div 
+                className="p-4 rounded-xl space-y-2 animate-fade-in"
+                style={{
+                  backgroundColor: 'var(--c-surface-2)',
+                  border: '1px solid var(--c-border)'
+                }}
+              >
+                <div className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--c-fg)' }}>
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
                   <span>Synthesized Corporate Answer</span>
                 </div>
-                <p className="text-xs text-[#141413] leading-relaxed font-sans">{queryAnswer}</p>
+                <p className="text-xs leading-relaxed font-sans" style={{ color: 'var(--c-fg)' }}>{queryAnswer}</p>
               </div>
             )}
           </div>
 
           {/* Selected Document Deep Dive */}
           {activeDoc ? (
-            <div className="catalyst-card p-6 rounded-2xl space-y-5">
-              <div className="flex items-start justify-between border-b border-[#141413]/10 pb-4">
+            <div 
+              className="p-6 rounded-2xl space-y-5 transition-all"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                border: '1px solid var(--c-border)',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+            >
+              <div className="flex items-start justify-between pb-4" style={{ borderBottom: '1px solid var(--c-border)' }}>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase rounded-md bg-[#141413]/05 text-[#141413]">
+                    <span 
+                      className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase rounded-md"
+                      style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                    >
                       {activeDoc.type.replace('_', ' ')}
                     </span>
-                    <span className="text-[10px] font-mono text-[#696969]">{activeDoc.size}</span>
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>{activeDoc.size}</span>
                   </div>
-                  <h3 className="text-base font-bold text-[#141413]">{activeDoc.name}</h3>
+                  <h3 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>{activeDoc.name}</h3>
                 </div>
 
-                <span className="text-xs font-mono text-[#696969] flex items-center gap-1">
+                <span className="text-xs font-mono flex items-center gap-1" style={{ color: 'var(--c-muted)' }}>
                   <Calendar className="w-3.5 h-3.5" />
                   {new Date(activeDoc.uploadDate).toLocaleDateString()}
                 </span>
@@ -555,11 +665,18 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
 
               {/* AI Executive Summary */}
               <div className="space-y-2">
-                <span className="text-xs font-bold text-[#141413] flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: 'var(--c-fg)' }}>
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
                   Executive Synthesis & Key Takeaways
                 </span>
-                <p className="text-xs text-[#141413] leading-relaxed bg-[#FCFBFA] p-4 rounded-xl border border-[#141413]/08">
+                <p 
+                  className="text-xs leading-relaxed p-4 rounded-xl"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
+                >
                   {activeDoc.summary || 'Document indexed and available for cross-council grounding.'}
                 </p>
               </div>
@@ -567,13 +684,21 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
               {/* Key Insights List */}
               {activeDoc.keyInsights && activeDoc.keyInsights.length > 0 && (
                 <div className="space-y-2">
-                  <span className="text-xs font-bold text-[#141413] flex items-center gap-1.5">
-                    <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: 'var(--c-fg)' }}>
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
                     Audited Extracted Insights
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {activeDoc.keyInsights.map((insight, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-[#FCFBFA] border border-[#141413]/08 text-xs text-[#141413]">
+                      <div 
+                        key={idx} 
+                        className="p-3 rounded-xl text-xs"
+                        style={{
+                          backgroundColor: 'var(--c-surface-2)',
+                          border: '1px solid var(--c-border)',
+                          color: 'var(--c-fg)'
+                        }}
+                      >
                         {insight}
                       </div>
                     ))}
@@ -581,12 +706,13 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                 </div>
               )}
 
-              {/* Technical / RAG Advanced Accordion (Hidden by default) */}
-              <div className="pt-2 border-t border-[#141413]/10">
+              {/* Technical / RAG Advanced Accordion */}
+              <div className="pt-2" style={{ borderTop: '1px solid var(--c-border)' }}>
                 <button
                   type="button"
                   onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-                  className="flex items-center justify-between w-full text-xs font-mono text-[#696969] hover:text-[#141413] py-1"
+                  className="flex items-center justify-between w-full text-xs font-mono py-1 cursor-pointer transition-colors"
+                  style={{ color: 'var(--c-muted)' }}
                 >
                   <span className="flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5" />
@@ -596,22 +722,29 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
                 </button>
 
                 {showTechnicalDetails && (
-                  <div className="mt-3 p-4 rounded-xl bg-[#FCFBFA] border border-[#141413]/08 text-[11px] font-mono space-y-2 text-[#696969] animate-fade-in">
+                  <div 
+                    className="mt-3 p-4 rounded-xl text-[11px] font-mono space-y-2 animate-fade-in"
+                    style={{
+                      backgroundColor: 'var(--c-surface-2)',
+                      border: '1px solid var(--c-border)',
+                      color: 'var(--c-muted)'
+                    }}
+                  >
                     <div className="flex justify-between">
                       <span>Document ID:</span>
-                      <span className="text-[#141413]">{activeDoc.id}</span>
+                      <span style={{ color: 'var(--c-fg)' }}>{activeDoc.id}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Embedding Model:</span>
-                      <span className="text-[#141413]">text-embedding-004 (768-dim)</span>
+                      <span style={{ color: 'var(--c-fg)' }}>text-embedding-004 (768-dim)</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Index Store:</span>
-                      <span className="text-[#141413]">PostgreSQL / pgvector (Neon)</span>
+                      <span style={{ color: 'var(--c-fg)' }}>PostgreSQL / pgvector (Neon)</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Grounding Status:</span>
-                      <span className="text-emerald-700 font-bold">100% Vectorized & Audited</span>
+                      <span className="text-emerald-500 font-bold">100% Vectorized & Audited</span>
                     </div>
                   </div>
                 )}
@@ -619,7 +752,10 @@ export default function KnowledgeBase({ documents, onUploadDoc }: KnowledgeBaseP
 
             </div>
           ) : (
-            <div className="p-12 text-center border border-dashed border-[#141413]/20 rounded-2xl text-xs text-[#696969]">
+            <div 
+              className="p-12 text-center rounded-2xl text-xs"
+              style={{ border: '1px dashed var(--c-border)', color: 'var(--c-muted)' }}
+            >
               Select a document to inspect executive summaries and key findings.
             </div>
           )}

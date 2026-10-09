@@ -1,6 +1,8 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * CatalystOS - Multi-Agent Workflows & DAG Canvas
+ * Redesigned with Apple × Linear × Notion aesthetics.
+ * Clean, scannable sprint boards, reactive SVG collaboration topology DAG,
+ * interactive multi-agent deliberation simulation, and high-contrast deliverable previews.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -8,8 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Initiative, AgentRole, Deliverable } from '../types';
 import {
   Play, Plus, RefreshCw, AlertTriangle, FileText, CheckCircle2,
-  ChevronRight, MessageSquare, ArrowRight, ArrowLeft, Users,
-  Sparkles, Check, Layers, Clock, ShieldCheck, X
+  ChevronRight, ArrowRight, ArrowLeft,
+  Sparkles, Check, X
 } from 'lucide-react';
 import Section from './Section';
 
@@ -121,7 +123,6 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
     try {
       await apiPromise;
-      // Auto-switch to deliverables tab so the founder sees the verified recommendation immediately
       setDetailTab('deliverables');
     } catch (err) {
       console.error(err);
@@ -159,7 +160,6 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
     setCreateStep(2);
   };
 
-  // Autoselect first initiative if none is selected
   useEffect(() => {
     if (initiatives.length > 0 && !selectedInitId) {
       setSelectedInitId(initiatives[0].id);
@@ -170,27 +170,33 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
     <div id="workflow-canvas-container" className="space-y-8 font-sans">
       
       {/* ── TOP SECTION HEADER ──────────────────────────────────────────────── */}
-      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
+      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4" style={{ borderBottom: '1px solid var(--c-border)' }}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#696969]">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--c-accent)' }}>
               Multi-Agent Orchestration
             </span>
-            <span className="w-1 h-1 rounded-full bg-[#141413]/30" />
-            <span className="text-[11px] font-mono text-[#696969]">
+            <span className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--c-border-strong)' }} />
+            <span className="text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
               {initiatives.length} Strategic Sprints
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#141413]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
             Workflows & Sprints
           </h1>
-          <p className="text-sm text-[#696969] mt-1 max-w-2xl">
+          <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--c-muted)' }}>
             Autonomous multi-agent execution pipelines. Dispatch executive councils, simulate strategic decisions, and track verified deliverables.
           </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <div className="relative flex items-center p-1 rounded-xl bg-[#141413]/05 border border-[#141413]/10 text-xs font-semibold">
+          <div 
+            className="relative flex items-center p-1 rounded-xl text-xs font-semibold"
+            style={{ 
+              backgroundColor: 'var(--c-surface-2)', 
+              border: '1px solid var(--c-border)' 
+            }}
+          >
             {(['detail', 'list'] as const).map((view) => {
               const isActive = workflowView === view;
               const label = view === 'detail' ? 'Workspace' : `All Workflows (${initiatives.length})`;
@@ -198,14 +204,16 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                 <button
                   key={view}
                   onClick={() => setWorkflowView(view)}
-                  className={`relative z-10 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    isActive ? 'text-[#141413]' : 'text-[#696969] hover:text-[#141413]'
-                  }`}
+                  className="relative z-10 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                  style={{
+                    color: isActive ? 'var(--c-fg)' : 'var(--c-muted)'
+                  }}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="workflowViewTab"
-                      className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                      className="absolute inset-0 rounded-lg shadow-sm"
+                      style={{ backgroundColor: 'var(--c-surface)' }}
                       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                     />
                   )}
@@ -220,9 +228,13 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               setIsCreateOpen(true);
               setCreateStep(1);
             }}
-            className="interactive-btn magnetic-btn premium-button px-4 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-2 shadow-sm cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm cursor-pointer transition-all"
+            style={{
+              backgroundColor: 'var(--c-fg)',
+              color: 'var(--c-bg)'
+            }}
           >
-            <Plus className="w-4 h-4 text-[#F3F0EE]" />
+            <Plus className="w-4 h-4" />
             New Workflow
           </button>
         </div>
@@ -235,10 +247,10 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-[#141413]">Active & In-Flight Sprints</h3>
-                <p className="text-xs text-[#696969]">Workflows currently undergoing executive council collaboration or awaiting founder action.</p>
+                <h3 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>Active & In-Flight Sprints</h3>
+                <p className="text-xs" style={{ color: 'var(--c-muted)' }}>Workflows currently undergoing executive council collaboration or awaiting founder action.</p>
               </div>
-              <span className="text-xs font-mono text-[#696969]">
+              <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>
                 {initiatives.filter(i => i.status !== 'completed').length} In Flight
               </span>
             </div>
@@ -251,43 +263,53 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                     setSelectedInitId(init.id);
                     setWorkflowView('detail');
                   }}
-                  className="catalyst-card card-hover glow-border p-5 rounded-2xl flex flex-col justify-between cursor-pointer group"
+                  className="p-5 rounded-2xl flex flex-col justify-between cursor-pointer group transition-all"
+                  style={{
+                    backgroundColor: 'var(--c-surface)',
+                    border: '1px solid var(--c-border)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase border ${
-                        init.category === 'funding' ? 'bg-emerald-500/10 text-emerald-800 border-emerald-500/20' :
-                        init.category === 'hiring' ? 'bg-pink-500/10 text-pink-800 border-pink-500/20' :
-                        'bg-indigo-500/10 text-indigo-800 border-indigo-500/20'
-                      }`}>
+                      <span 
+                        className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase"
+                        style={{
+                          backgroundColor: 'var(--c-surface-2)',
+                          color: 'var(--c-fg)',
+                          border: '1px solid var(--c-border)'
+                        }}
+                      >
                         {init.category}
                       </span>
-                      <span className={`text-[10px] font-bold flex items-center gap-1.5 font-mono ${
-                        init.status === 'completed' ? 'text-emerald-700' :
-                        init.status === 'active' ? 'text-amber-700' : 'text-[#696969]'
-                      }`}>
+                      <span className="text-[10px] font-bold flex items-center gap-1.5 font-mono">
                         <span className={`w-2 h-2 rounded-full ${
-                          init.status === 'completed' ? 'bg-emerald-600' :
-                          init.status === 'active' ? 'bg-amber-500 animate-pulse' : 'bg-[#696969]'
+                          init.status === 'completed' ? 'bg-emerald-500' :
+                          init.status === 'active' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
                         }`} />
-                        {init.status.toUpperCase()}
+                        <span style={{ color: init.status === 'completed' ? 'rgb(16, 185, 129)' : init.status === 'active' ? '#f59e0b' : 'var(--c-muted)' }}>
+                          {init.status.toUpperCase()}
+                        </span>
                       </span>
                     </div>
 
-                    <h4 className="text-sm font-bold text-[#141413] group-hover:text-black line-clamp-2">
+                    <h4 className="text-sm font-bold line-clamp-2 transition-colors group-hover:text-indigo-400" style={{ color: 'var(--c-fg)' }}>
                       {init.title}
                     </h4>
-                    <p className="text-xs text-[#696969] line-clamp-3 leading-relaxed">
+                    <p className="text-xs line-clamp-3 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                       {init.description}
                     </p>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-[#141413]/05 flex items-center justify-between text-xs">
-                    <span className="text-[11px] font-mono text-[#696969] flex items-center gap-1">
+                  <div 
+                    className="pt-4 mt-4 flex items-center justify-between text-xs"
+                    style={{ borderTop: '1px solid var(--c-border)' }}
+                  >
+                    <span className="text-[11px] font-mono flex items-center gap-1" style={{ color: 'var(--c-muted)' }}>
                       <FileText className="w-3.5 h-3.5" />
                       {init.deliverables.length} Deliverables
                     </span>
-                    <span className="text-[11px] font-bold text-[#141413] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-[11px] font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform" style={{ color: 'var(--c-fg)' }}>
                       Open Canvas <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -297,35 +319,44 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
           </section>
 
           {/* Curated Enterprise Templates Section */}
-          <section className="space-y-4 pt-4 border-t border-[#141413]/10">
+          <section className="space-y-4 pt-4" style={{ borderTop: '1px solid var(--c-border)' }}>
             <div>
-              <h3 className="text-base font-bold text-[#141413]">Enterprise Sprint Templates</h3>
-              <p className="text-xs text-[#696969]">Pre-engineered executive council topologies for common high-impact corporate maneuvers.</p>
+              <h3 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>Enterprise Sprint Templates</h3>
+              <p className="text-xs" style={{ color: 'var(--c-muted)' }}>Pre-engineered executive council topologies for common high-impact corporate maneuvers.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {templates.map((tpl, idx) => (
                 <div
                   key={idx}
-                  className="catalyst-card card-hover glow-border p-5 rounded-2xl flex flex-col justify-between space-y-4"
+                  className="p-5 rounded-2xl flex flex-col justify-between space-y-4 transition-all"
+                  style={{
+                    backgroundColor: 'var(--c-surface)',
+                    border: '1px solid var(--c-border)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}
                 >
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-md bg-[#141413]/05 text-[#141413] uppercase">
+                      <span 
+                        className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-md uppercase"
+                        style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                      >
                         {tpl.category}
                       </span>
-                      <span className="text-[10px] font-mono text-[#696969]">{tpl.duration}</span>
+                      <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>{tpl.duration}</span>
                     </div>
-                    <h4 className="text-sm font-bold text-[#141413]">{tpl.title}</h4>
-                    <p className="text-xs text-[#696969] leading-relaxed">{tpl.description}</p>
+                    <h4 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>{tpl.title}</h4>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--c-muted)' }}>{tpl.description}</p>
                   </div>
 
-                  <div className="pt-3 border-t border-[#141413]/05 flex items-center justify-between">
+                  <div className="pt-3 flex items-center justify-between" style={{ borderTop: '1px solid var(--c-border)' }}>
                     <div className="flex -space-x-1.5">
                       {tpl.executives.map((role, i) => (
                         <span
                           key={i}
-                          className="w-6 h-6 rounded-full bg-[#141413] text-[#F3F0EE] text-[9px] font-bold font-mono flex items-center justify-center border-2 border-white"
+                          className="w-6 h-6 rounded-full text-[9px] font-bold font-mono flex items-center justify-center border"
+                          style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', borderColor: 'var(--c-border)' }}
                           title={role}
                         >
                           {role[0]}
@@ -334,7 +365,12 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                     </div>
                     <button
                       onClick={() => handleApplyTemplate(tpl)}
-                      className="px-3 py-1.5 rounded-lg bg-[#141413]/05 hover:bg-[#141413] hover:text-[#F3F0EE] text-xs font-bold text-[#141413] transition-all cursor-pointer font-sans"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                      style={{
+                        backgroundColor: 'var(--c-surface-2)',
+                        color: 'var(--c-fg)',
+                        border: '1px solid var(--c-border)'
+                      }}
                     >
                       Use Template
                     </button>
@@ -351,68 +387,82 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
           {/* Left Column: Quick Sprint Selector (4 cols on lg) */}
           <div className="lg:col-span-4 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider font-mono text-[#141413]">
+              <span className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
                 Strategic Sprints ({initiatives.length})
               </span>
               <button
                 onClick={() => setWorkflowView('list')}
-                className="text-[11px] text-[#696969] hover:text-[#141413] underline font-medium"
+                className="text-[11px] underline font-medium cursor-pointer"
+                style={{ color: 'var(--c-muted)' }}
               >
                 View all
               </button>
             </div>
 
             <div className="space-y-2.5 max-h-[720px] overflow-y-auto pr-1">
-              {initiatives.map((init) => (
-                <button
-                  key={init.id}
-                  onClick={() => setSelectedInitId(init.id)}
-                  className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                    selectedInitId === init.id
-                      ? 'bg-white border-[#141413] shadow-md ring-1 ring-[#141413]/05'
-                      : 'bg-white/60 border-[#141413]/10 hover:bg-white hover:border-[#141413]/25'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className={`px-2 py-0.5 text-[9px] font-mono font-bold rounded-full uppercase ${
-                      init.category === 'funding' ? 'bg-emerald-500/10 text-emerald-800' :
-                      init.category === 'hiring' ? 'bg-pink-500/10 text-pink-800' :
-                      'bg-indigo-500/10 text-indigo-800'
-                    }`}>
-                      {init.category}
-                    </span>
-                    <span className={`text-[10px] font-bold flex items-center gap-1 font-mono ${
-                      init.status === 'completed' ? 'text-emerald-700' :
-                      init.status === 'active' ? 'text-amber-700' : 'text-[#696969]'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        init.status === 'completed' ? 'bg-emerald-600' :
-                        init.status === 'active' ? 'bg-amber-500 animate-pulse' : 'bg-[#696969]'
-                      }`} />
-                      {init.status.toUpperCase()}
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-[#141413] line-clamp-1">{init.title}</h4>
-                  <p className="mt-1 text-[11px] text-[#696969] line-clamp-2 leading-relaxed">
-                    {init.description}
-                  </p>
-                </button>
-              ))}
+              {initiatives.map((init) => {
+                const isSelected = selectedInitId === init.id;
+                return (
+                  <button
+                    key={init.id}
+                    onClick={() => setSelectedInitId(init.id)}
+                    className="w-full p-4 rounded-2xl text-left transition-all cursor-pointer"
+                    style={{
+                      backgroundColor: isSelected ? 'var(--c-surface-2)' : 'var(--c-surface)',
+                      border: `1px solid ${isSelected ? 'var(--c-fg)' : 'var(--c-border)'}`,
+                      boxShadow: isSelected ? 'var(--shadow-sm)' : 'none'
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span 
+                        className="px-2 py-0.5 text-[9px] font-mono font-bold rounded-full uppercase"
+                        style={{ backgroundColor: 'var(--c-surface)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                      >
+                        {init.category}
+                      </span>
+                      <span className="text-[10px] font-bold flex items-center gap-1 font-mono">
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          init.status === 'completed' ? 'bg-emerald-500' :
+                          init.status === 'active' ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'
+                        }`} />
+                        <span style={{ color: init.status === 'completed' ? 'rgb(16, 185, 129)' : init.status === 'active' ? '#f59e0b' : 'var(--c-muted)' }}>
+                          {init.status.toUpperCase()}
+                        </span>
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-bold line-clamp-1" style={{ color: 'var(--c-fg)' }}>{init.title}</h4>
+                    <p className="mt-1 text-[11px] line-clamp-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
+                      {init.description}
+                    </p>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Quick Template Card */}
-            <div className="p-4 rounded-2xl border border-dashed border-[#141413]/20 bg-[#141413]/02 space-y-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] block">
+            <div 
+              className="p-4 rounded-2xl space-y-2 transition-all"
+              style={{ 
+                backgroundColor: 'var(--c-surface)', 
+                border: '1px dashed var(--c-border-strong)' 
+              }}
+            >
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider block" style={{ color: 'var(--c-muted)' }}>
                 Quick Deploy
               </span>
-              <p className="text-xs text-[#696969]">
+              <p className="text-xs" style={{ color: 'var(--c-muted)' }}>
                 Deploy an accredited Q3 institutional funding, SOC-2, or compensation round.
               </p>
               <button
                 onClick={() => {
                   handleApplyTemplate(templates[0]);
                 }}
-                className="w-full mt-1 py-2 px-3 rounded-xl bg-white border border-[#141413]/15 text-xs font-bold text-[#141413] hover:border-[#141413] transition-colors"
+                className="w-full mt-1 py-2 px-3 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                style={{
+                  backgroundColor: 'var(--c-surface-2)',
+                  border: '1px solid var(--c-border)',
+                  color: 'var(--c-fg)'
+                }}
               >
                 Use Funding Template →
               </button>
@@ -422,23 +472,36 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
           {/* Right Column: Active Workflow Detail Canvas (8 cols on lg) */}
           <div className="lg:col-span-8 space-y-6">
             {activeInit ? (
-              <div className="catalyst-card rounded-2xl p-6 space-y-6">
+              <div 
+                className="rounded-2xl p-6 space-y-6"
+                style={{ 
+                  backgroundColor: 'var(--c-surface)', 
+                  border: '1px solid var(--c-border)',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
                 
                 {/* Active Workflow Header Banner */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-[#141413]/10 pb-5">
+                <div 
+                  className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5"
+                  style={{ borderBottom: '1px solid var(--c-border)' }}
+                >
                   <div className="space-y-2 max-w-xl">
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10">
+                      <span 
+                        className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase"
+                        style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                      >
                         SPRINT-{activeInit.id.slice(0, 8)}
                       </span>
-                      <span className="text-xs font-mono uppercase font-bold text-[#696969]">
+                      <span className="text-xs font-mono uppercase font-bold" style={{ color: 'var(--c-muted)' }}>
                         {activeInit.category} Track
                       </span>
                     </div>
-                    <h2 className="text-xl font-bold text-[#141413] leading-snug">
+                    <h2 className="text-xl font-bold leading-snug" style={{ color: 'var(--c-fg)' }}>
                       {activeInit.title}
                     </h2>
-                    <p className="text-xs text-[#696969] leading-relaxed">
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                       {activeInit.description}
                     </p>
                   </div>
@@ -449,14 +512,18 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       <button
                         onClick={() => handleSimulate(activeInit.id)}
                         disabled={simulatingId !== null}
-                        className="interactive-btn magnetic-btn px-5 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-2 shadow-sm disabled:opacity-50"
+                        className="px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer transition-all"
+                        style={{
+                          backgroundColor: 'var(--c-fg)',
+                          color: 'var(--c-bg)'
+                        }}
                       >
-                        <Play className="w-4 h-4 text-[#F3F0EE]" />
+                        <Play className="w-4 h-4" />
                         {simulatingId === activeInit.id ? 'Simulating Debate...' : 'Orchestrate Council'}
                       </button>
                     ) : (
-                      <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/20 text-xs font-mono font-bold flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold flex items-center gap-1.5" style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', color: 'rgb(16, 185, 129)', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                        <CheckCircle2 className="w-4 h-4" />
                         Completed & Audited
                       </span>
                     )}
@@ -465,26 +532,32 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
                 {/* Simulation Progress Alert Bar */}
                 {simulatingId === activeInit.id && (
-                  <div className="p-5 rounded-2xl border border-[#141413]/15 bg-[#141413]/05 space-y-3 animate-pulse">
-                    <div className="flex items-center justify-between text-xs font-bold text-[#141413]">
+                  <div 
+                    className="p-5 rounded-2xl space-y-3 animate-pulse"
+                    style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold" style={{ color: 'var(--c-fg)' }}>
                       <span className="flex items-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <RefreshCw className="w-4 h-4 animate-spin" style={{ color: 'var(--c-accent)' }} />
                         Live Multi-Agent Synthesis in Progress
                       </span>
-                      <span className="font-mono text-[#696969]">Step {simStep + 1} of 7</span>
+                      <span className="font-mono" style={{ color: 'var(--c-muted)' }}>Step {simStep + 1} of 6</span>
                     </div>
-                    <p className="text-xs font-mono text-[#141413]">{simProgressMessage}</p>
-                    <div className="w-full h-2 bg-[#141413]/10 rounded-full overflow-hidden">
+                    <p className="text-xs font-mono" style={{ color: 'var(--c-fg)' }}>{simProgressMessage}</p>
+                    <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--c-border)' }}>
                       <div
-                        className="h-full bg-[#141413] rounded-full transition-all duration-500"
-                        style={{ width: `${((simStep + 1) / 7) * 100}%` }}
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${((simStep + 1) / 6) * 100}%`,
+                          backgroundColor: 'var(--c-accent)' 
+                        }}
                       />
                     </div>
                   </div>
                 )}
 
                 {/* Sub-tab Navigation */}
-                <div className="flex items-center gap-1.5 border-b border-[#141413]/10 pb-2">
+                <div className="flex items-center gap-1.5 pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
                   {[
                     { id: 'topology', label: 'Council Topology & Network' },
                     { id: 'debate', label: 'Debate Logs', count: activeInit.messages.length },
@@ -495,24 +568,28 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       <button
                         key={tab.id}
                         onClick={() => setDetailTab(tab.id as any)}
-                        className={`relative px-3.5 py-2 rounded-xl text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer ${
-                          isActive ? 'text-[#141413]' : 'text-[#696969] hover:text-[#141413]'
-                        }`}
+                        className="relative px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+                        style={{
+                          color: isActive ? 'var(--c-fg)' : 'var(--c-muted)'
+                        }}
                       >
                         {isActive && (
                           <motion.div
                             layoutId="workflowDetailTab"
-                            className="absolute inset-0 bg-[#141413]/05 rounded-xl border border-[#141413]/10"
-                            style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
+                            className="absolute inset-0 rounded-xl"
+                            style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                           />
                         )}
                         <span className="relative z-10">{tab.label}</span>
                         {tab.count !== undefined && (
                           <span
-                            className={`relative z-10 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold transition-colors ${
-                              isActive ? 'bg-[#141413] text-[#F3F0EE]' : 'bg-[#141413]/10 text-[#696969]'
-                            }`}
+                            className="relative z-10 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold transition-colors"
+                            style={{
+                              backgroundColor: isActive ? 'var(--c-fg)' : 'var(--c-surface)',
+                              color: isActive ? 'var(--c-bg)' : 'var(--c-muted)',
+                              border: '1px solid var(--c-border)'
+                            }}
                           >
                             {tab.count}
                           </span>
@@ -525,12 +602,18 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                 {/* Sub-tab 1: SVG Multi-Agent Collaboration Topology */}
                 {detailTab === 'topology' && (
                   <div className="space-y-4">
-                    <div className="p-4 border border-[#141413]/10 rounded-2xl bg-[#FCFBFA] relative">
+                    <div 
+                      className="p-4 rounded-2xl relative"
+                      style={{ 
+                        backgroundColor: 'var(--c-surface-2)', 
+                        border: '1px solid var(--c-border)' 
+                      }}
+                    >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969]">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--c-muted)' }}>
                           Executive Collaboration Graph
                         </span>
-                        <span className="text-[10px] font-mono text-[#696969]">
+                        <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>
                           7 Connected Council Nodes
                         </span>
                       </div>
@@ -548,7 +631,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                               <g key={idx}>
                                 <path
                                   d={`M ${fromNode.x} ${fromNode.y} L ${toNode.x} ${toNode.y}`}
-                                  stroke={isFlowing ? '#141413' : '#141413/15'}
+                                  stroke={isFlowing ? 'var(--c-accent)' : 'var(--c-border-strong)'}
                                   strokeWidth={isFlowing ? 2.5 : 1.5}
                                   strokeDasharray={isFlowing ? '4,4' : undefined}
                                 />
@@ -565,13 +648,15 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                           return (
                             <div
                               key={node.role}
-                              style={{ left: `${node.x - 45}px`, top: `${node.y - 45}px` }}
-                              className={`absolute p-3 rounded-2xl border flex flex-col items-center justify-between w-24 h-24 transition-all duration-300 select-none shadow-sm ${
-                                isActive
-                                  ? 'bg-white border-[#141413] ring-4 ring-[#141413]/10 scale-105 shadow-lg'
-                                  : isVetted
-                                  ? 'bg-white border-emerald-500/40 text-[#141413]'
-                                  : 'bg-white/90 border-[#141413]/10'
+                              style={{ 
+                                left: `${node.x - 45}px`, 
+                                top: `${node.y - 45}px`,
+                                backgroundColor: 'var(--c-surface)',
+                                borderColor: isActive ? 'var(--c-accent)' : isVetted ? 'rgb(16, 185, 129)' : 'var(--c-border)',
+                                boxShadow: isActive ? '0 0 16px rgba(99, 102, 241, 0.3)' : 'var(--shadow-sm)'
+                              }}
+                              className={`absolute p-3 rounded-2xl border flex flex-col items-center justify-between w-24 h-24 transition-all duration-300 select-none ${
+                                isActive ? 'scale-105' : ''
                               }`}
                             >
                               <div className="relative">
@@ -579,17 +664,18 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                                   src={node.avatar}
                                   alt={node.role}
                                   referrerPolicy="no-referrer"
-                                  className="w-10 h-10 rounded-full object-cover filter grayscale border border-[#141413]/10"
+                                  className="w-10 h-10 rounded-full object-cover filter grayscale border"
+                                  style={{ borderColor: 'var(--c-border)' }}
                                 />
                                 {isActive && (
                                   <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 animate-ping" />
                                 )}
                               </div>
                               <div className="text-center">
-                                <span className="text-[10px] font-bold text-[#141413] block font-mono">
+                                <span className="text-[10px] font-bold block font-mono" style={{ color: 'var(--c-fg)' }}>
                                   {node.role}
                                 </span>
-                                <span className="text-[9px] text-[#696969] block truncate max-w-[80px]">
+                                <span className="text-[9px] block truncate max-w-[80px]" style={{ color: 'var(--c-muted)' }}>
                                   {node.name.split(' ')[0]}
                                 </span>
                               </div>
@@ -609,31 +695,42 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                         {activeInit.messages.map((msg) => (
                           <div
                             key={msg.id}
-                            className={`p-4 rounded-xl border text-xs space-y-1.5 ${
-                              msg.isConflict
-                                ? 'bg-amber-500/05 border-amber-500/30'
+                            className="p-4 rounded-xl text-xs space-y-1.5 transition-all"
+                            style={{
+                              backgroundColor: msg.isConflict 
+                                ? 'rgba(245, 158, 11, 0.08)' 
                                 : msg.sender === 'ConflictResolver'
-                                ? 'bg-indigo-500/05 border-indigo-500/30'
-                                : 'bg-[#FCFBFA] border-[#141413]/10'
-                            }`}
+                                  ? 'rgba(99, 102, 241, 0.08)'
+                                  : 'var(--c-surface-2)',
+                              border: `1px solid ${
+                                msg.isConflict 
+                                  ? 'rgba(245, 158, 11, 0.3)' 
+                                  : msg.sender === 'ConflictResolver'
+                                    ? 'rgba(99, 102, 241, 0.3)'
+                                    : 'var(--c-border)'
+                              }`
+                            }}
                           >
                             <div className="flex items-center justify-between">
-                              <span className="font-mono font-bold uppercase tracking-wider text-[10px] text-[#141413]">
+                              <span className="font-mono font-bold uppercase tracking-wider text-[10px]" style={{ color: 'var(--c-fg)' }}>
                                 {msg.sender} → {msg.receiver}
                               </span>
                               {msg.isConflict && (
-                                <span className="px-2 py-0.5 text-[9px] font-bold rounded-full bg-amber-500/10 text-amber-800 border border-amber-500/20 flex items-center gap-1">
+                                <span className="px-2 py-0.5 text-[9px] font-bold rounded-full flex items-center gap-1" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
                                   <AlertTriangle className="w-3 h-3" />
                                   Boundary Conflict
                                 </span>
                               )}
                             </div>
-                            <p className="text-[#141413] leading-relaxed font-sans">{msg.content}</p>
+                            <p className="leading-relaxed font-sans" style={{ color: 'var(--c-fg)' }}>{msg.content}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="p-8 text-center border border-dashed border-[#141413]/15 rounded-2xl text-xs text-[#696969]">
+                      <div 
+                        className="p-8 text-center rounded-2xl text-xs"
+                        style={{ border: '1px dashed var(--c-border)', color: 'var(--c-muted)' }}
+                      >
                         No deliberation logs recorded yet. Launch orchestration to view the multi-agent debate.
                       </div>
                     )}
@@ -646,18 +743,28 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                     {activeInit.deliverables.length > 0 ? (
                       <div className="space-y-4">
                         {onNavigate && (
-                          <div className="p-4 rounded-2xl bg-[#141413] text-[#F3F0EE] flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+                          <div 
+                            className="p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm"
+                            style={{
+                              backgroundColor: 'var(--c-surface-2)',
+                              border: '1px solid var(--c-border)'
+                            }}
+                          >
                             <div>
-                              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold block">
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-500 font-bold block">
                                 Executive Council Consensus Reached
                               </span>
-                              <h4 className="text-sm font-bold text-white">
+                              <h4 className="text-sm font-bold mt-0.5" style={{ color: 'var(--c-fg)' }}>
                                 Decision Charter compiled and queued for Founder Sign-Off
                               </h4>
                             </div>
                             <button
                               onClick={() => onNavigate('approvals')}
-                              className="interactive-btn px-4 py-2 rounded-xl bg-white text-[#141413] text-xs font-bold hover:bg-[#F3F0EE] transition-all flex items-center gap-1.5 shrink-0 shadow-sm"
+                              className="px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
+                              style={{
+                                backgroundColor: 'var(--c-fg)',
+                                color: 'var(--c-bg)'
+                              }}
                             >
                               Review in Decision Inbox →
                             </button>
@@ -667,26 +774,39 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                         {activeInit.deliverables.map((del) => (
                           <div
                             key={del.id}
-                            className="catalyst-card catalyst-card-hover p-4 rounded-2xl flex flex-col justify-between space-y-3"
+                            className="p-4 rounded-2xl flex flex-col justify-between space-y-3 transition-all"
+                            style={{
+                              backgroundColor: 'var(--c-surface)',
+                              border: '1px solid var(--c-border)',
+                              boxShadow: 'var(--shadow-sm)'
+                            }}
                           >
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between">
-                                <span className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase rounded-md bg-[#141413]/05 text-[#141413]">
+                                <span 
+                                  className="px-2 py-0.5 text-[9px] font-mono font-bold uppercase rounded-md"
+                                  style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                                >
                                   {del.type}
                                 </span>
-                                <span className="px-2 py-0.5 text-[9px] font-mono font-bold rounded-full bg-emerald-500/10 text-emerald-800">
+                                <span className="px-2 py-0.5 text-[9px] font-mono font-bold rounded-full" style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', color: 'rgb(16, 185, 129)' }}>
                                   Score: {del.impact}/10
                                 </span>
                               </div>
-                              <h4 className="text-xs font-bold text-[#141413]">{del.title}</h4>
-                              <p className="text-[11px] text-[#696969] line-clamp-2 leading-relaxed">
+                              <h4 className="text-xs font-bold" style={{ color: 'var(--c-fg)' }}>{del.title}</h4>
+                              <p className="text-[11px] line-clamp-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                                 {del.description}
                               </p>
                             </div>
 
                             <button
                               onClick={() => setPreviewDeliverable(del)}
-                              className="w-full mt-2 py-2 px-3 rounded-xl bg-[#141413]/05 hover:bg-[#141413] hover:text-[#F3F0EE] text-xs font-bold text-[#141413] transition-all flex items-center justify-center gap-1.5"
+                              className="w-full mt-2 py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              style={{
+                                backgroundColor: 'var(--c-surface-2)',
+                                border: '1px solid var(--c-border)',
+                                color: 'var(--c-fg)'
+                              }}
                             >
                               <FileText className="w-3.5 h-3.5" />
                               Inspect Deliverable
@@ -696,7 +816,10 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       </div>
                       </div>
                     ) : (
-                      <div className="p-8 text-center border border-dashed border-[#141413]/15 rounded-2xl text-xs text-[#696969]">
+                      <div 
+                        className="p-8 text-center rounded-2xl text-xs"
+                        style={{ border: '1px dashed var(--c-border)', color: 'var(--c-muted)' }}
+                      >
                         No deliverables compiled yet for this sprint.
                       </div>
                     )}
@@ -705,7 +828,10 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
               </div>
             ) : (
-              <div className="p-12 text-center border border-dashed border-[#141413]/20 rounded-2xl text-xs text-[#696969]">
+              <div 
+                className="p-12 text-center rounded-2xl text-xs"
+                style={{ border: '1px dashed var(--c-border)', color: 'var(--c-muted)' }}
+              >
                 Select a sprint or create a new initiative to begin.
               </div>
             )}
@@ -722,7 +848,8 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#141413]/40 backdrop-blur-sm"
+              className="fixed inset-0"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)' }}
               onClick={() => setIsCreateOpen(false)}
             />
             <motion.div
@@ -730,18 +857,19 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="relative w-full max-w-xl bg-white border border-[#141413]/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden z-10"
+              className="relative w-full max-w-xl rounded-2xl shadow-2xl flex flex-col overflow-hidden z-10"
+              style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
               onClick={(e) => e.stopPropagation()}
             >
             
             {/* Modal Header & Progress Indicator */}
-            <div className="p-6 border-b border-[#141413]/10 space-y-4">
+            <div className="p-6 space-y-4" style={{ borderBottom: '1px solid var(--c-border)' }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969]">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--c-muted)' }}>
                     Step {createStep} of 6
                   </span>
-                  <h3 className="text-lg font-bold text-[#141413] mt-0.5">
+                  <h3 className="text-lg font-bold mt-0.5" style={{ color: 'var(--c-fg)' }}>
                     {createStep === 1 && 'Select Initiative Track'}
                     {createStep === 2 && 'Define Scope & Context'}
                     {createStep === 3 && 'Assign Executive Council'}
@@ -752,17 +880,21 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                 </div>
                 <button
                   onClick={() => setIsCreateOpen(false)}
-                  className="p-1.5 rounded-full hover:bg-[#141413]/05 text-[#696969] hover:text-[#141413] transition-colors"
+                  className="p-1.5 rounded-full transition-colors cursor-pointer"
+                  style={{ color: 'var(--c-muted)', backgroundColor: 'var(--c-surface-2)' }}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full h-1.5 bg-[#141413]/05 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--c-surface-2)' }}>
                 <div
-                  className="h-full bg-[#141413] transition-all duration-300"
-                  style={{ width: `${(createStep / 6) * 100}%` }}
+                  className="h-full transition-all duration-300"
+                  style={{ 
+                    width: `${(createStep / 6) * 100}%`,
+                    backgroundColor: 'var(--c-accent)'
+                  }}
                 />
               </div>
             </div>
@@ -772,33 +904,42 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               {/* Step 1: Track */}
               {createStep === 1 && (
                 <div className="space-y-4">
-                  <label className="text-xs font-bold text-[#141413] block">
+                  <label className="text-xs font-bold block" style={{ color: 'var(--c-fg)' }}>
                     Choose Strategic Domain
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {(['growth', 'funding', 'hiring', 'operations', 'legal'] as const).map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => setNewCategory(cat)}
-                        className={`p-3 rounded-xl border text-left transition-all capitalize font-semibold text-xs ${
-                          newCategory === cat
-                            ? 'bg-[#141413] text-[#F3F0EE] border-[#141413]'
-                            : 'bg-white border-[#141413]/15 text-[#141413] hover:border-[#141413]'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
+                    {(['growth', 'funding', 'hiring', 'operations', 'legal'] as const).map((cat) => {
+                      const isSelected = newCategory === cat;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setNewCategory(cat)}
+                          className="p-3 rounded-xl text-left transition-all capitalize font-semibold text-xs cursor-pointer"
+                          style={{
+                            backgroundColor: isSelected ? 'var(--c-fg)' : 'var(--c-surface-2)',
+                            color: isSelected ? 'var(--c-bg)' : 'var(--c-fg)',
+                            border: `1px solid ${isSelected ? 'var(--c-fg)' : 'var(--c-border)'}`
+                          }}
+                        >
+                          {cat}
+                        </button>
+                      );
+                    })}
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-[#141413] block mb-1.5">Initiative Title</label>
+                    <label className="text-xs font-bold block mb-1.5" style={{ color: 'var(--c-fg)' }}>Initiative Title</label>
                     <input
                       type="text"
                       placeholder="e.g., Enterprise SOC-2 Audit & Compliance"
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413]"
+                      className="w-full px-3.5 py-2.5 rounded-xl text-xs outline-none transition-colors"
+                      style={{
+                        backgroundColor: 'var(--c-surface-2)',
+                        border: '1px solid var(--c-border)',
+                        color: 'var(--c-fg)'
+                      }}
                     />
                   </div>
                 </div>
@@ -807,7 +948,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               {/* Step 2: Scope & Context */}
               {createStep === 2 && (
                 <div className="space-y-3">
-                  <label className="text-xs font-bold text-[#141413] block">
+                  <label className="text-xs font-bold block" style={{ color: 'var(--c-fg)' }}>
                     Directives & Operational Bounds
                   </label>
                   <textarea
@@ -815,9 +956,14 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                     placeholder="Specify constraints, key deliverables expected, budget boundaries, and timelines..."
                     value={newDescription}
                     onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full p-3.5 rounded-xl border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413] leading-relaxed resize-none"
+                    className="w-full p-3.5 rounded-xl text-xs leading-relaxed resize-none outline-none"
+                    style={{
+                      backgroundColor: 'var(--c-surface-2)',
+                      border: '1px solid var(--c-border)',
+                      color: 'var(--c-fg)'
+                    }}
                   />
-                  <p className="text-[11px] text-[#696969]">
+                  <p className="text-[11px]" style={{ color: 'var(--c-muted)' }}>
                     The multi-agent debate engine will use these directives to guide disagreement resolution.
                   </p>
                 </div>
@@ -826,7 +972,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               {/* Step 3: Select Executives */}
               {createStep === 3 && (
                 <div className="space-y-3">
-                  <label className="text-xs font-bold text-[#141413] block">
+                  <label className="text-xs font-bold block" style={{ color: 'var(--c-fg)' }}>
                     Select Participating AI Executives
                   </label>
                   <div className="grid grid-cols-2 gap-2.5">
@@ -850,11 +996,12 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                               setSelectedAgents([...selectedAgents, agent.role]);
                             }
                           }}
-                          className={`p-3 rounded-xl border text-left text-xs font-semibold flex items-center justify-between ${
-                            isSelected
-                              ? 'bg-[#141413] text-[#F3F0EE] border-[#141413]'
-                              : 'bg-white border-[#141413]/15 text-[#141413]'
-                          }`}
+                          className="p-3 rounded-xl text-left text-xs font-semibold flex items-center justify-between cursor-pointer transition-all"
+                          style={{
+                            backgroundColor: isSelected ? 'var(--c-fg)' : 'var(--c-surface-2)',
+                            color: isSelected ? 'var(--c-bg)' : 'var(--c-fg)',
+                            border: `1px solid ${isSelected ? 'var(--c-fg)' : 'var(--c-border)'}`
+                          }}
                         >
                           <span>{agent.label}</span>
                           {isSelected && <Check className="w-3.5 h-3.5" />}
@@ -869,24 +1016,32 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               {createStep === 4 && (
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-[#141413] block mb-1.5">
+                    <label className="text-xs font-bold block mb-1.5" style={{ color: 'var(--c-fg)' }}>
                       Target Completion Milestone
                     </label>
                     <select
                       value={targetMilestone}
                       onChange={(e) => setTargetMilestone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413]"
+                      className="w-full px-3.5 py-2.5 rounded-xl text-xs outline-none"
+                      style={{
+                        backgroundColor: 'var(--c-surface-2)',
+                        border: '1px solid var(--c-border)',
+                        color: 'var(--c-fg)'
+                      }}
                     >
                       <option value="2-Week Sprint">2-Week Sprint (Rapid Turnaround)</option>
                       <option value="30-Day Execution Cycle">30-Day Execution Cycle (Standard)</option>
                       <option value="Quarterly Board Cycle">Quarterly Board Cycle (Comprehensive)</option>
                     </select>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-[#FCFBFA] border border-[#141413]/10 space-y-1">
-                    <span className="text-[10px] font-mono font-bold text-[#141413] uppercase">
+                  <div 
+                    className="p-3.5 rounded-xl space-y-1"
+                    style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}
+                  >
+                    <span className="text-[10px] font-mono font-bold uppercase" style={{ color: 'var(--c-fg)' }}>
                       Governance Guardrail
                     </span>
-                    <p className="text-xs text-[#696969]">
+                    <p className="text-xs" style={{ color: 'var(--c-muted)' }}>
                       Any capital changes above $15k will automatically pause for founder sign-off before committing to the Decision Ledger.
                     </p>
                   </div>
@@ -895,22 +1050,25 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
 
               {/* Step 5: Review */}
               {createStep === 5 && (
-                <div className="p-4 rounded-xl bg-[#FCFBFA] border border-[#141413]/10 space-y-3 text-xs">
-                  <div className="flex justify-between border-b border-[#141413]/05 pb-2">
-                    <span className="text-[#696969]">Track:</span>
-                    <span className="font-bold text-[#141413] uppercase font-mono">{newCategory}</span>
+                <div 
+                  className="p-4 rounded-xl space-y-3 text-xs"
+                  style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}
+                >
+                  <div className="flex justify-between pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
+                    <span style={{ color: 'var(--c-muted)' }}>Track:</span>
+                    <span className="font-bold uppercase font-mono" style={{ color: 'var(--c-fg)' }}>{newCategory}</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#141413]/05 pb-2">
-                    <span className="text-[#696969]">Title:</span>
-                    <span className="font-bold text-[#141413] text-right line-clamp-1">{newTitle || 'Untitled Sprint'}</span>
+                  <div className="flex justify-between pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
+                    <span style={{ color: 'var(--c-muted)' }}>Title:</span>
+                    <span className="font-bold text-right line-clamp-1" style={{ color: 'var(--c-fg)' }}>{newTitle || 'Untitled Sprint'}</span>
                   </div>
-                  <div className="flex justify-between border-b border-[#141413]/05 pb-2">
-                    <span className="text-[#696969]">Council:</span>
-                    <span className="font-bold text-[#141413]">{selectedAgents.join(', ')}</span>
+                  <div className="flex justify-between pb-2" style={{ borderBottom: '1px solid var(--c-border)' }}>
+                    <span style={{ color: 'var(--c-muted)' }}>Council:</span>
+                    <span className="font-bold" style={{ color: 'var(--c-fg)' }}>{selectedAgents.join(', ')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#696969]">Milestone:</span>
-                    <span className="font-bold text-[#141413]">{targetMilestone}</span>
+                    <span style={{ color: 'var(--c-muted)' }}>Milestone:</span>
+                    <span className="font-bold" style={{ color: 'var(--c-fg)' }}>{targetMilestone}</span>
                   </div>
                 </div>
               )}
@@ -918,11 +1076,11 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               {/* Step 6: Launch */}
               {createStep === 6 && (
                 <div className="text-center space-y-3 py-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-800 flex items-center justify-center mx-auto">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
                     <Sparkles className="w-6 h-6" />
                   </div>
-                  <h4 className="text-base font-bold text-[#141413]">Council Ready to Deploy</h4>
-                  <p className="text-xs text-[#696969] max-w-sm mx-auto">
+                  <h4 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>Council Ready to Deploy</h4>
+                  <p className="text-xs max-w-sm mx-auto" style={{ color: 'var(--c-muted)' }}>
                     Spawning this workflow will initiate cross-functional agent deliberations and generate deliverables for your review.
                   </p>
                 </div>
@@ -930,12 +1088,16 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
             </div>
 
             {/* Modal Footer Controls */}
-            <div className="p-5 border-t border-[#141413]/10 bg-[#FCFBFA] flex items-center justify-between">
+            <div 
+              className="p-5 flex items-center justify-between"
+              style={{ backgroundColor: 'var(--c-surface)', borderTop: '1px solid var(--c-border)' }}
+            >
               {createStep > 1 ? (
                 <button
                   type="button"
                   onClick={() => setCreateStep(createStep - 1)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#696969] hover:text-[#141413] flex items-center gap-1.5 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  style={{ color: 'var(--c-muted)' }}
                 >
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
@@ -948,7 +1110,11 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                   type="button"
                   disabled={createStep === 1 && !newTitle.trim()}
                   onClick={() => setCreateStep(createStep + 1)}
-                  className="interactive-btn px-5 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-1.5 disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+                  style={{
+                    backgroundColor: 'var(--c-fg)',
+                    color: 'var(--c-bg)'
+                  }}
                 >
                   Continue <ArrowRight className="w-4 h-4" />
                 </button>
@@ -957,7 +1123,11 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                   type="button"
                   disabled={isLaunching}
                   onClick={handleLaunchSubmit}
-                  className="interactive-btn px-6 py-2.5 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-2 shadow-md disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md disabled:opacity-50 transition-all cursor-pointer"
+                  style={{
+                    backgroundColor: 'var(--c-fg)',
+                    color: 'var(--c-bg)'
+                  }}
                 >
                   {isLaunching ? (
                     <>
@@ -985,7 +1155,8 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#141413]/40 backdrop-blur-sm"
+              className="fixed inset-0"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)' }}
               onClick={() => setPreviewDeliverable(null)}
             />
             <motion.div
@@ -993,32 +1164,46 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
-              className="relative w-full max-w-2xl bg-white border border-[#141413]/10 rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden z-10"
+              className="relative w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden z-10"
+              style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-5 border-b border-[#141413]/10 flex items-center justify-between">
+              <div 
+                className="p-5 flex items-center justify-between"
+                style={{ borderBottom: '1px solid var(--c-border)' }}
+              >
                 <div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10">
+                  <span 
+                    className="text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+                    style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                  >
                     {previewDeliverable.type}
                   </span>
-                  <h4 className="text-base font-bold text-[#141413] mt-1.5">{previewDeliverable.title}</h4>
+                  <h4 className="text-base font-bold mt-1.5" style={{ color: 'var(--c-fg)' }}>{previewDeliverable.title}</h4>
                 </div>
                 <button
                   onClick={() => setPreviewDeliverable(null)}
-                  className="p-1.5 rounded-full hover:bg-[#141413]/05 text-[#696969] hover:text-[#141413] transition-colors"
+                  className="p-1.5 rounded-full transition-colors cursor-pointer"
+                  style={{ color: 'var(--c-muted)', backgroundColor: 'var(--c-surface-2)' }}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-4 text-xs text-[#141413] leading-relaxed font-mono whitespace-pre-wrap bg-[#FCFBFA]">
+              <div 
+                className="p-6 overflow-y-auto space-y-4 text-xs leading-relaxed font-mono whitespace-pre-wrap"
+                style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)' }}
+              >
                 {previewDeliverable.content}
               </div>
 
-              <div className="p-4 border-t border-[#141413]/10 bg-[#FCFBFA] flex items-center justify-between text-xs text-[#696969] font-mono">
+              <div 
+                className="p-4 flex items-center justify-between text-xs font-mono"
+                style={{ backgroundColor: 'var(--c-surface)', borderTop: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
+              >
                 <div className="flex items-center gap-3">
                   <span>Impact: {previewDeliverable.impact}</span>
-                  <span className="text-[#141413] font-bold">
+                  <span className="font-bold" style={{ color: 'var(--c-fg)' }}>
                     Treasury: {previewDeliverable.financialChange ? `${previewDeliverable.financialChange > 0 ? '+' : ''}${(previewDeliverable.financialChange / 1000).toFixed(0)}k` : 'Neutral'}
                   </span>
                 </div>
@@ -1028,7 +1213,11 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       setPreviewDeliverable(null);
                       onNavigate('approvals');
                     }}
-                    className="interactive-btn px-4 py-2 rounded-xl bg-[#141413] text-[#F3F0EE] font-sans font-bold hover:bg-[#262627] transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl font-sans font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    style={{
+                      backgroundColor: 'var(--c-fg)',
+                      color: 'var(--c-bg)'
+                    }}
                   >
                     Open in Decision Inbox →
                   </button>
