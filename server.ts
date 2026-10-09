@@ -80,6 +80,11 @@ app.get('/ready', async (req, res) => {
 // Mount modularized backend API routes
 app.use('/api', apiRouter);
 
+// Catch unhandled /api routes before Vite middleware to prevent proxy loops
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });
+});
+
 // Support root /onboarding and /startup/onboarding API aliases for headless/programmatic requests
 app.use(['/onboarding', '/startup/onboarding'], (req, res, next) => {
   if (req.headers['content-type']?.includes('application/json') || req.headers['accept']?.includes('application/json') || req.method !== 'GET') {

@@ -90,12 +90,12 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 return <h1 key={lIdx} className="text-xl font-extrabold text-[#151A2D] pt-2 pb-1 font-sans">{line.replace('# ', '')}</h1>;
               }
 
-              // Bullet points - or *
-              if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-                const bulletText = line.trim().replace(/^[-*]\s+/, '');
+              // Bullet points •, -, or *
+              if (line.trim().startsWith('•') || /^[-*]\s+/.test(line.trim())) {
+                const bulletText = line.trim().replace(/^(?:[•]\s*|[-*]\s+)+/, '');
                 return (
                   <div key={lIdx} className="flex items-start gap-2 pl-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white/70 mt-2 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-2 shrink-0" />
                     <span>{parseInlineFormatting(bulletText)}</span>
                   </div>
                 );
@@ -124,7 +124,20 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
  * Parses bold **text**, italic *text*, and inline `code`
  */
 function parseInlineFormatting(text: string): React.ReactNode {
-  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
+  let sanitized = text;
+  const boldMatches = sanitized.match(/\*\*/g);
+  if (boldMatches && boldMatches.length % 2 !== 0) {
+    if (/^[^*]+\*\*:\s*/.test(sanitized)) {
+      sanitized = '**' + sanitized;
+    } else if (/^[^*]+\*\*\s*\(/.test(sanitized)) {
+      sanitized = '**' + sanitized;
+    } else {
+      const lastIdx = sanitized.lastIndexOf('**');
+      sanitized = sanitized.slice(0, lastIdx) + sanitized.slice(lastIdx + 2);
+    }
+  }
+
+  const parts = sanitized.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
 
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
@@ -140,6 +153,6 @@ function parseInlineFormatting(text: string): React.ReactNode {
         </code>
       );
     }
-    return part;
+    return part.replace(/\*{2,}/g, '').replace(/\*/g, '');
   });
 }

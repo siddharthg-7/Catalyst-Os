@@ -49,10 +49,30 @@ const SUGGESTED_DIRECTIVES = [
  * Ensures NO raw asterisks or markdown symbols leak into the UI.
  */
 function renderInlineMarkdown(text: string): React.ReactNode {
-  // First clean any internal markdown headings like "## " inside excerpts
-  const sanitized = text.replace(/##+\s+/g, '').replace(/^[•\s\-\*]+/, '').trim();
+  if (!text) return null;
 
-  // Split on bold **...**, italics *...*, or inline code `...`
+  // 1. Remove internal heading prefixes and safely remove leading bullet indicators without stripping '**'
+  let sanitized = text
+    .replace(/^#+\s+/g, '')
+    .replace(/^(?:[•]\s*|[-*]\s+)+/, '')
+    .trim();
+
+  // 2. Fix unmatched bold asterisks before tokenizing:
+  // E.g. "DocName.pdf**: Excerpt" or "Priority Title** (Sourced from...)"
+  const boldMatches = sanitized.match(/\*\*/g);
+  if (boldMatches && boldMatches.length % 2 !== 0) {
+    if (/^[^*]+\*\*:\s*/.test(sanitized)) {
+      sanitized = '**' + sanitized;
+    } else if (/^[^*]+\*\*\s*\(/.test(sanitized)) {
+      sanitized = '**' + sanitized;
+    } else {
+      // Remove trailing or lone orphan '**'
+      const lastIdx = sanitized.lastIndexOf('**');
+      sanitized = sanitized.slice(0, lastIdx) + sanitized.slice(lastIdx + 2);
+    }
+  }
+
+  // 3. Split on bold **...**, italics *...*, or inline code `...`
   const tokens = sanitized.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g);
 
   return tokens.map((token, i) => {
@@ -96,7 +116,9 @@ function renderInlineMarkdown(text: string): React.ReactNode {
       );
     }
 
-    return token;
+    // For unstyled plain text tokens, strip any stray raw asterisks so stars never appear in the UI
+    const cleanToken = token.replace(/\*{2,}/g, '').replace(/\*/g, '');
+    return cleanToken;
   });
 }
 
@@ -161,8 +183,8 @@ function ExecutiveSummaryRenderer({ content }: { content: string }) {
                     );
                   }
 
-                  // Strip all leading bullets/asterisks/dashes to prevent double bullets
-                  const strippedText = cleanedLine.replace(/^[•\s\-\*]+/, '').trim();
+                  // Strip all leading bullets/asterisks/dashes to prevent double bullets WITHOUT eating bold **
+                  const strippedText = cleanedLine.replace(/^(?:[•]\s*|[-*]\s+)+/, '').trim();
                   if (!strippedText) return null;
 
                   return (
@@ -183,12 +205,12 @@ function ExecutiveSummaryRenderer({ content }: { content: string }) {
           <div key={sIdx} className="space-y-2">
             {paragraphs.map((p, pIdx) => {
               // If paragraph starts with bullet
-              if (p.trim().startsWith('•') || p.trim().startsWith('-') || p.trim().startsWith('*')) {
+              if (p.trim().startsWith('•') || /^(?:[-*]\s+)/.test(p.trim())) {
                 const bulletLines = p.split('\n').filter(l => l.trim());
                 return (
                   <div key={pIdx} className="space-y-1.5 pl-1">
                     {bulletLines.map((bl, blIdx) => {
-                      const stripped = bl.replace(/^[•\s\-\*]+/, '').trim();
+                      const stripped = bl.replace(/^(?:[•]\s*|[-*]\s+)+/, '').trim();
                       if (!stripped) return null;
                       return (
                         <div key={blIdx} className="flex items-start gap-2 text-xs text-slate-800">
@@ -212,7 +234,6 @@ function ExecutiveSummaryRenderer({ content }: { content: string }) {
     </div>
   );
 }
-
 
 export const ExecutiveDirectiveDispatcher: React.FC<ExecutiveDirectiveDispatcherProps> = ({
   messages,

@@ -539,16 +539,24 @@ export class MultiLevelOrchestrator {
     if (hasPrioritiesInGoals || hasEvidence) {
       summary = `Based on verified company records for **${startupName}**, our primary product and strategic priorities are:`;
       if (hasPrioritiesInGoals) {
-        goals.forEach(g => keyFindings.push(`**${g}** (Sourced from company strategic goals)`));
+        goals.forEach(g => {
+          const cleanGoal = (g || '').replace(/\*+/g, '').trim();
+          if (cleanGoal) {
+            keyFindings.push(`**${cleanGoal}** (Sourced from company strategic goals)`);
+          }
+        });
       }
       if (hasEvidence) {
         evidence.forEach(e => {
+          const docName = (e.documentName || 'Company Knowledge Document').replace(/\*+/g, '').trim();
           const cleanExcerpt = (e.excerpt || '')
             .replace(/^#+\s+/gm, '')
+            .replace(/\*\*([^*]+)\*\*/g, '$1') // unwrap bold inside excerpts to avoid fragmented or unclosed asterisks
+            .replace(/\*+/g, '') // remove any stray unclosed asterisks
             .replace(/[\r\n]+/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
-          keyFindings.push(`**${e.documentName}**: ${cleanExcerpt.slice(0, 160)}...`);
+          keyFindings.push(`**${docName}**: ${cleanExcerpt.slice(0, 160)}...`);
         });
       }
     } else {
