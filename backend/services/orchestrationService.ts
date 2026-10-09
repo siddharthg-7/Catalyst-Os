@@ -1,6 +1,12 @@
 import { ai } from './geminiService';
 import { prisma, safeDbQuery } from './dbService';
-import { performHybridSearch, buildContext } from './ragEngine';
+import { 
+  performHybridSearch, 
+  buildContext, 
+  retrieveRelevantKnowledge, 
+  filterKnowledgeForAgent, 
+  AgentKnowledgeSlice 
+} from './ragEngine';
 import { 
   startupProfile, 
   approvals, 
@@ -16,7 +22,7 @@ import {
   Deliverable 
 } from '../../src/types';
 import { multiAgentCouncil, CouncilExecutionResult } from './multiAgentCouncil';
-import { delegateWorkOrders } from './taskDelegationService';
+import { delegateWorkOrders, decomposeCommandToPlan } from './taskDelegationService';
 
 // Benchmark salaries for headcount modeling (annual USD)
 const SALARY_BENCHMARKS: Record<string, number> = {
@@ -113,20 +119,107 @@ function extractHeadcountDetails(command: string): HeadcountExtraction {
   return { hasHiringQuery: true, count, role, estimatedAnnualSalary: salary };
 }
 
-interface IntentAnalysis {
+export interface KnowledgeNeedDecision {
+  needsDocuments: boolean;
+  needsKnowledge: boolean;
+  reason: string;
+  searchQueries: string[];
+}
+
+export function evaluateKnowledgeNeed(command: string, intent: string): KnowledgeNeedDecision {
+  const lower = command.toLowerCase().trim();
+
+  // If greeting or completely unrelated, no company documents needed
+  if (intent === 'greeting' || intent === 'unrelated_inquiry') {
+    return {
+      needsDocuments: false,
+      needsKnowledge: false,
+      reason: 'Conversational greeting or out of scope inquiry.',
+      searchQueries: []
+    };
+  }
+
+  // 1. Explicit references to governance, policies, handbooks, contracts, or strategies
+  const hasPolicyRef = lower.includes('policy') || lower.includes('handbook') || lower.includes('guideline') ||
+    lower.includes('contract') || lower.includes('agreement') || lower.includes('strategy') ||
+    lower.includes('roadmap') || lower.includes('pitch deck') || lower.includes('document') ||
+    lower.includes('knowledge') || lower.includes('rule') || lower.includes('according to');
+
+  // 2. Planning or structural actions that require corporate grounding
+  const isActionPlan = lower.includes('plan') || lower.includes('create a hiring plan') ||
+    lower.includes('hiring plan') || lower.includes('compliance') || lower.includes('legal review') ||
+    lower.includes('onboarding');
+
+  // 3. Knowledge base inquiries or company identity
+  const isKnowledgeQuery = intent === 'knowledge_inquiry' || intent === 'startup_identity';
+
+  if (hasPolicyRef || isActionPlan || isKnowledgeQuery) {
+    const searchQueries: string[] = [command];
+
+    if (lower.includes('hiring') || lower.includes('hire') || lower.includes('engineer') || lower.includes('talent')) {
+      searchQueries.push('Hiring Policy');
+      searchQueries.push('Employee Handbook');
+      searchQueries.push('Company Strategy');
+    }
+
+    if (lower.includes('contract') || lower.includes('legal') || lower.includes('nda') || lower.includes('agreement') || lower.includes('handbook')) {
+      searchQueries.push('Employee Handbook');
+      searchQueries.push('Hiring Policy');
+    }
+
+    if (lower.includes('growth') || lower.includes('marketing') || lower.includes('gtm') || lower.includes('icp')) {
+      searchQueries.push('Company Strategy');
+      searchQueries.push('Pitch Deck');
+    }
+
+    return {
+      needsDocuments: true,
+      needsKnowledge: true,
+      reason: 'Command requires grounding in company policy, corporate strategy, and handbooks.',
+      searchQueries
+    };
+  }
+
+  return {
+    needsDocuments: false,
+    needsKnowledge: false,
+    reason: 'Command relies on deterministic treasury telemetry and financial metrics.',
+    searchQueries: [command]
+  };
+}
+
+export interface IntentAnalysis {
   intent: string;
   objective: string;
   activatedRoles: string[];
   requiresFinancialCalculations: boolean;
   requiresHeadcountModeling: boolean;
   requiresRag: boolean;
+  needsCompanyKnowledge?: boolean;
+  knowledgeReason?: string;
+  searchQueries?: string[];
   isUnrelated: boolean;
   requiresApproval: boolean;
   proposedActionTitle: string | null;
   proposedActionImpact: string | null;
 }
 
+function finalizeIntent(analysis: IntentAnalysis, command: string): IntentAnalysis {
+  const kDecision = evaluateKnowledgeNeed(command, analysis.intent);
+  analysis.needsCompanyKnowledge = kDecision.needsDocuments;
+  analysis.knowledgeReason = kDecision.reason;
+  analysis.searchQueries = kDecision.searchQueries;
+  if (kDecision.needsDocuments) {
+    analysis.requiresRag = true;
+  }
+  return analysis;
+}
+
 export function analyzeCommandIntent(command: string): IntentAnalysis {
+  return finalizeIntent(rawAnalyzeCommandIntent(command), command);
+}
+
+function rawAnalyzeCommandIntent(command: string): IntentAnalysis {
   const lower = command.toLowerCase().trim();
 
   // 0. Conversational Greeting & Executive Readiness
@@ -230,18 +323,35 @@ export function analyzeCommandIntent(command: string): IntentAnalysis {
 
   // 3. Hiring & Headcount Expansion Scenarios
   if (lower.includes('hire') || lower.includes('hiring') || lower.includes('engineer') || lower.includes('developer') || lower.includes('headcount') || lower.includes('recruit')) {
-    const isAction = lower.startsWith('hire ') || lower.startsWith('start hiring') || lower.startsWith('approve hire') || lower.includes('send offer');
+    const isAdvisory = lower.includes('should i') || lower.includes('can we afford') || lower.includes('can we hire') || lower.includes('is it safe to') || lower.includes('would hiring') || (lower.includes('runway') && lower.includes('month'));
+    const isActionPlan = lower.includes('plan') || lower.includes('create a hiring plan') || lower.includes('roadmap') || lower.includes('build a plan') || lower.startsWith('hire ') || lower.startsWith('start hiring') || lower.startsWith('approve hire') || lower.includes('send offer');
+
+    if (isAdvisory && !isActionPlan) {
+      return {
+        intent: 'hiring_scenario',
+        objective: 'Assess runway impact, headcount costs, and hiring feasibility',
+        activatedRoles: ['CEO', 'Finance', 'Talent', 'Auditor'],
+        requiresFinancialCalculations: true,
+        requiresHeadcountModeling: true,
+        requiresRag: true,
+        isUnrelated: false,
+        requiresApproval: false,
+        proposedActionTitle: null,
+        proposedActionImpact: null
+      };
+    }
+
     return {
       intent: 'hiring_scenario',
-      objective: 'Assess headcount talent criteria, compensation models, and financial runway impact',
-      activatedRoles: ['CEO', 'Talent', 'Finance', 'Operations', 'Auditor'],
+      objective: 'Formulate headcount recruitment plan, compensation model, and onboarding roadmap',
+      activatedRoles: ['CEO', 'Talent', 'Finance', 'Operations', 'Legal', 'Auditor'],
       requiresFinancialCalculations: true,
       requiresHeadcountModeling: true,
       requiresRag: true,
       isUnrelated: false,
-      requiresApproval: isAction,
-      proposedActionTitle: isAction ? 'Headcount Recruitment Authorization' : null,
-      proposedActionImpact: isAction ? 'Commits salary compensation pool to startup burn' : null
+      requiresApproval: true,
+      proposedActionTitle: 'Headcount Recruitment Authorization',
+      proposedActionImpact: 'Commits salary compensation pool to startup burn'
     };
   }
 
@@ -267,7 +377,7 @@ export function analyzeCommandIntent(command: string): IntentAnalysis {
     return {
       intent: 'gtm_planning',
       objective: 'Structure go-to-market milestones, distribution channels, and user acquisition strategies',
-      activatedRoles: ['CEO', 'Growth', 'Auditor'],
+      activatedRoles: ['CEO', 'Growth', 'Finance', 'Auditor'],
       requiresFinancialCalculations: false,
       requiresHeadcountModeling: false,
       requiresRag: true,
@@ -381,7 +491,7 @@ export class OrchestrationService {
    */
   async executeCommand(
     command: string,
-    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string },
+    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string; context?: any },
     onEvent?: (event: any) => void
   ): Promise<OrchestrationResponse> {
     const userId = typeof userIdOrContext === 'string' 
@@ -408,7 +518,7 @@ export class OrchestrationService {
     command: string,
     commandId: string,
     userId: string | undefined,
-    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string },
+    userIdOrContext?: string | { userId?: string; startupId?: string; commandId?: string; context?: any },
     onEvent?: (event: any) => void
   ): Promise<OrchestrationResponse> {
     console.log(`[Command] commandId=${commandId} userId=${userId || 'anonymous'} command="${command}"`);
@@ -418,8 +528,11 @@ export class OrchestrationService {
     const targetUserId = userId || (typeof userIdOrContext === 'object' ? userIdOrContext?.userId : undefined);
     const targetStartupId = typeof userIdOrContext === 'object' ? userIdOrContext?.startupId : undefined;
 
-    let canonical: CompanyContext | null = null;
-    if (targetStartupId && targetUserId) {
+    let canonical: CompanyContext | null = (typeof userIdOrContext === 'object' && userIdOrContext?.context)
+      ? userIdOrContext.context
+      : null;
+
+    if (!canonical && targetStartupId && targetUserId) {
       canonical = await companyContextService.getContextForStartup(targetStartupId, targetUserId);
     }
     if (!canonical && targetUserId) {
@@ -800,28 +913,32 @@ export class OrchestrationService {
     // 5. User-Scoped Hybrid RAG Retrieval (Grounded in Verified Company Files)
     let evidence: OrchestrationEvidence[] = [];
     let retrievedContextText = 'No specific internal documents were indexed or retrieved.';
+    const agentKnowledgeMap = new Map<string, AgentKnowledgeSlice>();
 
-    if (analysis.requiresRag) {
+    if (analysis.needsCompanyKnowledge || analysis.requiresRag) {
       try {
-        console.log(`[RAG] Searching hybrid indexed base for: "${command}" (startupId: ${startupId})`);
-        const retrievedChunks = await performHybridSearch(command, startupId, 4);
-        if (retrievedChunks.length > 0) {
-          // Verify relevance: ensure the query and chunk share meaningful terms or semantic threshold
-          const queryTokens = command.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !['what', 'have', 'with', 'about', 'this', 'that', 'from'].includes(w));
-          const relevantChunks = retrievedChunks.filter(c => {
-            const contentLower = c.content.toLowerCase();
-            return queryTokens.some(t => contentLower.includes(t)) || c.similarityScore > 0.45;
-          });
+        console.log(`[RAG] Searching company knowledge base for: "${command}" (startupId: ${startupId}, reason: ${analysis.knowledgeReason || 'domain analysis'})`);
+        const retrievedChunks = await retrieveRelevantKnowledge({
+          startupId,
+          command,
+          subQueries: analysis.searchQueries || [],
+          limit: 6,
+          minSimilarity: 0.35
+        });
 
-          if (relevantChunks.length > 0) {
-            const { contextText, citations } = buildContext(relevantChunks);
-            retrievedContextText = contextText;
-            evidence = citations.map((c, idx) => ({
-              citationId: `[CIT-${idx + 1}]`,
-              documentId: c.documentId,
-              documentName: c.documentName,
-              excerpt: c.chunkContent.slice(0, 200) + '...'
-            }));
+        if (retrievedChunks.length > 0) {
+          const { contextText, citations } = buildContext(retrievedChunks);
+          retrievedContextText = contextText;
+          evidence = citations.map(c => ({
+            citationId: c.citationId,
+            documentId: c.documentId,
+            documentName: c.documentName,
+            excerpt: c.chunkContent.slice(0, 200) + '...'
+          }));
+
+          // Route domain-scoped knowledge to each active specialist agent (safeguards context size and relevance)
+          for (const role of analysis.activatedRoles) {
+            agentKnowledgeMap.set(role, filterKnowledgeForAgent(role, retrievedChunks));
           }
         }
       } catch (err: any) {
@@ -861,19 +978,42 @@ export class OrchestrationService {
     const councilResult = await multiAgentCouncil.executeCouncil(
       command,
       canonical,
-      evidence.map(e => e.excerpt)
+      evidence.map(e => e.excerpt),
+      { 
+        activatedRoles: analysis.activatedRoles,
+        agentKnowledgeMap
+      }
     );
 
-    // Phase A3: persist the CEO decomposition as assignable Task rows so the work
-    // survives the request and can reach an employee workspace. Delegation must
-    // never fail the founder's command, so this is deliberately non-throwing.
+    // Phase A4 — Explicit Plan Decomposition:
+    // Turn the founder command into an explicit Plan and ordered sequential Task rows.
+    const decomposedPlan = await decomposeCommandToPlan({
+      startupId,
+      command,
+      commandId
+    });
+
+    // Also persist the council's work orders under this plan
     await delegateWorkOrders(
       startupId,
       councilResult.decomposition.workOrders.map(w => ({
         department: w.department,
         objective: w.objective
-      }))
+      })),
+      { planId: decomposedPlan.plan.id }
     );
+
+    onEvent?.({
+      type: 'plan_generated',
+      plan: {
+        id: decomposedPlan.plan.id,
+        title: decomposedPlan.plan.title,
+        description: decomposedPlan.plan.description,
+        status: decomposedPlan.plan.status,
+        steps: decomposedPlan.explicitSteps,
+        tasks: decomposedPlan.tasks
+      }
+    });
 
     const agents: OrchestrationAgentActivity[] = [];
     const allRoles = ['CEO', 'Finance', 'Talent', 'Growth', 'Operations', 'Legal', 'Auditor'];
@@ -886,7 +1026,9 @@ export class OrchestrationService {
 
     for (const role of analysis.activatedRoles) {
       onEvent?.({ type: 'agent_started', role, status: 'analyzing' });
-      const execRes = councilResult.executiveResults.get(role as any);
+      const execRes = councilResult.executiveResults.get(role as any)
+        || (role === 'Finance' ? councilResult.executiveResults.get('CFO') : undefined)
+        || (role === 'CFO' ? councilResult.executiveResults.get('Finance' as any) : undefined);
       const contribution = execRes ? execRes.recommendation : `${role} analyzed domain parameters.`;
       agents.push({
         role,
@@ -936,14 +1078,18 @@ BOARD CONSENSUS:
 ${councilResult.boardConsensus.summary}
 ${councilResult.boardConsensus.hasUnresolvedVeto ? '⚠️ CRITICAL: Council consensus is BLOCKED by one or more formal executive vetoes.' : '✓ Board consensus satisfied.'}
 
+EXPLICIT OPERATING PLAN:
+${decomposedPlan.formattedPlanText}
+
 INSTRUCTIONS:
 1. Deliver ONE authoritative executive briefing written from the perspective of the CEO synthesizing the real council deliberation above.
 2. If an active veto is present, explain the exact risk and propose alternative restructuring or escalation.
 3. For startup identity questions, state company name, industry, and description.
-4. Return clean JSON matching this exact structure:
+4. Prominently include the explicit PLAN with numbered steps in your response details.
+5. Return clean JSON matching this exact structure:
 {
   "summary": "1-3 sentence decisive executive verdict or direct answer",
-  "details": "Actionable breakdown with specific bullet points and next steps",
+  "details": "Actionable breakdown with specific bullet points and next steps, including the PLAN",
   "confidence": 0.95
 }
 `;
@@ -1069,12 +1215,17 @@ INSTRUCTIONS:
       confidence = 0.5;
     }
 
+    // Ensure the explicit execution plan is cleanly appended to details
+    if (!finalDetails.includes('1.') || !finalDetails.toLowerCase().includes('plan')) {
+      finalDetails = `${finalDetails}\n\n${decomposedPlan.formattedPlanText}`;
+    }
+
     onEvent?.({ type: 'chunk', text: finalSummary });
 
     // 9. Human-in-the-Loop Approval Center Integration
     let approvalRequirement: OrchestrationResponse['approval'] = undefined;
 
-    const shouldTriggerApproval = analysis.requiresApproval || (headcount.hasHiringQuery && headcount.count > 0);
+    const shouldTriggerApproval = analysis.requiresApproval;
 
     if (shouldTriggerApproval) {
       const isHiring = headcount.hasHiringQuery && headcount.count > 0;
@@ -1114,12 +1265,13 @@ INSTRUCTIONS:
       if (isDbAvailable && prisma) {
         try {
           await safeDbQuery(async () => {
-            let activePlan = await prisma.plan.findFirst({ where: { startupId } });
+            let activePlan = await prisma.plan.findUnique({ where: { id: decomposedPlan.plan.id } });
             if (!activePlan) {
               activePlan = await prisma.plan.create({
                 data: {
-                  title: 'Core Executive Operations',
-                  description: 'Default continuous operating plan',
+                  id: decomposedPlan.plan.id,
+                  title: decomposedPlan.plan.title,
+                  description: decomposedPlan.plan.description,
                   startupId: startupId,
                   status: 'active'
                 }
@@ -1241,6 +1393,14 @@ INSTRUCTIONS:
       votes: councilResult.boardConsensus.votes,
       boardConsensus: councilResult.boardConsensus,
       approval: approvalRequirement,
+      plan: {
+        id: decomposedPlan.plan.id,
+        title: decomposedPlan.plan.title,
+        description: decomposedPlan.plan.description,
+        status: decomposedPlan.plan.status,
+        steps: decomposedPlan.explicitSteps,
+        tasks: decomposedPlan.tasks
+      },
       nextActions,
       confidence,
     };

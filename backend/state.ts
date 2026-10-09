@@ -162,11 +162,57 @@ export const DEFAULT_INITIATIVES: Initiative[] = [
 
 export const DEFAULT_KNOWLEDGE_FILES: KnowledgeFile[] = [
   {
+    id: 'doc_hiring_policy',
+    name: 'Hiring Policy.pdf',
+    type: 'policy',
+    size: '24.2 KB',
+    uploadDate: '2026-10-06T09:00:00.000Z',
+    startupId: 'st_catalystos',
+    summary: 'Official Talent Acquisition & Hiring Policy. Defines recruitment standards, engineering interview loops, 90-day probation review, and salary compensation benchmarks.',
+    insights: [
+      'All full-time engineering candidates must complete a 4-round technical assessment and cultural interview.',
+      'Base salaries for Senior Engineers are benchmarked at $130,000 - $150,000/yr with standard 0.25% - 0.75% equity incentives.',
+      'Mandatory structured 90-day performance milestone review before full tenure confirmation.',
+      'All hiring offers require dual approval from Talent lead and Finance (CFO).'
+    ]
+  },
+  {
+    id: 'doc_employee_handbook',
+    name: 'Employee Handbook.pdf',
+    type: 'handbook',
+    size: '38.6 KB',
+    uploadDate: '2026-10-06T09:30:00.000Z',
+    startupId: 'st_catalystos',
+    summary: 'Company Employee Handbook & Governance Guide. Details employment standards, intellectual property protection covenants, standard 20-day PTO, at-will terms, and onboarding compliance.',
+    insights: [
+      'All employees and contractors must execute standard Proprietary Information and Inventions Agreement (PIIA) prior to start date.',
+      'Employment is at-will; all offers are contingent upon background verification and signed compliance acknowledgment.',
+      'Standard benefits package includes 20 days paid time off (PTO) and comprehensive health insurance coverage.',
+      'Equipment stipend of $2,500 allocated per engineer for developer workstation and hardware setup.'
+    ]
+  },
+  {
+    id: 'doc_company_strategy',
+    name: 'Company Strategy.docx',
+    type: 'strategy',
+    size: '42.1 KB',
+    uploadDate: '2026-10-06T10:00:00.000Z',
+    startupId: 'st_catalystos',
+    summary: 'Strategic Master Plan & Operational Roadmap. Details the 6-month product roadmap, target enterprise launch milestones, runway guardrails, and customer acquisition priorities.',
+    insights: [
+      'Core corporate objective: Deliver production enterprise workflow orchestration engine within 90 days.',
+      'Runway preservation guardrail: Maintain a minimum 6-month operational runway buffer at all times before approving non-essential headcount expansion.',
+      'Target ICP: Mid-market B2B SaaS engineering teams with 20-100 developers building microservices.',
+      'Engineering capacity is the primary delivery bottleneck; strategic technical hiring is prioritized over sales expansion.'
+    ]
+  },
+  {
     id: 'doc_novatech_strategy',
     name: 'NovaTech_Enterprise_Strategy.md',
     type: 'pitch_deck',
     size: '18.4 KB',
     uploadDate: '2026-10-05T09:00:00.000Z',
+    startupId: 'st_catalystos',
     summary: 'Executive roadmap for NovaTech Enterprise Orchestrator. Documents our 6-week launch timeline with 5 pilot enterprise customers, 3 developers bandwidth bottleneck, and ₹8L/mo burn boundary.',
     insights: [
       'Enterprise launch is firmly committed in 6 weeks with 5 pilot partner contracts.',
@@ -197,7 +243,20 @@ export let startupProfile: StartupProfile = persisted?.startupProfile || { ...DE
 export let initiatives: Initiative[] = (persisted?.initiatives && persisted.initiatives.length > 0) ? persisted.initiatives : [...DEFAULT_INITIATIVES];
 export let approvals: Deliverable[] = persisted?.approvals || [];
 export let decisionLog: DecisionRecord[] = (persisted?.decisionLog && persisted.decisionLog.length > 0) ? persisted.decisionLog : [...DEFAULT_DECISION_LOG];
-export let knowledgeFiles: KnowledgeFile[] = (persisted?.knowledgeFiles && persisted.knowledgeFiles.length > 0) ? persisted.knowledgeFiles : [...DEFAULT_KNOWLEDGE_FILES];
+const initialFiles: KnowledgeFile[] = (persisted?.knowledgeFiles && persisted.knowledgeFiles.length > 0)
+  ? [...persisted.knowledgeFiles]
+  : [];
+
+for (const defaultDoc of DEFAULT_KNOWLEDGE_FILES) {
+  const existing = initialFiles.find(kf => kf.id === defaultDoc.id || kf.name === defaultDoc.name);
+  if (!existing) {
+    initialFiles.push({ ...defaultDoc });
+  } else if (!existing.startupId) {
+    existing.startupId = defaultDoc.startupId;
+  }
+}
+
+export let knowledgeFiles: KnowledgeFile[] = initialFiles;
 
 export function persistCurrentState() {
   savePersistedState({

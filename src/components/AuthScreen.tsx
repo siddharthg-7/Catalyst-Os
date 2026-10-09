@@ -148,7 +148,7 @@ export default function AuthScreen({ initialView = 'landing', onOnboardingComple
   const labelCls = "block text-[10px] uppercase tracking-widest text-[#696969] mb-1.5 font-bold font-mono";
 
   return (
-    <div className="min-h-screen relative font-sans overflow-hidden transition-colors duration-300" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
+    <div className="min-h-screen bg-[#F3F0EE] text-[#141413] relative font-sans overflow-hidden">
       <WarmBackground />
 
       <AnimatePresence mode="wait" custom={direction}>jiiiiiiiiiiiiiiii
