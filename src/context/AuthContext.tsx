@@ -58,7 +58,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const parsed = JSON.parse(storedDemo);
           if (mounted) {
             setUser(parsed);
-            setToken('mock_demo_bearer_token');
+            if (storedToken && storedToken.split('.').length === 3) {
+              setToken(storedToken);
+            } else {
+              setToken('mock_demo_bearer_token');
+              fetch('/api/auth/demo', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                  if (d.token && mounted) {
+                    setToken(d.token);
+                    localStorage.setItem('catalystos_token', d.token);
+                  }
+                })
+                .catch(() => {});
+            }
             setLoading(false);
           }
           return;
@@ -213,9 +226,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     // Fallback if network issue
     localStorage.setItem('catalystos_demo_user', JSON.stringify(dUser));
+    localStorage.setItem('catalystos_token', 'mock_demo_bearer_token');
     localStorage.setItem(`catalystos_onboarding_completed_${dUser.id}`, 'true');
     localStorage.setItem('catalystos_onboarding_completed_usr_founder_demo', 'true');
     setUser(dUser);
+    setToken('mock_demo_bearer_token');
   }, []);
 
   const logout = async () => {

@@ -67,6 +67,18 @@ export async function authenticateJWT(
     return;
   }
 
+  // 0. Support demo / mock session token used by demo profile in local storage or development
+  if (token === 'mock_demo_bearer_token' || token === 'mock_demo_token' || token.startsWith('demo_token_')) {
+    req.user = {
+      id: 'usr_founder_demo',
+      email: 'founder@founder.os',
+      name: 'Alex Rivera',
+      role: 'Founder',
+    };
+    ensureUserInDatabase(req.user).catch(() => {});
+    return next();
+  }
+
   // 1. Try verifying native JWT signed with JWT_SECRET
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
