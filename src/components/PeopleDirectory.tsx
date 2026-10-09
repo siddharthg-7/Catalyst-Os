@@ -944,6 +944,18 @@ export default function PeopleDirectory({
                   }}
                   required
                 />
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {['Operations', 'Growth Lead', 'Finance Analyst', 'HR Specialist', 'Software Engineer'].map(r => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRole(r)}
+                      className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>

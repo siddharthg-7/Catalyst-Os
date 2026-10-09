@@ -756,7 +756,6 @@ export default function OrgHierarchyFlow({
           panOnScroll={false}
           panOnDrag={true}
           preventScrolling={false}
-          proOptions={{ hideAttribution: true }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
 

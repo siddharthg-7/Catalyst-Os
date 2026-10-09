@@ -1602,15 +1602,27 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
     res.status(400).json({ error: 'Role is required.' });
     return;
   }
-  // P1 Task 7: roles are a fixed set, not free text, so the permission map always resolves.
+  // P1 Task 7: Map role title to canonical RBAC role so arbitrary titles (e.g. "Lead Integrations Engineer") succeed
   const assignableRoles = ROLES.filter(r => r !== 'FOUNDER');
-  const canonicalRole = memberRole.toUpperCase();
-  if (!assignableRoles.includes(canonicalRole as any)) {
-    res.status(400).json({
-      error: `Role must be one of [${assignableRoles.join(', ')}].`,
-      allowedRoles: assignableRoles
-    });
-    return;
+  let canonicalRole = memberRole.toUpperCase();
+  const explicitRole = (req.body?.systemRole || req.body?.canonicalRole || '').trim().toUpperCase();
+
+  if (assignableRoles.includes(explicitRole as any)) {
+    canonicalRole = explicitRole;
+  } else if (!assignableRoles.includes(canonicalRole as any)) {
+    // Intelligent domain/role inference
+    const lowerRole = memberRole.toLowerCase();
+    if (lowerRole.includes('admin')) {
+      canonicalRole = 'ADMIN';
+    } else if (lowerRole.includes('finan') || lowerRole.includes('account') || lowerRole.includes('cfo')) {
+      canonicalRole = 'FINANCE';
+    } else if (lowerRole.includes('hr') || lowerRole.includes('talent') || lowerRole.includes('people') || lowerRole.includes('recruit')) {
+      canonicalRole = 'HR';
+    } else if (lowerRole.includes('growth') || lowerRole.includes('market') || lowerRole.includes('sales')) {
+      canonicalRole = 'GROWTH';
+    } else {
+      canonicalRole = 'OPERATIONS';
+    }
   }
   if (!memberDept) {
     res.status(400).json({ error: 'Department is required.' });
@@ -1632,7 +1644,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
             title: memberName,
             description: JSON.stringify({
               fullName: memberName,
-              role: canonicalRole,
+              role: memberRole,
+              systemRole: canonicalRole,
               department: memberDept,
               email: memberEmail,
               status: status || 'Active'
@@ -1683,7 +1696,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
           id: memory.id,
           fullName: memberName,
           name: memberName,
-          role: canonicalRole,
+          role: memberRole,
+          systemRole: canonicalRole,
           department: memberDept,
           email: memberEmail,
           status: status || 'Active',
@@ -1699,7 +1713,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
       userId,
       fullName: memberName,
       name: memberName,
-      role: canonicalRole,
+      role: memberRole,
+      systemRole: canonicalRole,
       department: memberDept,
       email: memberEmail,
       status: (status as any) || 'Active',
