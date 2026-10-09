@@ -54,6 +54,8 @@ export async function authenticateJWT(
   // In non-production development environments, provide seamless fallback for local dashboard viewing
   if (
     process.env.NODE_ENV !== 'production' &&
+    process.env.NODE_ENV !== 'test' &&
+    process.env.STRICT_AUTH !== 'true' &&
     (!authHeader || authHeader === 'Bearer' || authHeader === 'Bearer null' || authHeader === 'Bearer undefined')
   ) {
     req.user = {

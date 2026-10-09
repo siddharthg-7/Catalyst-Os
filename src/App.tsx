@@ -20,6 +20,7 @@ import AcceptInvitation from './components/AcceptInvitation';
 import EmployeeWorkspace from './components/EmployeeWorkspace';
 import ExecutiveCouncilWorkspace from './components/ExecutiveCouncilWorkspace';
 import RoleAwareDashboard from './components/RoleAwareDashboard';
+import MultiAgentOrchestrationDashboard from './components/MultiAgentOrchestrationDashboard';
 import { 
   Bell,
   CheckSquare, 
@@ -51,7 +52,8 @@ import {
   SlidersHorizontal,
   Settings,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Cpu
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -59,6 +61,7 @@ import AuthScreen from './components/AuthScreen';
 import CatalystLogo from './components/CatalystLogo';
 import CatalystOsChatbot from './components/chatbot/CatalystOsChatbot';
 import NotificationPanel from './components/NotificationPanel';
+import { sendEmailWithEmailJS } from './services/emailJsService';
 import MouseSpotlight from './components/MouseSpotlight';
 import AuroraBackground from './components/AuroraBackground';
 import Footer from './components/Footer';
@@ -175,7 +178,8 @@ export default function App() {
   };
 
   // ── Derive activeTab from URL pathname ───────────────────────────────────────
-  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people' => {
+  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people' | 'orchestration' => {
+    if (pathname.includes('/orchestration')) return 'orchestration';
     if (pathname.includes('/council')) return 'council';
     if (pathname.includes('/workspace')) return 'workspace';
     if (pathname.includes('/approvals')) return 'approvals';
@@ -204,7 +208,7 @@ export default function App() {
     }
   }, [location.pathname]);
 
-  const handleTabChange = (tab: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people', agentId?: string) => {
+  const handleTabChange = (tab: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people' | 'orchestration', agentId?: string) => {
     if (tab === 'agents') {
       const targetAgent = agentId || selectedAgentId || 'ceo';
       setSelectedAgentId(targetAgent);
@@ -253,7 +257,7 @@ export default function App() {
   const DEFAULT_AGENTS: Agent[] = [
     {
       id: 'ceo',
-      name: 'Sophia Vance (Atlas)',
+      name: 'CEO Orchestrator (Atlas)',
       role: 'CEO',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
       description: 'Autonomous corporate strategist. Formulates broad roadmaps and coordinates specialist executives.',
@@ -264,7 +268,7 @@ export default function App() {
     },
     {
       id: 'finance',
-      name: 'Marcus Sterling (Aura)',
+      name: 'Chief Financial Officer (Aura)',
       role: 'Finance',
       avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
       description: 'Automated Chief Financial Officer. Optimizes unit economics, burn rates, and deterministic runways.',
@@ -275,7 +279,7 @@ export default function App() {
     },
     {
       id: 'talent',
-      name: 'Evelyn Brooks (Echo)',
+      name: 'Head of People & HR (Echo)',
       role: 'Talent',
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
       description: 'AI Recruiting and HR Executive. Strategizes resource allocation and compensation structures.',
@@ -286,7 +290,7 @@ export default function App() {
     },
     {
       id: 'growth',
-      name: 'Dax Ramirez (Vector)',
+      name: 'VP of Growth (Vector)',
       role: 'Growth',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
       description: 'Autonomous Marketing and Acquisition Officer. Focuses on customer acquisition and GTM loops.',
@@ -297,7 +301,7 @@ export default function App() {
     },
     {
       id: 'legal',
-      name: 'Helena Vance, Esq. (Nexus)',
+      name: 'General Counsel (Nexus)',
       role: 'Legal',
       avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150',
       description: 'Automated General Counsel. Drafts contracts, assesses IP protection, and reviews compliance.',
@@ -308,7 +312,7 @@ export default function App() {
     },
     {
       id: 'operations',
-      name: 'Felix Torres (Helix)',
+      name: 'Chief Operating Officer (Helix)',
       role: 'Operations',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
       description: 'Chief Operating Officer. Orchestrates milestone deliveries, sprint cadences, and systems reliability.',
@@ -319,7 +323,7 @@ export default function App() {
     },
     {
       id: 'investment',
-      name: 'Sarah Chen (Apex)',
+      name: 'Head of Capital (Apex)',
       role: 'Investment',
       avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150',
       description: 'Investor Relations & Capital Executive. Formulates cap table simulations and fundraising models.',
@@ -330,7 +334,7 @@ export default function App() {
     },
     {
       id: 'auditor',
-      name: 'Sentry Core (Auditor)',
+      name: 'Verification Auditor (Sentry)',
       role: 'Auditor',
       avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
       description: 'Governance & Verification Officer. Audits calculations, checks evidence grounding, and enforces gates.',
@@ -505,6 +509,18 @@ export default function App() {
 
   const handleAddTeamMember = async (newMember: { fullName: string; email: string; role: string; department: string; status?: 'Active' | 'Invited' }) => {
     const memberName = newMember.fullName;
+
+    // Dispatch welcome notification via EmailJS (service_6dwbxni / template_xqoitun)
+    sendEmailWithEmailJS({
+      to_email: newMember.email,
+      to_name: newMember.fullName,
+      from_name: user?.name || 'The Founder',
+      company_name: startup.name,
+      role: newMember.role,
+      department: newMember.department,
+      subject: `Welcome to the ${startup.name} Team on CatalystOS`
+    }).catch(err => console.warn('[App] Client EmailJS welcome error:', err));
+
     try {
       const res = await apiFetch('/api/team', {
         method: 'POST',
@@ -523,11 +539,7 @@ export default function App() {
           return updated;
         });
         await refreshInvitations();
-        if (created.emailDelivered) {
-          showToast(`Team member "${memberName}" added & invitation emailed via Gmail.`, 'success');
-        } else {
-          showToast(`Team member "${memberName}" successfully added.`, 'success');
-        }
+        showToast(`Team member "${memberName}" added & invitation dispatched via EmailJS.`, 'success');
         return;
       }
     } catch (err) {
@@ -614,7 +626,18 @@ export default function App() {
     }
   };
 
-  const handleInviteMember = async (invite: { email: string; role: string }) => {
+  const handleInviteMember = async (invite: { email: string; role: string; department?: string }) => {
+    // 1. Dispatch invitation email via EmailJS (service_6dwbxni / template_xqoitun)
+    sendEmailWithEmailJS({
+      to_email: invite.email,
+      to_name: invite.email.split('@')[0],
+      from_name: user?.name || 'The Founder',
+      company_name: startup.name,
+      role: invite.role,
+      department: invite.department || 'Operations',
+      subject: `Invitation to join ${startup.name} on CatalystOS`
+    }).catch(err => console.warn('[App] Client EmailJS invite error:', err));
+
     const res = await apiFetch('/api/invitations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -626,18 +649,7 @@ export default function App() {
       throw new Error(data?.error || 'Invitation failed');
     }
     await refreshInvitations();
-    // With no SMTP configured the backend returns the link in development so the
-    // founder can pass it along manually.
-    if (data.invitationUrl && !data.emailDelivered) {
-      try {
-        await navigator.clipboard?.writeText(data.invitationUrl);
-        showToast(`Invitation created for ${invite.email}. Link copied to clipboard.`, 'success');
-      } catch {
-        showToast(`Invitation created for ${invite.email}. Copy the link from the server log.`, 'info');
-      }
-    } else {
-      showToast(`Invitation emailed to ${invite.email} via Gmail.`, 'success');
-    }
+    showToast(`Invitation dispatched to ${invite.email} via EmailJS.`, 'success');
   };
 
   const handleRevokeInvitation = async (id: string) => {
@@ -890,11 +902,12 @@ export default function App() {
       {
         title: 'Intelligence',
         items: [
+          { id: 'orchestration' as const, label: 'Multi-Agent Orchestrator', Icon: Cpu, badge: '5-Step', badgeColor: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
           { id: 'knowledge' as const, label: 'Company Knowledge', Icon: BookOpen },
           { id: 'workflows' as const, label: 'Workflows', Icon: GitMerge },
           { id: 'scenarios' as const, label: 'Scenario Planning', Icon: SlidersHorizontal },
           { id: 'council' as const,   label: 'Executive Council', Icon: Sparkles },
-        ].filter(item => item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
+        ].filter(item => item.id === 'orchestration' || item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
         title: 'Governance',
@@ -1286,6 +1299,8 @@ export default function App() {
                     onRefreshTasks={hydrateTasks}
                     onNavigate={(tab) => handleTabChange(tab as any)}
                     apiFetch={apiFetch}
+                    teamMembers={teamMembers}
+                    currentUser={user}
                   />
                 )}
 
@@ -1298,6 +1313,13 @@ export default function App() {
                     onUpdateStartup={handleUpdateStartup} 
                     selectedAgentId={selectedAgentId}
                     onSelectAgent={handleSelectAgent}
+                  />
+                )}
+
+                {activeTab === 'orchestration' && (
+                  <MultiAgentOrchestrationDashboard
+                    apiFetch={apiFetch}
+                    onNavigate={(tab) => handleTabChange(tab as any)}
                   />
                 )}
 

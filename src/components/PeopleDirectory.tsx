@@ -20,10 +20,13 @@ import {
   ShieldCheck,
   Bot,
   UserMinus,
-  Network
+  Network,
+  Plus,
+  Check
 } from 'lucide-react';
 import Section from './Section';
 import OrgHierarchyFlow, { CORE_DOMAINS } from './OrgHierarchyFlow';
+import { sendEmailWithEmailJS } from '../services/emailJsService';
 
 const ASSIGNABLE_ROLES = [
   { value: 'ADMIN',      label: 'Admin',      hint: 'Full access to every area, agent and approval.' },
@@ -128,7 +131,7 @@ interface PeopleDirectoryProps {
   onRemoveMember?: (id: string) => Promise<void>;
   memberships?: CompanyMembership[];
   invitations?: CompanyInvitation[];
-  onInviteMember?: (invite: { email: string; role: string }) => Promise<void>;
+  onInviteMember?: (invite: { email: string; role: string; department?: string }) => Promise<void>;
   onRevokeInvitation?: (id: string) => Promise<void>;
   onResendInvitation?: (id: string) => Promise<void>;
   onRemoveMembership?: (id: string) => Promise<void>;
@@ -149,10 +152,53 @@ export default function PeopleDirectory({
 }: PeopleDirectoryProps) {
   const [activeTab, setActiveTab] = useState<'hierarchy' | 'humans' | 'agents'>('hierarchy');
 
+  // Custom departments state (persisted across sessions)
+  const [customDepartments, setCustomDepartments] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('catalystos_custom_departments');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [newDeptInput, setNewDeptInput] = useState('');
+  const [showNewDeptInput, setShowNewDeptInput] = useState(false);
+
+  const handleAddCustomDepartment = (deptName: string): string => {
+    const trimmed = deptName.trim();
+    if (!trimmed) return '';
+    if (!customDepartments.includes(trimmed)) {
+      const updated = [...customDepartments, trimmed];
+      setCustomDepartments(updated);
+      try {
+        localStorage.setItem('catalystos_custom_departments', JSON.stringify(updated));
+      } catch {}
+    }
+    setNewDeptInput('');
+    setShowNewDeptInput(false);
+    return trimmed;
+  };
+
+  const allAvailableDepartments = Array.from(
+    new Set([
+      ...CORE_DOMAINS.map(d => d.label),
+      'Operations',
+      'Finance & Accounting',
+      'People & HR',
+      'Growth & Marketing',
+      'Engineering & Tech',
+      'Product & Design',
+      'Security & InfoSec',
+      ...customDepartments,
+      ...teamMembers.map(m => m.department).filter(Boolean)
+    ])
+  );
+
   // Invite modal state
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('');
+  const [inviteDepartment, setInviteDepartment] = useState('Operations');
   const [inviteSubmitting, setInviteSubmitting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
@@ -161,7 +207,7 @@ export default function PeopleDirectory({
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const [department, setDepartment] = useState('');
+  const [department, setDepartment] = useState('Operations');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -185,7 +231,7 @@ export default function PeopleDirectory({
     setFullName('');
     setEmail('');
     setRole('');
-    setDepartment('');
+    setDepartment('Operations');
     setError(null);
   };
 
@@ -213,11 +259,31 @@ export default function PeopleDirectory({
       setInviteError('Select a role for this person.');
       return;
     }
+
+    const chosenDept = inviteDepartment.trim() || 'Operations';
     setInviteSubmitting(true);
     try {
-      await onInviteMember?.({ email: inviteEmail.trim(), role: inviteRole });
+      // 1. Dispatch directly via EmailJS (service_6dwbxni / template_xqoitun)
+      sendEmailWithEmailJS({
+        to_email: inviteEmail.trim(),
+        to_name: inviteEmail.split('@')[0],
+        from_name: founderName,
+        company_name: companyName,
+        role: inviteRole,
+        department: chosenDept,
+        subject: `You've been invited to join ${companyName} on CatalystOS`
+      }).catch(err => console.warn('[PeopleDirectory] EmailJS invite attempt:', err));
+
+      // 2. Delegate to parent invite handler
+      await onInviteMember?.({ 
+        email: inviteEmail.trim(), 
+        role: inviteRole,
+        department: chosenDept 
+      });
+
       setInviteEmail('');
       setInviteRole('');
+      setInviteDepartment('Operations');
       setInviteOpen(false);
     } catch (err: any) {
       setInviteError(err?.message || 'The invitation could not be sent.');
@@ -233,7 +299,7 @@ export default function PeopleDirectory({
     const trimmedName = fullName.trim();
     const trimmedEmail = email.trim();
     const trimmedRole = role.trim();
-    const trimmedDept = department.trim();
+    const trimmedDept = department.trim() || 'Operations';
 
     if (!trimmedName) {
       setError('Please provide the person\'s full name.');
@@ -247,21 +313,29 @@ export default function PeopleDirectory({
       setError('Please enter a role.');
       return;
     }
-    if (!trimmedDept) {
-      setError('Please enter a department.');
-      return;
-    }
 
     setIsSubmitting(true);
     try {
-      if (!onAddMember) return;
-      await onAddMember({
-        fullName: trimmedName,
-        email: trimmedEmail,
+      // Dispatch directly via EmailJS (service_6dwbxni / template_xqoitun)
+      sendEmailWithEmailJS({
+        to_email: trimmedEmail,
+        to_name: trimmedName,
+        from_name: founderName,
+        company_name: companyName,
         role: trimmedRole,
         department: trimmedDept,
-        status: 'Active'
-      });
+        subject: `Welcome to the ${companyName} Team on CatalystOS`
+      }).catch(err => console.warn('[PeopleDirectory] EmailJS welcome attempt:', err));
+
+      if (onAddMember) {
+        await onAddMember({
+          fullName: trimmedName,
+          email: trimmedEmail,
+          role: trimmedRole,
+          department: trimmedDept,
+          status: 'Active'
+        });
+      }
       resetForm();
       setModalOpen(false);
     } catch (err: any) {
@@ -828,6 +902,95 @@ export default function PeopleDirectory({
                 </p>
               </div>
 
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>
+                    Department / Domain
+                  </label>
+                  <span className="text-[10px] font-mono text-emerald-500 font-semibold flex items-center gap-1">
+                    <Check className="w-3 h-3" /> EmailJS Enabled
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Select domain below or enter custom department"
+                  value={inviteDepartment}
+                  onChange={(e) => setInviteDepartment(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-xs outline-none"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
+                  required
+                />
+                
+                {/* Domain Quick Preset Selector with custom department add */}
+                <div className="flex flex-wrap items-center gap-1 mt-2">
+                  {allAvailableDepartments.slice(0, 8).map((d) => {
+                    const isSelected = inviteDepartment === d;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setInviteDepartment(d)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' 
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                        }`}
+                      >
+                        {d}
+                      </button>
+                    );
+                  })}
+                  {!showNewDeptInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewDeptInput(true)}
+                      className="px-2 py-0.5 rounded text-[10px] font-medium text-sky-500 hover:bg-sky-500/10 transition-all flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" /> Add Dept
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-1 mt-1">
+                      <input
+                        type="text"
+                        placeholder="New department name"
+                        value={newDeptInput}
+                        onChange={(e) => setNewDeptInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const added = handleAddCustomDepartment(newDeptInput);
+                            if (added) setInviteDepartment(added);
+                          }
+                        }}
+                        className="px-2 py-0.5 rounded text-[10px] outline-none border border-sky-400 bg-transparent text-slate-800 dark:text-slate-100"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const added = handleAddCustomDepartment(newDeptInput);
+                          if (added) setInviteDepartment(added);
+                        }}
+                        className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500 text-white cursor-pointer"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewDeptInput(false)}
+                        className="px-1 py-0.5 text-[10px] text-slate-400 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {inviteError && (
                 <div className="p-3 rounded-xl bg-rose-500/10 text-rose-500 border border-rose-500/25 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -977,25 +1140,69 @@ export default function PeopleDirectory({
                   required
                 />
                 
-                {/* Domain Quick Preset Selector */}
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {CORE_DOMAINS.map((d) => {
-                    const isSelected = department === d.label;
+                {/* Domain Quick Preset Selector with custom department add */}
+                <div className="flex flex-wrap items-center gap-1 mt-2">
+                  {allAvailableDepartments.slice(0, 8).map((d) => {
+                    const isSelected = department === d;
                     return (
                       <button
-                        key={d.id}
+                        key={d}
                         type="button"
-                        onClick={() => setDepartment(d.label)}
+                        onClick={() => setDepartment(d)}
                         className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all cursor-pointer ${
                           isSelected 
                             ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' 
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                         }`}
                       >
-                        {d.label}
+                        {d}
                       </button>
                     );
                   })}
+                  {!showNewDeptInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewDeptInput(true)}
+                      className="px-2 py-0.5 rounded text-[10px] font-medium text-sky-500 hover:bg-sky-500/10 transition-all flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" /> Add Dept
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-1 mt-1">
+                      <input
+                        type="text"
+                        placeholder="New department name"
+                        value={newDeptInput}
+                        onChange={(e) => setNewDeptInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const added = handleAddCustomDepartment(newDeptInput);
+                            if (added) setDepartment(added);
+                          }
+                        }}
+                        className="px-2 py-0.5 rounded text-[10px] outline-none border border-sky-400 bg-transparent text-slate-800 dark:text-slate-100"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const added = handleAddCustomDepartment(newDeptInput);
+                          if (added) setDepartment(added);
+                        }}
+                        className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500 text-white cursor-pointer"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowNewDeptInput(false)}
+                        className="px-1 py-0.5 text-[10px] text-slate-400 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 

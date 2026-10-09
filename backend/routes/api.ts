@@ -29,6 +29,7 @@ import {
 } from '../services/neonAuthMiddleware';
 import {
   getActiveStartupId,
+  isDemoUserId,
   resolveMembership,
   listMemberships,
   getEffectivePermissions,
@@ -87,6 +88,9 @@ import { financialEngine } from '../services/financialEngine';
 import { decisionLedgerService } from '../services/decisionLedgerService';
 import { agentRunService } from '../services/agentRunService';
 import { companyPolicyService } from '../services/companyPolicyService';
+import { agentRuleService } from '../services/agentRuleService';
+import { activityLogService } from '../services/activityLogService';
+import { multiAgentOrchestratorService } from '../services/multiAgentOrchestratorService';
 
 const router = Router();
 const idempotencyCache = new Map<string, { status: number; body: any; timestamp: number }>();
@@ -1042,7 +1046,7 @@ async function resolveCallerStartupId(
   }
   const startupId = await getActiveStartupId(userId);
   if (!startupId) {
-    if (!isDbAvailable || userId.includes('demo')) {
+    if (!isDbAvailable || isDemoUserId(userId)) {
       return 'startup_novatech_demo';
     }
     res.status(404).json({ error: 'No company found for this account. Complete onboarding first.' });
@@ -1180,6 +1184,7 @@ router.post('/invitations', authenticateJWT, requireActiveMembership, requirePer
       startupId,
       email: req.body?.email,
       role: req.body?.role,
+      department: req.body?.department,
       invitedById: req.user!.id
     });
 
@@ -1300,6 +1305,95 @@ router.post('/invitations/accept', authRateLimiter, async (req: AuthenticatedReq
 });
 
 // ============================================================================
+// SMTP & FOUNDER EMAIL DISPATCH
+// Allows verified founders/admins to check SMTP health, verify live Gmail transport,
+// and dispatch emails to any designated recipient address ("respected mail").
+// ============================================================================
+
+// GET /api/smtp/status
+router.get('/smtp/status', authenticateJWT, requireActiveMembership, async (req: AuthenticatedRequest, res) => {
+  const isConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+  res.json({
+    configured: isConfigured,
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 587),
+    user: process.env.SMTP_USER ? process.env.SMTP_USER.replace(/(.{3}).*(@.*)/, '$1***$2') : null,
+    from: process.env.SMTP_FROM || process.env.SMTP_USER || null
+  });
+});
+
+// POST /api/smtp/verify - live connection handshake
+router.post('/smtp/verify', authenticateJWT, requireActiveMembership, requirePermission('people:access'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { verifySmtpConnection } = await import('../services/invitationMailer');
+    const result = await verifySmtpConnection();
+    if (!result.ok) {
+      return res.status(400).json(result);
+    }
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(500).json({ ok: false, message: err?.message || 'SMTP verification error.' });
+  }
+});
+
+// POST /api/smtp/send - dispatch email from founder to designated recipient
+router.post('/smtp/send', authenticateJWT, requireActiveMembership, requirePermission('people:access'), async (req: AuthenticatedRequest, res) => {
+  const { to, subject, text, html } = req.body || {};
+  if (!to || !to.includes('@')) {
+    return res.status(400).json({ error: 'A valid recipient email address (to) is required.' });
+  }
+  if (!subject) {
+    return res.status(400).json({ error: 'An email subject is required.' });
+  }
+
+  try {
+    const startupId = await resolveCallerStartupId(req, res);
+    if (!startupId) return;
+    const { sendDirectEmail } = await import('../services/invitationMailer');
+    
+    const senderName = req.user?.name || 'CatalystOS Founder';
+    const replyTo = req.user?.email || process.env.SMTP_FROM || process.env.SMTP_USER;
+
+    const delivery = await sendDirectEmail({
+      to,
+      subject,
+      text: text || '',
+      html: html || undefined,
+      senderName,
+      replyTo
+    });
+
+    // Record audit event in founder activity log
+    try {
+      if (!startupId) return;
+      const { activityLogService } = await import('../services/activityLogService');
+      await activityLogService.logActivity({
+          startupId,
+          userId: req.user!.id,
+          action: 'EMAIL_DISPATCHED',
+          details: {
+            recipient: to,
+            subject,
+            delivered: delivery.delivered,
+            channel: delivery.channel,
+            messageId: delivery.messageId
+          }
+        });
+      } catch (logErr) {
+        // Logging failure should not break delivery confirmation
+      }
+
+    return res.json({
+      success: delivery.delivered,
+      ...delivery
+    });
+  } catch (err: any) {
+    console.error('[SMTP Send API] Error:', err.message);
+    return res.status(500).json({ error: 'Failed to dispatch email: ' + (err.message || 'Unknown error') });
+  }
+});
+
+// ============================================================================
 // TASK DELEGATION (Phase A3)
 // The council's decomposition is persisted as assignable Task rows. Listing is
 // scoped to the caller's company AND their role: FOUNDER/ADMIN see the whole
@@ -1328,12 +1422,35 @@ router.get('/tasks', authenticateJWT, requireActiveMembership, requirePermission
 // approved/rejected are reserved for the founder approval loop.
 router.patch('/tasks/:id', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   try {
-    res.json(await updateTaskForUser({
+    const updated = await updateTaskForUser({
       userId: req.user!.id,
       taskId: req.params.id,
       status: req.body?.status,
       result: req.body?.result
-    }));
+    });
+
+    // Record activity in Founder Activity Ledger
+    try {
+      const membership = await resolveMembership(req.user!.id);
+      if (!membership) throw new Error('No active membership; skipping activity log.');
+      const action = req.body?.status === 'submitted' ? 'TASK_SUBMITTED' : 'STATUS_UPDATE';
+      await activityLogService.logActivity({
+        startupId: membership.startupId,
+        userId: req.user!.id,
+        actorRole: req.user?.role || 'EMPLOYEE',
+        action,
+        targetEntity: 'TASK',
+        targetId: req.params.id,
+        department: (updated as any)?.department,
+        details: {
+          taskId: req.params.id,
+          status: req.body?.status,
+          title: (updated as any)?.title
+        }
+      });
+    } catch {}
+
+    res.json(updated);
   } catch (err) {
     sendTaskError(res, err);
   }
@@ -1343,11 +1460,33 @@ router.patch('/tasks/:id', authenticateJWT, requireActiveMembership, requirePerm
 // Founder/Admin can assign or unassign; employee can claim their department tasks.
 router.patch('/tasks/:id/assign', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
   try {
-    res.json(await assignTaskForUser({
+    const updated = await assignTaskForUser({
       userId: req.user!.id,
       taskId: req.params.id,
       assigneeId: req.body?.assigneeId !== undefined ? req.body.assigneeId : req.body?.claim ? req.user!.id : undefined
-    }));
+    });
+
+    // Record activity in Founder Activity Ledger
+    try {
+      const membership = await resolveMembership(req.user!.id);
+      if (!membership) throw new Error('No active membership; skipping activity log.');
+      await activityLogService.logActivity({
+        startupId: membership.startupId,
+        userId: req.user!.id,
+        actorRole: req.user?.role || 'EMPLOYEE',
+        action: 'TASK_CLAIMED',
+        targetEntity: 'TASK',
+        targetId: req.params.id,
+        department: (updated as any)?.department,
+        details: {
+          taskId: req.params.id,
+          assigneeId: req.body?.assigneeId || req.user!.id,
+          title: (updated as any)?.title
+        }
+      });
+    } catch {}
+
+    res.json(updated);
   } catch (err) {
     sendTaskError(res, err);
   }
@@ -1536,6 +1675,12 @@ router.get('/team', authenticateJWT, requireActiveMembership, requirePermission(
             const memberDept = parsed.department || parsed.role || 'General';
             const memberEmail = (parsed.email || '').trim();
             const linkedUserId = accountEmails.get(memberEmail.toLowerCase());
+            const memberSkills = Array.isArray(parsed.skills) && parsed.skills.length > 0
+              ? parsed.skills
+              : multiAgentOrchestratorService.inferSkills(memberDept, memberRole);
+            const memberResponsibilities = Array.isArray(parsed.responsibilities) && parsed.responsibilities.length > 0
+              ? parsed.responsibilities
+              : multiAgentOrchestratorService.inferResponsibilities(memberDept, memberRole);
             return {
               id: m.id,
               fullName: memberName,
@@ -1545,6 +1690,8 @@ router.get('/team', authenticateJWT, requireActiveMembership, requirePermission(
               email: memberEmail,
               status: parsed.status || 'Active',
               joinedAt: m.createdAt.toISOString(),
+              skills: memberSkills,
+              responsibilities: memberResponsibilities,
               /** True when this roster entry corresponds to a live company account. */
               hasAccount: Boolean(linkedUserId),
               linkedUserId: linkedUserId || null
@@ -1559,6 +1706,8 @@ router.get('/team', authenticateJWT, requireActiveMembership, requirePermission(
               email: '',
               status: 'Active',
               joinedAt: m.createdAt.toISOString(),
+              skills: multiAgentOrchestratorService.inferSkills(m.description || 'General', m.description || 'Team Member'),
+              responsibilities: multiAgentOrchestratorService.inferResponsibilities(m.description || 'General', m.description || 'Team Member'),
               hasAccount: false,
               linkedUserId: null
             };
@@ -1584,7 +1733,7 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
     return;
   }
 
-  const { fullName, name, role, email, department, status } = req.body || {};
+  const { fullName, name, role, email, department, status, skills, responsibilities } = req.body || {};
   const memberName = (fullName || name || '').trim();
   const memberEmail = (email || '').trim();
   const memberRole = (role || '').trim();
@@ -1629,6 +1778,14 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
     return;
   }
 
+  // Determine structured skills and responsibilities
+  const assignedSkills: string[] = Array.isArray(skills) && skills.length > 0
+    ? skills
+    : multiAgentOrchestratorService.inferSkills(memberDept, memberRole);
+  const assignedResponsibilities: string[] = Array.isArray(responsibilities) && responsibilities.length > 0
+    ? responsibilities
+    : multiAgentOrchestratorService.inferResponsibilities(memberDept, memberRole);
+
   try {
     if (isDbAvailable && prisma) {
       // P1 Task 9: resolve via Membership so a member with people:write (e.g. HR)
@@ -1648,7 +1805,9 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
               systemRole: canonicalRole,
               department: memberDept,
               email: memberEmail,
-              status: status || 'Active'
+              status: status || 'Active',
+              skills: assignedSkills,
+              responsibilities: assignedResponsibilities
             }),
             startupId: startup.id
           }
@@ -1684,6 +1843,7 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
               role: canonicalRole,
               department: memberDept,
               addedByName: req.user?.name || req.user?.email || 'The Founder',
+              addedByEmail: req.user?.email,
               workspaceUrl: (process.env.APP_URL || process.env.APP_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '')
             });
             emailDelivered = Boolean(welcomeRes.delivered);
@@ -1691,6 +1851,20 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
             console.warn('[Team API] Welcome mail fallback warning:', mailErr.message);
           }
         }
+
+        // Register worker directly with multiAgentOrchestratorService
+        multiAgentOrchestratorService.registerLiveWorker({
+          id: memory.id,
+          startupId: startup.id,
+          userId,
+          name: memberName,
+          domain: memberDept || memberRole,
+          role: memberRole,
+          email: memberEmail,
+          status: (status as any) || 'Available',
+          skills: assignedSkills,
+          responsibilities: assignedResponsibilities
+        });
 
         return res.json({
           id: memory.id,
@@ -1702,6 +1876,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
           email: memberEmail,
           status: status || 'Active',
           joinedAt: memory.createdAt.toISOString(),
+          skills: assignedSkills,
+          responsibilities: assignedResponsibilities,
           emailDelivered
         });
       }
@@ -1718,9 +1894,25 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
       department: memberDept,
       email: memberEmail,
       status: (status as any) || 'Active',
-      joinedAt: new Date().toISOString()
+      joinedAt: new Date().toISOString(),
+      skills: assignedSkills,
+      responsibilities: assignedResponsibilities
     };
     inMemoryTeamMembers.unshift(memMember);
+
+    multiAgentOrchestratorService.registerLiveWorker({
+      id: memMember.id,
+      startupId: 'default_startup',
+      userId,
+      name: memberName,
+      domain: memberDept || memberRole,
+      role: memberRole,
+      email: memberEmail,
+      status: (status as any) || 'Available',
+      skills: assignedSkills,
+      responsibilities: assignedResponsibilities
+    });
+
     res.json(memMember);
   } catch (err: any) {
     console.error('[Team API] POST error:', err.message);
@@ -1738,6 +1930,8 @@ router.delete('/team/:id', authenticateJWT, requireActiveMembership, requirePerm
   }
 
   try {
+    multiAgentOrchestratorService.removeLiveWorker(id);
+
     if (isDbAvailable && prisma) {
       // Scope the delete to the caller's own startup so one tenant cannot
       // remove another tenant's team member by guessing a Memory id.
@@ -1975,6 +2169,28 @@ router.post('/approvals/:id/review', authenticateJWT, requireActiveMembership, r
         timestamp: Date.now()
       });
     }
+
+    // Record activity in Founder Activity Ledger
+    try {
+      const membership = await resolveMembership(req.user!.id);
+      if (!membership) throw new Error('No active membership; skipping activity log.');
+      const actionName = normalizedAction === 'approve' ? 'APPROVAL_GRANTED' : normalizedAction === 'reject' ? 'APPROVAL_REJECTED' : 'CHANGES_REQUESTED';
+      await activityLogService.logActivity({
+        startupId: membership.startupId,
+        userId: req.user!.id,
+        actorRole: req.user?.role || 'FOUNDER',
+        action: actionName,
+        targetEntity: 'DELIVERABLE',
+        targetId: id,
+        payloadDelta: result.item?.metricChanges || null,
+        details: {
+          approvalId: id,
+          title: result.item?.title,
+          action: normalizedAction,
+          feedback
+        }
+      });
+    } catch {}
 
     res.json(responseBody);
   } catch (err: any) {
@@ -2767,6 +2983,18 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
       commandId
     });
 
+    // Enrich with 5-Step Multi-Agent Orchestration & Resource Allocation
+    let multiAgentAssessment: any = null;
+    try {
+      multiAgentAssessment = await multiAgentOrchestratorService.orchestrateTask({
+        userRequirement: inputCmd,
+        startupId: context?.startupId || run.startupId,
+        userId: req.user!.id
+      });
+    } catch (e: any) {
+      console.warn('[Orchestrate API] 5-Step assessment notice:', e.message);
+    }
+
     // Format response to be 100% compatible with OrchestrationResponse
     const responsePayload = {
       commandId: run.runId,
@@ -2805,7 +3033,10 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
       confidence: run.status === 'completed' ? 0.98 : 0.85,
       dagPlan: run.plan,
       dagTasks: run.tasks,
-      createdRecords: run.createdRecords
+      createdRecords: run.createdRecords,
+      multiAgentAssessment,
+      monitoringBlueprint: multiAgentAssessment?.monitoringBlueprint || [],
+      headAlerts: multiAgentAssessment?.alerts || []
     };
 
     res.json(responsePayload);
@@ -2815,6 +3046,112 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
       error: 'I could not complete the executive analysis right now. Reason: AI orchestration pipeline encountered an error. Please try again.',
       details: err.message
     });
+  }
+});
+
+// ============================================================================
+// 5-STEP MULTI-AGENT ORCHESTRATION & RESOURCE ALLOCATION
+// [ Input Task ] ──► (1. Select Agents) ──► (2. Check Employee DB) 
+//                                                  │
+//                      ┌───────────────────────────┴───────────┐
+//                      ▼ (Available)                           ▼ (Not Available)
+//              (3A. Assign Work)                       (3B. Notify Head to Hire)
+//                      │                                       │
+//                      ▼                                       ▼
+//              (4. Generate Plan)                     (Suggest Domain Specs)
+//                      │
+//                      ▼
+//         (5. Live Monitoring Dashboard)
+// ============================================================================
+
+// POST /api/orchestrate/assess - Analyze task requirement, check workers, allocate or alert
+router.post('/orchestrate/assess', authenticateJWT, orchestrateRateLimiter, async (req: AuthenticatedRequest, res) => {
+  const { userRequirement, task, requirement, startupId } = req.body || {};
+  const inputPrompt = (userRequirement || task || requirement || '').trim();
+
+  if (!inputPrompt) {
+    return res.status(400).json({ error: 'A valid project requirement or task is required.' });
+  }
+
+  try {
+    const callerStartupId = startupId || (await resolveCallerStartupId(req, res)) || 'default_startup';
+    const assessment = await multiAgentOrchestratorService.orchestrateTask({
+      userRequirement: inputPrompt,
+      startupId: callerStartupId,
+      userId: req.user?.id
+    });
+
+    return res.json(assessment);
+  } catch (err: any) {
+    console.error('[Orchestrate Assess API] Error:', err.message);
+    return res.status(500).json({ error: 'Failed to process multi-agent assessment: ' + err.message });
+  }
+});
+
+// GET /api/orchestrate/assessments/latest - Retrieve latest assessment or create default
+router.get('/orchestrate/assessments/latest', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const latest = multiAgentOrchestratorService.getLatestAssessment();
+    if (latest) {
+      return res.json(latest);
+    }
+
+    const defaultAssessment = await multiAgentOrchestratorService.orchestrateTask({
+      userRequirement: 'We need an email marketing system with a React dashboard and a secure Python SMTP background processing worker.',
+      startupId: req.user?.id || 'default_startup',
+      userId: req.user?.id
+    });
+
+    return res.json(defaultAssessment);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch assessment: ' + err.message });
+  }
+});
+
+// POST /api/orchestrate/slot/assign - Head assigns or hires a worker to unblock a slot
+router.post('/orchestrate/slot/assign', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
+  const { assessmentId, domain, workerName, workerRole, workerEmail, startupId } = req.body || {};
+
+  if (!assessmentId || !domain || !workerName) {
+    return res.status(400).json({ error: 'assessmentId, domain, and workerName are required.' });
+  }
+
+  try {
+    const callerStartupId = startupId || (await resolveCallerStartupId(req, res)) || 'default_startup';
+    const updated = await multiAgentOrchestratorService.assignWorkerToSlot({
+      assessmentId,
+      domain,
+      workerName,
+      workerRole,
+      workerEmail,
+      startupId: callerStartupId
+    });
+
+    return res.json(updated);
+  } catch (err: any) {
+    console.error('[Slot Assign API] Error:', err.message);
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/orchestrate/slot/control - Head controls slot (pause, resume, revoke)
+router.post('/orchestrate/slot/control', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
+  const { assessmentId, domain, action } = req.body || {};
+
+  if (!assessmentId || !domain || !['pause', 'resume', 'revoke'].includes(action)) {
+    return res.status(400).json({ error: 'assessmentId, domain, and valid action (pause, resume, revoke) are required.' });
+  }
+
+  try {
+    const updated = multiAgentOrchestratorService.controlSlot({
+      assessmentId,
+      domain,
+      action
+    });
+
+    return res.json(updated);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
   }
 });
 
@@ -3166,6 +3503,80 @@ router.get('/team/hierarchy', authenticateJWT, requireActiveMembership, requireP
 });
 
 // ============================================================================
+// AGENT RULES & DYNAMIC BEHAVIORAL CUSTOMIZATION (Module 3)
+// ============================================================================
+
+// GET all agent rules for the current venture
+router.get('/agents/rules', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const startupId = await resolveCallerStartupId(req, res);
+    if (!startupId) return;
+    const rules = await agentRuleService.getAllRules(startupId);
+    res.json(rules);
+  } catch (err: any) {
+    console.error('[Agent Rules API] Error:', err.message);
+    res.status(500).json({ error: 'Failed to retrieve agent rules.' });
+  }
+});
+
+// GET rules and spend limit for a specific agent role
+router.get('/agents/:role/rules', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const startupId = await resolveCallerStartupId(req, res);
+    if (!startupId) return;
+    const rule = await agentRuleService.getRulesForAgent(startupId, req.params.role);
+    res.json(rule);
+  } catch (err: any) {
+    console.error('[Agent Rule API] Error:', err.message);
+    res.status(500).json({ error: 'Failed to retrieve agent rule.' });
+  }
+});
+
+// PUT update behavioral rules, ethical constraints, and spend limit for an agent role
+router.put('/agents/:role/rules', authenticateJWT, requireActiveMembership, requirePermission('startup:write'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { rules, spendLimit } = req.body || {};
+    if (!Array.isArray(rules)) {
+      return res.status(400).json({ error: 'Field "rules" must be an array of strings.' });
+    }
+    const startupId = await resolveCallerStartupId(req, res);
+    if (!startupId) return;
+    
+    const updated = await agentRuleService.updateRulesForAgent({
+      startupId,
+      role: req.params.role,
+      rules,
+      spendLimit: typeof spendLimit === 'number' ? spendLimit : undefined,
+      actorId: req.user!.id
+    });
+
+    // Record activity in Founder Activity Ledger
+    await activityLogService.logActivity({
+      startupId,
+      userId: req.user!.id,
+      actorRole: req.user?.role || 'FOUNDER',
+      action: 'RULE_MODIFIED',
+      targetEntity: 'AGENT_RULE',
+      targetId: req.params.role,
+      details: {
+        agentRole: updated.agentRole,
+        rulesCount: updated.rules.length,
+        spendLimit: updated.spendLimit
+      }
+    }).catch(() => {});
+
+    res.json({
+      success: true,
+      agentRule: updated,
+      message: `Updated behavioral rules for ${updated.agentRole} successfully.`
+    });
+  } catch (err: any) {
+    console.error('[Update Agent Rules API] Error:', err.message);
+    res.status(500).json({ error: 'Failed to update agent rules.' });
+  }
+});
+
+// ============================================================================
 // EMPLOYEE ECOSYSTEM: MEETINGS, AVAILABILITY, PROJECTS, ACTIVITY & EXPERTS
 // ============================================================================
 import * as employeeEcosystemService from '../services/employeeEcosystemService';
@@ -3345,6 +3756,82 @@ router.get('/tasks/:id/progress', authenticateJWT, requireActiveMembership, requ
     res.json(updates);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================================
+// FOUNDER ACTIVITY LEDGER & REAL-TIME AUDIT INSPECTION (Module 6)
+// ============================================================================
+
+// GET chronological activity feed with live filters
+router.get('/activities', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const startupId = await resolveCallerStartupId(req, res);
+    if (!startupId) return;
+    const department = req.query.department as string;
+    const employee = (req.query.employee || req.query.userId) as string;
+    const action = req.query.action as string;
+    const limit = parseInt(req.query.limit as string) || 50;
+
+    const activities = await activityLogService.listActivities({
+      startupId,
+      department,
+      userId: employee,
+      action,
+      limit
+    });
+
+    res.json(activities);
+  } catch (err: any) {
+    console.error('[Activities API] Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch activity logs.' });
+  }
+});
+
+// Alias for /audit/activities
+router.get('/audit/activities', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const startupId = await resolveCallerStartupId(req, res);
+    if (!startupId) return;
+    const activities = await activityLogService.listActivities({
+      startupId,
+      department: req.query.department as string,
+      userId: req.query.userId as string,
+      action: req.query.action as string,
+      limit: parseInt(req.query.limit as string) || 50
+    });
+    res.json(activities);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to fetch audit activity logs.' });
+  }
+});
+
+// POST custom activity log entry
+router.post('/activities', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { action, targetEntity, targetId, payloadDelta, department, details } = req.body || {};
+    if (!action) {
+      return res.status(400).json({ error: 'Action type is required.' });
+    }
+    const startupId = await resolveCallerStartupId(req, res);
+    if (!startupId) return;
+
+    const record = await activityLogService.logActivity({
+      startupId,
+      userId: req.user!.id,
+      actorRole: req.user?.role || 'EMPLOYEE',
+      action,
+      targetEntity,
+      targetId,
+      payloadDelta,
+      department,
+      details
+    });
+
+    res.json(record);
+  } catch (err: any) {
+    console.error('[Post Activity API] Error:', err.message);
+    res.status(500).json({ error: 'Failed to record activity log.' });
   }
 });
 
