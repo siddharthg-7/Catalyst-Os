@@ -99,9 +99,11 @@ export async function sendEmailWithEmailJS(payload: EmailJsPayload): Promise<Ema
     ...(payload.custom_params || {})
   };
 
-  // 1. Try sending via @emailjs/browser SDK if imported
+  // 1. Try sending via window.emailjs or optional @emailjs/browser SDK if imported
   try {
-    const emailjs = await import('@emailjs/browser').catch(() => null);
+    const pkgName = '@emailjs/browser';
+    // @ts-ignore - optional dynamic client package
+    const emailjs: any = (typeof window !== 'undefined' && (window as any).emailjs) || await import(/* @vite-ignore */ pkgName).catch(() => null);
     if (emailjs && (emailjs.send || (emailjs.default && emailjs.default.send))) {
       const sendFn = emailjs.send || emailjs.default.send;
       const res = await sendFn(
