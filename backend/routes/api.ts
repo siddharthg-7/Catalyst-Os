@@ -1675,6 +1675,12 @@ router.get('/team', authenticateJWT, requireActiveMembership, requirePermission(
             const memberDept = parsed.department || parsed.role || 'General';
             const memberEmail = (parsed.email || '').trim();
             const linkedUserId = accountEmails.get(memberEmail.toLowerCase());
+            const memberSkills = Array.isArray(parsed.skills) && parsed.skills.length > 0
+              ? parsed.skills
+              : multiAgentOrchestratorService.inferSkills(memberDept, memberRole);
+            const memberResponsibilities = Array.isArray(parsed.responsibilities) && parsed.responsibilities.length > 0
+              ? parsed.responsibilities
+              : multiAgentOrchestratorService.inferResponsibilities(memberDept, memberRole);
             return {
               id: m.id,
               fullName: memberName,
@@ -1684,6 +1690,8 @@ router.get('/team', authenticateJWT, requireActiveMembership, requirePermission(
               email: memberEmail,
               status: parsed.status || 'Active',
               joinedAt: m.createdAt.toISOString(),
+              skills: memberSkills,
+              responsibilities: memberResponsibilities,
               /** True when this roster entry corresponds to a live company account. */
               hasAccount: Boolean(linkedUserId),
               linkedUserId: linkedUserId || null
@@ -1698,6 +1706,8 @@ router.get('/team', authenticateJWT, requireActiveMembership, requirePermission(
               email: '',
               status: 'Active',
               joinedAt: m.createdAt.toISOString(),
+              skills: multiAgentOrchestratorService.inferSkills(m.description || 'General', m.description || 'Team Member'),
+              responsibilities: multiAgentOrchestratorService.inferResponsibilities(m.description || 'General', m.description || 'Team Member'),
               hasAccount: false,
               linkedUserId: null
             };
@@ -1723,7 +1733,7 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
     return;
   }
 
-  const { fullName, name, role, email, department, status } = req.body || {};
+  const { fullName, name, role, email, department, status, skills, responsibilities } = req.body || {};
   const memberName = (fullName || name || '').trim();
   const memberEmail = (email || '').trim();
   const memberRole = (role || '').trim();
@@ -1768,6 +1778,14 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
     return;
   }
 
+  // Determine structured skills and responsibilities
+  const assignedSkills: string[] = Array.isArray(skills) && skills.length > 0
+    ? skills
+    : multiAgentOrchestratorService.inferSkills(memberDept, memberRole);
+  const assignedResponsibilities: string[] = Array.isArray(responsibilities) && responsibilities.length > 0
+    ? responsibilities
+    : multiAgentOrchestratorService.inferResponsibilities(memberDept, memberRole);
+
   try {
     if (isDbAvailable && prisma) {
       // P1 Task 9: resolve via Membership so a member with people:write (e.g. HR)
@@ -1787,7 +1805,9 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
               systemRole: canonicalRole,
               department: memberDept,
               email: memberEmail,
-              status: status || 'Active'
+              status: status || 'Active',
+              skills: assignedSkills,
+              responsibilities: assignedResponsibilities
             }),
             startupId: startup.id
           }
@@ -1842,7 +1862,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
           role: memberRole,
           email: memberEmail,
           status: (status as any) || 'Available',
-          skills: [memberDept, memberRole, canonicalRole]
+          skills: assignedSkills,
+          responsibilities: assignedResponsibilities
         });
 
         return res.json({
@@ -1855,6 +1876,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
           email: memberEmail,
           status: status || 'Active',
           joinedAt: memory.createdAt.toISOString(),
+          skills: assignedSkills,
+          responsibilities: assignedResponsibilities,
           emailDelivered
         });
       }
@@ -1871,7 +1894,9 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
       department: memberDept,
       email: memberEmail,
       status: (status as any) || 'Active',
-      joinedAt: new Date().toISOString()
+      joinedAt: new Date().toISOString(),
+      skills: assignedSkills,
+      responsibilities: assignedResponsibilities
     };
     inMemoryTeamMembers.unshift(memMember);
 
@@ -1884,7 +1909,8 @@ router.post('/team', authenticateJWT, requireActiveMembership, requirePermission
       role: memberRole,
       email: memberEmail,
       status: (status as any) || 'Available',
-      skills: [memberDept, memberRole, canonicalRole]
+      skills: assignedSkills,
+      responsibilities: assignedResponsibilities
     });
 
     res.json(memMember);
@@ -3084,7 +3110,7 @@ router.get('/orchestrate/assessments/latest', authenticateJWT, async (req: Authe
 
 // POST /api/orchestrate/slot/assign - Head assigns or hires a worker to unblock a slot
 router.post('/orchestrate/slot/assign', authenticateJWT, requireActiveMembership, requirePermission('people:write'), async (req: AuthenticatedRequest, res) => {
-  const { assessmentId, domain, workerName, workerEmail, startupId } = req.body || {};
+  const { assessmentId, domain, workerName, workerRole, workerEmail, startupId } = req.body || {};
 
   if (!assessmentId || !domain || !workerName) {
     return res.status(400).json({ error: 'assessmentId, domain, and workerName are required.' });
@@ -3096,6 +3122,7 @@ router.post('/orchestrate/slot/assign', authenticateJWT, requireActiveMembership
       assessmentId,
       domain,
       workerName,
+      workerRole,
       workerEmail,
       startupId: callerStartupId
     });

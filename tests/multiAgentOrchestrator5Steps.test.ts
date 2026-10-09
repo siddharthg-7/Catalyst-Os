@@ -224,3 +224,70 @@ test('Multi-Agent Orchestration: Available Finance worker is assigned directly w
 
   console.log('✅ PASS: Multi-Agent Orchestration assigns available employee & only requests hire when unavailable');
 });
+
+test('Multi-Agent Employee Schema: Assignment Reasoning for Present Employee & Responsibilities Reasoning for Hire', async () => {
+  const startupId = 'startup_schema_reasoning_' + Date.now();
+
+  // 1. Add employee with explicit schema (skills, responsibilities, presence status)
+  const registeredWorker = multiAgentOrchestratorService.registerLiveWorker({
+    startupId,
+    name: 'Kavita Iyer',
+    domain: 'UI/UX Design',
+    role: 'Lead Product Designer',
+    status: 'Available',
+    email: 'kavita.iyer@company.internal',
+    skills: ['Figma', 'Design Systems', 'User Research', 'Interactive Prototyping'],
+    responsibilities: [
+      'Architect design systems and high-fidelity component libraries',
+      'Conduct user testing and wireframe core user journeys'
+    ]
+  });
+
+  assert.strictEqual(registeredWorker.status, 'Available', 'Worker presence must be Available');
+  assert.ok(registeredWorker.skills.includes('Figma'), 'Skills must be preserved in schema');
+  assert.ok(registeredWorker.responsibilities.length >= 2, 'Responsibilities must be preserved in schema');
+
+  // 2. Submit task requiring UI/UX Design AND DevOps (where DevOps has no employee present)
+  const mixedTask = 'Design a high-fidelity interactive user onboarding flow in Figma and deploy multi-region Kubernetes clusters with Docker containers.';
+
+  const assessment = await multiAgentOrchestratorService.orchestrateTask({
+    userRequirement: mixedTask,
+    startupId
+  });
+
+  // Verify UI/UX slot: Identified Kavita, matched because she is present, and provides assignment reasoning
+  const designAlloc = assessment.allocations.find(a => 
+    multiAgentOrchestratorService.matchDomain(a.requiredDomain, 'UI/UX Design')
+  );
+  assert.ok(designAlloc, 'Design allocation must exist');
+  assert.strictEqual(designAlloc.status, 'ASSIGNED', 'Design slot must be assigned to available Kavita');
+  assert.strictEqual(designAlloc.assignedWorker?.name, 'Kavita Iyer');
+  assert.strictEqual(designAlloc.assignedWorker?.status, 'Available');
+  assert.ok(designAlloc.assignmentReasoning, 'Must generate AI assignment reasoning for present employee');
+  assert.ok(designAlloc.assignmentReasoning.includes('Kavita Iyer'), 'Assignment reasoning must reference employee name');
+  assert.ok(designAlloc.assignmentReasoning.includes('Available'), 'Assignment reasoning must verify presence');
+  assert.ok(designAlloc.assignedWorker?.skills && designAlloc.assignedWorker.skills.length > 0, 'Worker skills attached');
+  assert.ok(designAlloc.assignedWorker?.responsibilities && designAlloc.assignedWorker.responsibilities.length > 0, 'Worker responsibilities attached');
+
+  // Verify DevOps slot: No employee present -> provides structured hiring reasoning with role responsibilities
+  const devopsAlloc = assessment.allocations.find(a => 
+    multiAgentOrchestratorService.matchDomain(a.requiredDomain, 'DevOps')
+  );
+  assert.ok(devopsAlloc, 'DevOps allocation must exist');
+  assert.strictEqual(devopsAlloc.status, 'HIRE_REQUIRED', 'DevOps slot must require hire');
+  assert.strictEqual(devopsAlloc.assignedWorker, null, 'No worker assigned');
+
+  // Validate HiringReasoning structure
+  assert.ok(devopsAlloc.hiringReasoning, 'Must generate structured HiringReasoning when employee is missing');
+  assert.ok(devopsAlloc.hiringReasoning.diagnostic.includes('Roster Diagnostic'), 'Must provide diagnostic reasoning');
+  assert.ok(devopsAlloc.hiringReasoning.rationale.includes('Governance Rationale'), 'Must provide governance rationale');
+  assert.ok(devopsAlloc.hiringReasoning.roleTitle.toLowerCase().includes('devops') || devopsAlloc.hiringReasoning.roleTitle.toLowerCase().includes('infrastructure'), 'Must specify target role title');
+  assert.ok(Array.isArray(devopsAlloc.hiringReasoning.coreResponsibilities), 'Must provide core responsibilities array');
+  assert.ok(devopsAlloc.hiringReasoning.coreResponsibilities.length >= 3, 'Must provide detailed responsibilities so head can hire');
+  assert.ok(Array.isArray(devopsAlloc.hiringReasoning.requiredSkills), 'Must provide required skills');
+  assert.ok(Array.isArray(devopsAlloc.hiringReasoning.immediateDeliverables), 'Must provide deliverables');
+  assert.ok(devopsAlloc.hiringReasoning.estimatedCompBand, 'Must provide compensation benchmark band');
+
+  console.log('✅ PASS: Employee schema matching reasoning & role responsibilities reasoning verified');
+});
+

@@ -434,6 +434,8 @@ export interface TeamMember {
   role: string;
   department: string;
   status?: 'Active' | 'Invited' | 'Inactive';
+  skills?: string[];
+  responsibilities?: string[];
   joinedAt: string;
   /**
    * P1 Task 9 — true when this roster entry matches a live company account by
@@ -442,5 +444,37 @@ export interface TeamMember {
    */
   hasAccount?: boolean;
   linkedUserId?: string | null;
+}
+
+export interface EmployeeRecord {
+  id?: string;
+  name: string;
+  email?: string;
+  role: string;
+  domain: string;
+  status: 'Available' | 'Busy' | 'On Leave';
+  skills: string[];
+  responsibilities: string[];
+  capacityPercentage?: number;
+  activeTasksCount?: number;
+  avatar?: string;
+}
+
+export interface HiringReasoning {
+  diagnostic: string;
+  rationale: string;
+  roleTitle: string;
+  domain: string;
+  employmentType: string;
+  coreResponsibilities: string[];
+  requiredSkills: string[];
+  immediateDeliverables: string[];
+  estimatedCompBand?: string;
+  urgencyTier: 'CRITICAL' | 'HIGH' | 'MODERATE';
+  suggestedJobPosting?: {
+    headline: string;
+    summary: string;
+    requirementsSnippet: string;
+  };
 }
 
