@@ -349,32 +349,7 @@ export default function PeopleDirectory({
 
       {/* ── TAB 1: INTERACTIVE REACT FLOW ORG HIERARCHY ──────────────────── */}
       {activeTab === 'hierarchy' && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-widest font-bold" style={{ color: 'var(--c-muted)' }}>
-                System Organizational Tree
-              </span>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>
-                Clear structural hierarchy from Founder & CEO down to core operational domains and reporting team members.
-              </p>
-            </div>
-            {onAddMember && (
-              <button
-                onClick={() => handleOpenModal()}
-                id="hierarchy-top-add-member-btn"
-                className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 self-start sm:self-center transition-all shadow-sm cursor-pointer hover:opacity-90"
-                style={{
-                  backgroundColor: 'var(--c-fg)',
-                  color: 'var(--c-bg)'
-                }}
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>+ Add Team Member</span>
-              </button>
-            )}
-          </div>
-
+        <div className="animate-fade-in">
           <OrgHierarchyFlow
             founder={{
               name: founderName,

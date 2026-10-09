@@ -1160,7 +1160,7 @@ export default function App() {
           className="flex-1 overflow-y-auto scroll-smooth"
           style={{ backgroundColor: 'transparent' }}
         >
-          <div className="app-container page-padding py-8 space-y-8">
+          <div className={`${activeTab === 'people' ? 'max-w-[1440px] py-6 space-y-6' : 'app-container py-8 space-y-8'} page-padding mx-auto w-full`}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}

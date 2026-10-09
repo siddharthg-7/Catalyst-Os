@@ -4,13 +4,10 @@
  * Built with @xyflow/react, Aura light theme styling, and interactive detail drawers.
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   ReactFlow,
-  Controls,
   Background,
-  MiniMap,
-  Panel,
   Handle,
   Position,
   MarkerType,
@@ -18,7 +15,8 @@ import {
   Edge,
   useNodesState,
   useEdgesState,
-  BackgroundVariant
+  BackgroundVariant,
+  ReactFlowInstance
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -42,7 +40,11 @@ import {
   Shield,
   Layers,
   Sparkles,
-  Info
+  Info,
+  Plus,
+  Minus,
+  Maximize2,
+  RotateCcw
 } from 'lucide-react';
 
 // ── DOMAIN METADATA CONFIGURATION ──────────────────────────────────────────
@@ -62,7 +64,7 @@ export const CORE_DOMAINS: DomainConfig[] = [
     label: 'Engineering & Platform',
     icon: Code2,
     color: '#4f46e5',
-    bgColor: 'rgba(79, 70, 229, 0.06)',
+    bgColor: 'rgba(79, 70, 229, 0.08)',
     borderColor: 'rgba(79, 70, 229, 0.25)',
     description: 'UPI stack, backend architecture, payment security & microservices.'
   },
@@ -71,7 +73,7 @@ export const CORE_DOMAINS: DomainConfig[] = [
     label: 'Product & Design',
     icon: Compass,
     color: '#d97706',
-    bgColor: 'rgba(217, 119, 6, 0.06)',
+    bgColor: 'rgba(217, 119, 6, 0.08)',
     borderColor: 'rgba(217, 119, 6, 0.25)',
     description: 'Merchant checkout UX, feature roadmaps & D2C buyer workflows.'
   },
@@ -80,7 +82,7 @@ export const CORE_DOMAINS: DomainConfig[] = [
     label: 'Growth & Marketing',
     icon: TrendingUp,
     color: '#059669',
-    bgColor: 'rgba(5, 150, 105, 0.06)',
+    bgColor: 'rgba(5, 150, 105, 0.08)',
     borderColor: 'rgba(5, 150, 105, 0.25)',
     description: 'Customer acquisition, partner ecosystem, brand campaigns & GTM.'
   },
@@ -89,7 +91,7 @@ export const CORE_DOMAINS: DomainConfig[] = [
     label: 'Finance & Treasury',
     icon: Coins,
     color: '#7c3aed',
-    bgColor: 'rgba(124, 58, 237, 0.06)',
+    bgColor: 'rgba(124, 58, 237, 0.08)',
     borderColor: 'rgba(124, 58, 237, 0.25)',
     description: 'Runway modeling, FP&A forecasts, nodal accounts & tax compliance.'
   },
@@ -98,7 +100,7 @@ export const CORE_DOMAINS: DomainConfig[] = [
     label: 'Operations & Logistics',
     icon: Boxes,
     color: '#0891b2',
-    bgColor: 'rgba(8, 145, 178, 0.06)',
+    bgColor: 'rgba(8, 145, 178, 0.08)',
     borderColor: 'rgba(8, 145, 178, 0.25)',
     description: 'Pan-India shipping coordination, KYC verification & SLA tracking.'
   },
@@ -107,7 +109,7 @@ export const CORE_DOMAINS: DomainConfig[] = [
     label: 'People & Legal Governance',
     icon: ShieldCheck,
     color: '#e11d48',
-    bgColor: 'rgba(225, 29, 72, 0.06)',
+    bgColor: 'rgba(225, 29, 72, 0.08)',
     borderColor: 'rgba(225, 29, 72, 0.25)',
     description: 'Talent hiring pipelines, corporate contracts, and regulatory filings.'
   }
@@ -223,7 +225,7 @@ export function resolveDomain(department: string): DomainConfig {
     label: department || 'General Operations',
     icon: Layers,
     color: '#64748b',
-    bgColor: 'rgba(100, 116, 139, 0.06)',
+    bgColor: 'rgba(100, 116, 139, 0.08)',
     borderColor: 'rgba(100, 116, 139, 0.25)',
     description: `Dedicated ${department} operations and strategic execution.`
   };
@@ -233,46 +235,44 @@ export function resolveDomain(department: string): DomainConfig {
 function FounderNode({ data }: { data: any }) {
   return (
     <div 
-      className="p-5 rounded-2xl border transition-all cursor-pointer select-none min-w-[300px] max-w-[340px] shadow-sm hover:shadow-md"
-      style={{
-        backgroundColor: 'var(--c-surface)',
-        borderColor: 'var(--c-fg)',
-        boxShadow: 'var(--shadow-md)'
-      }}
+      className="w-[320px] rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all select-none hover:border-slate-300 hover:shadow-md cursor-pointer"
     >
-      <div className="flex items-center justify-between pb-3 mb-3 border-b" style={{ borderColor: 'var(--c-border)' }}>
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
         <div className="flex items-center gap-1.5">
-          <Crown className="w-4 h-4 text-amber-500" />
-          <span className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: 'var(--c-accent)' }}>
-            Venture Founder & Owner
+          <div className="w-5 h-5 rounded-md bg-amber-500/10 flex items-center justify-center">
+            <Crown className="w-3.5 h-3.5 text-amber-500" />
+          </div>
+          <span className="text-[11px] font-semibold text-slate-700 tracking-tight">
+            Founder & Workspace Owner
           </span>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/25">
+        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
           Apex Authority
         </span>
       </div>
 
-      <div className="flex items-center gap-3.5">
-        <div 
-          className="w-12 h-12 rounded-xl flex items-center justify-center font-mono font-bold text-sm uppercase shrink-0 shadow-sm"
-          style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
-        >
+      <div className="flex items-center gap-3">
+        <div className="w-11 h-11 rounded-xl bg-slate-900 text-white flex items-center justify-center font-mono font-bold text-sm uppercase shrink-0 shadow-xs">
           {data.name?.slice(0, 2) || 'FO'}
         </div>
-        <div className="min-w-0">
-          <h3 className="text-sm font-bold truncate" style={{ color: 'var(--c-fg)' }}>{data.name}</h3>
-          <p className="text-xs font-semibold truncate" style={{ color: 'var(--c-muted)' }}>{data.role || 'Founder & CEO'}</p>
-          <div className="flex items-center gap-1.5 mt-1 text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-bold text-slate-900 truncate leading-tight">
+            {data.name}
+          </h3>
+          <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
+            {data.role || 'Founder & CEO'}
+          </p>
+          <div className="flex items-center gap-1.5 mt-1 text-[11px] font-mono text-slate-400">
             <Mail className="w-3 h-3 shrink-0" />
             <span className="truncate">{data.email}</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-3.5 pt-3 border-t flex items-center justify-between text-[11px] font-mono" style={{ borderColor: 'var(--c-border)' }}>
-        <span style={{ color: 'var(--c-muted)' }}>Organization Scale:</span>
-        <span className="font-bold" style={{ color: 'var(--c-fg)' }}>
-          {data.totalMembers} Members · {data.numDomains} Domains
+      <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono text-slate-500">
+        <span>Org Scale:</span>
+        <span className="font-semibold text-slate-800">
+          {data.totalMembers} {data.totalMembers === 1 ? 'Member' : 'Members'} · {data.numDomains} Domains
         </span>
       </div>
 
@@ -280,7 +280,7 @@ function FounderNode({ data }: { data: any }) {
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        style={{ background: 'var(--c-fg)', width: 8, height: 8 }} 
+        style={{ background: '#0f172a', width: 9, height: 9, border: '2px solid #ffffff' }} 
       />
     </div>
   );
@@ -291,28 +291,27 @@ function DomainNode({ data }: { data: any }) {
   const Icon = data.domain.icon;
   return (
     <div 
-      className="p-4 rounded-xl border transition-all cursor-pointer select-none min-w-[240px] max-w-[270px] shadow-sm hover:shadow-md"
+      className="w-[270px] rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all select-none hover:border-slate-300 hover:shadow-md cursor-pointer relative"
       style={{
-        backgroundColor: 'var(--c-surface)',
-        borderColor: data.domain.borderColor,
+        borderTop: `3px solid ${data.domain.color}`
       }}
     >
       <Handle 
         type="target" 
         position={Position.Top} 
-        style={{ background: data.domain.color, width: 7, height: 7 }} 
+        style={{ background: data.domain.color, width: 8, height: 8, border: '2px solid #ffffff' }} 
       />
 
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2.5">
         <div 
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-xs"
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-2xs"
           style={{ backgroundColor: data.domain.bgColor, color: data.domain.color }}
         >
           <Icon className="w-4 h-4" />
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <span 
-            className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full"
+            className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full"
             style={{ backgroundColor: data.domain.bgColor, color: data.domain.color }}
           >
             {data.memberCount} {data.memberCount === 1 ? 'Person' : 'People'}
@@ -324,7 +323,7 @@ function DomainNode({ data }: { data: any }) {
                 data.onAddClick(data.domain.label);
               }}
               title={`Add member to ${data.domain.label}`}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
+              className="p-1 rounded-md text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
             </button>
@@ -332,22 +331,22 @@ function DomainNode({ data }: { data: any }) {
         </div>
       </div>
 
-      <h4 className="text-xs font-bold" style={{ color: 'var(--c-fg)' }}>
+      <h4 className="text-xs font-bold text-slate-900 leading-tight">
         {data.domain.label}
       </h4>
-      <p className="text-[10px] line-clamp-2 mt-0.5 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
+      <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-relaxed min-h-[32px]">
         {data.domain.description}
       </p>
 
-      <div className="mt-2.5 pt-2 border-t flex items-center justify-between text-[10px] font-mono" style={{ borderColor: 'var(--c-border)' }}>
-        <span style={{ color: 'var(--c-muted)' }}>Reports to:</span>
-        <span className="font-semibold" style={{ color: 'var(--c-fg)' }}>Founder / Owner</span>
+      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
+        <span>Reports to:</span>
+        <span className="font-semibold text-slate-700">Founder & CEO</span>
       </div>
 
       <Handle 
         type="source" 
         position={Position.Bottom} 
-        style={{ background: data.domain.color, width: 7, height: 7 }} 
+        style={{ background: data.domain.color, width: 8, height: 8, border: '2px solid #ffffff' }} 
       />
     </div>
   );
@@ -358,54 +357,51 @@ function MemberNode({ data }: { data: any }) {
   const isSelected = data.isSelected;
   return (
     <div 
-      className="p-3.5 rounded-xl border transition-all cursor-pointer select-none min-w-[220px] max-w-[250px] shadow-xs hover:shadow-sm"
-      style={{
-        backgroundColor: isSelected ? 'var(--c-surface-2)' : 'var(--c-surface)',
-        borderColor: isSelected ? 'var(--c-fg)' : 'var(--c-border)',
-        outline: isSelected ? '2px solid var(--c-fg)' : 'none'
-      }}
+      className={`w-[270px] rounded-xl border bg-white p-3.5 shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all select-none hover:border-slate-300 hover:shadow-sm cursor-pointer ${
+        isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200'
+      }`}
     >
       <Handle 
         type="target" 
         position={Position.Top} 
-        style={{ background: 'var(--c-border-strong)', width: 6, height: 6 }} 
+        style={{ background: '#94a3b8', width: 7, height: 7, border: '2px solid #ffffff' }} 
       />
 
       <div className="flex items-center gap-2.5">
-        <div 
-          className="w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs uppercase shrink-0"
-          style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
-        >
+        <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-mono font-bold text-xs uppercase flex items-center justify-center shrink-0">
           {data.member.fullName?.slice(0, 2) || 'TM'}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-1">
-            <h5 className="text-xs font-bold truncate" style={{ color: 'var(--c-fg)' }}>
+            <h5 className="text-xs font-bold text-slate-900 truncate">
               {data.member.fullName}
             </h5>
             <span 
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${data.member.status === 'Invited' ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+              className={`w-2 h-2 rounded-full shrink-0 ${data.member.status === 'Invited' ? 'bg-amber-400' : 'bg-emerald-500'}`} 
               title={data.member.status || 'Active'}
             />
           </div>
-          <p className="text-[11px] font-medium truncate" style={{ color: 'var(--c-muted)' }}>
+          <p className="text-[11px] font-medium text-slate-500 truncate mt-0.5">
             {data.member.role}
           </p>
         </div>
       </div>
 
-      <div className="mt-2.5 pt-2 border-t flex items-center justify-between text-[10px] font-mono" style={{ borderColor: 'var(--c-border)' }}>
-        <span className="truncate max-w-[130px]" style={{ color: 'var(--c-muted)' }}>
+      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono text-slate-400">
+        <span className="truncate max-w-[160px]">
           {data.member.email || 'roster@catalyst.os'}
         </span>
-        <span 
-          className="px-1.5 py-0.2 rounded text-[9px] uppercase font-bold"
-          style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)' }}
-        >
+        <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-600">
           {data.member.status || 'Active'}
         </span>
       </div>
+
+      <Handle 
+        type="source" 
+        position={Position.Bottom} 
+        style={{ background: '#94a3b8', width: 7, height: 7, border: '2px solid #ffffff' }} 
+      />
     </div>
   );
 }
@@ -415,6 +411,59 @@ const nodeTypes = {
   domainNode: DomainNode,
   memberNode: MemberNode
 };
+
+// ── CUSTOM CANVAS VIEWPORT CONTROLS ─────────────────────────────────────────
+function CanvasViewportControls({
+  onZoomIn,
+  onZoomOut,
+  onFitView,
+  onResetView
+}: {
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onFitView: () => void;
+  onResetView: () => void;
+}) {
+  return (
+    <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1 p-1 bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/90 shadow-sm text-slate-600">
+      <button
+        onClick={onZoomIn}
+        title="Zoom In (+)"
+        aria-label="Zoom in org chart"
+        className="p-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
+      >
+        <Plus className="w-4 h-4" />
+      </button>
+      <button
+        onClick={onZoomOut}
+        title="Zoom Out (-)"
+        aria-label="Zoom out org chart"
+        className="p-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
+      >
+        <Minus className="w-4 h-4" />
+      </button>
+      <div className="h-4 w-px bg-slate-200 mx-0.5" />
+      <button
+        onClick={onFitView}
+        title="Fit All to View"
+        aria-label="Fit all nodes to view"
+        className="px-2.5 py-1 rounded-lg hover:bg-slate-100 hover:text-slate-900 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+      >
+        <Maximize2 className="w-3.5 h-3.5" />
+        <span>Fit</span>
+      </button>
+      <button
+        onClick={onResetView}
+        title="Center on Founder Node"
+        aria-label="Center view on root founder node"
+        className="px-2.5 py-1 rounded-lg hover:bg-slate-100 hover:text-slate-900 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+      >
+        <RotateCcw className="w-3.5 h-3.5" />
+        <span>Center</span>
+      </button>
+    </div>
+  );
+}
 
 // ── COMPONENT PROPS ────────────────────────────────────────────────────────
 interface OrgHierarchyFlowProps {
@@ -439,6 +488,8 @@ export default function OrgHierarchyFlow({
   const [selectedNode, setSelectedNode] = useState<{ type: 'founder' | 'domain' | 'member'; data: any } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDomain, setFilterDomain] = useState<string>('ALL');
+
+  const rfInstanceRef = useRef<ReactFlowInstance | null>(null);
 
   // Group team members by resolved domain
   const { domainsWithMembers, totalPeopleCount } = useMemo(() => {
@@ -470,7 +521,7 @@ export default function OrgHierarchyFlow({
   }, [teamMembers, filterDomain]);
 
   // Construct React Flow Nodes and Edges with clean hierarchical coordinates
-  const { nodes: computedNodes, edges: computedEdges } = useMemo(() => {
+  const { nodes: computedNodes, edges: computedEdges, founderCenterX, founderCenterY } = useMemo(() => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
 
@@ -480,13 +531,16 @@ export default function OrgHierarchyFlow({
     // Layout configuration
     const colWidth = 270;
     const gapX = 36;
-    const startY = 40;
-    const domainY = 220;
-    const memberStartY = 370;
-    const memberGapY = 100;
+    const startY = 28;
+    const domainY = 210;
+    const memberStartY = 390;
+    const memberGapY = 116;
 
     const totalWidth = numDomains * colWidth + Math.max(0, numDomains - 1) * gapX;
-    const founderX = Math.max(20, (totalWidth - 320) / 2);
+    const founderWidth = 320;
+    const founderX = totalWidth > founderWidth ? (totalWidth - founderWidth) / 2 : 0;
+    const founderCenterX = founderX + founderWidth / 2;
+    const founderCenterY = startY + 70;
 
     // 1. Root Node: Founder
     nodes.push({
@@ -504,7 +558,9 @@ export default function OrgHierarchyFlow({
 
     // 2. Domain & Member Nodes
     activeList.forEach((group, dIdx) => {
-      const currentX = dIdx * (colWidth + gapX);
+      const currentX = totalWidth > founderWidth
+        ? dIdx * (colWidth + gapX)
+        : (founderWidth - colWidth) / 2;
       const domainNodeId = `domain-${group.domain.id}`;
 
       // Domain Node
@@ -530,8 +586,8 @@ export default function OrgHierarchyFlow({
         markerEnd: {
           type: MarkerType.ArrowClosed,
           color: group.domain.color,
-          width: 14,
-          height: 14
+          width: 12,
+          height: 12
         }
       });
 
@@ -540,13 +596,14 @@ export default function OrgHierarchyFlow({
         const memberNodeId = `member-${member.id}`;
         const isMatched = searchQuery.trim() 
           ? member.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-            member.role?.toLowerCase().includes(searchQuery.toLowerCase())
+            member.role?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            member.email?.toLowerCase().includes(searchQuery.toLowerCase())
           : false;
 
         nodes.push({
           id: memberNodeId,
           type: 'memberNode',
-          position: { x: currentX + 10, y: memberStartY + mIdx * memberGapY },
+          position: { x: currentX, y: memberStartY + mIdx * memberGapY },
           data: {
             member,
             domain: group.domain,
@@ -554,28 +611,26 @@ export default function OrgHierarchyFlow({
           }
         });
 
-        // Edge from Domain -> Member
+        // Edge: Domain -> Member 0, and chained for subsequent members to prevent crossing lines
+        const edgeSourceId = mIdx === 0 ? domainNodeId : `member-${group.members[mIdx - 1].id}`;
         edges.push({
-          id: `e-${domainNodeId}-${member.id}`,
-          source: domainNodeId,
+          id: `e-${edgeSourceId}-${member.id}`,
+          source: edgeSourceId,
           target: memberNodeId,
           type: 'smoothstep',
-          style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+          style: { stroke: '#cbd5e1', strokeWidth: 1.75 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: '#94a3b8',
-            width: 12,
-            height: 12
+            width: 10,
+            height: 10
           }
         });
       });
     });
 
-    return { nodes, edges };
+    return { nodes, edges, founderCenterX, founderCenterY };
   }, [domainsWithMembers, totalPeopleCount, founder, searchQuery, selectedNode, onAddMemberClick]);
-
-  const [nodes, , onNodesChange] = useNodesState(computedNodes);
-  const [edges, , onEdgesChange] = useEdgesState(computedEdges);
 
   // Sync state when computed nodes change
   const currentNodes = useMemo(() => computedNodes, [computedNodes]);
@@ -592,286 +647,298 @@ export default function OrgHierarchyFlow({
   }, []);
 
   return (
-    <div className="relative w-full h-[680px] rounded-2xl border overflow-hidden transition-all" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
+    <div className="w-full flex flex-col font-sans">
       
-      {/* ── TOP CONTROL PANEL ────────────────────────────────────────────── */}
+      {/* ── 1. REDESIGNED UNIFIED TOOLBAR ─────────────────────────────────── */}
       <div 
-        className="absolute top-4 left-4 right-4 z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 p-3 rounded-xl border backdrop-blur-md shadow-sm"
-        style={{
-          backgroundColor: 'rgba(255, 255, 255, 0.85)',
-          borderColor: 'var(--c-border)'
-        }}
+        id="org-hierarchy-toolbar"
+        className="w-full bg-white border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 shadow-xs mb-4"
       >
-        <div className="flex items-center gap-2">
-          <div className="relative w-56 sm:w-64">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--c-muted)' }} />
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+          
+          {/* LEFT: Search */}
+          <div className="relative w-full lg:w-64 xl:w-72 shrink-0">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Filter people, roles..."
+              id="org-search-input"
+              placeholder="Search people or domains..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg outline-none transition-colors"
-              style={{
-                backgroundColor: 'var(--c-surface)',
-                border: '1px solid var(--c-border)',
-                color: 'var(--c-fg)'
-              }}
+              className="w-full h-10 pl-9 pr-8 text-xs font-medium rounded-xl border border-slate-200 bg-slate-50/60 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 outline-none transition-all"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Domain Filter */}
-          <div className="hidden sm:flex items-center gap-1 overflow-x-auto">
+          {/* CENTER: Domain Filters */}
+          <div className="flex items-center gap-1 overflow-x-auto py-0.5 px-0.5 rounded-xl bg-slate-100/70 border border-slate-200/70 scrollbar-none max-w-full">
             <button
               onClick={() => setFilterDomain('ALL')}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${filterDomain === 'ALL' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                filterDomain === 'ALL'
+                  ? 'bg-white text-slate-900 font-semibold shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
             >
               All Domains
             </button>
-            {CORE_DOMAINS.map(d => (
-              <button
-                key={d.id}
-                onClick={() => setFilterDomain(d.id)}
-                className={`px-2 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-all cursor-pointer ${filterDomain === d.id ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900' : 'text-slate-500 hover:text-slate-800'}`}
-              >
-                {d.label.split(' ')[0]}
-              </button>
-            ))}
+            {CORE_DOMAINS.map(d => {
+              const isSelected = filterDomain === d.id;
+              const shortLabel = d.label.split(' ')[0];
+              return (
+                <button
+                  key={d.id}
+                  onClick={() => setFilterDomain(d.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isSelected
+                      ? 'bg-white text-slate-900 font-semibold shadow-xs border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  }`}
+                >
+                  {shortLabel}
+                </button>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Action: Add Team Member */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-mono text-slate-500 hidden md:block">
-            {teamMembers.length} Employees · 1 Founder
-          </span>
-          {onAddMemberClick && (
-            <button
-              onClick={() => onAddMemberClick()}
-              id="flow-add-team-member-btn"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer hover:opacity-90"
-              style={{
-                backgroundColor: 'var(--c-fg)',
-                color: 'var(--c-bg)'
-              }}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>+ Add Team Member</span>
-            </button>
-          )}
+          {/* RIGHT: Team summary and Primary Action */}
+          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+            <div className="flex items-center gap-2 whitespace-nowrap text-xs font-mono text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span>
+                {teamMembers.length} {teamMembers.length === 1 ? 'team member' : 'team members'} · 1 founder
+              </span>
+            </div>
+
+            <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+
+            {onAddMemberClick && (
+              <button
+                onClick={() => onAddMemberClick()}
+                id="flow-add-team-member-btn"
+                className="h-10 px-4 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-xs cursor-pointer bg-slate-900 hover:bg-slate-800 text-white whitespace-nowrap shrink-0 hover:shadow-sm active:scale-[0.98]"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>+ Add Team Member</span>
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
 
-      {/* ── REACT FLOW CANVAS ────────────────────────────────────────────── */}
-      <ReactFlow
-        nodes={currentNodes}
-        edges={currentEdges}
-        nodeTypes={nodeTypes}
-        onNodeClick={handleNodeClick}
-        fitView
-        fitViewOptions={{ padding: 0.18, maxZoom: 1.15 }}
-        minZoom={0.3}
-        maxZoom={1.5}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.85 }}
+      {/* ── 2. REACT FLOW CANVAS WORKSPACE ───────────────────────────────── */}
+      <div 
+        id="org-hierarchy-canvas-wrapper"
+        className="relative w-full h-[620px] sm:h-[680px] lg:h-[720px] rounded-2xl border border-slate-200/90 overflow-hidden bg-slate-50/60 shadow-xs"
       >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#cbd5e1" />
-        <Controls position="bottom-left" showInteractive={false} />
-        <MiniMap 
-          position="bottom-right"
-          nodeColor={(n) => {
-            if (n.type === 'founderNode') return '#1e293b';
-            if (n.type === 'domainNode') return '#6366f1';
-            return '#94a3b8';
+        <ReactFlow
+          nodes={currentNodes}
+          edges={currentEdges}
+          nodeTypes={nodeTypes}
+          onNodeClick={handleNodeClick}
+          fitView
+          fitViewOptions={{ padding: 0.12, minZoom: 0.75, maxZoom: 1.0 }}
+          minZoom={0.35}
+          maxZoom={1.5}
+          onInit={(instance) => {
+            rfInstanceRef.current = instance;
           }}
-          style={{ width: 120, height: 80, borderRadius: 12 }}
-        />
-      </ReactFlow>
-
-      {/* ── INTERACTIVE NODE DETAIL DRAWER ───────────────────────────────── */}
-      {selectedNode && (
-        <div 
-          className="absolute top-20 right-4 z-20 w-80 max-w-[90vw] rounded-2xl p-5 border shadow-xl animate-fade-in space-y-4"
-          style={{
-            backgroundColor: 'var(--c-surface)',
-            borderColor: 'var(--c-border)',
-            boxShadow: 'var(--shadow-xl)'
-          }}
+          zoomOnScroll={false}
+          panOnScroll={false}
+          panOnDrag={true}
+          preventScrolling={false}
+          proOptions={{ hideAttribution: true }}
         >
-          <div className="flex items-start justify-between pb-3 border-b" style={{ borderColor: 'var(--c-border)' }}>
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4" style={{ color: 'var(--c-accent)' }} />
-              <span className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
-                Hierarchy Information
-              </span>
-            </div>
-            <button 
-              onClick={() => setSelectedNode(null)}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#cbd5e1" />
 
-          {/* Member Details */}
-          {selectedNode.type === 'member' && (
-            <div className="space-y-3.5 text-xs">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-11 h-11 rounded-xl flex items-center justify-center font-mono font-bold text-sm uppercase shrink-0"
-                  style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
-                >
-                  {selectedNode.data.member.fullName?.slice(0, 2)}
+          {/* Canvas Viewport Controls in bottom-left */}
+          <CanvasViewportControls
+            onZoomIn={() => rfInstanceRef.current?.zoomIn({ duration: 300 })}
+            onZoomOut={() => rfInstanceRef.current?.zoomOut({ duration: 300 })}
+            onFitView={() => rfInstanceRef.current?.fitView({ padding: 0.12, minZoom: 0.75, duration: 400 })}
+            onResetView={() => {
+              rfInstanceRef.current?.setCenter(founderCenterX, founderCenterY, { zoom: 0.95, duration: 400 });
+            }}
+          />
+        </ReactFlow>
+
+        {/* ── INTERACTIVE NODE DETAIL DRAWER ──────────────────────────────── */}
+        {selectedNode && (
+          <div 
+            className="absolute top-4 right-4 z-20 w-80 max-w-[90vw] rounded-2xl p-5 border border-slate-200 bg-white/95 backdrop-blur-md shadow-xl animate-fade-in space-y-4"
+          >
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-indigo-600" />
+                <span className="text-xs font-bold uppercase tracking-wider font-mono text-slate-800">
+                  Hierarchy Information
+                </span>
+              </div>
+              <button 
+                onClick={() => setSelectedNode(null)}
+                aria-label="Close detail drawer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Member Details */}
+            {selectedNode.type === 'member' && (
+              <div className="space-y-3.5 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center font-mono font-bold text-sm uppercase shrink-0">
+                    {selectedNode.data.member.fullName?.slice(0, 2)}
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-slate-900 truncate">
+                      {selectedNode.data.member.fullName}
+                    </h4>
+                    <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
+                      {selectedNode.data.member.role}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Reporting Line Breadcrumb */}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
+                    Reporting Line
+                  </span>
+                  <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700">
+                    <span>Founder</span>
+                    <ArrowRight className="w-3 h-3 text-slate-400" />
+                    <span className="font-semibold text-indigo-600">
+                      {selectedNode.data.domain.label}
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-slate-400" />
+                    <span className="font-bold">{selectedNode.data.member.fullName.split(' ')[0]}</span>
+                  </div>
+                </div>
+
+                {/* Metadata Fields */}
+                <div className="space-y-2 pt-1 font-mono text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Domain:</span>
+                    <span className="font-semibold text-slate-800">
+                      {selectedNode.data.member.department || selectedNode.data.domain.label}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Contact:</span>
+                    <span className="truncate max-w-[170px] text-slate-800">
+                      {selectedNode.data.member.email}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Status:</span>
+                    <span className="text-emerald-600 font-bold">
+                      {selectedNode.data.member.status || 'Active Roster'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-2 flex gap-2">
+                  <a
+                    href={`mailto:${selectedNode.data.member.email}`}
+                    className="flex-1 py-2 rounded-xl text-center font-semibold text-xs transition-all border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 flex items-center justify-center gap-1.5"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>Email Member</span>
+                  </a>
+                  {onRemoveMember && (
+                    <button
+                      onClick={() => {
+                        onRemoveMember(selectedNode.data.member.id);
+                        setSelectedNode(null);
+                      }}
+                      title="Remove from roster"
+                      className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors border border-rose-200 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Domain Details */}
+            {selectedNode.type === 'domain' && (
+              <div className="space-y-3.5 text-xs">
                 <div>
-                  <h4 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>
-                    {selectedNode.data.member.fullName}
+                  <h4 className="text-sm font-bold text-slate-900">
+                    {selectedNode.data.domain.label}
                   </h4>
-                  <p className="text-xs font-medium" style={{ color: 'var(--c-muted)' }}>
-                    {selectedNode.data.member.role}
+                  <p className="text-[11px] mt-1 leading-relaxed text-slate-500">
+                    {selectedNode.data.domain.description}
                   </p>
                 </div>
-              </div>
 
-              {/* Reporting Line Breadcrumb */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1">
-                <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
-                  Reporting Line
-                </span>
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                  <span>Founder</span>
-                  <ArrowRight className="w-3 h-3 text-slate-400" />
-                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                    {selectedNode.data.domain.label}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
+                    Domain Structure
                   </span>
-                  <ArrowRight className="w-3 h-3 text-slate-400" />
-                  <span className="font-bold">{selectedNode.data.member.fullName.split(' ')[0]}</span>
+                  <p className="text-[11px] text-slate-700">
+                    Reports directly to <strong className="text-indigo-600">{founder.name}</strong>. Manages {selectedNode.data.memberCount} operational team members.
+                  </p>
                 </div>
-              </div>
 
-              {/* Metadata Fields */}
-              <div className="space-y-2 pt-1 font-mono text-[11px]">
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--c-muted)' }}>Domain:</span>
-                  <span className="font-semibold" style={{ color: 'var(--c-fg)' }}>
-                    {selectedNode.data.member.department || selectedNode.data.domain.label}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--c-muted)' }}>Contact:</span>
-                  <span className="truncate max-w-[170px]" style={{ color: 'var(--c-fg)' }}>
-                    {selectedNode.data.member.email}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span style={{ color: 'var(--c-muted)' }}>Status:</span>
-                  <span className="text-emerald-500 font-bold">
-                    {selectedNode.data.member.status || 'Active Roster'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-2 flex gap-2">
-                <a
-                  href={`mailto:${selectedNode.data.member.email}`}
-                  className="flex-1 py-2 rounded-xl text-center font-semibold text-xs transition-all border flex items-center justify-center gap-1.5"
-                  style={{
-                    backgroundColor: 'var(--c-surface-2)',
-                    borderColor: 'var(--c-border)',
-                    color: 'var(--c-fg)'
-                  }}
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  Email Member
-                </a>
-                {onRemoveMember && (
+                {onAddMemberClick && (
                   <button
                     onClick={() => {
-                      onRemoveMember(selectedNode.data.member.id);
+                      onAddMemberClick(selectedNode.data.domain.label);
                       setSelectedNode(null);
                     }}
-                    title="Remove from roster"
-                    className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors border border-rose-500/20 cursor-pointer"
+                    className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs bg-slate-900 hover:bg-slate-800 text-white"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>+ Add Member to this Domain</span>
                   </button>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Domain Details */}
-          {selectedNode.type === 'domain' && (
-            <div className="space-y-3.5 text-xs">
-              <div>
-                <h4 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>
-                  {selectedNode.data.domain.label}
-                </h4>
-                <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
-                  {selectedNode.data.domain.description}
-                </p>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1">
-                <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
-                  Domain Structure
-                </span>
-                <p className="text-[11px] text-slate-700 dark:text-slate-300">
-                  Reports directly to <strong className="text-indigo-600">{founder.name}</strong>. Manages {selectedNode.data.memberCount} operational team members.
-                </p>
-              </div>
-
-              {onAddMemberClick && (
-                <button
-                  onClick={() => {
-                    onAddMemberClick(selectedNode.data.domain.label);
-                    setSelectedNode(null);
-                  }}
-                  className="w-full py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all shadow-sm"
-                  style={{
-                    backgroundColor: 'var(--c-fg)',
-                    color: 'var(--c-bg)'
-                  }}
-                >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  <span>+ Add Member to this Domain</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Founder Details */}
-          {selectedNode.type === 'founder' && (
-            <div className="space-y-3.5 text-xs">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-11 h-11 rounded-xl flex items-center justify-center font-mono font-bold text-sm uppercase shrink-0"
-                  style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
-                >
-                  {founder.name?.slice(0, 2)}
+            {/* Founder Details */}
+            {selectedNode.type === 'founder' && (
+              <div className="space-y-3.5 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-slate-900 text-white flex items-center justify-center font-mono font-bold text-sm uppercase shrink-0">
+                    {founder.name?.slice(0, 2)}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">
+                      {founder.name}
+                    </h4>
+                    <p className="text-xs font-medium text-slate-500">
+                      {founder.role}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold" style={{ color: 'var(--c-fg)' }}>
-                    {founder.name}
-                  </h4>
-                  <p className="text-xs font-medium" style={{ color: 'var(--c-muted)' }}>
-                    {founder.role}
+
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1">
+                  <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
+                    Apex Leadership Mandate
+                  </span>
+                  <p className="text-[11px] text-slate-700 leading-relaxed">
+                    Ultimate venture signing authority, cap table oversight, capital allocation, and executive approval gate.
                   </p>
                 </div>
               </div>
+            )}
+          </div>
+        )}
 
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1">
-                <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block">
-                  Apex Leadership Mandate
-                </span>
-                <p className="text-[11px] text-slate-700 dark:text-slate-300">
-                  Ultimate venture signing authority, cap table oversight, capital allocation, and executive approval gate.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
+      </div>
     </div>
   );
 }

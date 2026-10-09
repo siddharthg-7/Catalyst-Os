@@ -14,10 +14,8 @@ export default function ChatButton({ isOpen, onClick, unreadCount = 0 }: ChatBut
       <button
         onClick={onClick}
         aria-label="Toggle Catalyst OS AI Chatbot"
-        className="w-14 h-14 rounded-2xl bg-[#5546ED] hover:bg-[#4939D5] text-white shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center relative cursor-pointer group scale-100 hover:scale-105 active:scale-95"
+        className="w-13 h-13 rounded-2xl bg-[#5546ED] hover:bg-[#4939D5] text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center relative cursor-pointer group scale-100 hover:scale-105 active:scale-95 border border-indigo-400/30"
       >
-        {/* Subtle Ambient Pulse Ring */}
-        <span className="absolute -inset-1 rounded-2xl bg-white/15 animate-ping opacity-75 pointer-events-none" style={{ animationDuration: '3s' }} />
 
         {/* Icon Transition */}
         {isOpen ? (

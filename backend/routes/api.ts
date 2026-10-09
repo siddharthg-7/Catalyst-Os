@@ -1,4 +1,4 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma, safeDbQuery } from '../services/dbService';
 import vaultService from '../services/vaultService';
@@ -1305,11 +1305,11 @@ router.post('/invitations/accept', authRateLimiter, async (req: AuthenticatedReq
 // ============================================================================
 
 function sendTaskError(res: any, err: any) {
-  if (err instanceof TaskDelegationError) {
-    res.status(err.status).json({ error: err.message, code: err.code });
+  if (err instanceof TaskDelegationError || err?.name === 'TaskDelegationError' || (typeof err?.status === 'number' && err?.code)) {
+    res.status(err.status || 400).json({ error: err.message, code: err.code });
     return;
   }
-  console.error('[Tasks API] Unexpected error:', err?.message);
+  console.error('[Tasks API] Unexpected error:', err?.message || err);
   res.status(500).json({ error: 'The task could not be processed.' });
 }
 
