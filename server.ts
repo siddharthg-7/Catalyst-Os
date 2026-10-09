@@ -40,9 +40,12 @@ app.use((req, res, next) => {
       changeOrigin: true,
       proxyTimeout: 3000,
       timeout: 3000,
-      onError: (_err, _req, res: any) => {
-        if (!res.headersSent) {
-          res.status(503).json({ error: 'FastAPI service unavailable' });
+      on: {
+        error: (_err, _req, res: any) => {
+          if (res && typeof res.writeHead === 'function' && !res.headersSent) {
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'FastAPI service unavailable' }));
+          }
         }
       }
     })(req, res, next);
