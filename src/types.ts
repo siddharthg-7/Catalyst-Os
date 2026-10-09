@@ -73,6 +73,14 @@ export interface DelegatedTask {
   changesRequested?: boolean;
   needsHumanOwner: boolean;
   humanRequirement?: HumanRoleRequirement | null;
+  priority?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  dueDate?: string;
+  projectName?: string;
+  reviewerId?: string;
+  reviewerName?: string;
+  collaborators?: Array<{ id: string; name: string; role: string }>;
+  acceptanceCriteria?: string[];
+  progressUpdates?: Array<{ id: string; author: string; note: string; timestamp: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -443,4 +451,190 @@ export interface TeamMember {
   hasAccount?: boolean;
   linkedUserId?: string | null;
 }
+
+export type CommunityPostType = 'announcement' | 'question' | 'knowledge' | 'update' | 'recognition';
+
+export interface CommunityPost {
+  id: string;
+  startupId: string;
+  type: CommunityPostType;
+  title: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  authorRole: string;
+  tags?: string[];
+  department?: string;
+  reactions: Record<string, number>;
+  userReactions?: string[];
+  isAnswered?: boolean;
+  knowledgeDocId?: string | null;
+  commentsCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommunityComment {
+  id: string;
+  postId: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  authorRole: string;
+  isAnswer?: boolean;
+  createdAt: string;
+}
+
+export interface TaskBlocker {
+  id: string;
+  taskId: string;
+  reason: string;
+  status: 'OPEN' | 'RESOLVED';
+  reportedById: string;
+  reportedByName: string;
+  reportedByRole: string;
+  resolutionNote?: string | null;
+  resolvedAt?: string | null;
+  createdAt: string;
+}
+
+export interface OrgMemberNode {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  title: string;
+  department: string;
+  level: 1 | 2 | 3;
+  reportsToId?: string | null;
+  reportsToName?: string | null;
+  directReportsCount?: number;
+  directReportNames?: string[];
+  availability: AvailabilityStatus;
+  statusText?: string;
+  location: string;
+  timezone: string;
+  skills: string[];
+  activeProjects: string[];
+  responsibilities: string[];
+  currentDeliverable?: string;
+  bio: string;
+}
+
+export interface ReportingHierarchy {
+  founder: { id: string; name: string; email: string; role: string; title: string };
+  myManager: { id: string; name: string; email: string; role: string; title: string } | null;
+  reportingPath: Array<{ name: string; role: string; title: string }>;
+  departmentTeammates: Array<{ id: string; name: string; email: string; role: string; department: string }>;
+  allMembers?: OrgMemberNode[];
+  levels?: {
+    level1: OrgMemberNode[];
+    level2: OrgMemberNode[];
+    level3: OrgMemberNode[];
+  };
+}
+
+export interface MeetingActionItem {
+  id: string;
+  text: string;
+  assigneeName?: string;
+  completed?: boolean;
+}
+
+export interface CompanyMeeting {
+  id: string;
+  startupId: string;
+  title: string;
+  purpose: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  provider: 'google_meet' | 'teams' | 'zoom' | 'other';
+  joinUrl: string;
+  organizerId: string;
+  organizerName: string;
+  organizerRole: string;
+  attendees: Array<{ id: string; name: string; role: string }>;
+  projectName?: string;
+  taskId?: string;
+  isDemo?: boolean;
+  createdAt: string;
+  meetingNotes?: string;
+  keyDecisions?: string[];
+  actionItems?: MeetingActionItem[];
+  recordingUrl?: string;
+}
+
+export interface WorkspaceActivityEvent {
+  id: string;
+  startupId: string;
+  type: 'task_assigned' | 'task_progress' | 'task_submitted' | 'task_approved' | 'blocker_reported' | 'blocker_resolved' | 'meeting_scheduled' | 'post_created' | 'resource_shared';
+  title: string;
+  description: string;
+  actorName: string;
+  actorRole: string;
+  entityId?: string;
+  entityType?: 'task' | 'project' | 'meeting' | 'post' | 'document';
+  timestamp: string;
+}
+
+export type AvailabilityStatus = 'AVAILABLE' | 'FOCUS' | 'MEETING' | 'LEAVE' | 'OFFLINE';
+
+export interface UserAvailability {
+  userId: string;
+  status: AvailabilityStatus;
+  statusText?: string;
+  updatedAt: string;
+}
+
+export interface ProjectContribution {
+  id: string;
+  name: string;
+  objective: string;
+  ownerName: string;
+  ownerRole: string;
+  status: 'planning' | 'in_progress' | 'completed' | 'on_hold';
+  totalTasks: number;
+  completedTasks: number;
+  progressPercentage: number;
+  myRole: string;
+  myTasksCount: number;
+  myCompletedCount: number;
+  nextDeliverable?: string;
+  milestoneDeadline?: string;
+}
+
+export interface DomainExpert {
+  id: string;
+  name: string;
+  role: string;
+  department: string;
+  email: string;
+  avatar?: string;
+  availability: AvailabilityStatus;
+  statusText?: string;
+  skills: string[];
+  bio: string;
+  reportsTo?: string;
+  reportsToId?: string;
+  level?: number;
+  location?: string;
+  timezone?: string;
+  activeProjects?: string[];
+  directReportsCount?: number;
+  directReportNames?: string[];
+  responsibilities?: string[];
+  currentDeliverable?: string;
+}
+
+export interface TaskProgressUpdate {
+  id: string;
+  taskId: string;
+  authorId: string;
+  authorName: string;
+  authorRole?: string;
+  note: string;
+  createdAt: string;
+}
+
 

@@ -3005,4 +3005,347 @@ router.get('/memories/search', authenticateJWT, async (req: AuthenticatedRequest
   }
 });
 
+// ============================================================================
+// EMPLOYEE WORKSPACE & COMPANY COMMUNITY ROUTES
+// ============================================================================
+import * as communityService from '../services/communityService';
+
+// GET /api/community/posts
+router.get('/community/posts', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const posts = await communityService.listCommunityPosts({
+      userId: req.user!.id,
+      type: req.query.type as string,
+      search: req.query.q as string
+    });
+    res.json(posts);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to list posts' });
+  }
+});
+
+// POST /api/community/posts
+router.post('/community/posts', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { type, title, content, tags, department } = req.body || {};
+    if (!title || !content || !type) {
+      return res.status(400).json({ error: 'Title, content, and type are required.' });
+    }
+    const post = await communityService.createCommunityPost({
+      userId: req.user!.id,
+      type,
+      title,
+      content,
+      tags,
+      department
+    });
+    res.json(post);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || 'Failed to create post' });
+  }
+});
+
+// GET /api/community/posts/:id/comments
+router.get('/community/posts/:id/comments', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const comments = await communityService.listCommunityComments(req.user!.id, req.params.id);
+    res.json(comments);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/community/posts/:id/comments
+router.post('/community/posts/:id/comments', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { content } = req.body || {};
+    if (!content) return res.status(400).json({ error: 'Comment content is required.' });
+    const comment = await communityService.addCommunityComment({
+      userId: req.user!.id,
+      postId: req.params.id,
+      content
+    });
+    res.json(comment);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/community/posts/:id/react
+router.post('/community/posts/:id/react', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { reaction } = req.body || {};
+    const result = await communityService.togglePostReaction({
+      userId: req.user!.id,
+      postId: req.params.id,
+      reaction: reaction || 'helpful'
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/community/posts/:id/answer
+router.post('/community/posts/:id/answer', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { commentId } = req.body || {};
+    const success = await communityService.markQuestionAnswered({
+      userId: req.user!.id,
+      postId: req.params.id,
+      commentId
+    });
+    res.json({ success });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/community/posts/:id/convert-to-knowledge
+router.post('/community/posts/:id/convert-to-knowledge', authenticateJWT, requireActiveMembership, requirePermission('knowledge:write'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const doc = await communityService.convertPostToKnowledge({
+      userId: req.user!.id,
+      postId: req.params.id
+    });
+    res.json(doc);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/tasks/:id/blocker
+router.post('/tasks/:id/blocker', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { reason } = req.body || {};
+    if (!reason) return res.status(400).json({ error: 'Blocker reason is required.' });
+    const blocker = await communityService.reportTaskBlocker({
+      userId: req.user!.id,
+      taskId: req.params.id,
+      reason
+    });
+    res.json(blocker);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/tasks/:id/blockers
+router.get('/tasks/:id/blockers', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const blockers = await communityService.listTaskBlockers(req.user!.id, req.params.id);
+    res.json(blockers);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/tasks/:id/blocker/:blockerId/resolve
+router.patch('/tasks/:id/blocker/:blockerId/resolve', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { resolutionNote } = req.body || {};
+    const resolved = await communityService.resolveTaskBlocker({
+      userId: req.user!.id,
+      blockerId: req.params.blockerId,
+      resolutionNote
+    });
+    res.json({ success: resolved });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/team/hierarchy
+router.get('/team/hierarchy', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const hierarchy = await communityService.getCompanyReportingHierarchy(req.user!.id);
+    res.json(hierarchy);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================================
+// EMPLOYEE ECOSYSTEM: MEETINGS, AVAILABILITY, PROJECTS, ACTIVITY & EXPERTS
+// ============================================================================
+import * as employeeEcosystemService from '../services/employeeEcosystemService';
+
+// GET /api/meetings
+router.get('/meetings', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const meetings = await employeeEcosystemService.listCompanyMeetings(req.user!.id);
+    res.json(meetings);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Failed to list meetings' });
+  }
+});
+
+// POST /api/meetings
+router.post('/meetings', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { title, purpose, startTime, endTime, timezone, joinUrl, projectName, taskId, attendeeIds } = req.body || {};
+    if (!title || !purpose || !startTime || !endTime || !joinUrl) {
+      return res.status(400).json({ error: 'Title, purpose, start time, end time, and join URL are required.' });
+    }
+    const meeting = await employeeEcosystemService.createCompanyMeeting({
+      userId: req.user!.id,
+      title,
+      purpose,
+      startTime,
+      endTime,
+      timezone,
+      joinUrl,
+      projectName,
+      taskId,
+      attendeeIds
+    });
+    res.json(meeting);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// DELETE /api/meetings/:id
+router.delete('/meetings/:id', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const success = await employeeEcosystemService.cancelCompanyMeeting(req.user!.id, req.params.id);
+    res.json({ success });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/meetings/:id/notes
+router.post('/meetings/:id/notes', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { meetingNotes, keyDecisions, actionItems } = req.body || {};
+    if (meetingNotes === undefined || meetingNotes === null) {
+      return res.status(400).json({ error: 'Meeting notes content is required.' });
+    }
+    const updated = await employeeEcosystemService.updateMeetingNotes({
+      userId: req.user!.id,
+      meetingId: req.params.id,
+      meetingNotes,
+      keyDecisions,
+      actionItems
+    });
+    res.json(updated);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// PATCH /api/meetings/:id/action-items/:itemId/toggle
+router.patch('/meetings/:id/action-items/:itemId/toggle', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const updated = await employeeEcosystemService.toggleMeetingActionItem({
+      userId: req.user!.id,
+      meetingId: req.params.id,
+      actionItemId: req.params.itemId
+    });
+    res.json(updated);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/workspace/availability
+router.get('/workspace/availability', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const availability = await employeeEcosystemService.getUserAvailability(req.user!.id);
+    res.json(availability);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/workspace/availability
+router.post('/workspace/availability', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { status, statusText } = req.body || {};
+    if (!status) return res.status(400).json({ error: 'Status is required' });
+    const result = await employeeEcosystemService.setUserAvailability({
+      userId: req.user!.id,
+      status,
+      statusText
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/workspace/projects
+router.get('/workspace/projects', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const projects = await employeeEcosystemService.listEmployeeProjects(req.user!.id);
+    res.json(projects);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/workspace/activity
+router.get('/workspace/activity', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const feed = await employeeEcosystemService.listActivityFeed(req.user!.id);
+    res.json(feed);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/workspace/experts
+router.get('/workspace/experts', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const experts = await employeeEcosystemService.listDomainExperts(req.user!.id);
+    res.json(experts);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/tasks/:id/collaborator
+router.post('/tasks/:id/collaborator', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { collaboratorId, note } = req.body || {};
+    if (!collaboratorId) return res.status(400).json({ error: 'collaboratorId is required.' });
+    const result = await employeeEcosystemService.addTaskCollaborator({
+      userId: req.user!.id,
+      taskId: req.params.id,
+      collaboratorId,
+      note
+    });
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/tasks/:id/progress
+router.post('/tasks/:id/progress', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const { note } = req.body || {};
+    if (!note) return res.status(400).json({ error: 'Progress note is required.' });
+    const update = await employeeEcosystemService.addTaskProgressUpdate({
+      userId: req.user!.id,
+      taskId: req.params.id,
+      note
+    });
+    res.json(update);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/tasks/:id/progress
+router.get('/tasks/:id/progress', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const updates = await employeeEcosystemService.listTaskProgressUpdates(req.params.id);
+    res.json(updates);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

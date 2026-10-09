@@ -92,7 +92,9 @@ export default function AcceptInvitation() {
       // Reuse the existing session contract, then enter the shared workspace.
       localStorage.setItem('catalystos_token', data.token);
       localStorage.setItem('catalystos_user', JSON.stringify(data.user));
-      window.location.replace('/dashboard');
+      const roleUpper = (data.user?.role || data.role || '').toUpperCase();
+      const isEmployee = !['FOUNDER', 'ADMIN'].includes(roleUpper);
+      window.location.replace(isEmployee ? '/employee' : '/dashboard');
     } catch {
       setError('The invitation could not be accepted. Please retry.');
     } finally {

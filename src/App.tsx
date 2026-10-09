@@ -32,6 +32,7 @@ import {
   Search,
   Shield,
   LogOut,
+  ArrowRight,
   ChevronDown,
   Users,
   TrendingUp,
@@ -396,6 +397,7 @@ export default function App() {
   });
 
   const hasPermission = (action: UserPermissions['actions'][number]) => permissions.actions.includes(action);
+  const isEmployeeRole = (role?: string) => Boolean(role && !['FOUNDER', 'ADMIN', 'Founder'].includes(role.toUpperCase()));
 
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'error' } | null>(null);
 
@@ -1017,6 +1019,25 @@ export default function App() {
               )}
             </button>
 
+            {/* Dedicated Employee Workspace Action */}
+            <button
+              onClick={() => navigate('/employee')}
+              className={`w-full flex items-center rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer ${
+                sidebarCollapsed ? 'justify-center p-2' : 'justify-between px-2.5 py-2'
+              }`}
+              title="Employee Workspace"
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <Users className="w-4 h-4 text-emerald-600 shrink-0" />
+                {!sidebarCollapsed && <span>Employee Workspace</span>}
+              </span>
+              {!sidebarCollapsed && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  /employee
+                </span>
+              )}
+            </button>
+
             {/* Workspace Settings Action */}
             <button
               onClick={() => setIsSettingsOpen(true)}
@@ -1212,14 +1233,41 @@ export default function App() {
                 )}
 
                 {activeTab === 'workspace' && (
-                  <EmployeeWorkspace 
-                    userRole={user?.role}
-                    userName={user?.name}
-                    companyName={startup?.name}
-                    initialTaskId={selectedTaskIdForWorkspace}
-                    onRefreshTasks={hydrateTasks}
-                    onNavigateToApprovals={() => handleTabChange('approvals')}
-                  />
+                  <div className="space-y-4">
+                    {/* Founder notice for dedicated separate employee workspace */}
+                    <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0">
+                          EW
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-semibold text-slate-900">Separate Employee Operating Environment</h4>
+                          <p className="text-[11px] text-slate-500">Employees operate in their own focused environment at <code className="bg-slate-100 text-indigo-600 px-1 py-0.5 rounded font-mono font-medium">/employee</code> with Overview, My Work, Team, and Community.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => navigate('/employee')}
+                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-xs shrink-0 self-start sm:self-auto"
+                      >
+                        <span>Open Employee Workspace</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <RoleAwareDashboard 
+                      userRole={user?.role || permissions.role}
+                      userName={user?.name || 'Founder'}
+                      companyName={startup?.name}
+                      tasks={tasks}
+                      teamMembers={teamMembers}
+                      onOpenTask={(taskId) => {
+                        navigate(`/employee?task=${taskId}`);
+                      }}
+                      onNavigate={(tab) => handleTabChange(tab as any)}
+                      onRefreshTasks={hydrateTasks}
+                      apiFetch={apiFetch}
+                    />
+                  </div>
                 )}
                 
                 {activeTab === 'council' && (
@@ -1499,7 +1547,9 @@ export default function App() {
               </div>
             </div>
           ) : user ? (
-            onboardingCompleted ? (
+            isEmployeeRole(user?.role || permissions.role) ? (
+              <Navigate to="/employee" replace />
+            ) : onboardingCompleted ? (
               <Navigate to="/dashboard" replace />
             ) : (
               <Navigate to="/onboarding" replace />
@@ -1532,7 +1582,9 @@ export default function App() {
               </div>
             </div>
           ) : user ? (
-            onboardingCompleted ? (
+            isEmployeeRole(user?.role || permissions.role) ? (
+              <Navigate to="/employee" replace />
+            ) : onboardingCompleted ? (
               <Navigate to="/dashboard" replace />
             ) : (
               <Navigate to="/onboarding" replace />
@@ -1581,6 +1633,37 @@ export default function App() {
       <Route path="/agents" element={<Navigate to="/dashboard/agents" replace />} />
       <Route path="/agents/:agentId" element={<Navigate to="/dashboard/agents" replace />} />
       <Route path="/council" element={<Navigate to="/dashboard/council" replace />} />
+      <Route path="/workspace/employee" element={<Navigate to="/employee" replace />} />
+
+      {/* Dedicated Employee Operating System Workspace Route */}
+      <Route
+        path="/employee/*"
+        element={
+          loading || isCheckingStartup ? (
+            <div className="flex h-screen w-screen items-center justify-center bg-[#F3F0EE]">
+              <div className="text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-white border border-[#141413]/10 flex items-center justify-center mx-auto shadow-[rgba(0,0,0,0.06)_0px_8px_24px]">
+                  <RefreshCw className="w-6 h-6 text-[#141413] animate-spin" />
+                </div>
+                <p className="text-xs font-mono text-[#696969] uppercase tracking-widest">Verifying Employee Session...</p>
+              </div>
+            </div>
+          ) : !user ? (
+            <Navigate to="/auth" replace />
+          ) : (
+            <EmployeeWorkspace
+              userRole={user?.role || permissions.role}
+              userName={user?.name}
+              companyName={startup?.name}
+              initialTaskId={selectedTaskIdForWorkspace}
+              onRefreshTasks={hydrateTasks}
+              onNavigateToDashboard={() => navigate('/dashboard')}
+              onNavigateToApprovals={() => navigate('/dashboard/approvals')}
+            />
+          )
+        }
+      />
+      <Route path="/employee" element={<Navigate to="/employee/overview" replace />} />
 
       {/* Executive Workspace Dashboard Phase Route */}
       <Route
@@ -1597,6 +1680,8 @@ export default function App() {
             </div>
           ) : !user ? (
             <Navigate to="/auth" replace />
+          ) : isEmployeeRole(user?.role || permissions.role) ? (
+            <Navigate to="/employee" replace />
           ) : !onboardingCompleted ? (
             <Navigate to="/onboarding" replace />
           ) : (

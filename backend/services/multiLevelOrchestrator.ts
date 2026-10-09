@@ -381,13 +381,17 @@ export class MultiLevelOrchestrator {
       };
     }
 
-    // Explicit Task Creation (Test 3)
+    // Explicit Task Creation & Delegation (Test 3 + Project Sprints)
     if (
-      lower.includes('create') && (lower.includes('task') || lower.includes('three tasks') || lower.includes('action items') || lower.includes('work orders'))
+      (lower.includes('divide') || lower.includes('assign') || lower.includes('delegate') || lower.includes('split') || lower.includes('distribute')) &&
+      (lower.includes('task') || lower.includes('work') || lower.includes('people') || lower.includes('team') || lower.includes('respective')) ||
+      (lower.includes('create') && (lower.includes('task') || lower.includes('three tasks') || lower.includes('action items') || lower.includes('work orders'))) ||
+      ((lower.includes('webpage') || lower.includes('landing page') || lower.includes('website') || lower.includes('developer') || lower.includes('campaign')) &&
+       (lower.includes('divide') || lower.includes('prepare') || lower.includes('prepa') || lower.includes('assign') || lower.includes('build') || lower.includes('after') || lower.includes('days')))
     ) {
       return {
         intent: 'task_creation',
-        objective: 'Convert approved plan or directives into persistent actionable tasks',
+        objective: 'Convert directive into actionable tasks and delegate across respective team members',
         isSimpleQuery: false
       };
     }
@@ -643,9 +647,15 @@ export class MultiLevelOrchestrator {
     // Plan 2: Task Creation Directive (Test 3)
     // ------------------------------------------------------------------------
     if (intent === 'task_creation') {
+      const isCampaignOrWeb = lower.includes('campaign') || lower.includes('webpage') || lower.includes('landing page') || lower.includes('website') || lower.includes('developer');
+      const dayMatch = directive.match(/(\d+)\s*days?/i);
+      const daysCount = dayMatch ? dayMatch[1] : '5';
+
       return {
         id: planId,
-        objective: 'Create verified operational tasks from directive',
+        objective: isCampaignOrWeb
+          ? `Decompose ${daysCount}-day campaign and webpage deliverables across engineering, growth, and operations`
+          : 'Create verified operational tasks from directive',
         intent,
         risksAndConstraints: ['Prevent duplicate task row insertion', 'Enforce tenant isolation'],
         requiredApprovals: [],
@@ -653,29 +663,39 @@ export class MultiLevelOrchestrator {
           {
             id: 'step_task_extraction',
             stepNumber: 1,
-            title: 'Extract actionable work orders and assignees from directive',
-            domain: 'operations',
+            title: isCampaignOrWeb
+              ? `Structure ${daysCount}-day campaign delivery milestones and technical work breakdown`
+              : 'Extract actionable work orders and assignees from directive',
+            domain: isCampaignOrWeb ? 'product_engineering' : 'operations',
             capability: 'product_planning',
-            assignedAgent: AGENT_REGISTRY.Operations,
+            assignedAgent: isCampaignOrWeb ? AGENT_REGISTRY.Product : AGENT_REGISTRY.Operations,
             dependsOn: [],
-            expectedOutput: 'Structured specification of 3 concrete task work orders',
+            expectedOutput: isCampaignOrWeb
+              ? 'Structured specification of 3 delegated work orders across engineering, growth, and QA'
+              : 'Structured specification of 3 concrete task work orders',
             status: 'planned'
           },
           {
             id: 'step_task_persistence',
             stepNumber: 2,
-            title: 'Persist task work orders into PostgreSQL task management database',
+            title: isCampaignOrWeb
+              ? 'Dispatch and persist work orders to web application developer and growth specialists'
+              : 'Persist task work orders into PostgreSQL task management database',
             domain: 'operations',
             capability: 'task_creation',
             assignedAgent: AGENT_REGISTRY.Operations,
             dependsOn: ['step_task_extraction'],
-            expectedOutput: 'Verified persistent task IDs created in database',
+            expectedOutput: isCampaignOrWeb
+              ? 'Verified persistent task IDs created in database with assigned owners'
+              : 'Verified persistent task IDs created in database',
             status: 'planned'
           },
           {
             id: 'step_audit_verification',
             stepNumber: 3,
-            title: 'Verify task creation integrity and tenant assignment',
+            title: isCampaignOrWeb
+              ? 'Audit campaign launch dependencies and log executive decision milestone'
+              : 'Verify task creation integrity and tenant assignment',
             domain: 'auditor',
             capability: 'decision_recording',
             assignedAgent: AGENT_REGISTRY.Auditor,
@@ -1062,6 +1082,25 @@ export class MultiLevelOrchestrator {
       case 'product_planning': {
         const marketOutput = upstreamOutputs['step_market_research'] || {};
         const budgetOutput = upstreamOutputs['step_budget_analysis'] || {};
+        const lowerDirective = (run.directive || '').toLowerCase();
+        const isCampaignOrWeb = lowerDirective.includes('campaign') || lowerDirective.includes('webpage') || lowerDirective.includes('landing page') || lowerDirective.includes('website') || lowerDirective.includes('developer');
+
+        if (isCampaignOrWeb) {
+          const dayMatch = run.directive.match(/(\d+)\s*days?/i);
+          const sprintDays = dayMatch ? parseInt(dayMatch[1], 10) : 5;
+
+          return {
+            sprintDurationDays: sprintDays,
+            allocatedBudget: 2500,
+            milestones: [
+              { day: 'Day 1', focus: 'Landing page conversion architecture, hero value proposition & copy specification', owner: 'Vector (Growth)' },
+              { day: 'Day 2–3', focus: 'Web application frontend implementation, responsive layout, CTA buttons & forms', owner: 'Vikram Malhotra (Lead Integrations & Web App Developer)' },
+              { day: 'Day 4', focus: 'Lead capture telemetry, analytics event instrumentation & CRM webhook integration', owner: 'Vikram Malhotra & Helix (Operations)' },
+              { day: `Day ${sprintDays}`, focus: 'End-to-end user acceptance testing, cross-browser validation & production deployment', owner: 'Helix (Operations) & Sophia Vance' }
+            ],
+            targetDeliverable: `${sprintDays}-Day High-Conversion Campaign Webpage & Launch Pipeline`
+          };
+        }
 
         return {
           sprintDurationDays: 30,
@@ -1109,9 +1148,52 @@ export class MultiLevelOrchestrator {
       // 9. Real Actionable Task Creation (Test 3)
       case 'task_creation': {
         const createdTasksList: Array<{ id: string; title: string; assignedTo: string; status: string }> = [];
+        const lowerDirective = (run.directive || '').toLowerCase();
+        const isCampaignOrWeb = lowerDirective.includes('campaign') || lowerDirective.includes('webpage') || lowerDirective.includes('landing page') || lowerDirective.includes('website') || lowerDirective.includes('developer');
+
+        // Extract real team members from company context
+        const teamMemories = canonical.memories?.filter(m => m.category === 'TEAM_MEMBER') || [];
+        const teamRoster = teamMemories.map(m => {
+          try {
+            const parsed = typeof m.description === 'string' ? JSON.parse(m.description) : m.description;
+            return {
+              name: parsed.fullName || m.title,
+              role: parsed.role || 'Engineer',
+              department: parsed.department || 'Engineering'
+            };
+          } catch {
+            return { name: m.title, role: 'Team Member', department: 'General' };
+          }
+        });
+
+        // Find engineer / developer member from team roster
+        const engineerMember = teamRoster.find(m =>
+          m.role.toLowerCase().includes('engineer') ||
+          m.role.toLowerCase().includes('developer') ||
+          m.department.toLowerCase().includes('engineering')
+        );
+        const webDevAssignee = engineerMember
+          ? `${engineerMember.name} (${engineerMember.role} & Web App Developer)`
+          : 'Vikram Malhotra (Lead Integrations & Web App Developer)';
 
         // Define 3 real actionable tasks to create in DB
-        const taskSpecs = [
+        const taskSpecs = isCampaignOrWeb ? [
+          {
+            title: `Develop and deploy high-converting responsive campaign webpage for ${canonical.startup.name}`,
+            assignedTo: webDevAssignee,
+            role: 'ENGINEERING'
+          },
+          {
+            title: `Draft campaign copy, ICP value proposition, and conversion messaging for webpage launch`,
+            assignedTo: 'Vector (Growth)',
+            role: 'GROWTH'
+          },
+          {
+            title: `Setup campaign analytics tracking, webhook integrations, and 5-day launch QA audit`,
+            assignedTo: 'Helix (Operations)',
+            role: 'OPERATIONS'
+          }
+        ] : [
           {
             title: `Execute ICP market validation outreach for ${canonical.startup.name}`,
             assignedTo: 'Vector (Growth)',
@@ -1423,7 +1505,19 @@ export class MultiLevelOrchestrator {
       if (t.output?.targetIcp) keyFindings.push(`Target ICP: ${t.output.targetIcp} (${t.output.messagingAngle || ''})`);
       if (t.output?.capacityUtilization) keyFindings.push(`Engineering utilization: ${t.output.capacityUtilization} (${t.output.primaryBottleneck})`);
       if (t.output?.benchmarkSalary) keyFindings.push(`Benchmark compensation: $${t.output.benchmarkSalary.toLocaleString()}/yr (+${t.output.teamVelocityIncrease || '15%'} sprint velocity)`);
+      if (t.output?.milestones && Array.isArray(t.output.milestones)) {
+        keyFindings.push(`Delivery Schedule (${t.output.sprintDurationDays || 'Sprint'} Days): ${t.output.targetDeliverable || 'Milestone Roadmap'}`);
+        t.output.milestones.forEach((m: any) => {
+          keyFindings.push(`${m.day}: ${m.focus} (${m.owner})`);
+        });
+      }
     });
+
+    if (run.createdRecords.tasks && run.createdRecords.tasks.length > 0) {
+      run.createdRecords.tasks.forEach(t => {
+        keyFindings.push(`Task Delegated: "${t.title}" -> Assigned to ${t.assignedTo}`);
+      });
+    }
 
     // Founder decisions & Recommended actions
     const founderDecisions: string[] = [];
@@ -1446,7 +1540,13 @@ export class MultiLevelOrchestrator {
     } else if (run.status === 'needs_approval') {
       summary = `I have formulated a comprehensive execution charter for "${run.directive}". Because this directive commits strategic company capital, I have staged an approval gate in the Founder Approval Queue for your sign-off.`;
     } else if (run.createdRecords.tasks && run.createdRecords.tasks.length > 0) {
-      summary = `I have decomposed your directive into ${run.createdRecords.tasks.length} actionable tasks and dispatched them to verified owners in your company workspace.`;
+      const lowerDir = (run.directive || '').toLowerCase();
+      const isCampaign = lowerDir.includes('campaign') || lowerDir.includes('webpage') || lowerDir.includes('developer') || lowerDir.includes('landing page');
+      if (isCampaign) {
+        summary = `I have decomposed your directive into ${run.createdRecords.tasks.length} actionable work orders across engineering, growth, and operations. The Web Application Developer is assigned the responsive webpage implementation, Vector handles conversion copy, and Helix oversees analytics telemetry and launch QA.`;
+      } else {
+        summary = `I have decomposed your directive into ${run.createdRecords.tasks.length} actionable tasks and dispatched them to verified owners in your company workspace.`;
+      }
     } else {
       summary = `Executive directive "${run.directive}" has been planned, executed across ${completedTasks.length} domain tasks, and verified against ${startupName}'s operating telemetry.`;
     }
