@@ -105,7 +105,7 @@ const EXECUTIVE_DETAILS: Record<string, ExecutiveDetail> = {
     keyMetrics: [
       { label: 'Open Headcount', value: '2 Roles', trend: 'Approved' },
       { label: 'Time to Hire Target', value: '28 Days', trend: 'Benchmarked' },
-      { label: 'Hiring Budget', value: '$180,000', trend: 'Scoped' }
+      { label: 'Hiring Budget', value: '₹55,00,000', trend: 'Scoped' }
     ],
     sampleTasks: [
       'Formulate senior full-stack engineer technical scorecard',
@@ -208,12 +208,12 @@ const EXECUTIVE_DETAILS: Record<string, ExecutiveDetail> = {
     ],
     keyMetrics: [
       { label: 'Funding Stage', value: 'Pre-Seed', trend: 'Active' },
-      { label: 'Target Raise', value: '$1,000,000', trend: 'Planned' },
+      { label: 'Target Raise', value: '₹8,00,00,000', trend: 'Planned' },
       { label: 'Diligence Room', value: 'Ready', trend: 'Grounded in RAG' }
     ],
     sampleTasks: [
       'Index corporate pitch deck and financial plan in RAG',
-      'Model 15% SAFE dilution on $8M post-money cap',
+      'Model 15% SAFE dilution on ₹65 Cr post-money cap',
       'Prepare responses for technical due diligence queries'
     ]
   },
@@ -238,9 +238,9 @@ const EXECUTIVE_DETAILS: Record<string, ExecutiveDetail> = {
       { label: 'Audit Status', value: 'Enforcing', trend: 'Active' }
     ],
     sampleTasks: [
-      'Audit runway calculation: 245000 / 18500 = 13.2 months',
+      'Audit runway calculation: 7200000 / 800000 = 9.0 months',
       'Verify source citations for target ICP market claims',
-      'Trigger approval requirement for commitments > $10,000'
+      'Trigger approval requirement for commitments > ₹1,00,000'
     ]
   }
 };

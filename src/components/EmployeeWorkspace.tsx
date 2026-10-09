@@ -4,9 +4,220 @@ import {
   Users, CheckCircle2, Clock, Send, Sparkles, FileText,
   Shield, AlertCircle, ArrowRight, RefreshCw, Copy, Check,
   BookOpen, Lock, UserCheck, ChevronRight, Search, Filter,
-  Building2, Award, Eye, Edit3, Bot, RotateCcw
+  Building2, Award, Eye, Edit3, Bot, RotateCcw,
+  FolderKanban, CheckSquare, Calendar, ArrowUpRight, ChevronDown,
+  ChevronUp, AlertTriangle, CheckCircle, Target
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+
+interface DemoProjectTask {
+  id: string;
+  title: string;
+  description: string;
+  owner: string;
+  role: string;
+  priority: 'Urgent' | 'High' | 'Medium' | 'Low';
+  status: 'completed' | 'in_progress' | 'blocked' | 'upcoming';
+  dueDate: string;
+  dependencies: string[];
+}
+
+interface DemoMilestone {
+  id: string;
+  title: string;
+  status: 'completed' | 'in_progress' | 'upcoming';
+  targetDate: string;
+}
+
+interface DemoProject {
+  id: string;
+  title: string;
+  tagline: string;
+  businessObjective: string;
+  owner: string;
+  ownerRole: string;
+  ownerAvatar: string;
+  startDate: string;
+  targetDate: string;
+  progressPercent: number;
+  status: 'In Progress' | 'On Track' | 'Review';
+  domain: string;
+  nextAction: string;
+  milestones: DemoMilestone[];
+  tasks: DemoProjectTask[];
+}
+
+const DEMO_PROJECTS: DemoProject[] = [
+  {
+    id: 'proj_upi_onboarding',
+    title: 'UPI Payments & Merchant Onboarding',
+    tagline: 'Instant QR / VPA activation & automated compliance verification for Indian kiranas & SMEs',
+    businessObjective: 'Compress merchant onboarding TAT from 48 hours to under 15 minutes, with 99.9% UPI intent callback reliability and automated T+1 nodal settlement.',
+    owner: 'Rajesh Verma',
+    ownerRole: 'Lead Fintech Solutions Architect',
+    ownerAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+    startDate: '15 Sep 2026',
+    targetDate: '30 Oct 2026',
+    progressPercent: 68,
+    status: 'In Progress',
+    domain: 'Fintech & Payments',
+    nextAction: 'Execute load stress testing on ICICI/HDFC payment gateway fallback webhooks under 500 TPS to eliminate payment timeout drops.',
+    milestones: [
+      { id: 'm1_1', title: 'NPCI UPI 2.0 Spec Compliance & Intent URI flow', status: 'completed', targetDate: '20 Sep 2026' },
+      { id: 'm1_2', title: 'Aadhaar & PAN Instant OCR Verification via NSDL Sandbox', status: 'completed', targetDate: '28 Sep 2026' },
+      { id: 'm1_3', title: 'Automated T+1 Nodal Settlement & Webhook Recon', status: 'in_progress', targetDate: '18 Oct 2026' },
+      { id: 'm1_4', title: 'Production Pilot Rollout for 250 SME Merchants', status: 'upcoming', targetDate: '30 Oct 2026' }
+    ],
+    tasks: [
+      {
+        id: 'upi_t1',
+        title: 'Complete merchant onboarding flow review',
+        description: 'Analyze telemetry across mobile web registration steps. Identify friction points in GST certificate uploads and bank account validation.',
+        owner: 'Rajesh Verma',
+        role: 'Payments Engineering',
+        priority: 'High',
+        status: 'completed',
+        dueDate: '22 Sep 2026',
+        dependencies: ['None']
+      },
+      {
+        id: 'upi_t2',
+        title: 'Validate KYC document submission and verification',
+        description: 'Integrate DigiLocker OAuth & NSDL PAN validation APIs. Implement real-time fuzzy name matching against bank account records.',
+        owner: 'Priya Nair',
+        role: 'Compliance Lead',
+        priority: 'Urgent',
+        status: 'completed',
+        dueDate: '28 Sep 2026',
+        dependencies: ['Onboarding Review']
+      },
+      {
+        id: 'upi_t3',
+        title: 'Test UPI payment success and failure handling',
+        description: 'Simulate high-volume intent invocations, bank server timeouts (U30 error codes), and idempotent retry logic across PhonePe, Google Pay, and Paytm.',
+        owner: 'Rajesh Verma & Echo AI',
+        role: 'Backend Engineering',
+        priority: 'Urgent',
+        status: 'in_progress',
+        dueDate: '14 Oct 2026',
+        dependencies: ['KYC Document Pipeline']
+      },
+      {
+        id: 'upi_t4',
+        title: 'Review reconciliation and settlement reporting',
+        description: 'Build automated end-of-day T+1 settlement ledger for nodal accounts with automated fee withholding and GST invoice output.',
+        owner: 'Finance & Treasury Team',
+        role: 'Treasury Operations',
+        priority: 'High',
+        status: 'in_progress',
+        dueDate: '18 Oct 2026',
+        dependencies: ['UPI Payment Engine']
+      },
+      {
+        id: 'upi_t5',
+        title: 'Complete quality assurance for merchant activation',
+        description: 'Perform end-to-end sandbox signoff, pen-testing on webhook endpoints, and SLA validation before promoting to production kirana merchant pilot.',
+        owner: 'QA & Security Team',
+        role: 'Quality Assurance',
+        priority: 'Medium',
+        status: 'upcoming',
+        dueDate: '25 Oct 2026',
+        dependencies: ['Reconciliation & Settlement']
+      }
+    ]
+  },
+  {
+    id: 'proj_d2c_launch',
+    title: 'D2C E-commerce Launch in India',
+    tagline: 'Multi-warehouse digital storefront rollout across metro and Tier 2 cities in India',
+    businessObjective: 'Launch pan-India direct-to-consumer store with sub-3-day metro delivery, automated GST e-invoicing, and seamless multi-rail checkout.',
+    owner: 'Ananya Sharma',
+    ownerRole: 'Head of E-Commerce Operations',
+    ownerAvatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+    startDate: '01 Oct 2026',
+    targetDate: '15 Nov 2026',
+    progressPercent: 50,
+    status: 'In Progress',
+    domain: 'D2C Retail & Logistics',
+    nextAction: 'Validate automated GSTIN lookup and multi-state CGST/SGST vs IGST tax split rules with chartered accountant team.',
+    milestones: [
+      { id: 'm2_1', title: '150-SKU Master Catalog & Regional Inventory Sync', status: 'completed', targetDate: '05 Oct 2026' },
+      { id: 'm2_2', title: 'Multi-rail Payment Gateway Integration (UPI, Cards, COD)', status: 'completed', targetDate: '08 Oct 2026' },
+      { id: 'm2_3', title: 'Delhivery & BlueDart Automated Surface Logistics Integration', status: 'completed', targetDate: '12 Oct 2026' },
+      { id: 'm2_4', title: 'GST E-Invoice Generation & State-wise Tax Validation', status: 'in_progress', targetDate: '20 Oct 2026' },
+      { id: 'm2_5', title: 'Return & Refund Automated UPI Reverse Logistics Engine', status: 'upcoming', targetDate: '28 Oct 2026' },
+      { id: 'm2_6', title: 'Diwali Festive Launch Campaign & Creator Seeding', status: 'upcoming', targetDate: '10 Nov 2026' }
+    ],
+    tasks: [
+      {
+        id: 'd2c_t1',
+        title: 'Product catalogue readiness & multi-warehouse inventory sync',
+        description: 'Complete high-resolution product imagery, HSN classification, and real-time inventory feed across Bhiwandi and Bangalore distribution hubs.',
+        owner: 'Ananya Sharma',
+        role: 'Catalog & Merchandising',
+        priority: 'High',
+        status: 'completed',
+        dueDate: '05 Oct 2026',
+        dependencies: ['None']
+      },
+      {
+        id: 'd2c_t2',
+        title: 'Checkout and payment integration',
+        description: 'Integrate Razorpay and Cashfree multi-rail checkout with 1-click UPI intent, credit/debit card tokenization, and cash-on-delivery OTP verification.',
+        owner: 'Tech Lead & Echo AI',
+        role: 'Core Engineering',
+        priority: 'Urgent',
+        status: 'completed',
+        dueDate: '08 Oct 2026',
+        dependencies: ['Catalog Readiness']
+      },
+      {
+        id: 'd2c_t3',
+        title: 'Shipping and logistics coordination',
+        description: 'Configure automated shipping label generation and reverse-pickup APIs with Delhivery and BlueDart surface logistics networks.',
+        owner: 'Logistics Operations',
+        role: 'Supply Chain Ops',
+        priority: 'High',
+        status: 'completed',
+        dueDate: '12 Oct 2026',
+        dependencies: ['Checkout Pipeline']
+      },
+      {
+        id: 'd2c_t4',
+        title: 'GST invoice generation and validation',
+        description: 'Implement automated B2C & B2B GST tax invoices with state-wise IGST / CGST / SGST split and QR code generation for IRN compliance.',
+        owner: 'Tax & Finance Team',
+        role: 'Finance Operations',
+        priority: 'Urgent',
+        status: 'in_progress',
+        dueDate: '20 Oct 2026',
+        dependencies: ['Payment Gateway']
+      },
+      {
+        id: 'd2c_t5',
+        title: 'Return and refund workflow testing',
+        description: 'Test doorstep QC return validation, automated AWB generation, and instant UPI refund trigger via nodal escrow upon courier scan.',
+        owner: 'Customer Experience Team',
+        role: 'Customer Support',
+        priority: 'Medium',
+        status: 'upcoming',
+        dueDate: '28 Oct 2026',
+        dependencies: ['GST Pipeline']
+      },
+      {
+        id: 'd2c_t6',
+        title: 'Launch readiness and marketing coordination',
+        description: 'Finalize Diwali festive promotional discount codes, influencer gifting tracking links, and performance marketing landing page speed audit.',
+        owner: 'Vector AI & Growth Lead',
+        role: 'Growth Marketing',
+        priority: 'Medium',
+        status: 'upcoming',
+        dueDate: '05 Nov 2026',
+        dependencies: ['Logistics Readiness']
+      }
+    ]
+  }
+];
 
 interface EmployeeWorkspaceProps {
   userRole?: string;
@@ -58,9 +269,14 @@ export default function EmployeeWorkspace({
     agentRole: string;
   } | null>(null);
 
+  const [activeWorkspaceView, setActiveWorkspaceView] = useState<'projects' | 'tasks'>('projects');
+  const [expandedProjectId, setExpandedProjectId] = useState<string | null>('proj_upi_onboarding');
+  const [projectTaskFilter, setProjectTaskFilter] = useState<string>('ALL');
+
   useEffect(() => {
     if (initialTaskId) {
       setSelectedTaskId(initialTaskId);
+      setActiveWorkspaceView('tasks');
     }
   }, [initialTaskId]);
 
@@ -363,6 +579,334 @@ export default function EmployeeWorkspace({
         </div>
       )}
 
+      {/* ── Sub-navigation View Toggle ─────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setActiveWorkspaceView('projects')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+              activeWorkspaceView === 'projects'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <FolderKanban className="w-3.5 h-3.5" />
+            <span>Strategic Projects (2 Initiatives)</span>
+          </button>
+          <button
+            onClick={() => setActiveWorkspaceView('tasks')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+              activeWorkspaceView === 'tasks'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            <span>Task Execution Studio (AI Co-Pilot)</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>2 Active Initiatives • 11 Tracked Deliverables</span>
+        </div>
+      </div>
+
+      {/* ── View 1: Strategic Demonstration Projects ─────────────────────── */}
+      {activeWorkspaceView === 'projects' && (
+        <div className="space-y-8 animate-fade-in">
+          {/* Header Description */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                  Startup Operations Portfolio
+                </span>
+                <span className="text-xs text-slate-400 font-mono">•</span>
+                <span className="text-xs text-slate-500 font-medium">India Market Execution Sprints</span>
+              </div>
+              <h2 className="text-lg font-bold text-slate-900">
+                Strategic Initiatives & Domain Progress
+              </h2>
+              <p className="text-xs text-slate-500 max-w-2xl leading-relaxed">
+                Audited operational roadmaps, milestone tracking, and task execution for core product delivery.
+              </p>
+            </div>
+
+            {/* Quick Filter */}
+            <div className="flex items-center gap-1.5 self-start md:self-center bg-slate-100 p-1 rounded-xl text-xs">
+              {['ALL', 'completed', 'in_progress', 'upcoming'].map((filterKey) => (
+                <button
+                  key={filterKey}
+                  onClick={() => setProjectTaskFilter(filterKey)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono uppercase tracking-wider font-semibold transition-all cursor-pointer ${
+                    projectTaskFilter === filterKey
+                      ? 'bg-white text-slate-900 shadow-xs font-bold'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  {filterKey.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Render the 2 Demo Projects */}
+          <div className="space-y-6">
+            {DEMO_PROJECTS.map((project) => {
+              const isExpanded = expandedProjectId === project.id;
+              const filteredTasks = project.tasks.filter((t) => {
+                if (projectTaskFilter === 'ALL') return true;
+                return t.status === projectTaskFilter;
+              });
+
+              const completedTasksCount = project.tasks.filter(t => t.status === 'completed').length;
+              const inProgressTasksCount = project.tasks.filter(t => t.status === 'in_progress').length;
+              const upcomingTasksCount = project.tasks.filter(t => t.status === 'upcoming').length;
+
+              return (
+                <div
+                  key={project.id}
+                  className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-xs transition-all hover:border-slate-300"
+                >
+                  {/* Project Summary Header */}
+                  <div className="p-6 space-y-5">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                      <div className="space-y-1.5 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                            {project.domain}
+                          </span>
+                          <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            {project.status}
+                          </span>
+                          <span className="text-xs text-slate-400 font-mono flex items-center gap-1 ml-auto md:ml-0">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {project.startDate} – {project.targetDate}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                          {project.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 font-sans leading-relaxed">
+                          {project.tagline}
+                        </p>
+                      </div>
+
+                      {/* Owner Card */}
+                      <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 shrink-0 self-start">
+                        <img
+                          src={project.ownerAvatar}
+                          alt={project.owner}
+                          className="w-10 h-10 rounded-xl object-cover ring-1 ring-slate-200"
+                        />
+                        <div className="text-left">
+                          <div className="text-xs font-bold text-slate-900">{project.owner}</div>
+                          <div className="text-[10px] text-slate-500 font-mono">{project.ownerRole}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Business Objective Callout */}
+                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                      <div className="flex items-start gap-2">
+                        <Target className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-semibold text-slate-900">Business Objective: </span>
+                          <span className="text-slate-600">{project.businessObjective}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar & Stat Badges */}
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-xs font-semibold">
+                        <span className="text-slate-600 font-mono text-[11px] uppercase tracking-wider">
+                          Overall Progress ({completedTasksCount}/{project.tasks.length} tasks completed)
+                        </span>
+                        <span className="text-slate-900 font-mono font-bold text-sm">
+                          {project.progressPercent}%
+                        </span>
+                      </div>
+                      <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200/50">
+                        <div
+                          className="h-full rounded-full bg-slate-900 transition-all duration-500"
+                          style={{ width: `${project.progressPercent}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 pt-1 text-[11px] font-mono text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          {completedTasksCount} Done
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                          {inProgressTasksCount} In Progress
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-slate-300" />
+                          {upcomingTasksCount} Upcoming
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Next Immediate Action */}
+                    <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs flex items-start gap-2.5">
+                      <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="space-y-0.5 flex-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-amber-800 block">
+                          Next Critical Action
+                        </span>
+                        <p className="text-slate-800 font-medium">
+                          {project.nextAction}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Milestones Horizontal Row */}
+                    <div className="space-y-2 pt-1">
+                      <div className="text-[10px] uppercase font-mono tracking-wider font-bold text-slate-400">
+                        Target Milestones
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        {project.milestones.map((m, idx) => (
+                          <div
+                            key={m.id}
+                            className={`p-2.5 rounded-xl border text-xs space-y-1 transition-all ${
+                              m.status === 'completed'
+                                ? 'bg-emerald-50/60 border-emerald-200/80 text-slate-900'
+                                : m.status === 'in_progress'
+                                  ? 'bg-blue-50/60 border-blue-200/80 text-slate-900 ring-1 ring-blue-400/20'
+                                  : 'bg-slate-50 border-slate-200 text-slate-500'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between text-[10px] font-mono">
+                              <span className="font-semibold text-slate-400">M0{idx + 1}</span>
+                              <span className={`px-1.5 py-0.5 rounded font-semibold ${
+                                m.status === 'completed' ? 'text-emerald-700 bg-emerald-100/60' :
+                                m.status === 'in_progress' ? 'text-blue-700 bg-blue-100/60' : 'text-slate-500 bg-slate-200/60'
+                              }`}>
+                                {m.status === 'completed' ? 'Completed' : m.status === 'in_progress' ? 'In Progress' : 'Upcoming'}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-medium leading-tight">
+                              {m.title}
+                            </p>
+                            <span className="text-[10px] text-slate-400 font-mono block">
+                              {m.targetDate}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tasks Table Header & Expander Toggle */}
+                  <div className="border-t border-slate-200 bg-slate-50/50 px-6 py-3 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 font-mono uppercase tracking-wider flex items-center gap-2">
+                      <CheckSquare className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Detailed Task Breakdown ({filteredTasks.length} items)</span>
+                    </span>
+                    <button
+                      onClick={() => setExpandedProjectId(isExpanded ? null : project.id)}
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <span>{isExpanded ? 'Collapse Tasks' : 'Expand Tasks'}</span>
+                      {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {/* Structured Task List / Table */}
+                  {isExpanded && (
+                    <div className="border-t border-slate-200 overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50 text-[10px] font-mono uppercase tracking-wider text-slate-500">
+                            <th className="py-2.5 px-6 font-semibold">Task & Details</th>
+                            <th className="py-2.5 px-4 font-semibold">Priority</th>
+                            <th className="py-2.5 px-4 font-semibold">Status</th>
+                            <th className="py-2.5 px-4 font-semibold">Owner</th>
+                            <th className="py-2.5 px-4 font-semibold">Due Date</th>
+                            <th className="py-2.5 px-4 font-semibold">Dependencies</th>
+                            <th className="py-2.5 px-6 font-semibold text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filteredTasks.map((task) => (
+                            <tr key={task.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="py-3 px-6 max-w-sm">
+                                <div className="font-semibold text-slate-900">{task.title}</div>
+                                <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
+                                  {task.description}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase font-semibold ${
+                                  task.priority === 'Urgent'
+                                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    : task.priority === 'High'
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                }`}>
+                                  {task.priority}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono uppercase font-semibold flex items-center gap-1 w-max ${
+                                  task.status === 'completed'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : task.status === 'in_progress'
+                                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                }`}>
+                                  {task.status === 'completed' && <CheckCircle className="w-3 h-3 text-emerald-600" />}
+                                  {task.status === 'in_progress' && <Clock className="w-3 h-3 text-blue-600" />}
+                                  {task.status === 'upcoming' && <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />}
+                                  {task.status.replace('_', ' ')}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                <div className="font-medium text-slate-900">{task.owner}</div>
+                                <div className="text-[10px] text-slate-400 font-mono">{task.role}</div>
+                              </td>
+                              <td className="py-3 px-4 font-mono text-[11px] text-slate-600 whitespace-nowrap">
+                                {task.dueDate}
+                              </td>
+                              <td className="py-3 px-4 whitespace-nowrap">
+                                {task.dependencies.map((dep, dIdx) => (
+                                  <span key={dIdx} className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                    {dep}
+                                  </span>
+                                ))}
+                              </td>
+                              <td className="py-3 px-6 text-right whitespace-nowrap">
+                                <button
+                                  onClick={() => setActiveWorkspaceView('tasks')}
+                                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-900 cursor-pointer transition-all inline-flex items-center gap-1 shadow-2xs"
+                                >
+                                  <span>Work in Studio</span>
+                                  <ArrowUpRight className="w-3 h-3" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── View 2: Task Execution Studio (AI Co-Pilot) ───────────────── */}
+      {activeWorkspaceView === 'tasks' && (
+        <div className="space-y-6">
       {/* ── Companion AI Executive Banner ─────────────────────────────── */}
       <div 
         className="p-6 rounded-2xl relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
@@ -1048,6 +1592,8 @@ export default function EmployeeWorkspace({
         </div>
 
       </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,9 +19,11 @@ import {
   Ban,
   ShieldCheck,
   Bot,
-  UserMinus
+  UserMinus,
+  Network
 } from 'lucide-react';
 import Section from './Section';
+import OrgHierarchyFlow, { CORE_DOMAINS } from './OrgHierarchyFlow';
 
 const ASSIGNABLE_ROLES = [
   { value: 'ADMIN',      label: 'Admin',      hint: 'Full access to every area, agent and approval.' },
@@ -40,7 +42,7 @@ const AI_EXECUTIVES = [
     department: 'Executive Office',
     mandate: 'Strategic orchestration, council synthesis, and quarterly milestone execution.',
     autonomy: 'Tier 1 Orchestrator',
-    guardrail: '$25,000 Cap'
+    guardrail: '₹2,50,000 Cap'
   },
   {
     id: 'aura',
@@ -49,7 +51,7 @@ const AI_EXECUTIVES = [
     department: 'Marketing & Brand',
     mandate: 'Brand positioning, competitive benchmarking, and top-of-funnel customer narrative.',
     autonomy: 'Autonomous GTM',
-    guardrail: '$10,000 Cap'
+    guardrail: '₹1,00,000 Cap'
   },
   {
     id: 'echo',
@@ -58,7 +60,7 @@ const AI_EXECUTIVES = [
     department: 'Engineering & Tech',
     mandate: 'System architecture, technical security, and scalable infrastructure.',
     autonomy: 'Autonomous Architecture',
-    guardrail: '$15,000 Cap'
+    guardrail: '₹1,50,000 Cap'
   },
   {
     id: 'vector',
@@ -67,7 +69,7 @@ const AI_EXECUTIVES = [
     department: 'Operations',
     mandate: 'Operational cadence, multi-agent sprint execution, and SOC-2 compliance.',
     autonomy: 'Autonomous Sprints',
-    guardrail: '$15,000 Cap'
+    guardrail: '₹1,50,000 Cap'
   },
   {
     id: 'nexus',
@@ -85,7 +87,7 @@ const AI_EXECUTIVES = [
     department: 'Treasury & Finance',
     mandate: 'Cash runway forecasting, investor pitch scripts, and cap table scenario stress testing.',
     autonomy: 'Treasury Modeling',
-    guardrail: '$50,000 Cap'
+    guardrail: '₹5,00,000 Cap'
   },
   {
     id: 'apex',
@@ -94,7 +96,7 @@ const AI_EXECUTIVES = [
     department: 'Sales & Growth',
     mandate: 'CAC payback modeling, conversion funnel optimization, and commercial contracts.',
     autonomy: 'Autonomous Growth',
-    guardrail: '$10,000 Cap'
+    guardrail: '₹1,00,000 Cap'
   },
   {
     id: 'sentry',
@@ -145,7 +147,7 @@ export default function PeopleDirectory({
   onResendInvitation,
   onRemoveMembership,
 }: PeopleDirectoryProps) {
-  const [activeTab, setActiveTab] = useState<'humans' | 'agents'>('humans');
+  const [activeTab, setActiveTab] = useState<'hierarchy' | 'humans' | 'agents'>('hierarchy');
 
   // Invite modal state
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -187,8 +189,11 @@ export default function PeopleDirectory({
     setError(null);
   };
 
-  const handleOpenModal = () => {
+  const handleOpenModal = (prefillDept?: string) => {
     resetForm();
+    if (prefillDept) {
+      setDepartment(prefillDept);
+    }
     setModalOpen(true);
   };
 
@@ -289,7 +294,7 @@ export default function PeopleDirectory({
           </p>
         </div>
 
-        {/* Tab Switcher: Human Team vs AI Executives */}
+        {/* Tab Switcher: Org Hierarchy vs Human Roster vs AI Executives */}
         <div 
           className="flex items-center p-1 rounded-xl text-xs font-semibold self-start md:self-center"
           style={{
@@ -298,8 +303,23 @@ export default function PeopleDirectory({
           }}
         >
           <button
+            onClick={() => setActiveTab('hierarchy')}
+            id="tab-org-hierarchy-btn"
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer"
+            style={{
+              backgroundColor: activeTab === 'hierarchy' ? 'var(--c-surface)' : 'transparent',
+              color: activeTab === 'hierarchy' ? 'var(--c-fg)' : 'var(--c-muted)',
+              fontWeight: activeTab === 'hierarchy' ? 700 : 500,
+              boxShadow: activeTab === 'hierarchy' ? 'var(--shadow-sm)' : 'none'
+            }}
+          >
+            <Network className="w-3.5 h-3.5" />
+            <span>Org Hierarchy (React Flow)</span>
+          </button>
+          <button
             onClick={() => setActiveTab('humans')}
-            className="px-4 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer"
+            id="tab-directory-roster-btn"
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer"
             style={{
               backgroundColor: activeTab === 'humans' ? 'var(--c-surface)' : 'transparent',
               color: activeTab === 'humans' ? 'var(--c-fg)' : 'var(--c-muted)',
@@ -308,11 +328,12 @@ export default function PeopleDirectory({
             }}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Human Team ({teamMembers.length + 1})</span>
+            <span>Directory Roster ({teamMembers.length + 1})</span>
           </button>
           <button
             onClick={() => setActiveTab('agents')}
-            className="px-4 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer"
+            id="tab-ai-executives-btn"
+            className="px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 cursor-pointer"
             style={{
               backgroundColor: activeTab === 'agents' ? 'var(--c-surface)' : 'transparent',
               color: activeTab === 'agents' ? 'var(--c-fg)' : 'var(--c-muted)',
@@ -321,12 +342,54 @@ export default function PeopleDirectory({
             }}
           >
             <Bot className="w-3.5 h-3.5" />
-            <span>AI Executive Suite (8)</span>
+            <span>AI Executives (8)</span>
           </button>
         </div>
       </Section>
 
-      {/* ── TAB 1: HUMAN TEAM MEMBERS & ACCOUNTS ───────────────────────────── */}
+      {/* ── TAB 1: INTERACTIVE REACT FLOW ORG HIERARCHY ──────────────────── */}
+      {activeTab === 'hierarchy' && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+            <div>
+              <span className="text-xs font-mono uppercase tracking-widest font-bold" style={{ color: 'var(--c-muted)' }}>
+                System Organizational Tree
+              </span>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--c-muted)' }}>
+                Clear structural hierarchy from Founder & CEO down to core operational domains and reporting team members.
+              </p>
+            </div>
+            {onAddMember && (
+              <button
+                onClick={() => handleOpenModal()}
+                id="hierarchy-top-add-member-btn"
+                className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 self-start sm:self-center transition-all shadow-sm cursor-pointer hover:opacity-90"
+                style={{
+                  backgroundColor: 'var(--c-fg)',
+                  color: 'var(--c-bg)'
+                }}
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>+ Add Team Member</span>
+              </button>
+            )}
+          </div>
+
+          <OrgHierarchyFlow
+            founder={{
+              name: founderName,
+              email: founderEmail,
+              role: founderRole
+            }}
+            teamMembers={teamMembers}
+            onAddMemberClick={(dept) => handleOpenModal(dept)}
+            onRemoveMember={onRemoveMember}
+            companyName={companyName}
+          />
+        </div>
+      )}
+
+      {/* ── TAB 2: HUMAN TEAM MEMBERS & ACCOUNTS ───────────────────────────── */}
       {activeTab === 'humans' && (
         <div className="space-y-8 animate-fade-in">
           
@@ -887,8 +950,10 @@ export default function PeopleDirectory({
               </div>
 
               <div>
-                <label className="text-[10px] uppercase font-mono font-bold block mb-1" style={{ color: 'var(--c-muted)' }}>Role</label>
-                <select
+                <label className="text-[10px] uppercase font-mono font-bold block mb-1" style={{ color: 'var(--c-muted)' }}>Role Title</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Lead Integrations Engineer, Growth Lead, Solutions Architect"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl text-xs outline-none"
@@ -898,19 +963,17 @@ export default function PeopleDirectory({
                     color: 'var(--c-fg)'
                   }}
                   required
-                >
-                  <option value="">Select a role…</option>
-                  {ASSIGNABLE_ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
-                <label className="text-[10px] uppercase font-mono font-bold block mb-1" style={{ color: 'var(--c-muted)' }}>Department</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Domain / Department</label>
+                  <span className="text-[10px] font-mono text-slate-400">Branches under Founder</span>
+                </div>
                 <input
                   type="text"
-                  placeholder="e.g., Engineering, Growth, Finance"
+                  placeholder="Select domain below or enter custom department"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl text-xs outline-none"
@@ -921,6 +984,27 @@ export default function PeopleDirectory({
                   }}
                   required
                 />
+                
+                {/* Domain Quick Preset Selector */}
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {CORE_DOMAINS.map((d) => {
+                    const isSelected = department === d.label;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => setDepartment(d.label)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs' 
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3" style={{ borderTop: '1px solid var(--c-border)' }}>

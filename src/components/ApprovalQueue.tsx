@@ -14,6 +14,7 @@ import {
   Search, ExternalLink, Scale, Sparkles, RotateCcw
 } from 'lucide-react';
 import Section from './Section';
+import { formatINR, formatCompactINR } from '../utils/currency';
 
 interface ApprovalQueueProps {
   approvals: Deliverable[];
@@ -25,8 +26,8 @@ interface ApprovalQueueProps {
 export default function ApprovalQueue({
   approvals,
   onReviewItem,
-  currentCash = 250000,
-  currentBurn = 15000
+  currentCash = 7200000,
+  currentBurn = 800000
 }: ApprovalQueueProps) {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('ALL');
@@ -318,13 +319,13 @@ export default function ApprovalQueue({
                 {/* Impact (2 cols) */}
                 <div className="md:col-span-2 text-xs font-mono">
                   {cost !== 0 ? (
-                    <span className={`font-bold ${cost > 0 ? 'text-emerald-500' : ''}`} style={{ color: cost < 0 ? 'var(--c-fg)' : undefined }}>
-                      {cost > 0 ? '+' : ''}${Math.abs(cost).toLocaleString()}
+                    <span className={`font-bold ${cost > 0 ? 'text-emerald-600' : 'text-slate-800'}`}>
+                      {cost > 0 ? `+${formatINR(cost)}` : `-${formatINR(Math.abs(cost))}`}
                     </span>
                   ) : (
-                    <span style={{ color: 'var(--c-muted)' }}>Neutral ($0)</span>
+                    <span className="text-slate-400">Neutral (₹0)</span>
                   )}
-                  <span className="text-[10px] block font-sans" style={{ color: 'var(--c-muted)' }}>Total capital shift</span>
+                  <span className="text-[10px] block font-sans text-slate-500">Treasury impact</span>
                 </div>
 
                 {/* Risk / Reversibility (2 cols) */}
@@ -556,9 +557,9 @@ export default function ApprovalQueue({
                   >
                     <span className="text-[9px] block font-mono uppercase font-bold" style={{ color: 'var(--c-muted)' }}>Cash Balance</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>${(currentCash / 1000).toFixed(0)}k</span>
+                      <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>{formatCompactINR(currentCash)}</span>
                       <ArrowRight className="w-3 h-3 opacity-50" style={{ color: 'var(--c-muted)' }} />
-                      <span className="text-xs font-mono font-bold" style={{ color: 'var(--c-fg)' }}>${(stateProjection.projectedCash / 1000).toFixed(0)}k</span>
+                      <span className="text-xs font-mono font-bold" style={{ color: 'var(--c-fg)' }}>{formatCompactINR(stateProjection.projectedCash)}</span>
                     </div>
                   </div>
 
@@ -568,9 +569,9 @@ export default function ApprovalQueue({
                   >
                     <span className="text-[9px] block font-mono uppercase font-bold" style={{ color: 'var(--c-muted)' }}>Monthly Burn</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>${(currentBurn / 1000).toFixed(0)}k</span>
+                      <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>{formatCompactINR(currentBurn)}</span>
                       <ArrowRight className="w-3 h-3 opacity-50" style={{ color: 'var(--c-muted)' }} />
-                      <span className="text-xs font-mono font-bold" style={{ color: 'var(--c-fg)' }}>${(stateProjection.projectedBurn / 1000).toFixed(0)}k</span>
+                      <span className="text-xs font-mono font-bold" style={{ color: 'var(--c-fg)' }}>{formatCompactINR(stateProjection.projectedBurn)}</span>
                     </div>
                   </div>
 
@@ -629,10 +630,10 @@ export default function ApprovalQueue({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold text-amber-500 uppercase block mb-1">Adjusted Budget (USD)</label>
+                      <label className="text-[10px] font-bold text-amber-500 uppercase block mb-1">Adjusted Budget (₹ INR)</label>
                       <input
                         type="number"
-                        placeholder="e.g. 115000"
+                        placeholder="e.g. 185000"
                         value={customCost}
                         onChange={(e) => setCustomCost(e.target.value)}
                         className="w-full px-3 py-1.5 rounded-lg text-xs font-mono outline-none"

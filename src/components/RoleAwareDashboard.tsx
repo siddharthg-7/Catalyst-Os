@@ -401,7 +401,7 @@ export default function RoleAwareDashboard({
               </div>
               <div className="p-3.5 rounded-xl" style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}>
                 <div className="text-[10px] font-mono uppercase text-slate-400">Disbursement Cap</div>
-                <div className="text-lg font-bold font-mono mt-1 text-rose-500">$10,000</div>
+                <div className="text-lg font-bold font-mono mt-1 text-rose-500">₹1,00,000</div>
                 <div className="text-[10px] text-slate-500">Requires dual verification</div>
               </div>
             </div>

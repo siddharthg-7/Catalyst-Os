@@ -264,7 +264,7 @@ export default function SettingsModal({
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium text-slate-900">Multi-Agent Autonomy Threshold</div>
-                      <div className="text-slate-500 text-[11px]">Require human sign-off for actions exceeding $10,000</div>
+                      <div className="text-slate-500 text-[11px]">Require human sign-off for actions exceeding ₹1,00,000</div>
                     </div>
                     <span className="text-emerald-600 font-medium text-xs flex items-center gap-1">
                       <Check className="w-3.5 h-3.5" /> Enforced

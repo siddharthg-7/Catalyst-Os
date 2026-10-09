@@ -15,6 +15,7 @@ import KnowledgeBase from './components/KnowledgeBase';
 import DecisionLog from './components/DecisionLog';
 import ScenarioSimulator from './components/ScenarioSimulator';
 import PeopleDirectory from './components/PeopleDirectory';
+import { INITIAL_DEMO_TEAM_MEMBERS } from './components/OrgHierarchyFlow';
 import AcceptInvitation from './components/AcceptInvitation';
 import EmployeeWorkspace from './components/EmployeeWorkspace';
 import ExecutiveCouncilWorkspace from './components/ExecutiveCouncilWorkspace';
@@ -365,11 +366,14 @@ export default function App() {
         const u = JSON.parse(savedUserStr);
         if (u?.id) {
           const cached = localStorage.getItem(`catalystos_team_${u.id}`);
-          if (cached) return JSON.parse(cached);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
         }
       }
     } catch {}
-    return [];
+    return INITIAL_DEMO_TEAM_MEMBERS;
   });
 
   // P1 Task 8 — accounts with real access (Membership) and pending invitations.
@@ -1402,7 +1406,7 @@ export default function App() {
                         {section.items.map(({ id, label, Icon, badge, badgeColor }) => (
                           <button
                             key={id}
-                            onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
+                            onClick={() => { handleTabChange(id as any); setMobileMenuOpen(false); }}
                             className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors text-left ${
                               activeTab === id
                                 ? 'bg-indigo-50 text-indigo-700 font-semibold'

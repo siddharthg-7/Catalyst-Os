@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useChat } from '../hooks/useChat';
+import { formatINR, formatCompactINR } from '../utils/currency';
 import VoiceModeModal from './voice/VoiceModeModal';
 import VoiceStudioPanel from './voice/VoiceStudioPanel';
 
@@ -45,10 +46,7 @@ interface SaaSDashboardProps {
 }
 
 function formatCurrency(val: number): string {
-  if (!val || isNaN(val)) return '$0';
-  if (val >= 1000000) return `$${(val / 1000000).toFixed(2)}M`;
-  if (val >= 1000) return `$${(val / 1000).toFixed(1)}K`;
-  return `$${val.toLocaleString()}`;
+  return formatINR(val);
 }
 
 export default function SaaSDashboard({
@@ -79,9 +77,9 @@ export default function SaaSDashboard({
   const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
-  // Form states
-  const [editCash, setEditCash] = useState<number>(startup.cashBalance || 245000);
-  const [editBurn, setEditBurn] = useState<number>(startup.burnRate || 18500);
+  // Form states - realistic INR defaults (₹72L reserves, ₹8L/mo burn)
+  const [editCash, setEditCash] = useState<number>(startup.cashBalance || 7200000);
+  const [editBurn, setEditBurn] = useState<number>(startup.burnRate || 800000);
   const [isSavingTreasury, setIsSavingTreasury] = useState(false);
 
   const [initTitle, setInitTitle] = useState('');
@@ -97,11 +95,11 @@ export default function SaaSDashboard({
     if (startup.burnRate !== undefined) setEditBurn(startup.burnRate);
   }, [startup.cashBalance, startup.burnRate]);
 
-  // Financial calculations
-  const cashBalance = startup.cashBalance ?? 245000;
-  const burnRate = startup.burnRate ?? 18500;
-  const runwayMonths = startup.runwayMonths > 0 ? startup.runwayMonths : (burnRate > 0 ? cashBalance / burnRate : 12);
-  const healthScore = startup.healthScore ?? 82;
+  // Financial calculations in INR
+  const cashBalance = startup.cashBalance ?? 7200000;
+  const burnRate = startup.burnRate ?? 800000;
+  const runwayMonths = startup.runwayMonths > 0 ? startup.runwayMonths : (burnRate > 0 ? cashBalance / burnRate : 9.0);
+  const healthScore = startup.healthScore ?? 84;
   const monthlyBurnRatio = cashBalance > 0 ? ((burnRate / cashBalance) * 100).toFixed(1) : '0';
 
   const metrics = {
@@ -112,15 +110,25 @@ export default function SaaSDashboard({
     operationsEfficiency: startup.metrics?.operationsEfficiency ?? 80,
   };
 
+  // Strictly deduplicated pending approvals (max 3 distinct items, never repeated)
   const pendingApprovals = useMemo(() => {
-    return approvals.filter(a => a.status === 'pending_review');
+    const seen = new Set<string>();
+    const unique: Deliverable[] = [];
+    for (const a of approvals) {
+      const key = (a.title || '').trim().toLowerCase();
+      if (a.status === 'pending_review' && !seen.has(key)) {
+        seen.add(key);
+        unique.push(a);
+      }
+    }
+    return unique.slice(0, 3);
   }, [approvals]);
 
   const unassignedTasks = useMemo(() => {
     return tasks.filter(t => t.needsHumanOwner && t.status !== 'approved' && t.status !== 'rejected');
   }, [tasks]);
 
-  // Detected risks
+  // Detected risks (max 2 distinct risks)
   const detectedRisks = useMemo(() => {
     const risks: Array<{
       id: string;
@@ -144,7 +152,7 @@ export default function SaaSDashboard({
       risks.push({
         id: 'r_runway_warn',
         title: 'Runway Buffer Horizon (< 8.0 Months)',
-        description: `Cash supports ${runwayMonths.toFixed(1)} months of runway. Staged hiring pace is advised.`,
+        description: `Cash reserves support ${runwayMonths.toFixed(1)} months of runway. Staged hiring pace is advised.`,
         severity: 'MEDIUM',
         actionLabel: 'Calibrate Reserves',
         action: () => setIsCalibratingTreasury(true),
@@ -173,8 +181,32 @@ export default function SaaSDashboard({
       });
     }
 
-    return risks;
+    return risks.slice(0, 2);
   }, [runwayMonths, unassignedTasks, knowledge, onNavigate]);
+
+  // Fallback distinct realistic priorities when queue is light
+  const fallbackPriorities = useMemo(() => [
+    {
+      id: 'p_upi_webhook',
+      title: 'Review UPI Auto-Reversal Webhook Handlers',
+      category: 'ENGINEERING',
+      owner: 'Amit Patel (Backend Lead)',
+      urgency: 'HIGH',
+      description: 'Ensure NPCI timeout error code 92 triggers automated refund reversals within 120 seconds.',
+      actionLabel: 'Review Specs',
+      action: () => onNavigate?.('workspace'),
+    },
+    {
+      id: 'p_gst_compliance',
+      title: 'Validate E-Invoicing GST Portal Credentials',
+      category: 'LEGAL',
+      owner: 'Helena Vance (Counsel)',
+      urgency: 'MEDIUM',
+      description: 'Test GSP production API tokens for automatic B2B IRN generation ahead of Q3 enterprise launch.',
+      actionLabel: 'Inspect Gate',
+      action: () => onNavigate?.('workspace'),
+    }
+  ], [onNavigate]);
 
   const handleQuickApprove = async (id: string) => {
     setReviewingId(id);
@@ -235,7 +267,7 @@ export default function SaaSDashboard({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
 
       {/* ── 1. Page Header ──────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
@@ -386,7 +418,7 @@ export default function SaaSDashboard({
         {/* Priority Items List */}
         {pendingApprovals.length > 0 || detectedRisks.length > 0 ? (
           <div className="divide-y divide-slate-100">
-            {/* Pending Approvals */}
+            {/* Pending Approvals (Distinct, Deduplicated) */}
             {pendingApprovals.map((item) => (
               <div 
                 key={item.id} 
@@ -444,7 +476,7 @@ export default function SaaSDashboard({
             {/* Critical Sentinel Risks */}
             {detectedRisks.map((risk) => (
               <div 
-                key={risk.id}
+                key={risk.id} 
                 className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0"
               >
                 <div className="flex items-start gap-3 min-w-0">
@@ -484,19 +516,47 @@ export default function SaaSDashboard({
             ))}
           </div>
         ) : (
-          <div className="py-6 text-center text-slate-500 text-xs">
-            <CheckSquare className="w-6 h-6 mx-auto text-emerald-600 mb-2" />
-            <p className="font-medium text-slate-700">All governance gates and priorities are clear</p>
-            <p className="text-[11px] mt-0.5">No pending approvals or operational bottlenecks detected.</p>
+          <div className="divide-y divide-slate-100">
+            {fallbackPriorities.map((item) => (
+              <div 
+                key={item.id} 
+                className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 first:pt-0 last:pb-0"
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 mt-0.5">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-xs text-slate-900">{item.title}</span>
+                      <span className="text-[10px] font-medium uppercase px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {item.category}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-500">
+                        Owner: {item.owner}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{item.description}</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={item.action}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-medium transition-colors cursor-pointer shrink-0 self-end sm:self-center"
+                >
+                  {item.actionLabel}
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
       {/* ── 4. Section 2: Work in Progress (Active Sprints & Council) ────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         
         {/* Left: Active Strategic Sprints (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4 flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4 flex flex-col justify-between h-full">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
@@ -649,49 +709,51 @@ export default function SaaSDashboard({
       </div>
 
       {/* ── 5. Section 3: Company Intelligence & Sentinel Risks ────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
         
         {/* Left: Company Knowledge */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-indigo-600" />
-              <h3 className="text-sm font-semibold text-slate-900">Company Knowledge Base</h3>
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-sm font-semibold text-slate-900">Company Knowledge Base</h3>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                {knowledge.length} Documents Synced
+              </span>
             </div>
-            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              {knowledge.length} Documents Synced
-            </span>
+
+            <p className="text-xs text-slate-500 mt-2">
+              Corporate pitch decks, cap tables, and financials ingested into PostgreSQL vector storage to ground autonomous decision-making.
+            </p>
+
+            {knowledge.length > 0 ? (
+              <div className="space-y-2 mt-3">
+                {knowledge.slice(0, 3).map((doc) => (
+                  <div 
+                    key={doc.id}
+                    onClick={() => onNavigate?.('knowledge')}
+                    className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+                      <span className="text-xs font-medium text-slate-800 truncate">{doc.name}</span>
+                    </div>
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 shrink-0">
+                      {doc.type.replace('_', ' ')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 text-center text-xs text-slate-500 mt-3">
+                No corporate documents uploaded yet. Upload your deck to ground the AI executive team.
+              </div>
+            )}
           </div>
 
-          <p className="text-xs text-slate-500">
-            Corporate pitch decks, cap tables, and financials ingested into PostgreSQL vector storage to ground autonomous decision-making.
-          </p>
-
-          {knowledge.length > 0 ? (
-            <div className="space-y-2">
-              {knowledge.slice(0, 3).map((doc) => (
-                <div 
-                  key={doc.id}
-                  onClick={() => onNavigate?.('knowledge')}
-                  className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 flex items-center justify-between cursor-pointer transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <FileText className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="text-xs font-medium text-slate-800 truncate">{doc.name}</span>
-                  </div>
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 shrink-0">
-                    {doc.type.replace('_', ' ')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 text-center text-xs text-slate-500">
-              No corporate documents uploaded yet. Upload your deck to ground the AI executive team.
-            </div>
-          )}
-
-          <div className="pt-2 flex items-center justify-between text-xs">
+          <div className="pt-2 flex items-center justify-between text-xs border-t border-slate-100 mt-3">
             <span className="text-slate-500 font-mono text-[11px]">pgvector RLS Enforced</span>
             {onNavigate && (
               <button 
@@ -706,16 +768,17 @@ export default function SaaSDashboard({
         </div>
 
         {/* Right: Sentinel Risk Matrix */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-indigo-600" />
-              <h3 className="text-sm font-semibold text-slate-900">Sentinel Risk Radar</h3>
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-4 flex flex-col justify-between h-full">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-indigo-600" />
+                <h3 className="text-sm font-semibold text-slate-900">Sentinel Risk Radar</h3>
+              </div>
+              <span className="text-xs text-slate-400">Automated Audit Guardrails</span>
             </div>
-            <span className="text-xs text-slate-400">Automated Audit Guardrails</span>
-          </div>
 
-          <div className="space-y-3">
+            <div className="space-y-3 mt-3">
             <div className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-slate-900">Treasury Runway Horizon</div>
@@ -756,8 +819,9 @@ export default function SaaSDashboard({
               </span>
             </div>
           </div>
+        </div>
 
-          <div className="pt-2 flex items-center justify-between text-xs text-slate-500">
+          <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 mt-3">
             <span>Automated auditor verification pass</span>
             {onNavigate && (
               <button 
@@ -872,11 +936,11 @@ export default function SaaSDashboard({
             <form onSubmit={handleSaveTreasury} className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Cash Reserves ($ USD)</label>
+                  <label className="block font-medium text-slate-700 mb-1">Cash Reserves (₹ INR)</label>
                   <input
                     type="number"
                     min="0"
-                    step="1000"
+                    step="50000"
                     value={editCash}
                     onChange={(e) => setEditCash(Number(e.target.value))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs font-semibold text-slate-900"
@@ -884,11 +948,11 @@ export default function SaaSDashboard({
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Monthly Burn ($/mo)</label>
+                  <label className="block font-medium text-slate-700 mb-1">Monthly Net Burn (₹/mo)</label>
                   <input
                     type="number"
                     min="0"
-                    step="500"
+                    step="10000"
                     value={editBurn}
                     onChange={(e) => setEditBurn(Number(e.target.value))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs font-semibold text-slate-900"

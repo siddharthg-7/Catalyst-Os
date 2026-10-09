@@ -1042,7 +1042,7 @@ export default function WorkflowCanvas({ initiatives, onLaunchInitiative, onSimu
                       Governance Guardrail
                     </span>
                     <p className="text-xs" style={{ color: 'var(--c-muted)' }}>
-                      Any capital changes above $15k will automatically pause for founder sign-off before committing to the Decision Ledger.
+                      Any capital changes above ₹1,00,000 will automatically pause for founder sign-off before committing to the Decision Ledger.
                     </p>
                   </div>
                 </div>

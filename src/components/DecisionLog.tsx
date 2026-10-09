@@ -13,6 +13,7 @@ import {
   Clock, Check
 } from 'lucide-react';
 import Section from './Section';
+import { formatINR } from '../utils/currency';
 
 interface DecisionLogProps {
   decisions: DecisionRecord[];
@@ -200,7 +201,7 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
             Committed Capital
           </span>
           <p className={`text-2xl font-bold font-mono ${stats.netCapital >= 0 ? 'text-emerald-500' : ''}`} style={{ color: stats.netCapital < 0 ? 'var(--c-fg)' : undefined }}>
-            {stats.netCapital >= 0 ? '+' : ''}${Math.round(stats.netCapital).toLocaleString()}
+            {stats.netCapital >= 0 ? '+' : ''}{formatINR(Math.abs(Math.round(stats.netCapital)))}
           </p>
         </div>
       </Section>
@@ -483,7 +484,7 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
                 >
                   <span className="text-[10px] font-mono font-bold uppercase block" style={{ color: 'var(--c-muted)' }}>Capital Delta</span>
                   <span className="font-bold font-mono" style={{ color: 'var(--c-fg)' }}>
-                    {selectedRecord.financialImpact ? `$${Math.abs(selectedRecord.financialImpact).toLocaleString()}` : '$0 (Neutral)'}
+                    {selectedRecord.financialImpact ? `${selectedRecord.financialImpact < 0 ? '-' : '+'}${formatINR(Math.abs(selectedRecord.financialImpact))}` : '₹0 (Neutral)'}
                   </span>
                 </div>
               </div>

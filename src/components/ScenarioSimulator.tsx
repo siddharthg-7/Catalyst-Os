@@ -11,6 +11,7 @@ import {
   RefreshCw, Play, SlidersHorizontal, CheckCircle2, XCircle, ArrowDown
 } from 'lucide-react';
 import Section from './Section';
+import { formatINR, formatCompactINR } from '../utils/currency';
 
 interface ScenarioSimulatorProps {
   currentCash: number;
@@ -35,24 +36,24 @@ const PRESETS: ScenarioPreset[] = [
   {
     id: 'hire_3',
     title: 'Hire 3 Engineers',
-    query: 'What happens if we hire 3 Senior Engineers at $150k base?',
-    description: 'Scale core platform velocity with 3 senior engineers.',
+    query: 'What happens if we hire 3 Senior Engineers at ₹24,00,000 base?',
+    description: 'Scale core UPI and checkout platform velocity with 3 senior engineers.',
     headcountDelta: 3,
     headcountRole: 'Senior Backend Engineer',
-    headcountSalary: 150000,
+    headcountSalary: 2400000,
     adSpendDelta: 0,
     revenueDeltaPercent: 0,
     oneTimeExpense: 0
   },
   {
     id: 'ad_spend_15k',
-    title: '+$15k/mo Growth Spend',
-    query: 'What happens if we accelerate ad spend by $15k per month?',
-    description: 'Aggressive top-of-funnel customer acquisition push.',
+    title: '+₹1.5L/mo Growth Spend',
+    query: 'What happens if we accelerate ad spend by ₹1,50,000 per month?',
+    description: 'Aggressive top-of-funnel customer acquisition push across metro tiers.',
     headcountDelta: 0,
     headcountRole: '',
     headcountSalary: 0,
-    adSpendDelta: 15000,
+    adSpendDelta: 150000,
     revenueDeltaPercent: 0,
     oneTimeExpense: 0
   },
@@ -78,35 +79,35 @@ const PRESETS: ScenarioPreset[] = [
     headcountSalary: 0,
     adSpendDelta: 0,
     revenueDeltaPercent: 0,
-    oneTimeExpense: 25000
+    oneTimeExpense: 250000
   },
   {
     id: 'preservation',
     title: 'Cash Preservation',
-    query: 'What happens if we freeze hiring and cut spend by $10k/mo?',
-    description: 'Extend runway to maximum horizon before fundraising.',
+    query: 'What happens if we freeze hiring and cut spend by ₹1,00,000/mo?',
+    description: 'Extend runway to maximum horizon before Series A round.',
     headcountDelta: 0,
     headcountRole: '',
     headcountSalary: 0,
-    adSpendDelta: -10000,
+    adSpendDelta: -100000,
     revenueDeltaPercent: 0,
     oneTimeExpense: 0
   }
 ];
 
 export default function ScenarioSimulator({
-  currentCash = 500000,
-  currentBurn = 40000,
+  currentCash = 7200000,
+  currentBurn = 800000,
   companyName = 'Apex AI'
 }: ScenarioSimulatorProps) {
   // Scenario prompt query
-  const [scenarioPrompt, setScenarioPrompt] = useState('What happens if we hire 3 Senior Engineers at $150k base?');
+  const [scenarioPrompt, setScenarioPrompt] = useState('What happens if we hire 3 Senior Engineers at ₹24,00,000 base?');
   const [isRunning, setIsRunning] = useState(false);
   const [hasRun, setHasRun] = useState(true);
 
   // Scenario input variables
   const [headcount, setHeadcount] = useState<number>(3);
-  const [headcountSalary, setHeadcountSalary] = useState<number>(150000);
+  const [headcountSalary, setHeadcountSalary] = useState<number>(2400000);
   const [headcountRole, setHeadcountRole] = useState<string>('Senior Backend Engineer');
   const [adSpendDelta, setAdSpendDelta] = useState<number>(0);
   const [revenueDeltaPercent, setRevenueDeltaPercent] = useState<number>(0);
@@ -119,7 +120,7 @@ export default function ScenarioSimulator({
     setActivePreset(preset.id);
     setScenarioPrompt(preset.query);
     setHeadcount(preset.headcountDelta);
-    setHeadcountSalary(preset.headcountSalary || 140000);
+    setHeadcountSalary(preset.headcountSalary || 2400000);
     setHeadcountRole(preset.headcountRole || 'Software Engineer');
     setAdSpendDelta(preset.adSpendDelta);
     setRevenueDeltaPercent(preset.revenueDeltaPercent);
@@ -131,7 +132,7 @@ export default function ScenarioSimulator({
     setActivePreset(null);
     setScenarioPrompt('What happens if we remain at baseline?');
     setHeadcount(0);
-    setHeadcountSalary(140000);
+    setHeadcountSalary(2400000);
     setHeadcountRole('Software Engineer');
     setAdSpendDelta(0);
     setRevenueDeltaPercent(0);
@@ -267,7 +268,7 @@ export default function ScenarioSimulator({
               type="text"
               value={scenarioPrompt}
               onChange={(e) => setScenarioPrompt(e.target.value)}
-              placeholder="e.g. We hire 3 engineers and increase growth spend by $15k/mo..."
+              placeholder="e.g. We hire 3 engineers and increase growth spend by ₹1,50,000/mo..."
               className="w-full px-4 py-3.5 rounded-xl text-sm font-semibold outline-none transition-colors"
               style={{
                 backgroundColor: 'var(--c-surface-2)',
@@ -362,14 +363,14 @@ export default function ScenarioSimulator({
               <div className="flex justify-between font-semibold">
                 <span style={{ color: 'var(--c-muted)' }}>Monthly Ad Spend</span>
                 <span className="font-mono font-bold" style={{ color: 'var(--c-fg)' }}>
-                  {adSpendDelta >= 0 ? `+$${adSpendDelta.toLocaleString()}` : `-$${Math.abs(adSpendDelta).toLocaleString()}`}
+                  {adSpendDelta >= 0 ? `+${formatINR(adSpendDelta)}` : `-${formatINR(Math.abs(adSpendDelta))}`}
                 </span>
               </div>
               <input
                 type="range"
-                min="-20000"
-                max="50000"
-                step="2500"
+                min="-200000"
+                max="500000"
+                step="25000"
                 value={adSpendDelta}
                 onChange={(e) => {
                   setAdSpendDelta(parseInt(e.target.value, 10));
@@ -428,7 +429,7 @@ export default function ScenarioSimulator({
                 style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
               >
                 <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Baseline Cash Balance</span>
-                <p className="text-xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${(currentCash / 1000).toFixed(0)}k</p>
+                <p className="text-xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>{formatCompactINR(currentCash)}</p>
                 <span className="text-[10px]" style={{ color: 'var(--c-muted)' }}>Audited Neon Ledger</span>
               </div>
               <div 
@@ -436,7 +437,7 @@ export default function ScenarioSimulator({
                 style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
               >
                 <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Current Monthly Burn</span>
-                <p className="text-xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${(currentBurn / 1000).toFixed(0)}k/mo</p>
+                <p className="text-xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>{formatCompactINR(currentBurn)}/mo</p>
                 <span className="text-[10px]" style={{ color: 'var(--c-muted)' }}>Fixed + Discretionary</span>
               </div>
               <div 
@@ -480,7 +481,7 @@ export default function ScenarioSimulator({
               <div className="flex items-center gap-2 font-mono text-[11px]" style={{ color: 'var(--c-muted)' }}>
                 <span>Headcount: +{headcount}</span>
                 <span>·</span>
-                <span>Ad Spend: ${adSpendDelta}/mo</span>
+                <span>Ad Spend: {adSpendDelta >= 0 ? '+' : ''}{formatINR(adSpendDelta)}/mo</span>
                 <span>·</span>
                 <span>Revenue Shock: {revenueDeltaPercent}%</span>
               </div>
@@ -535,7 +536,7 @@ export default function ScenarioSimulator({
                 </div>
                 <p className="leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                   {headcount > 0
-                    ? `Adding ${headcount} hires expands loaded compensation burn by $${Math.round(simulation.monthlyHeadcountCost).toLocaleString()}/mo. 30-day hiring cycle expected.`
+                    ? `Adding ${headcount} hires expands loaded compensation burn by ${formatINR(Math.round(simulation.monthlyHeadcountCost))}/mo. 30-day hiring cycle expected.`
                     : 'Zero headcount modifications requested in this simulation branch.'}
                 </p>
               </div>
@@ -592,9 +593,9 @@ export default function ScenarioSimulator({
                 style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
               >
                 <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Projected Monthly Burn</span>
-                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${Math.round(simulation.projectedBurn / 1000)}k/mo</p>
+                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>{formatCompactINR(simulation.projectedBurn)}/mo</p>
                 <span className="text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
-                  {simulation.netBurnDelta >= 0 ? `+$${Math.round(simulation.netBurnDelta / 1000)}k` : `-$${Math.round(Math.abs(simulation.netBurnDelta) / 1000)}k`} net delta
+                  {simulation.netBurnDelta >= 0 ? `+${formatCompactINR(simulation.netBurnDelta)}` : `-${formatCompactINR(Math.abs(simulation.netBurnDelta))}`} net delta
                 </span>
               </div>
 
@@ -603,7 +604,7 @@ export default function ScenarioSimulator({
                 style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
               >
                 <span className="text-[10px] uppercase font-mono font-bold" style={{ color: 'var(--c-muted)' }}>Projected Cash</span>
-                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>${Math.round(simulation.projectedCash / 1000)}k</p>
+                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>{formatCompactINR(simulation.projectedCash)}</p>
                 <span className="text-[11px]" style={{ color: 'var(--c-muted)' }}>Available liquidity</span>
               </div>
 
@@ -650,7 +651,7 @@ export default function ScenarioSimulator({
                           backgroundColor: point.cash <= 0 ? 'rgb(239, 68, 68)' : point.cash <= simulation.projectedBurn * 3 ? '#f59e0b' : 'var(--c-fg)'
                         }}
                         className="w-full rounded-t transition-all"
-                        title={`Month ${point.month}: $${point.cash.toLocaleString()}`}
+                        title={`Month ${point.month}: ${formatINR(point.cash)}`}
                       />
                       <span className="text-[9px] font-mono mt-1" style={{ color: 'var(--c-muted)' }}>M{point.month}</span>
                     </div>

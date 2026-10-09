@@ -171,7 +171,7 @@ export const DEFAULT_KNOWLEDGE_FILES: KnowledgeFile[] = [
     summary: 'Official Talent Acquisition & Hiring Policy. Defines recruitment standards, engineering interview loops, 90-day probation review, and salary compensation benchmarks.',
     insights: [
       'All full-time engineering candidates must complete a 4-round technical assessment and cultural interview.',
-      'Base salaries for Senior Engineers are benchmarked at $130,000 - $150,000/yr with standard 0.25% - 0.75% equity incentives.',
+      'Base salaries for Senior Engineers are benchmarked at ₹25,00,000 - ₹32,00,000/yr with standard 0.25% - 0.75% equity incentives.',
       'Mandatory structured 90-day performance milestone review before full tenure confirmation.',
       'All hiring offers require dual approval from Talent lead and Finance (CFO).'
     ]
@@ -188,7 +188,7 @@ export const DEFAULT_KNOWLEDGE_FILES: KnowledgeFile[] = [
       'All employees and contractors must execute standard Proprietary Information and Inventions Agreement (PIIA) prior to start date.',
       'Employment is at-will; all offers are contingent upon background verification and signed compliance acknowledgment.',
       'Standard benefits package includes 20 days paid time off (PTO) and comprehensive health insurance coverage.',
-      'Equipment stipend of $2,500 allocated per engineer for developer workstation and hardware setup.'
+      'Equipment stipend of ₹1,50,000 allocated per engineer for developer workstation and hardware setup.'
     ]
   },
   {
@@ -236,12 +236,123 @@ export const DEFAULT_DECISION_LOG: DecisionRecord[] = [
   }
 ];
 
+export const DEFAULT_INDIAN_APPROVALS: Deliverable[] = [
+  {
+    id: 'appr_vendor_delhivery',
+    initiativeId: 'init_operations',
+    title: 'Vendor Payment Approval: Delhivery Logistics & Pan-India Line-Haul',
+    description: 'Q3 logistics line-haul fulfillment invoice for nationwide Tier-1 and Tier-2 customer shipments under Master Vendor Agreement.',
+    type: 'financials',
+    content: '# VENDOR PAYMENT INVOICE AUDIT: DELHIVERY LOGISTICS\n\n### Invoice Overview\n- **Vendor:** Delhivery Limited (Surface & Express Logistics)\n- **Invoice No:** DLV-BLR-2026-8821\n- **Service Period:** September 1 - September 30, 2026\n- **Total Billed Amount:** ₹1,85,000 (Inclusive of 18% GST: ₹28,220)\n\n### Operational Validation\n- **Shipments Processed:** 4,218 parcels across Karnataka, Maharashtra, Delhi NCR, and Tamil Nadu.\n- **SLA Fulfillment Rate:** 98.4% delivered within committed 72-hour window.\n- **RTO (Return to Origin) Rate:** 3.8% (Under contractual 5.0% threshold).\n\n### Recommendation\nOperations lead confirms delivery proof logs match warehouse scans. Recommend immediate signoff to maintain favorable volume tier discounts.',
+    impact: 'Fulfills Q3 carrier commitments, releases shipment credit hold, and preserves 98.4% on-time delivery SLA.',
+    financialChange: -185000,
+    status: 'pending_review',
+    metricChanges: {
+      velocity: 5,
+      financialHealth: -2,
+      legalCompliance: 4,
+      growthRate: 8,
+      operationsEfficiency: 12
+    }
+  },
+  {
+    id: 'appr_mktg_diwali',
+    initiativeId: 'init_growth',
+    title: 'Marketing Budget Authorization: Pan-India Festive Acquisition Campaign',
+    description: 'Multi-channel festive acquisition budget targeting SMB merchants and D2C consumers across Tier-1 & Tier-2 cities with 3.8x estimated ROAS.',
+    type: 'marketing_plan',
+    content: '# CAMPAIGN PROPOSAL: FESTIVE COMMERCE ACCELERATOR\n\n### Executive Summary\nStrategic customer acquisition blitz across Meta Ads, Google Performance Max, and targeted merchant trade networks.\n\n### Budget Allocation Breakdown\n- **Meta Ads (Instagram & Facebook):** ₹2,20,000 (Targeting D2C shoppers & storefront creators)\n- **Google Search & PMax:** ₹1,60,000 (High-intent keywords: \'instant merchant onboarding\', \'UPI payment gateway\')\n- **Merchant Partner Referral Bounties:** ₹70,000 (Cash incentives for active merchants referring new shops)\n- **Total Campaign Budget:** ₹4,50,000\n\n### Target Return on Ad Spend (ROAS)\n- Projected New Merchants: 1,450 activated stores\n- Estimated GMV Generated: ₹1,25,00,000 within 60 days\n- Target Blended CAC: ₹310 per onboarded merchant',
+    impact: 'Unlocks 1,450 active merchant activations, expands brand presence in 8 regional hubs, and targets 3.8x ROAS.',
+    financialChange: -450000,
+    status: 'pending_review',
+    metricChanges: {
+      velocity: 12,
+      financialHealth: -4,
+      legalCompliance: 0,
+      growthRate: 24,
+      operationsEfficiency: -2
+    }
+  },
+  {
+    id: 'appr_reimb_mumbai',
+    initiativeId: 'init_operations',
+    title: 'Employee Travel Reimbursement: Enterprise Client Onsite Integration',
+    description: 'Onsite solution architecture travel, lodging, and client technical workshops for ICICI Bank merchant nodal account deployment.',
+    type: 'financials',
+    content: '# EMPLOYEE EXPENSE REIMBURSEMENT AUDIT\n\n### Claim Summary\n- **Employee:** Vikram Malhotra (Solutions Architect)\n- **Purpose:** Onsite deployment workshop at ICICI Bank Bandra Kurla Complex (BKC), Mumbai\n- **Dates:** 22 Sep - 26 Sep 2026\n- **Claim Total:** ₹34,500\n\n### Itemized Expenses\n1. Flight: Bengaluru (BLR) ↔ Mumbai (BOM) — ₹14,800\n2. Hotel: 4 Nights BKC Executive Stay — ₹15,200\n3. Local Transit & Client Working Meals — ₹4,500\n\n### Audit Verification\nAll official tax invoices submitted with corporate GSTIN. Reviewed and pre-cleared by HR & Finance.',
+    impact: 'Concludes enterprise nodal switch integration, satisfying Phase-1 enterprise partner milestones.',
+    financialChange: -34500,
+    status: 'approved',
+    metricChanges: {
+      velocity: 8,
+      financialHealth: -1,
+      legalCompliance: 6,
+      growthRate: 5,
+      operationsEfficiency: 10
+    }
+  },
+  {
+    id: 'appr_cloud_gpu',
+    initiativeId: 'init_engineering',
+    title: 'Cloud Infrastructure Scaling: AWS Mumbai Reserved GPU Cluster',
+    description: 'Provision dedicated OCR document parsing and vector inference instances in AWS ap-south-1 (Mumbai) to support 35% weekly merchant surge.',
+    type: 'contract',
+    content: '# CLOUD INFRASTRUCTURE SCALE-UP MEMO: AWS MUMBAI\n\n### Current State vs Proposed State\n- **Current Setup:** Shared on-demand g4dn.xlarge instances ($960 / ₹80,000 / mo)\n- **Proposed Commitment:** 1-Year Reserved Instances (3x g5.2xlarge in AWS Mumbai Region)\n- **Proposed Monthly Cost:** ₹2,05,000 / mo (+₹1,25,000 / mo increase)\n\n### Technical Justification\n- Merchant KYC document parsing latency drops from 15 minutes to 45 seconds.\n- Eliminates webhook rate-limiting drops during 6 PM - 9 PM peak shopping spikes.\n- Fully compliant with RBI data localization mandates requiring merchant financial processing to reside within India.',
+    impact: 'Increases daily document throughput 5x, enforces RBI data localization, and slashes KYC wait time to <45 seconds.',
+    financialChange: -125000,
+    status: 'pending_review',
+    metricChanges: {
+      velocity: 15,
+      financialHealth: -3,
+      legalCompliance: 10,
+      growthRate: 6,
+      operationsEfficiency: 18
+    }
+  },
+  {
+    id: 'appr_hire_lead_backend',
+    initiativeId: 'init_talent',
+    title: 'Hiring Offer Approval: Lead Platform & UPI Integration Engineer',
+    description: 'Senior technical hire to head NPCI UPI switch certification, high-frequency settlement daemons, and banking API gateways.',
+    type: 'contract',
+    content: '# EXECUTIVE HIRING CHARTER: LEAD UPI PLATFORM ENGINEER\n\n### Candidate Profile\n- **Candidate:** Arpit Sengupta (7+ years fintech & payments switch engineering)\n- **Proposed Role:** Lead Platform Engineer (UPI & Core Banking)\n- **Annual CTC:** ₹28,00,000 (Base: ₹25L, Performance: ₹3L) + 0.35% Equity Pool\n- **Monthly Cost Impact:** ₹2,33,333 / month\n\n### Strategic Requirement\nOwns the end-to-end certification process with NPCI (National Payments Corporation of India) for UPI 2.0 AutoPay recurring mandates.\n\n### Founder Review Directives\nFounder requested restructuring of the joining incentive into two tranches tied to successful NPCI production sandbox certification.',
+    impact: 'Accelerates UPI 2.0 AutoPay mandate engine delivery by 8 weeks while restructuring sign-on risk.',
+    financialChange: -233000,
+    status: 'changes_requested',
+    metricChanges: {
+      velocity: 22,
+      financialHealth: -4,
+      legalCompliance: 12,
+      growthRate: 14,
+      operationsEfficiency: 16
+    }
+  },
+  {
+    id: 'appr_refund_sla',
+    initiativeId: 'init_operations',
+    title: 'Merchant Service Credit: Nodal Account Settlement Downtime Rebate',
+    description: 'Contractual SLA rebate for Merchant Enterprise ID M-9042 following scheduled partner bank maintenance window.',
+    type: 'policy',
+    content: '# SLA SERVICE-CREDIT REBATE CLAIM\n\n### Incident Details\n- **Merchant Account:** RetailSuper India Private Limited (Merchant ID: M-9042)\n- **Incident Date:** September 28, 2026 (02:00 - 05:30 IST)\n- **Impact:** Scheduled nodal bank gateway cutover resulted in 3.5 hours offline window.\n- **SLA Commitment:** 99.9% uptime per monthly billing cycle.\n- **Contractual Remedy:** 25% credit on monthly platform subscription fee.\n- **Calculated Credit Amount:** ₹48,000\n\n### Resolution\nCredit will be offset against next month\'s invoice. Restores enterprise client goodwill and avoids contractual arbitration.',
+    impact: 'Maintains tier-1 enterprise merchant partnership and ensures full compliance with Master Service SLA covenants.',
+    financialChange: -48000,
+    status: 'approved',
+    metricChanges: {
+      velocity: 0,
+      financialHealth: -1,
+      legalCompliance: 8,
+      growthRate: 2,
+      operationsEfficiency: 4
+    }
+  }
+];
+
 // Initialize state from file cache or default seeds
 const persisted = loadPersistedState();
 
 export let startupProfile: StartupProfile = persisted?.startupProfile || { ...DEFAULT_NOVATECH_PROFILE };
 export let initiatives: Initiative[] = (persisted?.initiatives && persisted.initiatives.length > 0) ? persisted.initiatives : [...DEFAULT_INITIATIVES];
-export let approvals: Deliverable[] = persisted?.approvals || [];
+export let approvals: Deliverable[] = (persisted?.approvals && persisted.approvals.length > 0) ? persisted.approvals : [...DEFAULT_INDIAN_APPROVALS];
 export let decisionLog: DecisionRecord[] = (persisted?.decisionLog && persisted.decisionLog.length > 0) ? persisted.decisionLog : [...DEFAULT_DECISION_LOG];
 const initialFiles: KnowledgeFile[] = (persisted?.knowledgeFiles && persisted.knowledgeFiles.length > 0)
   ? [...persisted.knowledgeFiles]

@@ -205,16 +205,16 @@ export default function ExecutiveCouncilWorkspace({
         recommendations: [
           {
             id: 'rec_cfo_1',
-            title: 'Enforce Salary Cap of $140,000 for Immediate Engineering Roles',
-            summary: 'Benchmarking loaded cost to $140k prevents monthly burn from accelerating past the $35k safety threshold.',
+            title: 'Enforce Salary Cap of ₹25,00,000 for Immediate Engineering Roles',
+            summary: 'Benchmarking loaded cost to ₹25L prevents monthly burn from accelerating past the ₹8,00,000 safety threshold.',
             impact: 'Preserves runway above 12.0 months',
             urgency: 'high'
           },
           {
             id: 'rec_cfo_2',
             title: 'Reclaim Redundant Cloud SaaS Subscriptions',
-            summary: 'Audit identified 14 inactive seats across staging tools representing $1,250/mo in reclaimable burn.',
-            impact: 'Saves $15,000 annualized',
+            summary: 'Audit identified 14 inactive seats across staging tools representing ₹12,500/mo in reclaimable burn.',
+            impact: 'Saves ₹1,50,000 annualized',
             urgency: 'medium'
           }
         ],
@@ -395,7 +395,7 @@ export default function ExecutiveCouncilWorkspace({
           {
             id: 'rec_auditor_1',
             title: 'Audit All Runway Figures Deterministically Against Database Ledger',
-            summary: 'Verify cash balance ($245,000) divided by burn rate ($18,500) equals 13.2 months without estimation.',
+            summary: 'Verify cash balance (₹72,00,000) divided by burn rate (₹8,00,000) equals 9.0 months without estimation.',
             impact: 'Zero mathematical hallucinations',
             urgency: 'high'
           }
@@ -438,7 +438,7 @@ export default function ExecutiveCouncilWorkspace({
           vote: 'APPROVE',
           confidence: 0.94,
           rationale: 'Engineering capacity is at 94% utilization. Opening 2 Senior Backend Engineer roles resolves delivery bottleneck for beta launch.',
-          dataOutput: 'Base salary: $140,000 each. 28-day recruitment cycle.',
+          dataOutput: 'Base salary: ₹25,00,000 each. 28-day recruitment cycle.',
           isConflict: false
         },
         {
@@ -447,8 +447,8 @@ export default function ExecutiveCouncilWorkspace({
           avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
           vote: 'CONDITIONAL',
           confidence: 0.91,
-          rationale: 'Monthly burn will increase by +$16,000/mo (from $18,500 to $34,500). Projected runway compresses to 7.1 months. Approval conditioned on capping base compensation at $135k.',
-          dataOutput: 'Monthly burn delta: +$16,000. Runway reduction: -6.1 months.',
+          rationale: 'Monthly burn will increase by +₹4,50,000/mo (from ₹8,00,000 to ₹12,50,000). Projected runway compresses to 5.8 months. Approval conditioned on capping base compensation at ₹24L.',
+          dataOutput: 'Monthly burn delta: +₹4,50,000. Runway reduction: -3.2 months.',
           isConflict: true // Conflicting perspective
         },
         {
@@ -477,23 +477,23 @@ export default function ExecutiveCouncilWorkspace({
           avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
           vote: 'APPROVE',
           confidence: 1.0,
-          rationale: 'Mathematical calculations verified: $245,000 / $34,500 = 7.1 months runway. All compensation benchmarks verified against market data.',
+          rationale: 'Mathematical calculations verified: ₹72,00,000 / ₹12,50,000 = 5.8 months runway. All compensation benchmarks verified against Indian market data.',
           dataOutput: 'Deterministic calculation verified.',
           isConflict: false
         }
       ],
       synthesis: {
-        summary: 'Conditional Consensus Reached: Authorize recruitment of 2x Senior Engineers with strict compensation cap at $135k to maintain runway solvency.',
+        summary: 'Conditional Consensus Reached: Authorize recruitment of 2x Senior Engineers with strict compensation cap at ₹24L to maintain runway solvency.',
         riskTier: 'MEDIUM' as const,
         reversibility: 'REVERSIBLE' as const,
         actionRequired: true,
-        conflictsIdentified: 'Tension between Talent throughput demand (+2 roles) and CFO cash burn preservation ($16k/mo delta). Resolved via compensation capping and sequential onboarding.',
+        conflictsIdentified: 'Tension between Talent throughput demand (+2 roles) and CFO cash burn preservation (₹4.5L/mo delta). Resolved via compensation capping and sequential onboarding.',
         finalRecommendation: 'Proceed with decomposed 6-step hiring plan. Stage offer letter package into Approval Queue for founder authorization.'
       }
     },
     {
       id: 'delib_gtm',
-      title: 'Should we launch an enterprise pricing tier at $2,500/mo?',
+      title: 'Should we launch an enterprise pricing tier at ₹75,000/mo?',
       directive: 'Formulate enterprise pricing tier with dedicated SLA and custom SOC-2 compliance add-on.',
       orchestrator: {
         name: 'Atlas (CEO)',
@@ -507,7 +507,7 @@ export default function ExecutiveCouncilWorkspace({
           avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
           vote: 'APPROVE',
           confidence: 0.92,
-          rationale: 'Early pilot enterprise customers are willing to pay $2,500/mo for guaranteed latency SLAs and dedicated migration support.',
+          rationale: 'Early pilot enterprise customers are willing to pay ₹75,000/mo for guaranteed latency SLAs and dedicated migration support.',
           dataOutput: 'Estimated 5 enterprise signups in 60 days (+₹12.5L MRR).',
           isConflict: false
         },
@@ -552,7 +552,7 @@ export default function ExecutiveCouncilWorkspace({
       role: 'CEO',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
       action: 'Decomposition & Orchestration',
-      speech: 'Founder has asked: "Should we hire two engineers?" Initiating executive council session. Decomposing inquiry: Echo evaluates candidate pipeline and role requirements; Aura models treasury cash burn and runway; Felix verifies operational sprint dependencies.',
+      speech: 'Founder has asked: "Should we hire two engineers?" Initiating executive council session. Decomposing inquiry: Echo evaluates candidate pipeline and role requirements; Aura models treasury cash burn and runway; Helix verifies operational sprint dependencies.',
       status: 'completed'
     },
     {
@@ -560,7 +560,7 @@ export default function ExecutiveCouncilWorkspace({
       role: 'Talent',
       avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
       action: 'Headcount & Capacity Review',
-      speech: 'Echo reporting. Current engineering capacity utilization is at 94%. Current sprint velocity is bottlenecked on perception pipeline delivery. Recommending opening 2x Senior Full-Stack Engineer positions at $140k base compensation. Estimated 28-day recruitment cycle.',
+      speech: 'Echo reporting. Current engineering capacity utilization is at 94%. Current sprint velocity is bottlenecked on perception pipeline delivery. Recommending opening 2x Senior Full-Stack Engineer positions at ₹25L base compensation. Estimated 28-day recruitment cycle.',
       status: 'completed'
     },
     {
@@ -568,7 +568,7 @@ export default function ExecutiveCouncilWorkspace({
       role: 'CFO',
       avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
       action: 'Runway Calculation & Cash Burn Gate',
-      speech: 'Aura reporting. Deterministic calculations: Current cash balance is $245,000 at $18,500/mo burn rate (13.2 months). Adding two engineers at $140k increases monthly burn by +$16,000/mo to $34,500/mo. Projected runway compresses to 7.1 months. I vote CONDITIONAL APPROVAL: Cap salaries at $135k to keep runway above 7.5 months.',
+      speech: 'Aura reporting. Deterministic calculations: Current cash balance is ₹72,00,000 at ₹8,00,000/mo burn rate (9.0 months). Adding two engineers at ₹25L increases monthly burn by +₹4,50,000/mo to ₹12,50,000/mo. Projected runway compresses to 5.8 months. I vote CONDITIONAL APPROVAL: Cap salaries at ₹24L to keep runway above 6.0 months.',
       status: 'completed'
     },
     {
@@ -584,7 +584,7 @@ export default function ExecutiveCouncilWorkspace({
       role: 'CEO',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
       action: 'Synthesis & Final Directive',
-      speech: 'Atlas synthesis: Council consensus reached. The company SHOULD hire two engineers, subject to Aura’s $135k compensation cap and Helix’s staggered onboarding schedule. Decomposed plan generated with 6 assignable tasks. Ready for founder review.',
+      speech: 'Atlas synthesis: Council consensus reached. The company SHOULD hire two engineers, subject to Aura’s ₹24L compensation cap and Helix’s staggered onboarding schedule. Decomposed plan generated with 6 assignable tasks. Ready for founder review.',
       status: 'completed'
     }
   ];

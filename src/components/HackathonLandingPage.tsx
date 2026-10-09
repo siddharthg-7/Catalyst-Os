@@ -223,7 +223,7 @@ export default function HackathonLandingPage({ onStartBuilding, onDemoLogin }: H
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80"
     },
     {
-      quote: "The finance module alone saved us $40k in the first quarter.",
+      quote: "The finance module alone saved us ₹32 Lakhs in the first quarter.",
       author: "Verified Growth Founder",
       role: "Founder",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"
