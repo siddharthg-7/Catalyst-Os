@@ -28,6 +28,17 @@ export interface ChatMessage {
   intent?: string;
   objective?: string;
   nextActions?: Array<{ label: string; action: string }>;
+  // Multi-Level DAG Orchestration fields
+  runId?: string;
+  currentPhase?: string;
+  dagPlan?: any;
+  dagTasks?: any[];
+  createdRecords?: {
+    tasks?: Array<{ id: string; title: string; assignedTo: string; status: string }>;
+    plans?: Array<{ id: string; title: string; status: string }>;
+    approvals?: Array<{ id: string; title: string; type: string; impact: string }>;
+    decisions?: Array<{ id: string; title: string; category: string; impact: string }>;
+  };
 }
 
 export const INITIAL_SUGGESTED_QUESTIONS = [
@@ -169,15 +180,49 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
               try {
                 const event = JSON.parse(dataStr);
                 
-                if (event.type === 'intent_detected') {
+                if (event.type === 'intent_detected' || event.type === 'intent_classified') {
                   setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
                     ...m,
+                    runId: event.runId || m.runId,
                     intent: event.intent,
                     objective: event.objective,
-                    activeAgents: event.activatedRoles.map((r: string) => ({
+                    activeAgents: event.activatedRoles ? event.activatedRoles.map((r: string) => ({
                       role: r,
                       status: r === 'CEO' ? 'collaborating' : 'analyzing'
-                    }))
+                    })) : m.activeAgents
+                  } : m));
+                } else if (event.type === 'plan_generated') {
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    runId: event.runId || m.runId,
+                    dagPlan: event.plan,
+                    dagTasks: event.plan?.steps || event.tasks || []
+                  } : m));
+                } else if (event.type === 'run_phase_updated') {
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    currentPhase: event.phase,
+                    status: event.status || m.status
+                  } : m));
+                } else if (event.type === 'dag_step_started') {
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    dagTasks: (m.dagTasks || []).map(t => t.id === event.task?.id ? { ...t, status: 'running' } : t)
+                  } : m));
+                } else if (event.type === 'dag_step_completed') {
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    dagTasks: (m.dagTasks || []).map(t => t.id === event.task?.id ? { ...t, status: 'completed', output: event.task?.output } : t)
+                  } : m));
+                } else if (event.type === 'dag_step_blocked') {
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    dagTasks: (m.dagTasks || []).map(t => t.id === event.task?.id ? { ...t, status: 'blocked', error: event.task?.error } : t)
+                  } : m));
+                } else if (event.type === 'dag_step_failed') {
+                  setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
+                    ...m,
+                    dagTasks: (m.dagTasks || []).map(t => t.id === event.task?.id ? { ...t, status: 'failed', error: event.error || event.task?.error } : t)
                   } : m));
                 } else if (event.type === 'agent_started') {
                   setMessages(prev => prev.map(m => m.id === assistantMsgId ? {
@@ -190,7 +235,7 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
                     activeAgents: (m.activeAgents || []).map(ag => ag.role === event.role ? { ...ag, status: 'completed', contribution: event.contribution } : ag)
                   } : m));
                 } else if (event.type === 'final_response' && event.result) {
-                  const res: OrchestrationResponse = event.result;
+                  const res: any = event.result;
                   const formattedContent = res.answer.details
                     ? `${res.answer.summary}\n\n${res.answer.details}`
                     : res.answer.summary;
@@ -206,9 +251,13 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
                     approval: res.approval,
                     status: res.status,
                     commandId: res.commandId,
+                    runId: res.runId || res.commandId,
                     intent: res.interpretation.intent,
                     objective: res.interpretation.objective,
                     nextActions: res.nextActions,
+                    dagPlan: res.dagPlan || m.dagPlan,
+                    dagTasks: res.dagTasks || m.dagTasks,
+                    createdRecords: res.createdRecords || m.createdRecords,
                     isStreaming: false,
                   } : m));
 
@@ -247,7 +296,7 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
           throw new Error(errData.error || errData.details || `Server returned status ${response.status}`);
         }
 
-        const resData: OrchestrationResponse = await response.json();
+        const resData: any = await response.json();
         const formattedContent = resData.answer.details
           ? `${resData.answer.summary}\n\n${resData.answer.details}`
           : resData.answer.summary;
@@ -263,9 +312,13 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
           approval: resData.approval,
           status: resData.status,
           commandId: resData.commandId,
+          runId: resData.runId || resData.commandId,
           intent: resData.interpretation.intent,
           objective: resData.interpretation.objective,
           nextActions: resData.nextActions,
+          dagPlan: resData.dagPlan,
+          dagTasks: resData.dagTasks,
+          createdRecords: resData.createdRecords,
           isStreaming: false,
         } : m));
 
@@ -293,6 +346,21 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
     }
   }, [messages, sendMessage]);
 
+  const cancelRun = useCallback(async (runId: string) => {
+    const fetchImpl = apiFetch || fetch;
+    try {
+      await fetchImpl(`/api/orchestration/runs/${runId}/cancel`, { method: 'POST' });
+      setMessages(prev => prev.map(m => m.runId === runId ? {
+        ...m,
+        status: 'failed',
+        content: m.content ? `${m.content}\n\n*[Execution cancelled by founder]*` : 'Execution cancelled by founder.',
+        isStreaming: false
+      } : m));
+    } catch (err) {
+      console.error('Failed to cancel run:', err);
+    }
+  }, [apiFetch]);
+
   return {
     isOpen,
     toggleOpen,
@@ -306,5 +374,6 @@ Your AI Executive Team (CFO, Talent, Growth, Operations, Legal, Auditor) is onli
     setLanguage,
     sendMessage,
     regenerateLastMessage,
+    cancelRun,
   };
 }

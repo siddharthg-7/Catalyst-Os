@@ -25,6 +25,7 @@ import { useChat } from '../hooks/useChat';
 import { formatINR, formatCompactINR } from '../utils/currency';
 import VoiceModeModal from './voice/VoiceModeModal';
 import VoiceStudioPanel from './voice/VoiceStudioPanel';
+import ExecutiveDirectiveDispatcher from './ExecutiveDirectiveDispatcher';
 
 interface SaaSDashboardProps {
   startup: StartupProfile;
@@ -67,7 +68,7 @@ export default function SaaSDashboard({
   onNavigate,
 }: SaaSDashboardProps) {
   const { user, apiFetch } = useAuth();
-  const { sendMessage, messages, isTyping } = useChat(apiFetch, user?.id);
+  const { sendMessage, messages, isTyping, cancelRun } = useChat(apiFetch, user?.id);
 
   // Modals state
   const [isCalibratingTreasury, setIsCalibratingTreasury] = useState(false);
@@ -306,6 +307,19 @@ export default function SaaSDashboard({
           </button>
         </div>
       </div>
+
+      {/* ── 1.5 Executive Directive Dispatcher (Sophia Vance) ──────────────── */}
+      <ExecutiveDirectiveDispatcher
+        messages={messages}
+        isTyping={isTyping}
+        onSendDirective={async (directive) => {
+          await sendMessage(directive);
+          if (onRefreshTasks) setTimeout(() => onRefreshTasks(), 1200);
+        }}
+        onCancelRun={cancelRun}
+        onNavigate={onNavigate}
+        startupName={startup.name}
+      />
 
       {/* ── 2. Core Metrics: 4 Clean KPI Cards ────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1085,7 +1099,7 @@ export default function SaaSDashboard({
       {/* ── 9. Issue Executive Directive Modal ─────────────────────────────── */}
       {isDirectiveOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full p-4 sm:p-6 space-y-4 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -1093,7 +1107,7 @@ export default function SaaSDashboard({
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-slate-900">Issue Executive Directive</h3>
-                  <p className="text-xs text-slate-500">Direct instruction to Sophia Vance (CEO co-pilot)</p>
+                  <p className="text-xs text-slate-500">Sophia Vance — Executive Directive Dispatcher</p>
                 </div>
               </div>
               <button
@@ -1104,45 +1118,21 @@ export default function SaaSDashboard({
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <textarea
-                rows={4}
-                value={directivePrompt}
-                onChange={(e) => setDirectivePrompt(e.target.value)}
-                placeholder="e.g. Analyze our current runway and coordinate with Marcus to prepare an investment brief for Pre-Seed angel investors..."
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs text-slate-900"
-              />
-
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setIsVoiceModeOpen(true)}
-                  className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-indigo-600 font-medium"
-                >
-                  <Mic className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Switch to Voice Mode</span>
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsDirectiveOpen(false)}
-                    className="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isSendingDirective || !directivePrompt.trim()}
-                    onClick={handleSendDirective}
-                    className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-xs disabled:opacity-50 flex items-center gap-1.5"
-                  >
-                    {isSendingDirective ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    <span>Dispatch Directive</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ExecutiveDirectiveDispatcher
+              messages={messages}
+              isTyping={isTyping}
+              onSendDirective={async (directive) => {
+                await sendMessage(directive);
+                if (onRefreshTasks) setTimeout(() => onRefreshTasks(), 1200);
+              }}
+              onCancelRun={cancelRun}
+              onNavigate={(tab) => {
+                setIsDirectiveOpen(false);
+                onNavigate?.(tab);
+              }}
+              startupName={startup.name}
+              compactMode={true}
+            />
           </div>
         </div>
       )}

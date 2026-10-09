@@ -77,6 +77,7 @@ import {
   getPresignedDownloadUrl 
 } from '../services/s3Service';
 import { orchestrationService } from '../services/orchestrationService';
+import { multiLevelOrchestrator } from '../services/multiLevelOrchestrator';
 import { workspaceService, DEFAULT_EXECUTIVE_ROLES } from '../services/workspaceService';
 import { companyContextService } from '../services/companyContextService';
 import { approvalService } from '../services/approvalService';
@@ -2639,20 +2640,160 @@ function generateGroundedRagFallback(
   return answer;
 }
 
-// POST orchestrate command (Master Planner-Executor Canonical Endpoint)
+// ============================================================================
+// MULTI-LEVEL AI ORCHESTRATION PIPELINE (PHASE 2 - 8)
+// Canonical endpoints for Sophia Vance Executive Directive Dispatcher
+// ============================================================================
+
+// POST /api/orchestration/directives — Submit a founder directive for multi-level orchestration
+router.post('/orchestration/directives', authenticateJWT, orchestrateRateLimiter, async (req: AuthenticatedRequest, res) => {
+  const { directive, command, commandId, context } = req.body;
+  const inputDirective = (directive || command || '').trim();
+
+  if (!inputDirective) {
+    res.status(400).json({ error: 'A non-empty directive is required.' });
+    return;
+  }
+
+  try {
+    const run = await multiLevelOrchestrator.dispatchDirective({
+      directive: inputDirective,
+      userId: req.user!.id,
+      startupId: context?.startupId,
+      commandId
+    });
+    res.json(run);
+  } catch (err: any) {
+    console.error('[Orchestration Directives API] Execution failure:', err.message);
+    res.status(500).json({
+      error: 'I could not complete the executive directive right now. Reason: AI orchestration pipeline encountered an error.',
+      details: err.message
+    });
+  }
+});
+
+// GET /api/orchestration/runs/:runId — Retrieve run status and execution metadata
+router.get('/orchestration/runs/:runId', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const canonical = await companyContextService.getContextForUser(req.user!.id);
+    const startupId = canonical?.startupId;
+    const run = multiLevelOrchestrator.getRun(req.params.runId, startupId);
+
+    if (!run) {
+      res.status(404).json({ error: 'Orchestration run not found or unauthorized.' });
+      return;
+    }
+    res.json(run);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve orchestration run', details: err.message });
+  }
+});
+
+// GET /api/orchestration/runs/:runId/tasks — Retrieve task-level execution status and DAG steps
+router.get('/orchestration/runs/:runId/tasks', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const canonical = await companyContextService.getContextForUser(req.user!.id);
+    const startupId = canonical?.startupId;
+    const tasks = multiLevelOrchestrator.getRunTasks(req.params.runId, startupId);
+
+    if (!tasks) {
+      res.status(404).json({ error: 'Orchestration run not found or unauthorized.' });
+      return;
+    }
+    res.json({ runId: req.params.runId, tasks });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve run tasks', details: err.message });
+  }
+});
+
+// POST /api/orchestration/runs/:runId/cancel — Cancel an active orchestration run
+router.post('/orchestration/runs/:runId/cancel', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const canonical = await companyContextService.getContextForUser(req.user!.id);
+    const startupId = canonical?.startupId;
+    const cancelled = multiLevelOrchestrator.cancelRun(req.params.runId, startupId);
+
+    if (!cancelled) {
+      res.status(400).json({ error: 'Could not cancel run. Run may have already finished or not exist.' });
+      return;
+    }
+    res.json({ success: true, message: 'Orchestration run successfully cancelled.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to cancel orchestration run', details: err.message });
+  }
+});
+
+// GET /api/orchestration/history — Retrieve authorized conversation & directive history
+router.get('/orchestration/history', authenticateJWT, async (req: AuthenticatedRequest, res) => {
+  try {
+    const canonical = await companyContextService.getContextForUser(req.user!.id);
+    const startupId = canonical?.startupId;
+    const history = startupId ? multiLevelOrchestrator.getHistory(startupId) : [];
+    res.json(history);
+  } catch (err: any) {
+    res.status(500).json({ error: 'Failed to retrieve orchestration history', details: err.message });
+  }
+});
+
+// POST orchestrate command (Master Planner-Executor Backwards-Compatible Canonical Endpoint)
 router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchestrateRateLimiter, async (req: AuthenticatedRequest, res) => {
-  const { command, commandId, context } = req.body;
-  if (!command || typeof command !== 'string' || !command.trim()) {
+  const { command, directive, commandId, context } = req.body;
+  const inputCmd = (command || directive || '').trim();
+  if (!inputCmd) {
     res.status(400).json({ error: 'A non-empty founder command is required.' });
     return;
   }
 
   try {
-    const result = await orchestrationService.executeCommand(
-      command.trim(),
-      { userId: req.user?.id, startupId: context?.startupId, commandId }
-    );
-    res.json(result);
+    const run = await multiLevelOrchestrator.dispatchDirective({
+      directive: inputCmd,
+      userId: req.user!.id,
+      startupId: context?.startupId,
+      commandId
+    });
+
+    // Format response to be 100% compatible with OrchestrationResponse
+    const responsePayload = {
+      commandId: run.runId,
+      runId: run.runId,
+      status: run.status === 'needs_approval' ? 'needs_approval' : run.status === 'blocked' ? 'needs_information' : run.status === 'failed' ? 'failed' : 'completed',
+      interpretation: {
+        intent: run.intent,
+        objective: run.objective
+      },
+      answer: {
+        summary: run.result.summary,
+        details: [
+          run.result.completedWork.length > 0 ? `### Completed Work\n${run.result.completedWork.map(w => `• ${w}`).join('\n')}` : '',
+          run.result.keyFindings.length > 0 ? `### Key Findings\n${run.result.keyFindings.map(k => `• ${k}`).join('\n')}` : '',
+          run.result.failedOrBlockedSteps.length > 0 ? `### Blocked / Failed Steps\n${run.result.failedOrBlockedSteps.map(f => `• **${f.title}**: ${f.reason}`).join('\n')}` : '',
+          run.result.founderDecisions.length > 0 ? `### Required Founder Decisions\n${run.result.founderDecisions.map(d => `• ${d}`).join('\n')}` : ''
+        ].filter(Boolean).join('\n\n')
+      },
+      agents: run.tasks.length > 0
+        ? run.tasks.map(t => ({
+            role: t.assignedAgent.role,
+            status: t.status === 'completed' ? 'completed' : t.status === 'running' ? 'collaborating' : 'idle',
+            contribution: t.output?.rationale || t.title
+          }))
+        : [{ role: 'CEO', status: 'completed', contribution: run.result.summary }],
+      evidence: run.result.evidence,
+      calculations: run.result.calculations.map(c => ({ metric: c.metric, value: c.value, source: c.source })),
+      supportingData: run.result.calculations.map(c => ({ label: c.metric, value: c.value, source: c.source })),
+      approval: run.createdRecords.approvals && run.createdRecords.approvals.length > 0 ? {
+        required: true,
+        approvalId: run.createdRecords.approvals[0].id,
+        reason: run.createdRecords.approvals[0].title,
+        impact: run.createdRecords.approvals[0].impact
+      } : undefined,
+      nextActions: run.result.recommendedActions,
+      confidence: run.status === 'completed' ? 0.98 : 0.85,
+      dagPlan: run.plan,
+      dagTasks: run.tasks,
+      createdRecords: run.createdRecords
+    };
+
+    res.json(responsePayload);
   } catch (err: any) {
     console.error('[Orchestrate API] Execution failure:', err.message);
     res.status(500).json({
@@ -2662,10 +2803,11 @@ router.post(['/orchestrate', '/orchestration/command'], authenticateJWT, orchest
   }
 });
 
-// POST orchestrate stream endpoint (Real-time SSE event stream for JARVIS Dashboard)
+// POST orchestrate stream endpoint (Real-time SSE event stream for Executive Dashboard)
 router.post('/orchestrate/stream', authenticateJWT, orchestrateRateLimiter, async (req: AuthenticatedRequest, res) => {
-  const { command, commandId, context } = req.body;
-  if (!command || typeof command !== 'string' || !command.trim()) {
+  const { command, directive, commandId, context } = req.body;
+  const inputCmd = (command || directive || '').trim();
+  if (!inputCmd) {
     res.status(400).json({ error: 'A non-empty founder command is required.' });
     return;
   }
@@ -2676,15 +2818,57 @@ router.post('/orchestrate/stream', authenticateJWT, orchestrateRateLimiter, asyn
   res.flushHeaders?.();
 
   try {
-    const result = await orchestrationService.executeCommand(
-      command.trim(),
-      { userId: req.user?.id, startupId: context?.startupId, commandId },
-      (event) => {
+    const run = await multiLevelOrchestrator.dispatchDirective({
+      directive: inputCmd,
+      userId: req.user!.id,
+      startupId: context?.startupId,
+      commandId,
+      onEvent: (event) => {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
-    );
+    });
 
-    res.write(`data: ${JSON.stringify({ type: 'final_response', result })}\n\n`);
+    const responsePayload = {
+      commandId: run.runId,
+      runId: run.runId,
+      status: run.status === 'needs_approval' ? 'needs_approval' : run.status === 'blocked' ? 'needs_information' : run.status === 'failed' ? 'failed' : 'completed',
+      interpretation: {
+        intent: run.intent,
+        objective: run.objective
+      },
+      answer: {
+        summary: run.result.summary,
+        details: [
+          run.result.completedWork.length > 0 ? `### Completed Work\n${run.result.completedWork.map(w => `• ${w}`).join('\n')}` : '',
+          run.result.keyFindings.length > 0 ? `### Key Findings\n${run.result.keyFindings.map(k => `• ${k}`).join('\n')}` : '',
+          run.result.failedOrBlockedSteps.length > 0 ? `### Blocked / Failed Steps\n${run.result.failedOrBlockedSteps.map(f => `• **${f.title}**: ${f.reason}`).join('\n')}` : '',
+          run.result.founderDecisions.length > 0 ? `### Required Founder Decisions\n${run.result.founderDecisions.map(d => `• ${d}`).join('\n')}` : ''
+        ].filter(Boolean).join('\n\n')
+      },
+      agents: run.tasks.length > 0
+        ? run.tasks.map(t => ({
+            role: t.assignedAgent.role,
+            status: t.status === 'completed' ? 'completed' : t.status === 'running' ? 'collaborating' : 'idle',
+            contribution: t.output?.rationale || t.title
+          }))
+        : [{ role: 'CEO', status: 'completed', contribution: run.result.summary }],
+      evidence: run.result.evidence,
+      calculations: run.result.calculations.map(c => ({ metric: c.metric, value: c.value, source: c.source })),
+      supportingData: run.result.calculations.map(c => ({ label: c.metric, value: c.value, source: c.source })),
+      approval: run.createdRecords.approvals && run.createdRecords.approvals.length > 0 ? {
+        required: true,
+        approvalId: run.createdRecords.approvals[0].id,
+        reason: run.createdRecords.approvals[0].title,
+        impact: run.createdRecords.approvals[0].impact
+      } : undefined,
+      nextActions: run.result.recommendedActions,
+      confidence: run.status === 'completed' ? 0.98 : 0.85,
+      dagPlan: run.plan,
+      dagTasks: run.tasks,
+      createdRecords: run.createdRecords
+    };
+
+    res.write(`data: ${JSON.stringify({ type: 'final_response', result: responsePayload })}\n\n`);
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (err: any) {
