@@ -1525,7 +1525,7 @@ export class ApprovalService {
       {
         title: `Founder approved`,
         content: `Founder signed off on deliverable. Operational state changes committed.`,
-        type: 'founder_approval',
+        type: isHiring ? 'hire' : 'founder_approval',
         createdAt: new Date(now - 1000)
       },
       {

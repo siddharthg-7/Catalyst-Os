@@ -99,20 +99,25 @@ export async function runOrchestrationLoop(
     const isHiringScenario = initiative.id === 'init_demo_hiring' || 
       initiative.title.toLowerCase().includes('hire') || 
       initiative.title.toLowerCase().includes('engineer') ||
-      initiative.title.toLowerCase().includes('launch');
+      initiative.title.toLowerCase().includes('recruit') ||
+      initiative.title.toLowerCase().includes('headcount');
+
+    const coName = startupProfile?.name || 'Company';
+    const cash = startupProfile?.cashBalance || 100000;
+    const burn = startupProfile?.burnRate || 10000;
 
     if (isHiringScenario) {
       return {
         initiativeId: initiative.id || `init_${Date.now()}`,
         founderGoal: initiative.description,
         requiredExecutives: ['Finance', 'Operations', 'Growth'],
-        ragQueryString: 'NovaTech enterprise launch runway pilot customers engineering bottleneck',
+        ragQueryString: `${coName} hiring runway headcount budget capacity`,
         decomposedTasks: [
-          { id: 'task_f1', assignedTo: 'Finance', title: 'Stress test runway impact of 2 new senior hires (-₹4L/mo) vs 1 senior hire (-₹2L/mo) against ₹72L reserves', constraints: 'Maintain minimum 6-month runway buffer.' },
-          { id: 'task_o1', assignedTo: 'Operations', title: 'Evaluate 3-developer bandwidth bottleneck and onboarding mentorship drag on 6-week launch sprint', constraints: 'Current team at 95% capacity; avoid 25% sprint drag.' },
-          { id: 'task_g1', assignedTo: 'Growth', title: 'Quantify delivery commitments for 5 enterprise pilot partners and ₹25L ARR launch milestone', constraints: 'Release committed in 6 weeks.' }
+          { id: 'task_f1', assignedTo: 'Finance', title: `Model runway impact of new headcount against $${cash.toLocaleString()} cash reserves`, constraints: 'Maintain minimum 6-month runway buffer.' },
+          { id: 'task_o1', assignedTo: 'Operations', title: `Evaluate team capacity, mentoring bandwidth, and onboarding ramp for ${initiative.title}`, constraints: 'Avoid team sprint delivery bottlenecks.' },
+          { id: 'task_g1', assignedTo: 'Growth', title: `Align headcount capacity with key customer delivery and revenue roadmap milestones`, constraints: 'Protect customer SLA commitments.' }
         ],
-        expectedDeliverables: [{ type: 'contract', title: 'Executive Decision: Hire 1 Senior Platform Infrastructure Engineer' }]
+        expectedDeliverables: [{ type: 'contract', title: `Executive Decision: Strategic Headcount Authorization for ${coName}` }]
       };
     }
 
@@ -120,13 +125,13 @@ export async function runOrchestrationLoop(
       initiativeId: `init_${Date.now()}`,
       founderGoal: initiative.description,
       requiredExecutives: ['Finance', 'Operations', 'Growth'],
-      ragQueryString: 'strategic growth expansion budget planning',
+      ragQueryString: `${coName} strategic growth roadmap execution`,
       decomposedTasks: [
-        { id: 'task_f1', assignedTo: 'Finance', title: 'Audit treasury bounds & cash burn impact', constraints: 'Protect 12-month runway.' },
-        { id: 'task_o1', assignedTo: 'Operations', title: 'Assess infrastructure scaling and delivery limits', constraints: 'Maintain 99.9% uptime.' },
-        { id: 'task_g1', assignedTo: 'Growth', title: 'Model acquisition conversion and revenue upside', constraints: 'Target 30% MoM growth.' }
+        { id: 'task_f1', assignedTo: 'Finance', title: `Audit treasury bounds & cash burn impact ($${burn.toLocaleString()}/mo burn)`, constraints: 'Protect operating runway.' },
+        { id: 'task_o1', assignedTo: 'Operations', title: 'Assess infrastructure scaling and delivery limits', constraints: 'Maintain high platform availability and velocity.' },
+        { id: 'task_g1', assignedTo: 'Growth', title: 'Model acquisition conversion and revenue upside', constraints: 'Target consistent MoM growth.' }
       ],
-      expectedDeliverables: [{ type: 'document', title: 'Strategic Initiative Execution Roadmap' }]
+      expectedDeliverables: [{ type: 'document', title: `Execution Roadmap: ${initiative.title}` }]
     };
   };
 
@@ -213,25 +218,36 @@ export async function runOrchestrationLoop(
       const isHiring = task.title.toLowerCase().includes('salary') || 
         task.title.toLowerCase().includes('compensation') || 
         task.title.toLowerCase().includes('hire') || 
+        task.title.toLowerCase().includes('headcount') || 
         task.title.toLowerCase().includes('engineer');
 
+      const coName = startupProfile?.name || 'Our venture';
+      const cash = startupProfile?.cashBalance || 100000;
+      const burn = startupProfile?.burnRate || 10000;
+      const runway = startupProfile?.runwayMonths || (burn > 0 ? parseFloat((cash / burn).toFixed(1)) : 12);
+      const singleHireCost = Math.round(burn * 0.25) || 10000;
+      const doubleHireCost = singleHireCost * 2;
+      const projectedRunwayDouble = burn + doubleHireCost > 0 ? parseFloat((cash / (burn + doubleHireCost)).toFixed(1)) : 6;
+      const projectedRunwaySingle = burn + singleHireCost > 0 ? parseFloat((cash / (burn + singleHireCost)).toFixed(1)) : 9;
+
       if (role === 'Finance') {
+        const isRunwayConstrained = projectedRunwayDouble < 6;
         return {
           agentId: 'Finance',
           reasoning: isHiring
-            ? 'Aura (Finance) runway audit: NovaTech holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway.'
-            : 'Aura (Finance) treasury audit: Verified expenditure against liquid capital and monthly burn rate. Runway preserves target tolerance boundaries.',
+            ? `Aura (Finance) runway audit: ${coName} holds $${cash.toLocaleString()} in liquid reserves with a $${burn.toLocaleString()}/month burn rate (${runway} months runway). Expanding headcount increases burn by $${doubleHireCost.toLocaleString()}/mo (${projectedRunwayDouble} mos runway). Authorizing phased hiring of 1 role increases burn by only $${singleHireCost.toLocaleString()}/mo, preserving a healthy ${projectedRunwaySingle} months of runway.`
+            : `Aura (Finance) treasury audit: Verified expenditure against liquid capital ($${cash.toLocaleString()}) and monthly burn ($${burn.toLocaleString()}/mo). Runway maintains target safety boundaries.`,
           recommendations: [{
             id: `rec_finance_1`,
-            title: isHiring ? 'Approve 1 Senior Hire (Defer Second Hire to Post-Launch)' : 'Authorize Controlled Expenditure',
+            title: isHiring ? 'Authorize Phased Headcount Addition' : 'Authorize Controlled Expenditure',
             description: isHiring
-              ? 'Authorizes 1 senior platform engineer. Preserves 7.8 months of operational runway while unlocking core backend throughput.'
-              : 'Approve budgeted capital deployment with strict monthly milestone reviews.',
-            financialImpact: isHiring ? -200000 : -100000,
+              ? `Authorizes 1 role initially, preserving ${projectedRunwaySingle} months of operational runway while unlocking critical execution throughput.`
+              : 'Approve budgeted capital deployment with monthly milestone reviews.',
+            financialImpact: isHiring ? -singleHireCost : -Math.round(burn * 0.1),
             riskRating: 'medium'
           }],
-          isConflict: isHiring, // Clash: 2 hires creates unsafe burn
-          conflictReason: isHiring ? 'Adding 2 engineers simultaneously reduces cash runway to 5.5 months, breaching our 6-month fiscal safety boundary.' : undefined,
+          isConflict: isHiring && isRunwayConstrained,
+          conflictReason: isHiring && isRunwayConstrained ? `Adding full requested headcount simultaneously reduces cash runway to ${projectedRunwayDouble} months, which is tight against safety buffers.` : undefined,
           metricChanges: {
             velocity: 15,
             financialHealth: -2,
@@ -246,14 +262,14 @@ export async function runOrchestrationLoop(
         return {
           agentId: 'Operations',
           reasoning: isHiring
-            ? 'Helix (Operations) bottleneck audit: Our 3-developer core team is running at 95% workload capacity. Onboarding 2 new developers concurrently introduces a 25% mentorship overhead, slowing sprint velocity right before the 6-week launch. A single senior platform specialist can be integrated in under 10 days with minimal team disruption.'
-            : 'Helix (Operations) delivery audit: Reviewed workflow bottlenecks and confirmed operational pipeline is capable of absorbing this initiative.',
+            ? `Helix (Operations) capacity audit: Existing team bandwidth is operating near full capacity. Phased onboarding allows rapid integration with minimal mentorship overhead and immediate velocity gains for ${coName}.`
+            : `Helix (Operations) delivery audit: Reviewed workflow bottlenecks and confirmed operational pipeline is capable of absorbing this initiative.`,
           recommendations: [{
             id: `rec_ops_1`,
-            title: isHiring ? 'Targeted Platform Infrastructure Integration' : 'Optimize Delivery Pipeline',
+            title: isHiring ? 'Targeted Operational Integration' : 'Optimize Delivery Pipeline',
             description: isHiring
-              ? 'Assign 1 senior engineer strictly to CI/CD pipeline automation and enterprise API reliability to protect launch deadline.'
-              : 'Streamline operational procedures and eliminate handoff bottlenecks across modules.',
+              ? 'Integrate new specialist directly into sprint milestones with structured 30-day onboarding goals.'
+              : 'Streamline operational procedures and eliminate handoff bottlenecks.',
             financialImpact: 0,
             riskRating: 'low'
           }],
@@ -272,15 +288,15 @@ export async function runOrchestrationLoop(
         return {
           agentId: 'Growth',
           reasoning: isHiring
-            ? 'Vector (Growth) market impact audit: NovaTech has 5 enterprise pilot agreements committed for launch in 6 weeks, unlocking ₹25,00,000 in ARR. Missing this milestone due to platform bottlenecks risks pilot cancellation. We need immediate platform throughput to fulfill pilot SLAs.'
-            : 'Vector (Growth) market audit: Verified customer acquisition trajectory. Initiative directly accelerates qualified pipeline conversion.',
+            ? `Vector (Growth) market impact audit: Unlocking additional capacity directly supports meeting customer delivery milestones and accelerating revenue conversion for ${coName}.`
+            : `Vector (Growth) market audit: Verified customer acquisition trajectory. Initiative directly accelerates qualified pipeline conversion.`,
           recommendations: [{
             id: `rec_growth_1`,
-            title: isHiring ? 'Accelerate Enterprise Pilot Delivery SLAs' : 'Deploy Growth Acceleration Loop',
+            title: isHiring ? 'Accelerate Product & Customer Milestones' : 'Deploy Growth Acceleration Loop',
             description: isHiring
-              ? 'Deploy platform capacity to satisfy data security and throughput criteria for the 5 enterprise pilot partners.'
-              : 'Launch targeted acquisition campaigns to capture high-intent enterprise pipeline.',
-            financialImpact: 2500000,
+              ? 'Deploy unlocked capacity to fulfill pending feature requests and protect customer retention.'
+              : 'Launch targeted acquisition campaigns to capture high-intent customers.',
+            financialImpact: 0,
             riskRating: 'low'
           }],
           isConflict: false,
@@ -403,17 +419,20 @@ export async function runOrchestrationLoop(
       const isHiring = initiative.id === 'init_demo_hiring' || 
         initiative.title.toLowerCase().includes('hire') || 
         initiative.title.toLowerCase().includes('engineer') || 
+        initiative.title.toLowerCase().includes('headcount') || 
         initiative.title.toLowerCase().includes('launch');
+
+      const coName = startupProfile?.name || 'Company';
 
       if (isHiring) {
         return {
           conflictId: `con_${Date.now()}`,
           resolvedMetrics: {
-            financialChange: -200000,
+            financialChange: -150000,
             metricChanges: { velocity: 20, financialHealth: -2, legalCompliance: 5, growthRate: 12, operationsEfficiency: 15 }
           },
-          resolutionText: 'Executive Consensus: Proceed with hiring ONE senior platform engineer immediately. Defer second hire to post-launch.',
-          compromiseDetails: 'Balances Aura\'s runway preservation goals (maintaining 7.8 months of runway) with Helix\'s onboarding bandwidth and Vector\'s 5 enterprise pilot SLA commitments.'
+          resolutionText: 'Executive Consensus: Authorize initial priority hire immediately; stage additional hiring post-milestone.',
+          compromiseDetails: `Balances treasury runway preservation with ${coName}'s delivery commitments and team onboarding bandwidth.`
         };
       }
 
