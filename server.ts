@@ -65,13 +65,20 @@ app.get('/ready', async (req, res) => {
 // Mount modularized backend API routes
 app.use('/api', apiRouter);
 
+import http from 'http';
+
 // ==================================================
 // VITE AND STATIC ASSETS SERVING SETUP
 // ==================================================
 async function startServer() {
+  const httpServer = http.createServer(app);
+
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: { server: httpServer },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -83,7 +90,19 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n❌ [CatalystOS] Port ${PORT} is already in use by another process (EADDRINUSE).`);
+      console.error(`💡 Tip: CatalystOS is a unified full-stack server (Express backend + Vite React frontend).`);
+      console.error(`   You only need ONE running terminal instance with "npm run dev" in the project root.\n`);
+      process.exit(1);
+    } else {
+      console.error('❌ [CatalystOS] Server error:', err);
+      process.exit(1);
+    }
+  });
+
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`CatalystOS Full-Stack Server active at http://0.0.0.0:${PORT}`);
   });
 }

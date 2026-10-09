@@ -16,6 +16,7 @@ import DecisionLog from './components/DecisionLog';
 import ScenarioSimulator from './components/ScenarioSimulator';
 import PeopleDirectory from './components/PeopleDirectory';
 import AcceptInvitation from './components/AcceptInvitation';
+import EmployeeWorkspace from './components/EmployeeWorkspace';
 import { 
   Bell,
   CheckSquare, 
@@ -32,7 +33,8 @@ import {
   Users,
   TrendingUp,
   Layers,
-  Database
+  Database,
+  Briefcase
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -152,7 +154,8 @@ export default function App() {
   };
 
   // ── Derive activeTab from URL pathname ───────────────────────────────────────
-  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'people' => {
+  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'people' => {
+    if (pathname.includes('/workspace')) return 'workspace';
     if (pathname.includes('/approvals')) return 'approvals';
     if (pathname.includes('/scenarios')) return 'scenarios';
     if (pathname.includes('/decisions')) return 'decisions';
@@ -178,7 +181,7 @@ export default function App() {
     }
   }, [location.pathname]);
 
-  const handleTabChange = (tab: 'dashboard' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'people', agentId?: string) => {
+  const handleTabChange = (tab: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'people', agentId?: string) => {
     if (tab === 'agents') {
       const targetAgent = agentId || selectedAgentId || 'ceo';
       setSelectedAgentId(targetAgent);
@@ -793,13 +796,14 @@ export default function App() {
     // ── Navigation helpers ─────────────────────────────────────────────────────
     const navItems = [
       { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
+      { id: 'workspace' as const,  label: 'Employee Workspace', Icon: Briefcase, badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', badgeColor: 'text-amber-600' },
       { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
       { id: 'knowledge' as const,  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-indigo-600' },
       { id: 'workflows' as const,  label: 'Workflows',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-[#696969]' },
       { id: 'people' as const,     label: 'People',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : 'New', badgeColor: 'text-emerald-600' },
       { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-indigo-600' },
       { id: 'decisions' as const,  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-[#696969]' },
-    ].filter(item => permissions.areas.includes(item.id as any));
+    ].filter(item => item.id === 'workspace' || permissions.areas.includes(item.id as any));
 
     const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
 
@@ -1078,7 +1082,17 @@ export default function App() {
                     onSimulateInitiative={handleSimulateInitiative}
                     onUpdateStartup={handleUpdateStartup}
                     onRefreshTasks={hydrateTasks}
-                    onNavigate={(tab) => handleTabChange(tab)}
+                    onNavigate={(tab) => handleTabChange(tab as any)}
+                  />
+                )}
+
+                {activeTab === 'workspace' && (
+                  <EmployeeWorkspace 
+                    userRole={user?.role}
+                    userName={user?.name}
+                    companyName={startup?.name}
+                    onRefreshTasks={hydrateTasks}
+                    onNavigateToApprovals={() => handleTabChange('approvals')}
                   />
                 )}
                 
@@ -1376,6 +1390,7 @@ export default function App() {
       />
 
       {/* Direct Shortcuts for Workspace Phases */}
+      <Route path="/workspace" element={<Navigate to="/dashboard/workspace" replace />} />
       <Route path="/approvals" element={<Navigate to="/dashboard/approvals" replace />} />
       <Route path="/knowledge" element={<Navigate to="/dashboard/knowledge" replace />} />
       <Route path="/workflows" element={<Navigate to="/dashboard/workflows" replace />} />

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch server.ts",
-    "test": "tsx --test tests/authSecurity.test.ts tests/financialEngine.test.ts tests/multiAgentCouncil.test.ts tests/productionVerification.test.ts tests/approvalContext.test.ts tests/companyContext.test.ts tests/membershipInvitations.test.ts tests/membershipRemoval.test.ts tests/accountAccessControl.test.ts tests/taskDelegation.test.ts tests/founderCommandPipeline.test.ts tests/companyKnowledgeRag.test.ts tests/taskDecompositionA4.test.ts",
+    "test": "tsx --test tests/authSecurity.test.ts tests/financialEngine.test.ts tests/multiAgentCouncil.test.ts tests/productionVerification.test.ts tests/approvalContext.test.ts tests/companyContext.test.ts tests/membershipInvitations.test.ts tests/membershipRemoval.test.ts tests/accountAccessControl.test.ts tests/taskDelegation.test.ts tests/founderCommandPipeline.test.ts tests/companyKnowledgeRag.test.ts tests/taskDecompositionA4.test.ts tests/employeeWorkspaceB1B2.test.ts",
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",

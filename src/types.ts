@@ -35,11 +35,38 @@ export interface DelegatedTask {
   department: string;
   agent: string;
   ownerRole: string | null;
+  assignedUserId?: string | null;
+  assignedUserName?: string | null;
   status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'rejected';
   result: string | null;
   needsHumanOwner: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface EmployeeWorkspacePayload {
+  department: string;
+  role: string;
+  companionAgent: {
+    name: string;
+    role: string;
+    avatar: string;
+    description: string;
+  };
+  tasks: DelegatedTask[];
+  accessibleDocuments: Array<{
+    id: string;
+    name: string;
+    type: string;
+    summary: string;
+    category?: string;
+  }>;
+  departmentMetrics?: {
+    activeTasks: number;
+    pendingSubmission: number;
+    submittedCount: number;
+    approvedCount: number;
+  };
 }
 
 export interface Plan {

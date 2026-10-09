@@ -40,6 +40,9 @@ import {
 import {
   listTasksForUser,
   updateTaskForUser,
+  assignTaskForUser,
+  getRoleScopedContext,
+  getAgentDraftForTask,
   listPlansForUser,
   getPlanById,
   TaskDelegationError
@@ -1159,6 +1162,38 @@ router.patch('/tasks/:id', authenticateJWT, requireActiveMembership, requirePerm
       status: req.body?.status,
       result: req.body?.result
     }));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// PATCH assign or claim a task (Phase B1).
+// Founder/Admin can assign or unassign; employee can claim their department tasks.
+router.patch('/tasks/:id/assign', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    res.json(await assignTaskForUser({
+      userId: req.user!.id,
+      taskId: req.params.id,
+      assigneeId: req.body?.assigneeId !== undefined ? req.body.assigneeId : req.body?.claim ? req.user!.id : undefined
+    }));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// GET the companion AI executive draft for a task (Phase B2).
+router.get('/tasks/:id/draft', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    res.json(await getAgentDraftForTask(req.user!.id, req.params.id));
+  } catch (err) {
+    sendTaskError(res, err);
+  }
+});
+
+// GET employee workspace payload: companion agent, role-scoped documents, metrics (Phase B2).
+router.get('/workspace/employee', authenticateJWT, requireActiveMembership, requirePermission('people:read'), async (req: AuthenticatedRequest, res) => {
+  try {
+    res.json(await getRoleScopedContext({ userId: req.user!.id }));
   } catch (err) {
     sendTaskError(res, err);
   }

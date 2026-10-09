@@ -538,6 +538,14 @@ export class ApprovalService {
             data: { status: 'rejected' }
           });
 
+          if (approvalId.startsWith('appr_task_')) {
+            const taskId = approvalId.replace('appr_task_', '');
+            await (prisma as any).task.update({
+              where: { id: taskId },
+              data: { status: 'rejected' }
+            }).catch(() => {});
+          }
+
           await prisma.decisionLog.create({
             data: {
               title: `Reject: ${dbApproval.title}`,
@@ -846,6 +854,14 @@ export class ApprovalService {
             data: { status: 'approved' }
           });
 
+          if (approvalId.startsWith('appr_task_')) {
+            const taskId = approvalId.replace('appr_task_', '');
+            await (prisma as any).task.update({
+              where: { id: taskId },
+              data: { status: 'approved' }
+            }).catch(() => {});
+          }
+
           // CRITICAL: Invalidate Company Context so future AI requests retrieve fresh database state
           companyContextService.invalidate(startup.id);
           companyContextService.invalidate(userId);
@@ -904,6 +920,14 @@ export class ApprovalService {
             where: { id: approvalId },
             data: { status: 'approved' }
           });
+
+          if (approvalId.startsWith('appr_task_')) {
+            const taskId = approvalId.replace('appr_task_', '');
+            await (prisma as any).task.update({
+              where: { id: taskId },
+              data: { status: 'approved' }
+            }).catch(() => {});
+          }
 
           await prisma.execution.create({
             data: {

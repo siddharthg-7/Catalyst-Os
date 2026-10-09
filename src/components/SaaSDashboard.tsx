@@ -41,7 +41,7 @@ interface SaaSDashboardProps {
   onSimulateInitiative: (id: string) => Promise<void>;
   onUpdateStartup: (updated: StartupProfile) => void;
   onRefreshTasks?: () => Promise<void>;
-  onNavigate?: (tab: 'dashboard' | 'approvals' | 'knowledge' | 'agents' | 'workflows' | 'people' | 'scenarios' | 'decisions') => void;
+  onNavigate?: (tab: 'dashboard' | 'workspace' | 'approvals' | 'knowledge' | 'agents' | 'workflows' | 'people' | 'scenarios' | 'decisions') => void;
 }
 
 // ── Utility Helpers ───────────────────────────────────────────────────────────
@@ -1454,14 +1454,25 @@ export default function SaaSDashboard({
             </p>
           </div>
 
-          {onRefreshTasks && (
-            <button
-              onClick={() => onRefreshTasks()}
-              className="text-xs font-semibold text-[#696969] hover:text-[#141413] px-3 py-1.5 rounded-lg border border-[#141413]/10 hover:bg-stone-50 transition-all self-start sm:self-center"
-            >
-              Sync Work Orders
-            </button>
-          )}
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('workspace')}
+                className="text-xs font-semibold bg-[#141413] text-[#F3F0EE] hover:bg-black px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>Open Employee Workspace</span>
+              </button>
+            )}
+            {onRefreshTasks && (
+              <button
+                onClick={() => onRefreshTasks()}
+                className="text-xs font-semibold text-[#696969] hover:text-[#141413] px-3 py-1.5 rounded-lg border border-[#141413]/10 hover:bg-stone-50 transition-all cursor-pointer"
+              >
+                Sync
+              </button>
+            )}
+          </div>
         </div>
 
         {tasks.length > 0 ? (
