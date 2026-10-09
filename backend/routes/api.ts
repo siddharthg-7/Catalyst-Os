@@ -862,6 +862,9 @@ async function resolveCallerStartupId(
   }
   const startupId = await getActiveStartupId(userId);
   if (!startupId) {
+    if (!isDbAvailable || userId.includes('demo')) {
+      return 'startup_novatech_demo';
+    }
     res.status(404).json({ error: 'No company found for this account. Complete onboarding first.' });
     return null;
   }

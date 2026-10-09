@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Mic, Paperclip, MicOff } from 'lucide-react';
+import { voiceService } from '../../services/voiceService';
 
 interface ChatInputProps {
   onSend: (text: string, isVoice?: boolean) => void;
@@ -21,81 +22,50 @@ export default function ChatInput({ onSend, disabled, language }: ChatInputProps
   }, [text]);
 
   const [permissionError, setPermissionError] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
 
   const toggleRecording = async () => {
     setPermissionError(null);
 
-    // Prime browser audio context during user gesture to grant autoplay permission for TTS
-    try {
-      const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARB8AAIA+AAACABAAZGF0YQAAAAA=');
-      silentAudio.play().catch(() => {});
-    } catch {
-      // Ignore silent audio initialization error
-    }
-
-    if (isRecording && recognitionRef.current) {
-      recognitionRef.current.stop();
+    // Stop and process current recording
+    if (isRecording) {
       setIsRecording(false);
+      try {
+        const audioBlob = await voiceService.stopRecording();
+        const currentDraft = text.trim();
+        const transcribed = (await voiceService.transcribeAudio(audioBlob)) || currentDraft;
+
+        if (transcribed && transcribed.trim()) {
+          onSend(transcribed.trim(), true);
+          setText('');
+        } else {
+          setText('');
+        }
+      } catch (err: any) {
+        console.error('[Voice Pipeline Error]:', err);
+        setPermissionError('Could not process speech input.');
+        setText('');
+      }
       return;
     }
 
+    // Start recording with real-time speech-to-text
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      recognitionRef.current = mediaRecorder;
-      const audioChunks: BlobPart[] = [];
-
-      mediaRecorder.addEventListener("dataavailable", (event) => {
-        audioChunks.push(event.data);
-      });
-
-      mediaRecorder.addEventListener("stop", async () => {
-        stream.getTracks().forEach(track => track.stop());
-        setIsRecording(false);
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        
-        // Prepare form data
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'recording.webm');
-        const recognitionLanguages: Record<string, string> = { en: 'en', te: 'te', hi: 'hi', ta: 'ta', kn: 'kn', ml: 'ml', bn: 'bn', ar: 'ar' };
-        formData.append('language', recognitionLanguages[language] || 'en');
-
-        try {
-          setText('Transcribing...');
-          const response = await fetch('/api/audio/transcribe', {
-            method: 'POST',
-            body: formData,
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Transcription failed: ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          const transcribed = data.text || '';
-          if (transcribed.trim()) {
-            console.log('[STT received]:', transcribed);
-            onSend(transcribed, true);
-            setText('');
-          } else {
-            console.warn('[STT received empty transcript]');
-            setText('');
-          }
-        } catch (error) {
-          console.error('[Voice Pipeline Error]:', error);
-          setPermissionError('Failed to transcribe audio.');
-          setText('');
-        }
-      });
-
       setIsRecording(true);
-      mediaRecorder.start();
+      setText('Listening...');
 
+      await voiceService.startRecording(
+        undefined,
+        (liveText) => {
+          if (liveText && liveText.trim()) {
+            setText(liveText);
+          }
+        }
+      );
     } catch (e: any) {
-      console.error(e);
+      console.error('[Mic Access Error]:', e);
       setIsRecording(false);
-      setPermissionError('Could not access microphone.');
+      setText('');
+      setPermissionError(e.message || 'Could not access microphone.');
     }
   };
 

@@ -90,7 +90,10 @@ export default function VoiceModeModal({
     voiceService.stopPlayback(); // Barge-in interruption: cancel previous speech
     try {
       setVoiceState('LISTENING');
-      await voiceService.startRecording((vol) => setVolume(vol));
+      await voiceService.startRecording(
+        (vol) => setVolume(vol),
+        (liveText) => setTranscript(liveText)
+      );
     } catch (err: any) {
       setVoiceState('ERROR');
       setErrorMessage(err.message || 'Microphone access denied');
@@ -103,11 +106,11 @@ export default function VoiceModeModal({
     try {
       setVoiceState('PROCESSING');
       const audioBlob = await voiceService.stopRecording();
-      const text = await voiceService.transcribeAudio(audioBlob);
+      const text = (await voiceService.transcribeAudio(audioBlob)) || transcript;
 
       if (!text || !text.trim()) {
         setVoiceState('IDLE');
-        setErrorMessage('No speech detected. Please try speaking again.');
+        setErrorMessage('No speech detected. Please tap Speak and try again.');
         return;
       }
 

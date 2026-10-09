@@ -33,6 +33,9 @@ class VoiceService {
   private isRecording: boolean = false;
   private volumeCallback: ((volume: number) => void) | null = null;
   private animationFrameId: number | null = null;
+  private speechRecognition: any = null;
+  private liveTranscript: string = '';
+  private transcriptCallback: ((text: string) => void) | null = null;
 
   // Selected voice and preferences
   private selectedVoiceId: string = localStorage.getItem('catalyst_voice_id') || 'atlas_voice_default';
@@ -41,14 +44,55 @@ class VoiceService {
 
   // ── 1. Microphone & Recording ──────────────────────────────────────────────
 
-  public async startRecording(onVolumeUpdate?: (volume: number) => void): Promise<void> {
+  public async startRecording(
+    onVolumeUpdate?: (volume: number) => void,
+    onTranscriptUpdate?: (transcript: string) => void
+  ): Promise<void> {
     if (this.isRecording) return;
     this.audioChunks = [];
+    this.liveTranscript = '';
     this.volumeCallback = onVolumeUpdate || null;
+    this.transcriptCallback = onTranscriptUpdate || null;
 
     try {
       // Intercept / barge-in: stop any currently playing assistant speech immediately
       this.stopPlayback();
+
+      // Start browser Web Speech recognition in parallel for instant, real-time live transcription
+      if (typeof window !== 'undefined') {
+        const SpeechRec = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+        if (SpeechRec) {
+          try {
+            const recognition = new SpeechRec();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = (event: any) => {
+              let currentText = '';
+              for (let i = 0; i < event.results.length; i++) {
+                currentText += event.results[i][0].transcript;
+              }
+              const clean = currentText.trim();
+              if (clean) {
+                this.liveTranscript = clean;
+                if (this.transcriptCallback) {
+                  this.transcriptCallback(clean);
+                }
+              }
+            };
+
+            recognition.onerror = (e: any) => {
+              console.warn('[Web Speech API] recognition notice:', e.error);
+            };
+
+            recognition.start();
+            this.speechRecognition = recognition;
+          } catch (e) {
+            console.warn('[Web Speech API] not started:', e);
+          }
+        }
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -162,6 +206,12 @@ class VoiceService {
 
   private cleanupRecording() {
     this.isRecording = false;
+    if (this.speechRecognition) {
+      try {
+        this.speechRecognition.stop();
+      } catch {}
+      this.speechRecognition = null;
+    }
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
@@ -179,19 +229,33 @@ class VoiceService {
     this.audioChunks = [];
   }
 
+  public getLiveTranscript(): string {
+    return this.liveTranscript;
+  }
+
   // ── 2. Speech-to-Text Transcription ────────────────────────────────────────
 
   public async transcribeAudio(audioBlob: Blob): Promise<string> {
-    // 1. Convert audio blob to base64
-    const base64Audio = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = (reader.result as string) || '';
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(audioBlob);
-    });
+    // 1. If Web Speech recognition captured live real-time transcript, return it immediately
+    if (this.liveTranscript && this.liveTranscript.trim().length > 0) {
+      const captured = this.liveTranscript.trim();
+      this.liveTranscript = '';
+      return captured;
+    }
+
+    // 2. Convert audio blob to base64
+    let base64Audio = '';
+    try {
+      base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string) || '';
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(audioBlob);
+      });
+    } catch {}
 
     try {
       const res = await fetch('/api/voice/transcribe', {
@@ -203,17 +267,15 @@ class VoiceService {
         })
       });
 
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data.transcript || data.text || '';
       }
-
-      const data = await res.json();
-      return data.transcript || '';
     } catch (err) {
-      console.warn('Backend transcription unavailable. Checking browser Web Speech fallback...');
-      // Fallback: If recording was short, notify user
-      throw new Error('Voice Studio transcription was unable to process the audio buffer.');
+      console.warn('Backend transcription unavailable:', err);
     }
+
+    return '';
   }
 
   // ── 3. Text-to-Speech Synthesis & Playback ──────────────────────────────────

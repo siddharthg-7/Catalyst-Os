@@ -61,6 +61,7 @@ voiceRouter.post('/transcribe', async (req: Request, res: Response) => {
     });
 
     res.json({
+      text: result.transcript,
       transcript: result.transcript,
       confidence: result.confidence,
       language: result.language,
@@ -74,18 +75,19 @@ voiceRouter.post('/transcribe', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/voice/synthesize — Text-to-Speech
-voiceRouter.post('/synthesize', async (req: Request, res: Response) => {
+// POST /api/voice/synthesize & /api/voice/speech — Text-to-Speech
+const handleSynthesis = async (req: Request, res: Response) => {
   try {
-    const { text, voiceId, format = 'wav', speed = 1.0 } = req.body || {};
+    const { text, input, voiceId, voice, format = 'wav', speed = 1.0 } = req.body || {};
+    const textToSpeak = text || input;
 
-    if (!text || typeof text !== 'string' || !text.trim()) {
+    if (!textToSpeak || typeof textToSpeak !== 'string' || !textToSpeak.trim()) {
       return res.status(400).json({ error: 'Field "text" is required for voice synthesis.' });
     }
 
     const result = await voiceManager.synthesize({
-      text: text.trim(),
-      voiceId,
+      text: textToSpeak.trim(),
+      voiceId: voiceId || voice,
       format: format === 'mp3' ? 'mp3' : format === 'opus' ? 'opus' : 'wav',
       speed: Number(speed) || 1.0
     });
@@ -98,7 +100,10 @@ voiceRouter.post('/synthesize', async (req: Request, res: Response) => {
     console.error('[VoiceRouter] /synthesize error:', err);
     res.status(500).json({ error: 'Synthesis failed', details: err.message });
   }
-});
+};
+
+voiceRouter.post('/synthesize', handleSynthesis);
+voiceRouter.post('/speech', handleSynthesis);
 
 // POST /api/voice/voices — Create Custom / Cloned Voice Profile
 voiceRouter.post('/voices', async (req: Request, res: Response) => {
