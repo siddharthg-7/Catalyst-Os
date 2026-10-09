@@ -996,27 +996,16 @@ export class ApprovalService {
             }
           });
 
-          // Record in DecisionLog
-          await prisma.decisionLog.create({
-            data: {
-              title: `Approve: ${appr.title}`,
-              description: appr.description,
-              category: (appr.type || 'OPERATIONS').toUpperCase(),
-              impactText: appr.impact || 'Executive action executed and verified in company ledger.',
-              financialImpact: appr.financialChange || 0,
-              status: 'approved',
-              startupId: startup.id
-            }
-          });
-
-          // Record in TimelineItem
-          await prisma.timelineItem.create({
-            data: {
-              title: `Signed Off: ${appr.title}`,
-              content: `${appr.description}. Impact: ${appr.impact || 'Company operational parameters updated.'}`,
-              type: isHiring ? 'hire' : 'financial',
-              startupId: startup.id
-            }
+          // Record DecisionLog, Memory (F1), and Timeline (F2)
+          await this.recordDecisionMemoryAndTimeline({
+            startup,
+            appr,
+            userId,
+            isStateChanging: true,
+            isHiring,
+            cashDelta,
+            burnDelta,
+            teamSizeDelta
           });
 
           // Update Approval status in PostgreSQL
@@ -1032,6 +1021,16 @@ export class ApprovalService {
               data: { status: 'approved' }
             }).catch(() => {});
           }
+
+          // Create real-time notification for successful approval
+          await prisma.notification.create({
+            data: {
+              title: `Approved: ${appr.title}`,
+              message: `Founder approved deliverable. Operational state changes committed and saved to company memory.`,
+              type: 'APPROVED',
+              startupId: startup.id
+            }
+          }).catch(() => {});
 
           // CRITICAL: Invalidate Company Context so future AI requests retrieve fresh database state
           companyContextService.invalidate(startup.id);
@@ -1114,25 +1113,16 @@ export class ApprovalService {
             }
           });
 
-          await prisma.decisionLog.create({
-            data: {
-              title: `Approve: ${appr.title}`,
-              description: appr.description,
-              category: (appr.type || 'DOCUMENT').toUpperCase(),
-              impactText: appr.impact || 'Deliverable approved by founder. No financial metrics modified.',
-              financialImpact: 0,
-              status: 'approved',
-              startupId: startup.id
-            }
-          });
-
-          await prisma.timelineItem.create({
-            data: {
-              title: `Approved: ${appr.title}`,
-              content: appr.description,
-              type: 'deliverable',
-              startupId: startup.id
-            }
+          // Record DecisionLog, Memory (F1), and Timeline (F2)
+          await this.recordDecisionMemoryAndTimeline({
+            startup,
+            appr,
+            userId,
+            isStateChanging: false,
+            isHiring: false,
+            cashDelta: 0,
+            burnDelta: 0,
+            teamSizeDelta: 0
           });
         }, 3);
 
@@ -1433,21 +1423,153 @@ export class ApprovalService {
   }
 
   /**
+   * Phase E & F: Persists DecisionLog, F1 Decision Memory, and F2 Company Timeline.
+   */
+  private async recordDecisionMemoryAndTimeline(params: {
+    startup: any;
+    appr: any;
+    userId: string;
+    isStateChanging: boolean;
+    isHiring: boolean;
+    cashDelta: number;
+    burnDelta: number;
+    teamSizeDelta: number;
+  }) {
+    const { startup, appr, userId, isStateChanging, isHiring, cashDelta, burnDelta, teamSizeDelta } = params;
+    if (!prisma || !startup?.id) return;
+
+    const rawMeta = appr.metricChanges || {};
+    const parsedMeta = typeof rawMeta === 'string'
+      ? (() => { try { return JSON.parse(rawMeta); } catch { return {}; } })()
+      : (rawMeta || {});
+
+    const cleanTitle = (appr.title || 'Executive Deliverable').replace(/^\[[A-Z]+\|[A-Za-z]+\|[A-Z]*\]\s*/, '');
+    const preparedBy = parsedMeta.preparedBy || appr.preparedBy || (isHiring ? 'HR Employee' : 'Employee');
+    const preparedByRole = parsedMeta.preparedByRole || appr.preparedByRole || (isHiring ? 'HR' : 'OPERATIONS');
+    const preparedByUserName = parsedMeta.preparedByUserName || appr.preparedByUserName || `${preparedByRole} Team Member`;
+    const aiAssistance = parsedMeta.aiAssistance || appr.aiAssistance || (isHiring ? 'Echo' : 'Atlas');
+    const summary = parsedMeta.summary || appr.description || cleanTitle;
+    const recommendation = parsedMeta.recommendation || appr.recommendation || `Approve ${cleanTitle} and authorize operational execution.`;
+    const whoRequested = parsedMeta.requestedBy || appr.requestedBy || `Founder (${userId})`;
+    const whyRationale = parsedMeta.whyRationale || appr.impact || `Strategic goal execution for ${cleanTitle}`;
+
+    const outcomeSummary = isStateChanging
+      ? (isHiring
+          ? `Headcount incremented by +${teamSizeDelta}. Monthly burn rate updated by +$${burnDelta.toLocaleString()}/mo. Liquid runway adjusted.`
+          : `Financial treasury parameters updated. Cash balance delta: $${cashDelta.toLocaleString()}, burn delta: $${burnDelta.toLocaleString()}.`)
+      : `Deliverable ratified and integrated into company operational baseline. No immediate liquid mutations.`;
+
+    // 1. Record in DecisionLog (immutable strategic ledger)
+    const existingDecision = await prisma.decisionLog.findFirst({
+      where: {
+        startupId: startup.id,
+        title: { contains: cleanTitle }
+      }
+    });
+
+    if (!existingDecision) {
+      await prisma.decisionLog.create({
+        data: {
+          title: `Approve: ${cleanTitle}`,
+          description: `${summary}. Prepared by ${preparedByUserName} (${preparedByRole}) with ${aiAssistance} assistance.`,
+          category: (appr.type || (isHiring ? 'CONTRACT' : 'OPERATIONS')).toUpperCase(),
+          impactText: appr.impact || outcomeSummary,
+          financialImpact: appr.financialChange || 0,
+          status: 'approved',
+          startupId: startup.id
+        }
+      });
+    }
+
+    // 2. F1 — Create Company Decision Memory (Completed work becomes company intelligence)
+    await prisma.memory.create({
+      data: {
+        category: 'DECISION_LOG',
+        title: cleanTitle,
+        description: [
+          `**What happened:** ${summary}`,
+          `**Who requested it:** ${whoRequested}`,
+          `**Who worked on it:** ${preparedByUserName} (${preparedByRole})`,
+          `**Which AI helped:** ${aiAssistance}`,
+          `**What was recommended:** ${recommendation}`,
+          `**Who approved it:** Founder (${userId})`,
+          `**When:** ${new Date().toISOString()}`,
+          `**Why:** ${whyRationale}`,
+          `**Outcome:** ${outcomeSummary}`
+        ].join('\n'),
+        startupId: startup.id
+      }
+    });
+
+    // 3. F2 — Create Company Timeline (5-Stage Sequential Collaboration Lifecycle)
+    const now = Date.now();
+    const timelineSequence = [
+      {
+        title: `Founder requested ${cleanTitle}`,
+        content: `Founder directive initiated execution loop for: "${cleanTitle}".`,
+        type: 'command',
+        createdAt: new Date(now - 4000)
+      },
+      {
+        title: `${aiAssistance} created analysis`,
+        content: `${aiAssistance} formulated domain benchmarks, leveling constraints, and initial co-pilot draft.`,
+        type: 'agent_analysis',
+        createdAt: new Date(now - 3000)
+      },
+      {
+        title: `${preparedByRole} completed plan`,
+        content: `${preparedByUserName} finalized and verified the deliverable in collaboration with ${aiAssistance}.`,
+        type: 'employee_submission',
+        createdAt: new Date(now - 2000)
+      },
+      {
+        title: `Founder approved`,
+        content: `Founder signed off on deliverable. Operational state changes committed.`,
+        type: 'founder_approval',
+        createdAt: new Date(now - 1000)
+      },
+      {
+        title: `Decision recorded`,
+        content: `Committed to immutable decision log and company memory for future organizational intelligence.`,
+        type: 'decision_recorded',
+        createdAt: new Date(now)
+      }
+    ];
+
+    for (const item of timelineSequence) {
+      await prisma.timelineItem.create({
+        data: {
+          title: item.title,
+          content: item.content,
+          type: item.type,
+          startupId: startup.id,
+          createdAt: item.createdAt
+        }
+      });
+    }
+
+    // 4. Trigger Phase G Proactive Analysis & Notifications
+    try {
+      const { proactiveEngine } = await import('./proactiveEngine');
+      proactiveEngine.generateAndNotifyInsights(startup.id).catch(() => {});
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
    * Retrieves decision records for the authenticated user's startup.
    */
   public async getDecisionsForUser(userId: string): Promise<DecisionRecord[]> {
     if (isDbAvailable && prisma && userId) {
-      const userStartup = await safeDbQuery(() =>
-        prisma.startup.findFirst({
-          where: { ownerId: userId },
-          select: { id: true }
-        })
-      );
+      const { resolveMembership } = await import('./membershipService');
+      const membership = await resolveMembership(userId);
+      const targetStartupId = membership?.startupId;
 
-      if (userStartup) {
+      if (targetStartupId) {
         const records = await safeDbQuery(() =>
           prisma.decisionLog.findMany({
-            where: { startupId: userStartup.id },
+            where: { startupId: targetStartupId },
             orderBy: { createdAt: 'desc' },
             take: 50
           })
@@ -1469,6 +1591,52 @@ export class ApprovalService {
     }
 
     return decisionLog;
+  }
+
+  /**
+   * F2 — Retrieves company timeline items for the authenticated user's startup.
+   */
+  public async getTimelineForUser(userId: string): Promise<any[]> {
+    if (isDbAvailable && prisma && userId) {
+      const { resolveMembership } = await import('./membershipService');
+      const membership = await resolveMembership(userId);
+      const targetStartupId = membership?.startupId;
+
+      if (targetStartupId) {
+        const records = await safeDbQuery(() =>
+          prisma.timelineItem.findMany({
+            where: { startupId: targetStartupId },
+            orderBy: { createdAt: 'desc' },
+            take: 50
+          })
+        );
+        if (records) return records;
+      }
+    }
+    return [];
+  }
+
+  /**
+   * F1 — Retrieves company memories for the authenticated user's startup.
+   */
+  public async getMemoriesForUser(userId: string): Promise<any[]> {
+    if (isDbAvailable && prisma && userId) {
+      const { resolveMembership } = await import('./membershipService');
+      const membership = await resolveMembership(userId);
+      const targetStartupId = membership?.startupId;
+
+      if (targetStartupId) {
+        const records = await safeDbQuery(() =>
+          prisma.memory.findMany({
+            where: { startupId: targetStartupId },
+            orderBy: { createdAt: 'desc' },
+            take: 50
+          })
+        );
+        if (records) return records;
+      }
+    }
+    return [];
   }
 
   /**
