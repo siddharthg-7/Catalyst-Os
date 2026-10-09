@@ -35,7 +35,11 @@ import {
   Layers,
   Database,
   Briefcase,
-  Radio
+  Radio,
+  Sun,
+  Moon,
+  Building,
+  Command
 } from 'lucide-react';
 import CommandPalette from './components/CommandPalette';
 import { useAuth } from './context/AuthContext';
@@ -796,90 +800,158 @@ export default function App() {
       );
     }
 
-    // ── Navigation helpers ─────────────────────────────────────────────────────
-    const navItems = [
-      { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
-      { id: 'workspace' as const,  label: 'Employee Workspace', Icon: Briefcase, badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', badgeColor: 'text-amber-600' },
-      { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
-      { id: 'knowledge' as const,  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-indigo-600' },
-      { id: 'workflows' as const,  label: 'Workflows',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-[#696969]' },
-      { id: 'people' as const,     label: 'People',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : 'New', badgeColor: 'text-emerald-600' },
-      { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-indigo-600' },
-      { id: 'decisions' as const,  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-[#696969]' },
-    ].filter(item => item.id === 'workspace' || permissions.areas.includes(item.id as any));
+    // ── Navigation Categories (Linear & Notion Information Architecture) ───────
+    const navSections = [
+      {
+        title: 'Core Workspace',
+        items: [
+          { id: 'dashboard' as const,  label: 'Executive Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+          { id: 'workspace' as const,  label: 'Employee Workspace', Icon: Briefcase, badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', badgeColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20' },
+          { id: 'approvals' as const,  label: 'Approval Queue',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20' },
+        ].filter(item => item.id === 'workspace' || permissions.areas.includes(item.id as any))
+      },
+      {
+        title: 'Intelligence & Strategy',
+        items: [
+          { id: 'workflows' as const,  label: 'Workflows & DAG',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
+          { id: 'knowledge' as const,  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-sky-500 bg-sky-500/10 border-sky-500/20' },
+          { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },
+        ].filter(item => permissions.areas.includes(item.id as any))
+      },
+      {
+        title: 'Governance & Team',
+        items: [
+          { id: 'decisions' as const,  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-slate-400 bg-slate-500/10 border-slate-500/20' },
+          { id: 'people' as const,     label: 'People & Access',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : '', badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+        ].filter(item => permissions.areas.includes(item.id as any))
+      }
+    ];
 
-    const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
+    const allNavItems = navSections.flatMap(s => s.items);
+    const currentNavItem = allNavItems.find(n => n.id === activeTab) || (activeTab === 'agents' ? { label: 'Executive Agents' } : { label: activeTab });
+    const tabLabel = currentNavItem.label;
 
     return (
       <div className="flex h-screen overflow-hidden font-sans relative" style={{ backgroundColor: 'var(--c-bg)', color: 'var(--c-fg)' }}>
-        <AuroraBackground />
+        {/* ── AMBIENT DREAMY BACKGROUND (PORTFOLIO REFERENCE) ── */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[55vw] h-[55vw] rounded-full bg-indigo-200/25 dark:bg-indigo-900/15 blur-[120px]" />
+          <div className="absolute top-[25%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-purple-200/20 dark:bg-purple-900/15 blur-[140px]" />
+          <div className="absolute bottom-[-10%] left-[20%] w-[60vw] h-[60vw] rounded-full bg-sky-200/20 dark:bg-blue-950/20 blur-[130px]" />
+        </div>
         <MouseSpotlight />
       
-      {/* ── Desktop Sidebar ──────────────────────────────────────────────── */}
-      <aside className="hidden md:flex flex-col border-r shrink-0 justify-between" style={{ width: 'var(--sidebar-width)', backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', padding: '1.25rem' }}>
-        <div className="space-y-6">
+      {/* ── Desktop Sidebar (Linear / Apple Refinement) ───────────────────── */}
+      <aside 
+        className="hidden md:flex flex-col border-r shrink-0 justify-between select-none z-20 backdrop-blur-xl" 
+        style={{ 
+          width: 'var(--sidebar-width)', 
+          backgroundColor: 'var(--glass-bg)', 
+          borderColor: 'var(--c-border)'
+        }}
+      >
+        <div className="flex flex-col flex-1 min-h-0">
           
-          {/* Logo */}
-          <div className="flex items-center gap-3 px-1">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
-              <CatalystLogo className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-bold text-base block" style={{ letterSpacing: '-0.02em', color: 'var(--c-fg)' }}>CatalystOS</span>
-              <span className="text-label" style={{ fontSize: '0.6rem', color: 'var(--c-faint)' }}>AI Operating System</span>
+          {/* Workspace Identity & Switcher Header */}
+          <div className="p-4 border-b" style={{ borderColor: 'var(--c-border)' }}>
+            <div className="flex items-center justify-between p-2 rounded-2xl transition-all hover:bg-[var(--c-surface-2)] cursor-pointer group">
+              <div className="flex items-center gap-3 min-w-0">
+                <div 
+                  className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-sm shrink-0 shadow-md text-white group-hover:scale-105 transition-transform"
+                >
+                  <CatalystLogo className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-sm truncate block tracking-tight" style={{ color: 'var(--c-fg)' }}>
+                      {startup?.name || 'CatalystOS'}
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs" title="System Operational" />
+                  </div>
+                  <span className="text-[11px] block truncate font-medium text-slate-400">
+                    {startup?.stage || 'Seed'} · {startup?.healthScore}% Health
+                  </span>
+                </div>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity shrink-0" style={{ color: 'var(--c-fg)' }} />
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="space-y-0.5">
-
-            {navItems.map(({ id, label, Icon, badge, badgeColor }) => {
-              const isActive = activeTab === id;
+          {/* Grouped Navigation */}
+          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+            {navSections.map((section, idx) => {
+              if (section.items.length === 0) return null;
               return (
-                <button
-                  key={id}
-                  onClick={() => handleTabChange(id)}
-                  className="relative w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all font-sans cursor-pointer group"
-                  style={{ color: isActive ? 'var(--c-bg)' : 'var(--c-muted)' }}
-                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.color = 'var(--c-fg)'; e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; }}}
-                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.backgroundColor = 'transparent'; }}}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="sidebar-active"
-                      className="absolute inset-0 rounded-xl -z-0"
-                      style={{ backgroundColor: 'var(--c-accent)', boxShadow: 'var(--shadow-sm)' }}
-                      transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
-                    />
-                  )}
-                  <span className="relative z-10 flex items-center gap-2.5">
-                    <Icon className="w-4 h-4 transition-colors" style={{ opacity: isActive ? 1 : 0.6 }} />
-                    <span>{label}</span>
-                  </span>
-                  {badge && (
-                    <span className="relative z-10 text-[10px] font-mono font-bold" style={{ opacity: isActive ? 0.7 : 1, color: isActive ? 'var(--c-bg)' : undefined }}>
-                      {!isActive && <span className={badgeColor}>{badge}</span>}
-                      {isActive && badge}
-                    </span>
-                  )}
-                </button>
+                <div key={idx} className="space-y-1">
+                  <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider font-mono text-slate-400">
+                    {section.title}
+                  </div>
+                  <div className="space-y-0.5">
+                    {section.items.map(({ id, label, Icon, badge, badgeColor }) => {
+                      const isActive = activeTab === id;
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => handleTabChange(id)}
+                          className="relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all font-sans cursor-pointer group text-left"
+                          style={{ 
+                            color: isActive ? 'var(--c-fg)' : 'var(--c-muted)',
+                            backgroundColor: isActive ? 'var(--c-surface-2)' : 'transparent',
+                          }}
+                          onMouseEnter={(e) => { 
+                            if (!isActive) { 
+                              e.currentTarget.style.color = 'var(--c-fg)'; 
+                              e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; 
+                            }
+                          }}
+                          onMouseLeave={(e) => { 
+                            if (!isActive) { 
+                              e.currentTarget.style.color = 'var(--c-muted)'; 
+                              e.currentTarget.style.backgroundColor = 'transparent'; 
+                            }
+                          }}
+                        >
+                          {isActive && (
+                            <motion.span
+                              layoutId="sidebar-active-indicator"
+                              className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-gradient-to-b from-indigo-500 to-purple-600"
+                              transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
+                            />
+                          )}
+                          <span className="flex items-center gap-2.5 min-w-0">
+                            <Icon 
+                              className="w-4 h-4 shrink-0 transition-colors" 
+                              style={{ 
+                                color: isActive ? 'var(--c-accent)' : 'inherit',
+                                opacity: isActive ? 1 : 0.7 
+                              }} 
+                            />
+                            <span className={`truncate ${isActive ? 'font-semibold' : ''}`}>{label}</span>
+                          </span>
+                          {badge && (
+                            <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border shrink-0 ${badgeColor}`}>
+                              {badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
 
-            {/* ── Collapsible Executive Agents ── */}
-            <div className="pt-3 mt-2" style={{ borderTop: '1px solid var(--c-border)' }}>
+            {/* ── Executive Agents Roster ── */}
+            <div className="space-y-1">
               <button
                 onClick={() => setAgentsExpanded(prev => !prev)}
-                className="w-full flex items-center justify-between px-3 py-1.5 text-label transition-colors cursor-pointer"
-                style={{ color: 'var(--c-faint)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--c-fg)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--c-faint)'; }}
+                className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider font-mono transition-colors cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <span className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" style={{ opacity: 0.6 }} />
-                  <span>Executive Agents</span>
+                  <Users className="w-3 h-3 opacity-70" />
+                  <span>Executive Council</span>
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${agentsExpanded ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${agentsExpanded ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>
@@ -888,36 +960,51 @@ export default function App() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                    transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-1 space-y-0.5">
-                      {agents.map((ag, i) => {
+                    <div className="space-y-0.5 pt-1">
+                      {agents.map((ag) => {
                         const isSelected = activeTab === 'agents' && selectedAgentId === ag.id;
                         return (
-                          <motion.button
+                          <button
                             key={ag.id}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.03 }}
                             onClick={() => handleSelectAgent(ag.id)}
-                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all font-sans cursor-pointer"
+                            className="w-full flex items-center justify-between px-3.5 py-1.5 rounded-lg text-xs transition-all font-sans cursor-pointer text-left"
                             style={{
-                              backgroundColor: isSelected ? 'var(--c-fg)' : 'transparent',
-                              color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)',
-                              border: isSelected ? '1px solid var(--c-fg)' : '1px solid transparent',
+                              backgroundColor: isSelected ? 'var(--c-surface-2)' : 'transparent',
+                              color: isSelected ? 'var(--c-fg)' : 'var(--c-muted)',
                             }}
-                            onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; e.currentTarget.style.color = 'var(--c-fg)'; }}}
-                            onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)'; }}}
+                            onMouseEnter={(e) => { 
+                              if (!isSelected) { 
+                                e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; 
+                                e.currentTarget.style.color = 'var(--c-fg)'; 
+                              }
+                            }}
+                            onMouseLeave={(e) => { 
+                              if (!isSelected) { 
+                                e.currentTarget.style.backgroundColor = 'transparent'; 
+                                e.currentTarget.style.color = 'var(--c-muted)'; 
+                              }
+                            }}
                           >
                             <span className="flex items-center gap-2 truncate">
-                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${ag.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : ''}`} style={{ backgroundColor: ag.status === 'idle' ? 'var(--c-faint)' : undefined }} />
-                              <span className="truncate">{ag.name.split(' ')[0]}</span>
+                              <span 
+                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${ag.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} 
+                              />
+                              <span className="truncate font-medium">{ag.name.split(' ')[0]}</span>
                             </span>
-                            <span className="text-[10px] font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ backgroundColor: isSelected ? 'rgba(255,255,255,0.15)' : 'var(--c-surface-2)', color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)' }}>
+                            <span 
+                              className="text-[10px] font-mono shrink-0 px-2 py-0.5 rounded-full border" 
+                              style={{ 
+                                backgroundColor: 'var(--c-bg)', 
+                                borderColor: 'var(--c-border)', 
+                                color: isSelected ? 'var(--c-accent)' : 'var(--c-muted)' 
+                              }}
+                            >
                               {ag.role}
                             </span>
-                          </motion.button>
+                          </button>
                         );
                       })}
                     </div>
@@ -926,144 +1013,220 @@ export default function App() {
               </AnimatePresence>
             </div>
           </nav>
-        </div>
 
-        <div className="space-y-3 pt-3" style={{ borderTop: '1px solid var(--c-border)' }}>
-          {/* Theme Toggle */}
-          <button
-            onClick={() => {
-              const html = document.documentElement;
-              const current = html.getAttribute('data-theme');
-              const next = current === 'dark' ? 'light' : 'dark';
-              html.setAttribute('data-theme', next);
-              localStorage.setItem('catalystos-theme', next);
-            }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer"
-            style={{ color: 'var(--c-muted)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--c-surface-2)'; e.currentTarget.style.color = 'var(--c-fg)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)'; }}
-            title="Toggle Theme"
-          >
-            <Sparkles className="w-4 h-4" style={{ opacity: 0.6 }} />
-            <span>Toggle Theme</span>
-          </button>
-          
-          {/* User profile */}
-          <div className="p-3 rounded-xl flex items-center justify-between gap-2 min-w-0" style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}>
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 uppercase font-mono" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
-                {user?.name?.slice(0, 2)}
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-semibold truncate font-sans" style={{ color: 'var(--c-fg)' }}>{user?.name}</div>
-                <div className="text-[10px] truncate capitalize flex items-center gap-1 font-mono" style={{ color: 'var(--c-muted)' }}>
-                  <Shield className="w-2.5 h-2.5 shrink-0" style={{ opacity: 0.4 }} />
-                  <span>{user?.role}</span>
+          {/* Sidebar Footer Controls */}
+          <div className="p-3 border-t space-y-2" style={{ borderColor: 'var(--c-border)' }}>
+            
+            {/* Voice Studio Quick Launch */}
+            <button
+              onClick={() => setIsVoiceStudioOpen(true)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
+              style={{
+                backgroundColor: 'var(--c-surface-2)',
+                borderColor: 'var(--c-border)',
+                color: 'var(--c-fg)'
+              }}
+              title="Open Voice Studio & Neural Voice Stream"
+            >
+              <span className="flex items-center gap-2">
+                <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
+                <span>Voice Studio</span>
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 font-bold">
+                Neural Live
+              </span>
+            </button>
+            
+            {/* User Profile & Session Sign Out */}
+            <div 
+              className="p-2.5 rounded-2xl flex items-center justify-between gap-2 border" 
+              style={{ 
+                backgroundColor: 'var(--c-surface-2)', 
+                borderColor: 'var(--c-border)' 
+              }}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div 
+                  className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 uppercase font-mono shadow-xs bg-gradient-to-tr from-indigo-500 to-purple-600 text-white" 
+                >
+                  {user?.name?.slice(0, 2) || 'US'}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold truncate" style={{ color: 'var(--c-fg)' }}>{user?.name || 'Venture User'}</div>
+                  <div className="text-[10px] truncate capitalize flex items-center gap-1 font-mono text-slate-400">
+                    <Shield className="w-2.5 h-2.5 shrink-0 opacity-50" />
+                    <span>{user?.role || 'Founder'}</span>
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
+                title="Sign Out Session"
+                className="p-1.5 rounded-full transition-all cursor-pointer shrink-0 border hover:bg-rose-50 hover:text-rose-600"
+                style={{ 
+                  backgroundColor: 'var(--c-surface)', 
+                  borderColor: 'var(--c-border)', 
+                  color: 'var(--c-muted)' 
+                }}
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                logout();
-                navigate('/');
-              }}
-              title="Sign Out Session"
-              className="p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
-              style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--c-fg)'; e.currentTarget.style.color = 'var(--c-bg)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--c-surface)'; e.currentTarget.style.color = 'var(--c-muted)'; }}
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       </aside>
 
-      {/* ── Main Content ──────────────────────────────────────────────────── */}
+      {/* ── Main Content Area ──────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         
-        {/* Top Navbar */}
-        <header className="shrink-0 sticky top-0 z-30 flex items-center justify-between px-6 md:px-8 transition-all duration-300" style={{ height: 'var(--topbar-height)', backgroundColor: scrolled ? 'var(--glass-bg)' : 'var(--c-surface)', borderBottom: '1px solid var(--c-border)', backdropFilter: scrolled ? 'blur(20px)' : 'none', boxShadow: scrolled ? 'var(--shadow-sm)' : 'none' }}>
-          <div className="flex items-center gap-4 text-sm">
-            {/* Mobile menu trigger */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 rounded-lg transition-colors"
-              style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-fg)' }}
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-            <span className="font-bold font-sans" style={{ letterSpacing: '-0.02em', color: 'var(--c-fg)' }}>CatalystOS</span>
-            <span style={{ color: 'var(--c-border-strong)' }}>/</span>
-            <span className="font-medium text-xs capitalize font-sans" style={{ color: 'var(--c-muted)' }}>{tabLabel} Workspace</span>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            {/* Search bar */}
-            <button
-              onClick={() => setCommandPaletteOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors cursor-pointer font-sans"
-              style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--c-border-strong)'; e.currentTarget.style.color = 'var(--c-fg)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-muted)'; }}
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span>Search anything...</span>
-              <kbd className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)', color: 'var(--c-faint)' }}>⌘K</kbd>
-            </button>
-
-            {/* Company Knowledge Quick Access */}
-            <button
-              onClick={() => handleTabChange('knowledge')}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-              style={{
-                backgroundColor: activeTab === 'knowledge' ? 'var(--c-fg)' : 'var(--c-surface-2)',
-                color: activeTab === 'knowledge' ? 'var(--c-bg)' : 'var(--c-fg)',
-                border: `1px solid ${activeTab === 'knowledge' ? 'var(--c-fg)' : 'var(--c-border)'}`,
-              }}
-              title="Company Knowledge Base"
-            >
-              <Database className="w-3.5 h-3.5" style={{ color: activeTab === 'knowledge' ? 'var(--c-bg)' : 'var(--c-accent)' }} />
-              <span className="font-sans text-[11px] font-semibold">Knowledge</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold" style={{ backgroundColor: 'rgba(79,70,229,0.1)', color: 'var(--c-accent)' }}>
-                {knowledge.length}
-              </span>
-            </button>
-
-            {/* Voice Studio Quick Access */}
-            <button
-              onClick={() => setIsVoiceStudioOpen(true)}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer hover:border-indigo-500/50"
-              style={{
-                backgroundColor: 'var(--c-surface-2)',
-                color: 'var(--c-fg)',
-                border: '1px solid var(--c-border)',
-              }}
-              title="Voice Studio & Neural Voice Management"
-            >
-              <Radio className="w-3.5 h-3.5 text-indigo-600 animate-pulse" />
-              <span className="font-sans text-[11px] font-semibold">Voice Studio</span>
-            </button>
-
-            {/* Notifications bell */}
-            <button 
-              onClick={() => setNotificationsOpen(true)}
-              className="relative p-2 rounded-lg transition-colors cursor-pointer"
-              style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)', color: 'var(--c-muted)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--c-fg)'; e.currentTarget.style.borderColor = 'var(--c-border-strong)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--c-muted)'; e.currentTarget.style.borderColor = 'var(--c-border)'; }}
-              title="Open Operational Alerts"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--c-accent)' }} />
-            </button>
-
-            {/* Founder profile */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}>
-              <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold uppercase font-mono" style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}>
-                {user?.name?.slice(0, 2)}
+        {/* Top Navbar (Floating Pill Aesthetic Aligned with Landing Page) */}
+        <header className="shrink-0 z-30 px-4 sm:px-8 pt-3 pb-1">
+          <div 
+            className="w-full flex items-center justify-between px-4 sm:px-6 py-2.5 rounded-2xl sm:rounded-full border backdrop-blur-xl shadow-[0_4px_25px_rgba(0,0,0,0.03)] transition-all duration-300"
+            style={{ 
+              backgroundColor: 'var(--glass-bg)', 
+              borderColor: 'var(--c-border)'
+            }}
+          >
+            {/* Breadcrumb Path & Mobile Menu */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="md:hidden p-1.5 rounded-full transition-colors border"
+                style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-xs tracking-tight" style={{ color: 'var(--c-muted)' }}>
+                  {startup?.name || 'CatalystOS'}
+                </span>
+                <span className="text-slate-300">/</span>
+                <span className="font-extrabold text-xs text-indigo-600 dark:text-indigo-400">
+                  {tabLabel}
+                </span>
               </div>
-              <span className="text-xs font-medium font-sans" style={{ color: 'var(--c-fg)' }}>{user?.name}</span>
+            </div>
+
+            {/* Right Action Bar */}
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              {/* Raycast ⌘K Command Palette Trigger */}
+              <button
+                onClick={() => setCommandPaletteOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer font-sans border hover:border-indigo-400"
+                style={{ 
+                  backgroundColor: 'var(--c-surface-2)', 
+                  borderColor: 'var(--c-border)', 
+                  color: 'var(--c-muted)' 
+                }}
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Search...</span>
+                <kbd 
+                  className="text-[10px] font-mono px-1.5 py-0.2 rounded-full border" 
+                  style={{ 
+                    backgroundColor: 'var(--c-surface)', 
+                    borderColor: 'var(--c-border)', 
+                    color: 'var(--c-faint)' 
+                  }}
+                >
+                  ⌘K
+                </kbd>
+              </button>
+
+              {/* Theme Toggle (Instant 1-Click Access) */}
+              <button
+                onClick={() => {
+                  const html = document.documentElement;
+                  const current = html.getAttribute('data-theme');
+                  const next = current === 'dark' ? 'light' : 'dark';
+                  html.setAttribute('data-theme', next);
+                  localStorage.setItem('catalystos-theme', next);
+                  localStorage.setItem('theme', next);
+                }}
+                className="p-2 rounded-full border transition-all cursor-pointer shadow-xs hover:border-indigo-400"
+                style={{ 
+                  backgroundColor: 'var(--c-surface-2)', 
+                  borderColor: 'var(--c-border)', 
+                  color: 'var(--c-muted)' 
+                }}
+                title="Toggle Light / Dark Theme"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              </button>
+
+              {/* Company Knowledge Quick Access */}
+              <button
+                onClick={() => handleTabChange('knowledge')}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
+                style={{
+                  backgroundColor: activeTab === 'knowledge' ? 'var(--c-accent)' : 'var(--c-surface-2)',
+                  color: activeTab === 'knowledge' ? '#FFFFFF' : 'var(--c-fg)',
+                  borderColor: activeTab === 'knowledge' ? 'var(--c-accent)' : 'var(--c-border)',
+                }}
+                title="Company Knowledge Base"
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span className="text-[11px]">Knowledge</span>
+                <span 
+                  className="text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold" 
+                  style={{ 
+                    backgroundColor: activeTab === 'knowledge' ? 'rgba(255,255,255,0.25)' : 'var(--c-accent-subtle)', 
+                    color: activeTab === 'knowledge' ? '#FFFFFF' : 'var(--c-accent)' 
+                  }}
+                >
+                  {knowledge.length}
+                </span>
+              </button>
+
+              {/* Voice Studio Button */}
+              <button
+                onClick={() => setIsVoiceStudioOpen(true)}
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
+                style={{
+                  backgroundColor: 'var(--c-surface-2)',
+                  borderColor: 'var(--c-border)',
+                  color: 'var(--c-fg)',
+                }}
+                title="Voice Studio"
+              >
+                <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
+                <span className="text-[11px]">Voice</span>
+              </button>
+
+              {/* Notifications Bell */}
+              <button 
+                onClick={() => setNotificationsOpen(true)}
+                className="relative p-2 rounded-full transition-colors cursor-pointer border hover:border-indigo-400"
+                style={{ 
+                  backgroundColor: 'var(--c-surface-2)', 
+                  borderColor: 'var(--c-border)', 
+                  color: 'var(--c-muted)' 
+                }}
+                title="Open Operational Alerts"
+              >
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full animate-pulse bg-indigo-600" />
+              </button>
+
+              {/* User Profile Badge */}
+              <div 
+                className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border" 
+                style={{ 
+                  backgroundColor: 'var(--c-surface-2)', 
+                  borderColor: 'var(--c-border)' 
+                }}
+              >
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold uppercase font-mono bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xs" 
+                >
+                  {user?.name?.slice(0, 2) || 'US'}
+                </div>
+                <span className="text-xs font-semibold font-sans hidden sm:inline" style={{ color: 'var(--c-fg)' }}>{user?.name}</span>
+              </div>
             </div>
           </div>
         </header>
@@ -1072,7 +1235,7 @@ export default function App() {
         <main
           onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 15)}
           className="flex-1 overflow-y-auto scroll-smooth"
-          style={{ backgroundColor: 'var(--c-bg)' }}
+          style={{ backgroundColor: 'transparent' }}
         >
           <div className="app-container page-padding py-8 space-y-8">
             <AnimatePresence mode="wait">
@@ -1273,24 +1436,24 @@ export default function App() {
                 </div>
 
                 <nav className="space-y-1">
-                  {navItems.map(({ id, label, Icon, badge, badgeColor }, i) => (
+                  {allNavItems.map(({ id, label, Icon, badge, badgeColor }, i) => (
                     <motion.button
                       key={id}
                       initial={{ opacity: 0, x: -16 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.04 }}
                       onClick={() => { handleTabChange(id); setMobileMenuOpen(false); }}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[13px] font-medium font-sans transition-all"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium font-sans transition-all text-left"
                       style={{
-                        backgroundColor: activeTab === id ? 'var(--c-fg)' : 'transparent',
-                        color: activeTab === id ? 'var(--c-bg)' : 'var(--c-muted)',
+                        backgroundColor: activeTab === id ? 'var(--c-surface-2)' : 'transparent',
+                        color: activeTab === id ? 'var(--c-fg)' : 'var(--c-muted)',
                       }}
                     >
                       <span className="flex items-center gap-2.5">
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-4 h-4" style={{ color: activeTab === id ? 'var(--c-accent)' : 'inherit' }} />
                         <span>{label}</span>
                       </span>
-                      {badge && <span className="text-[10px] font-mono font-bold" style={{ opacity: activeTab === id ? 0.7 : 1 }}>{badge}</span>}
+                      {badge && <span className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded border ${badgeColor}`}>{badge}</span>}
                     </motion.button>
                   ))}
                 </nav>

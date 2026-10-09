@@ -1,17 +1,17 @@
 /**
  * CatalystOS - Founder Decision Inbox & Approvals (Section 14)
- * Engineered as a clean, scannable Decision Inbox table.
- * Clicking 'Review' opens a focused slide-over evaluation drawer with Before vs After state projections,
+ * Engineered with Apple × Linear × Notion aesthetics.
+ * Scannable Decision Inbox table with translucent risk badges, clean 8pt spacing,
+ * and a focused slide-over evaluation drawer with Before vs After state projections,
  * parameter modification sliders, and high-assurance audit trails.
  */
 
 import React, { useState, useMemo } from 'react';
 import { Deliverable } from '../types';
 import {
-  CheckCircle2, XCircle, AlertCircle, FileText, ChevronRight,
-  TrendingUp, TrendingDown, Edit3, Shield, SlidersHorizontal,
-  ArrowRight, AlertTriangle, Sparkles, Check, X, RefreshCw,
-  Search, Filter, ExternalLink
+  CheckCircle2, XCircle, FileText, ChevronRight,
+  Shield, SlidersHorizontal, ArrowRight, Check, X,
+  Search, ExternalLink, Scale, Sparkles
 } from 'lucide-react';
 import Section from './Section';
 
@@ -141,43 +141,51 @@ export default function ApprovalQueue({
   };
 
   const selectedGovernance = selectedItem ? getItemGovernance(selectedItem) : null;
+  const totalImpact = approvals.reduce((acc, a) => acc + Math.abs(a.financialChange || 0), 0);
 
   return (
     <div id="approval-queue-container" className="space-y-6 font-sans">
       
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
-      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
+      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4" style={{ borderBottom: '1px solid var(--c-border)' }}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#696969]">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--c-accent)' }}>
               Executive Governance
             </span>
-            <span className="w-1 h-1 rounded-full bg-[#141413]/30" />
-            <span className="text-[11px] font-mono text-[#696969]">
-              {approvals.length} Requiring Sign-Off
+            <span className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--c-border-strong)' }} />
+            <span className="text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
+              {approvals.length} Gate{approvals.length === 1 ? '' : 's'} Pending Sign-Off
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#141413]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
             Decision Inbox
           </h1>
-          <p className="text-sm text-[#696969] mt-1 max-w-2xl">
+          <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--c-muted)' }}>
             Human-in-the-loop review queue for contracts, budget expansions, and high-impact council deliverables.
           </p>
         </div>
 
         {/* Quick Summary Pill */}
         <div className="flex items-center gap-3">
-          <div className="px-4 py-2 rounded-xl bg-white border border-[#141413]/10 text-xs font-mono flex items-center gap-3 shadow-sm">
+          <div 
+            className="px-4 py-2 rounded-xl text-xs font-mono flex items-center gap-3 shadow-sm transition-all"
+            style={{ 
+              backgroundColor: 'var(--c-surface)', 
+              border: '1px solid var(--c-border)', 
+              boxShadow: 'var(--shadow-sm)' 
+            }}
+          >
             <div>
-              <span className="text-[#696969] block text-[10px] uppercase">Cash Impact</span>
-              <span className="font-bold text-[#141413]">
-                ${approvals.reduce((acc, a) => acc + Math.abs(a.financialChange || 0), 0).toLocaleString()}
+              <span className="block text-[10px] uppercase font-semibold" style={{ color: 'var(--c-muted)' }}>Total Exposure</span>
+              <span className="font-bold text-sm" style={{ color: 'var(--c-fg)' }}>
+                ${totalImpact.toLocaleString()}
               </span>
             </div>
-            <div className="w-px h-6 bg-[#141413]/10" />
+            <div className="w-px h-6" style={{ backgroundColor: 'var(--c-border)' }} />
             <div>
-              <span className="text-[#696969] block text-[10px] uppercase">Pending</span>
-              <span className="font-bold text-amber-700">{approvals.length} items</span>
+              <span className="block text-[10px] uppercase font-semibold" style={{ color: 'var(--c-muted)' }}>Pending</span>
+              <span className="font-bold text-amber-500">{approvals.length} items</span>
             </div>
           </div>
         </div>
@@ -186,40 +194,65 @@ export default function ApprovalQueue({
       {/* ── SEARCH & FILTER BAR ────────────────────────────────────────────── */}
       <Section delay={0.1} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-[#696969] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--c-muted)' }} />
           <input
             type="text"
             placeholder="Search pending decisions by title or context..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413]"
+            className="w-full pl-10 pr-4 py-2 rounded-xl text-xs transition-all focus:outline-none"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              color: 'var(--c-fg)',
+              boxShadow: 'var(--shadow-sm)'
+            }}
           />
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <span className="text-xs text-[#696969] font-medium shrink-0">Filter:</span>
-          {['ALL', 'CONTRACT', 'FINANCIALS', 'MARKETING_PLAN'].map((type) => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                filterType === type
-                  ? 'bg-[#141413] text-[#F3F0EE]'
-                  : 'bg-white border border-[#141413]/10 text-[#696969] hover:text-[#141413]'
-              }`}
-            >
-              {type === 'ALL' ? 'All Types' : type.replace('_', ' ')}
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          <span className="text-xs font-medium shrink-0 mr-1" style={{ color: 'var(--c-muted)' }}>Type:</span>
+          {['ALL', 'CONTRACT', 'FINANCIALS', 'MARKETING_PLAN'].map((type) => {
+            const isSelected = filterType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => setFilterType(type)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer"
+                style={{
+                  backgroundColor: isSelected ? 'var(--c-fg)' : 'var(--c-surface)',
+                  color: isSelected ? 'var(--c-bg)' : 'var(--c-muted)',
+                  border: `1px solid ${isSelected ? 'var(--c-fg)' : 'var(--c-border)'}`
+                }}
+              >
+                {type === 'ALL' ? 'All Types' : type.replace('_', ' ')}
+              </button>
+            );
+          })}
         </div>
       </Section>
 
       {/* ── DECISION INBOX TABLE / ROWS ───────────────────────────────────── */}
       <Section delay={0.15}>
       {filteredApprovals.length > 0 ? (
-        <div className="catalyst-card rounded-2xl overflow-hidden divide-y divide-[#141413]/05">
+        <div 
+          className="rounded-2xl overflow-hidden divide-y transition-all"
+          style={{ 
+            backgroundColor: 'var(--c-surface)', 
+            border: '1px solid var(--c-border)',
+            borderColor: 'var(--c-border)',
+            divideColor: 'var(--c-border)'
+          }}
+        >
           {/* Table Header */}
-          <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3.5 bg-[#FCFBFA] text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] border-b border-[#141413]/10">
+          <div 
+            className="hidden md:grid grid-cols-12 gap-4 px-6 py-3.5 text-[10px] font-mono font-bold uppercase tracking-wider"
+            style={{ 
+              backgroundColor: 'var(--c-surface-2)', 
+              color: 'var(--c-muted)',
+              borderBottom: '1px solid var(--c-border)'
+            }}
+          >
             <div className="col-span-4">Decision & Context</div>
             <div className="col-span-2">Recommended By</div>
             <div className="col-span-2">Treasury Impact</div>
@@ -235,50 +268,73 @@ export default function ApprovalQueue({
             return (
               <div
                 key={item.id}
-                className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-[#FCFBFA] transition-colors group"
+                className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 items-center transition-colors group cursor-pointer"
+                style={{
+                  backgroundColor: 'var(--c-surface)',
+                  borderBottom: '1px solid var(--c-border)'
+                }}
+                onClick={() => {
+                  setSelectedItemId(item.id);
+                  setIsModifying(false);
+                  setFeedback('');
+                }}
               >
                 {/* Decision & Context (4 cols) */}
                 <div className="md:col-span-4 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="tech-badge">
+                    <span 
+                      className="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider font-semibold"
+                      style={{ 
+                        backgroundColor: 'var(--c-surface-2)', 
+                        color: 'var(--c-fg)',
+                        border: '1px solid var(--c-border)'
+                      }}
+                    >
                       {item.type.replace('_', ' ')}
                     </span>
-                    <span className="text-[10px] font-mono text-[#696969]">Score: {item.impact}/10</span>
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>Score: {item.impact}/10</span>
                   </div>
-                  <h4 className="text-xs font-bold text-[#141413] leading-snug">{item.title}</h4>
-                  <p className="text-[11px] text-[#696969] line-clamp-1 leading-normal">{item.description}</p>
+                  <h4 className="text-xs font-bold leading-snug group-hover:text-indigo-400 transition-colors" style={{ color: 'var(--c-fg)' }}>
+                    {item.title}
+                  </h4>
+                  <p className="text-[11px] line-clamp-1 leading-normal" style={{ color: 'var(--c-muted)' }}>
+                    {item.description}
+                  </p>
                 </div>
 
                 {/* Recommended By (2 cols) */}
                 <div className="md:col-span-2 flex items-center gap-2 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-[#141413]/10 text-[#141413] flex items-center justify-center font-bold text-[10px] font-mono">
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] font-mono shrink-0"
+                    style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                  >
                     {gov.rec[0]}
                   </div>
-                  <span className="font-semibold text-[#141413]">{gov.rec}</span>
+                  <span className="font-semibold text-xs truncate" style={{ color: 'var(--c-fg)' }}>{gov.rec}</span>
                 </div>
 
                 {/* Impact (2 cols) */}
                 <div className="md:col-span-2 text-xs font-mono">
                   {cost !== 0 ? (
-                    <span className={`font-bold ${cost > 0 ? 'text-emerald-700' : 'text-[#141413]'}`}>
+                    <span className={`font-bold ${cost > 0 ? 'text-emerald-500' : ''}`} style={{ color: cost < 0 ? 'var(--c-fg)' : undefined }}>
                       {cost > 0 ? '+' : ''}${Math.abs(cost).toLocaleString()}
                     </span>
                   ) : (
-                    <span className="text-[#696969]">Neutral ($0)</span>
+                    <span style={{ color: 'var(--c-muted)' }}>Neutral ($0)</span>
                   )}
-                  <span className="text-[10px] text-[#696969] block font-sans">Total capital shift</span>
+                  <span className="text-[10px] block font-sans" style={{ color: 'var(--c-muted)' }}>Total capital shift</span>
                 </div>
 
                 {/* Risk / Reversibility (2 cols) */}
                 <div className="md:col-span-2 space-y-1">
                   <span className={`inline-flex px-2 py-0.5 text-[9px] font-mono font-bold rounded-full ${
-                    gov.risk === 'CRITICAL' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
-                    gov.risk === 'HIGH' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                    'bg-sky-100 text-sky-800 border border-sky-200'
+                    gov.risk === 'CRITICAL' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/25' :
+                    gov.risk === 'HIGH' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
+                    'bg-sky-500/10 text-sky-500 border border-sky-500/25'
                   }`}>
                     {gov.risk} Risk
                   </span>
-                  <span className="text-[10px] text-[#696969] block font-mono">
+                  <span className="text-[10px] block font-mono" style={{ color: 'var(--c-muted)' }}>
                     {gov.reversibility}
                   </span>
                 </div>
@@ -286,12 +342,17 @@ export default function ApprovalQueue({
                 {/* Primary Action: Review (2 cols) */}
                 <div className="md:col-span-2 flex items-center justify-end">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedItemId(item.id);
                       setIsModifying(false);
                       setFeedback('');
                     }}
-                    className="interactive-btn magnetic-btn px-4 py-2 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] flex items-center gap-1.5 shadow-sm"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                    style={{
+                      backgroundColor: 'var(--c-fg)',
+                      color: 'var(--c-bg)'
+                    }}
                   >
                     <span>Review</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -303,12 +364,18 @@ export default function ApprovalQueue({
         </div>
       ) : (
         /* Empty State */
-        <div className="p-16 rounded-2xl border border-dashed border-[#141413]/20 bg-white text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-700 flex items-center justify-center mx-auto">
+        <div 
+          className="p-16 rounded-2xl text-center space-y-3 transition-all"
+          style={{ 
+            backgroundColor: 'var(--c-surface)', 
+            border: '1px dashed var(--c-border-strong)' 
+          }}
+        >
+          <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-[#141413]">Decision Inbox Clear</h3>
-          <p className="text-xs text-[#696969] max-w-sm mx-auto leading-relaxed">
+          <h3 className="text-base font-bold" style={{ color: 'var(--c-fg)' }}>Decision Inbox Clear</h3>
+          <p className="text-xs max-w-sm mx-auto leading-relaxed" style={{ color: 'var(--c-muted)' }}>
             All AI executive operations are currently executing within founder-authorized parameters. No pending gates blocked.
           </p>
         </div>
@@ -317,21 +384,40 @@ export default function ApprovalQueue({
 
       {/* ── FOCUSED EVALUATION DRAWER / MODAL ──────────────────────────────── */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm flex items-center justify-end">
-          <div className="w-full max-w-2xl h-full bg-white shadow-2xl flex flex-col justify-between overflow-y-auto animate-fade-in border-l border-[#141413]/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }}>
+          <div 
+            className="w-full max-w-2xl h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-fade-in"
+            style={{ 
+              backgroundColor: 'var(--c-surface)', 
+              borderLeft: '1px solid var(--c-border)' 
+            }}
+          >
             
             {/* Drawer Header */}
-            <div className="p-6 border-b border-[#141413]/10 space-y-3 sticky top-0 bg-white/95 backdrop-blur-md z-10">
+            <div 
+              className="p-6 space-y-3 sticky top-0 backdrop-blur-md z-10"
+              style={{ 
+                backgroundColor: 'var(--c-surface)', 
+                borderBottom: '1px solid var(--c-border)' 
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-[#141413]/05 text-[#141413] border border-[#141413]/10 uppercase">
+                  <span 
+                    className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase"
+                    style={{ 
+                      backgroundColor: 'var(--c-surface-2)', 
+                      color: 'var(--c-fg)', 
+                      border: '1px solid var(--c-border)' 
+                    }}
+                  >
                     {selectedItem.type.replace('_', ' ')}
                   </span>
                   {selectedGovernance && (
                     <span className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full ${
-                      selectedGovernance.risk === 'CRITICAL' ? 'bg-rose-100 text-rose-800' :
-                      selectedGovernance.risk === 'HIGH' ? 'bg-amber-100 text-amber-800' :
-                      'bg-sky-100 text-sky-800'
+                      selectedGovernance.risk === 'CRITICAL' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/25' :
+                      selectedGovernance.risk === 'HIGH' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
+                      'bg-sky-500/10 text-sky-500 border border-sky-500/25'
                     }`}>
                       {selectedGovernance.risk} Risk
                     </span>
@@ -339,15 +425,20 @@ export default function ApprovalQueue({
                 </div>
                 <button
                   onClick={() => setSelectedItemId(null)}
-                  className="p-1.5 rounded-full hover:bg-[#141413]/05 text-[#696969] hover:text-[#141413] transition-colors"
+                  className="p-1.5 rounded-full transition-colors cursor-pointer"
+                  style={{ color: 'var(--c-muted)', backgroundColor: 'var(--c-surface-2)' }}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-[#141413] leading-snug">{selectedItem.title}</h3>
-                <p className="text-xs text-[#696969] mt-1">{selectedItem.description}</p>
+                <h3 className="text-lg font-bold leading-snug" style={{ color: 'var(--c-fg)' }}>
+                  {selectedItem.title}
+                </h3>
+                <p className="text-xs mt-1" style={{ color: 'var(--c-muted)' }}>
+                  {selectedItem.description}
+                </p>
               </div>
             </div>
 
@@ -355,40 +446,55 @@ export default function ApprovalQueue({
             <div className="p-6 space-y-6 flex-1">
               
               {/* Deterministic Impact Projections */}
-              <div className="p-4 rounded-xl bg-[#FCFBFA] border border-[#141413]/10 space-y-3">
+              <div 
+                className="p-4 rounded-xl space-y-3"
+                style={{ 
+                  backgroundColor: 'var(--c-surface-2)', 
+                  border: '1px solid var(--c-border)' 
+                }}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-[#141413]" />
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--c-muted)' }}>
+                    <Shield className="w-3.5 h-3.5" style={{ color: 'var(--c-accent)' }} />
                     Forecasted Runway & Treasury Shift
                   </span>
-                  <span className="text-[10px] font-mono text-[#696969]">Neon Treasury Sync</span>
+                  <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>Postgres Treasury Sync</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 rounded-lg bg-white border border-[#141413]/05 space-y-1">
-                    <span className="text-[9px] text-[#696969] block font-mono uppercase font-bold">Cash Balance</span>
+                  <div 
+                    className="p-3 rounded-lg space-y-1"
+                    style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+                  >
+                    <span className="text-[9px] block font-mono uppercase font-bold" style={{ color: 'var(--c-muted)' }}>Cash Balance</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono text-[#696969]">${(currentCash / 1000).toFixed(0)}k</span>
-                      <ArrowRight className="w-3 h-3 text-[#696969]/50" />
-                      <span className="text-xs font-mono font-bold text-[#141413]">${(stateProjection.projectedCash / 1000).toFixed(0)}k</span>
+                      <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>${(currentCash / 1000).toFixed(0)}k</span>
+                      <ArrowRight className="w-3 h-3 opacity-50" style={{ color: 'var(--c-muted)' }} />
+                      <span className="text-xs font-mono font-bold" style={{ color: 'var(--c-fg)' }}>${(stateProjection.projectedCash / 1000).toFixed(0)}k</span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-white border border-[#141413]/05 space-y-1">
-                    <span className="text-[9px] text-[#696969] block font-mono uppercase font-bold">Monthly Burn</span>
+                  <div 
+                    className="p-3 rounded-lg space-y-1"
+                    style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+                  >
+                    <span className="text-[9px] block font-mono uppercase font-bold" style={{ color: 'var(--c-muted)' }}>Monthly Burn</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono text-[#696969]">${(currentBurn / 1000).toFixed(0)}k</span>
-                      <ArrowRight className="w-3 h-3 text-[#696969]/50" />
-                      <span className="text-xs font-mono font-bold text-[#141413]">${(stateProjection.projectedBurn / 1000).toFixed(0)}k</span>
+                      <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>${(currentBurn / 1000).toFixed(0)}k</span>
+                      <ArrowRight className="w-3 h-3 opacity-50" style={{ color: 'var(--c-muted)' }} />
+                      <span className="text-xs font-mono font-bold" style={{ color: 'var(--c-fg)' }}>${(stateProjection.projectedBurn / 1000).toFixed(0)}k</span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-white border border-[#141413]/05 space-y-1">
-                    <span className="text-[9px] text-[#696969] block font-mono uppercase font-bold">Runway</span>
+                  <div 
+                    className="p-3 rounded-lg space-y-1"
+                    style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}
+                  >
+                    <span className="text-[9px] block font-mono uppercase font-bold" style={{ color: 'var(--c-muted)' }}>Runway</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-mono text-[#696969]">{stateProjection.initialRunway}m</span>
-                      <ArrowRight className="w-3 h-3 text-[#696969]/50" />
-                      <span className="text-xs font-mono font-bold text-emerald-700">{stateProjection.projectedRunway}m</span>
+                      <span className="text-xs font-mono" style={{ color: 'var(--c-muted)' }}>{stateProjection.initialRunway}m</span>
+                      <ArrowRight className="w-3 h-3 opacity-50" style={{ color: 'var(--c-muted)' }} />
+                      <span className="text-xs font-mono font-bold text-emerald-500">{stateProjection.projectedRunway}m</span>
                     </div>
                   </div>
                 </div>
@@ -396,25 +502,38 @@ export default function ApprovalQueue({
 
               {/* Charter / Terms Content */}
               <div className="space-y-2">
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#696969] block">
+                <span className="text-[10px] font-mono uppercase tracking-wider font-bold block" style={{ color: 'var(--c-muted)' }}>
                   Deliverable Legal Charter & Terms
                 </span>
-                <div className="p-4 rounded-xl border border-[#141413]/10 bg-[#FCFBFA] max-h-56 overflow-y-auto text-xs font-mono text-[#141413] leading-relaxed whitespace-pre-wrap">
+                <div 
+                  className="p-4 rounded-xl max-h-56 overflow-y-auto text-xs font-mono leading-relaxed whitespace-pre-wrap"
+                  style={{ 
+                    backgroundColor: 'var(--c-surface-2)', 
+                    border: '1px solid var(--c-border)', 
+                    color: 'var(--c-fg)' 
+                  }}
+                >
                   {selectedItem.content}
                 </div>
               </div>
 
               {/* Inline Modifications Section */}
               {isModifying && (
-                <div className="p-4 rounded-xl bg-amber-500/05 border border-amber-500/20 space-y-3">
+                <div 
+                  className="p-4 rounded-xl space-y-3"
+                  style={{ 
+                    backgroundColor: 'rgba(245, 158, 11, 0.08)', 
+                    border: '1px solid rgba(245, 158, 11, 0.25)' 
+                  }}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-amber-500 flex items-center gap-1.5">
                       <SlidersHorizontal className="w-3.5 h-3.5" />
                       Parameter Modifications
                     </span>
                     <button
                       onClick={() => setIsModifying(false)}
-                      className="text-xs text-amber-800 hover:underline"
+                      className="text-xs text-amber-500 hover:underline cursor-pointer"
                     >
                       Reset
                     </button>
@@ -422,34 +541,37 @@ export default function ApprovalQueue({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold text-amber-900 uppercase block mb-1">Adjusted Budget (USD)</label>
+                      <label className="text-[10px] font-bold text-amber-500 uppercase block mb-1">Adjusted Budget (USD)</label>
                       <input
                         type="number"
                         placeholder="e.g. 115000"
                         value={customCost}
                         onChange={(e) => setCustomCost(e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-xs font-mono"
+                        className="w-full px-3 py-1.5 rounded-lg text-xs font-mono outline-none"
+                        style={{ backgroundColor: 'var(--c-surface)', border: '1px solid rgba(245, 158, 11, 0.3)', color: 'var(--c-fg)' }}
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-amber-900 uppercase block mb-1">Headcount Adjust</label>
+                      <label className="text-[10px] font-bold text-amber-500 uppercase block mb-1">Headcount Adjust</label>
                       <input
                         type="number"
                         value={customHeadcount}
                         onChange={(e) => setCustomHeadcount(e.target.value)}
-                        className="w-full px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-xs font-mono"
+                        className="w-full px-3 py-1.5 rounded-lg text-xs font-mono outline-none"
+                        style={{ backgroundColor: 'var(--c-surface)', border: '1px solid rgba(245, 158, 11, 0.3)', color: 'var(--c-fg)' }}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-amber-900 uppercase block mb-1">Founder Directives</label>
+                    <label className="text-[10px] font-bold text-amber-500 uppercase block mb-1">Founder Directives</label>
                     <input
                       type="text"
                       placeholder="e.g. Include 1-year cliff, review at quarterly board meeting"
                       value={customConditions}
                       onChange={(e) => setCustomConditions(e.target.value)}
-                      className="w-full px-3 py-1.5 rounded-lg border border-amber-300 bg-white text-xs"
+                      className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
+                      style={{ backgroundColor: 'var(--c-surface)', border: '1px solid rgba(245, 158, 11, 0.3)', color: 'var(--c-fg)' }}
                     />
                   </div>
                 </div>
@@ -457,7 +579,7 @@ export default function ApprovalQueue({
 
               {/* Feedback Input */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] block">
+                <label className="text-[10px] font-mono font-bold uppercase tracking-wider block" style={{ color: 'var(--c-muted)' }}>
                   Directives for Executive Council
                 </label>
                 <input
@@ -465,21 +587,37 @@ export default function ApprovalQueue({
                   placeholder="Optional directives attached to audit ledger..."
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#141413]/15 text-xs text-[#141413] focus:outline-none focus:border-[#141413]"
+                  className="w-full px-3.5 py-2.5 rounded-xl text-xs outline-none transition-colors"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
                 />
               </div>
 
             </div>
 
             {/* Drawer Footer Actions */}
-            <div className="p-5 border-t border-[#141413]/10 bg-[#FCFBFA] space-y-3 sticky bottom-0">
+            <div 
+              className="p-5 space-y-3 sticky bottom-0"
+              style={{ 
+                backgroundColor: 'var(--c-surface)', 
+                borderTop: '1px solid var(--c-border)' 
+              }}
+            >
               <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={() => setIsModifying(!isModifying)}
-                  className="px-3.5 py-2 rounded-xl border border-[#141413]/15 bg-white text-xs font-bold text-[#141413] hover:border-[#141413] flex items-center gap-1.5"
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-[#696969]" />
+                  <SlidersHorizontal className="w-3.5 h-3.5" style={{ color: 'var(--c-muted)' }} />
                   <span>{isModifying ? 'Hide Adjustments' : 'Modify Parameters'}</span>
                 </button>
 
@@ -487,7 +625,12 @@ export default function ApprovalQueue({
                   <button
                     onClick={() => handleAction('reject')}
                     disabled={isSubmitting}
-                    className="px-4 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-800 text-xs font-bold hover:bg-rose-100 flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    style={{
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      color: 'rgb(239, 68, 68)'
+                    }}
                   >
                     <XCircle className="w-4 h-4" /> Reject
                   </button>
@@ -496,7 +639,8 @@ export default function ApprovalQueue({
                     <button
                       onClick={() => handleAction('modify')}
                       disabled={isSubmitting}
-                      className="interactive-btn px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                      className="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer text-white transition-all"
+                      style={{ backgroundColor: '#d97706' }}
                     >
                       <Check className="w-4 h-4" /> Authorize with Modifications
                     </button>
@@ -504,7 +648,11 @@ export default function ApprovalQueue({
                     <button
                       onClick={() => handleAction('approve')}
                       disabled={isSubmitting}
-                      className="interactive-btn px-5 py-2 rounded-xl bg-[#141413] hover:bg-[#262627] text-[#F3F0EE] text-xs font-bold flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                      className="px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer transition-all"
+                      style={{
+                        backgroundColor: 'var(--c-fg)',
+                        color: 'var(--c-bg)'
+                      }}
                     >
                       <CheckCircle2 className="w-4 h-4" /> Approve & Sign
                     </button>

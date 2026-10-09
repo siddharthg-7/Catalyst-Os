@@ -371,7 +371,7 @@ export default function AgentWorkspace({
       case 'Legal': return <Shield className="w-4 h-4 text-rose-700" />;
       case 'Investment': return <TrendingUp className="w-4 h-4 text-purple-700" />;
       case 'Auditor': return <ShieldCheck className="w-4 h-4 text-blue-700" />;
-      default: return <Compass className="w-4 h-4 text-[#141413]" />;
+      default: return <Compass className="w-4 h-4 text-[var(--c-fg)]" />;
     }
   };
 
@@ -399,13 +399,13 @@ export default function AgentWorkspace({
   return (
     <div className="space-y-6 font-sans">
       {/* Top Header & View Mode Switcher */}
-      <Section delay={0.05} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#141413]/10 pb-4">
+      <Section delay={0.05} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--c-border)] pb-4">
         <div>
-          <h2 className="text-xl font-bold text-[#141413] tracking-tight">Executive Agent Workspace</h2>
-          <p className="text-xs text-[#696969] mt-0.5">Direct oversight of individual AI executive officers & operational governance</p>
+          <h2 className="text-xl font-bold text-[var(--c-fg)] tracking-tight">Executive Agent Workspace</h2>
+          <p className="text-xs text-[var(--c-muted)] mt-0.5">Direct oversight of individual AI executive officers & operational governance</p>
         </div>
 
-        <div className="relative flex items-center p-1 rounded-xl bg-[#141413]/05 border border-[#141413]/10 text-xs font-semibold">
+        <div className="relative flex items-center p-1 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] text-xs font-semibold">
           {[
             { id: 'agent' as const, label: 'Officer Workspace' },
             { id: 'all' as const, label: `All Officers (${agents.length})` },
@@ -417,13 +417,13 @@ export default function AgentWorkspace({
                 key={v.id}
                 onClick={() => setActiveView(v.id)}
                 className={`relative z-10 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
-                  isActive ? 'text-[#141413]' : 'text-[#696969] hover:text-[#141413]'
+                  isActive ? 'text-[var(--c-fg)]' : 'text-[var(--c-muted)] hover:text-[var(--c-fg)]'
                 }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="agentViewSwitcherTab"
-                    className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                    className="absolute inset-0 bg-[var(--c-surface)] rounded-lg shadow-sm"
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                   />
                 )}
@@ -450,8 +450,8 @@ export default function AgentWorkspace({
                   }}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-[14px] text-xs font-semibold shrink-0 transition-all border cursor-pointer interactive-btn ${
                     isSelected
-                      ? 'bg-[#141413] text-[#F3F0EE] border-[#141413] shadow-xs'
-                      : 'bg-white text-[#696969] border-[#141413]/10 hover:text-[#141413] hover:border-[#141413]/30 card-hover'
+                      ? 'bg-[var(--c-fg)] text-[var(--c-bg)] border-[#141413] shadow-xs'
+                      : 'bg-[var(--c-surface)] text-[var(--c-muted)] border-[var(--c-border)] hover:text-[var(--c-fg)] hover:border-[var(--c-border-strong)] card-hover'
                   }`}
                 >
                   {getRoleIcon(ag.role)}
@@ -470,34 +470,34 @@ export default function AgentWorkspace({
       {activeView === 'agent' && activeAgent && (
         <div className="space-y-6">
           {/* Agent Identity & Status Header Card */}
-          <div className="p-6 rounded-[20px] bg-white border border-[#141413]/10 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 card-hover glow-border">
+          <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 card-hover glow-border">
             <div className="flex items-start gap-4">
               <img
                 src={activeAgent.avatar}
                 alt={activeAgent.name}
                 referrerPolicy="no-referrer"
-                className="w-16 h-16 rounded-2xl object-cover border border-[#141413]/15 shadow-xs shrink-0 group-hover:scale-105 transition-transform"
+                className="w-16 h-16 rounded-2xl object-cover border border-[var(--c-border)] shadow-xs shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="text-xl font-bold text-[#141413] tracking-tight">{activeAgent.name}</h3>
+                  <h3 className="text-xl font-bold text-[var(--c-fg)] tracking-tight">{activeAgent.name}</h3>
                   <span className="tech-badge">
                     {activeAgent.role}
                   </span>
                   {getStatusBadge(activeAgent.status)}
                 </div>
-                <p className="text-xs font-medium text-[#696969]">{detail.officialTitle}</p>
-                <p className="text-xs text-[#141413]/80 max-w-xl leading-relaxed mt-1">{activeAgent.description}</p>
+                <p className="text-xs font-medium text-[var(--c-muted)]">{detail.officialTitle}</p>
+                <p className="text-xs text-[var(--c-fg)]/80 max-w-xl leading-relaxed mt-1">{activeAgent.description}</p>
               </div>
             </div>
 
-            <div className="flex sm:flex-col items-end justify-between border-t md:border-t-0 md:border-l border-[#141413]/10 pt-4 md:pt-0 md:pl-6 shrink-0 gap-2">
+            <div className="flex sm:flex-col items-end justify-between border-t md:border-t-0 md:border-l border-[var(--c-border)] pt-4 md:pt-0 md:pl-6 shrink-0 gap-2">
               <div className="text-right">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#696969] block">Core Authority</span>
-                <span className="text-sm font-bold text-[#141413]">{activeAgent.keyMetric}</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--c-muted)] block">Core Authority</span>
+                <span className="text-sm font-bold text-[var(--c-fg)]">{activeAgent.keyMetric}</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#696969] block">Governance Status</span>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--c-muted)] block">Governance Status</span>
                 <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                   Grounded & Active
                 </span>
@@ -508,10 +508,10 @@ export default function AgentWorkspace({
           {/* Key Metrics Strip (Section 25 Supporting Data) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {dynamicKeyMetrics.map((km, idx) => (
-              <div key={idx} className="p-4 rounded-[16px] bg-white border border-[#141413]/10 shadow-xs card-hover glow-border">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#696969] font-bold block">{km.label}</span>
+              <div key={idx} className="p-4 rounded-[16px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-xs card-hover glow-border">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--c-muted)] font-bold block">{km.label}</span>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="text-xl font-bold text-[#141413] font-mono">{km.value}</span>
+                  <span className="text-xl font-bold text-[var(--c-fg)] font-mono">{km.value}</span>
                   {km.trend && (
                     <span className="text-[11px] text-emerald-700 font-medium">{km.trend}</span>
                   )}
@@ -521,7 +521,7 @@ export default function AgentWorkspace({
           </div>
 
           {/* Workspace Sub-Navigation Tabs (Sections 9 & 10) */}
-          <div className="flex items-center gap-1.5 border-b border-[#141413]/10 pb-2 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-1.5 border-b border-[var(--c-border)] pb-2 overflow-x-auto scrollbar-none">
             {[
               { id: 'overview' as const, label: 'Overview' },
               { id: 'responsibilities' as const, label: 'Responsibilities' },
@@ -536,20 +536,20 @@ export default function AgentWorkspace({
                   onClick={() => setAgentTab(t.id)}
                   className={`relative px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
                     isActive
-                      ? 'text-[#F3F0EE]'
-                      : 'text-[#696969] hover:text-[#141413]'
+                      ? 'text-[var(--c-bg)]'
+                      : 'text-[var(--c-muted)] hover:text-[var(--c-fg)]'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="agentWorkspaceSubTab"
-                      className="absolute inset-0 bg-[#141413] rounded-full shadow-xs"
+                      className="absolute inset-0 bg-[var(--c-fg)] rounded-full shadow-xs"
                       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                     />
                   )}
                   <span className="relative z-10">{t.label}</span>
                   {t.badge && (
-                    <span className={`relative z-10 text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[#141413]/06 text-[#141413]'}`}>
+                    <span className={`relative z-10 text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-[var(--c-surface-2)] text-[var(--c-fg)]'}`}>
                       {t.badge}
                     </span>
                   )}
@@ -562,31 +562,31 @@ export default function AgentWorkspace({
           {agentTab === 'overview' && (
             <div className="space-y-6 animate-fadeIn">
               {/* 1. Current Focus */}
-              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-2">
+              <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Compass className="w-4 h-4 text-[#141413]" />
-                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#696969]">Current Strategic Focus</h4>
+                    <Compass className="w-4 h-4 text-[var(--c-fg)]" />
+                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--c-muted)]">Current Strategic Focus</h4>
                   </div>
                   <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                     Active Authority
                   </span>
                 </div>
-                <p className="text-base font-bold text-[#141413] tracking-tight">{activeAgent.keyMetric}</p>
-                <p className="text-xs text-[#696969] leading-relaxed max-w-2xl">{detail.responsibilities[0]}</p>
+                <p className="text-base font-bold text-[var(--c-fg)] tracking-tight">{activeAgent.keyMetric}</p>
+                <p className="text-xs text-[var(--c-muted)] leading-relaxed max-w-2xl">{detail.responsibilities[0]}</p>
               </div>
 
               {/* 2. AI Brief */}
-              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-3">
+              <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-3">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-indigo-600" />
-                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[#696969]">AI Executive Brief</h4>
+                  <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--c-muted)]">AI Executive Brief</h4>
                 </div>
-                <div className="p-4 rounded-xl bg-[#F3F0EE]/50 border border-[#141413]/06 text-xs text-[#141413] leading-relaxed space-y-2">
+                <div className="p-4 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] text-xs text-[var(--c-fg)] leading-relaxed space-y-2">
                   <p>
-                    <strong className="text-[#141413]">{detail.officialTitle}</strong> operating in synchronized autonomous alignment with the CatalystOS founder council.
+                    <strong className="text-[var(--c-fg)]">{detail.officialTitle}</strong> operating in synchronized autonomous alignment with the CatalystOS founder council.
                   </p>
-                  <p className="text-[#696969]">
+                  <p className="text-[var(--c-muted)]">
                     {activeAgent.description} Grounded in verified corporate telemetry, deterministic runway boundaries, and live team records.
                   </p>
                 </div>
@@ -595,18 +595,18 @@ export default function AgentWorkspace({
               {/* 3. Current Priorities & 4. Active Work (Two Columns) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Current Priorities */}
-                <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#141413]" />
-                      <h4 className="text-sm font-bold text-[#141413]">Current Priorities</h4>
+                      <CheckCircle2 className="w-4 h-4 text-[var(--c-fg)]" />
+                      <h4 className="text-sm font-bold text-[var(--c-fg)]">Current Priorities</h4>
                     </div>
-                    <span className="text-[10px] font-mono text-[#696969]">Active</span>
+                    <span className="text-[10px] font-mono text-[var(--c-muted)]">Active</span>
                   </div>
                   <ul className="space-y-2.5">
                     {detail.responsibilities.slice(0, 3).map((resp, i) => (
-                      <li key={i} className="text-xs text-[#141413] flex items-start gap-2.5 leading-relaxed">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#141413] mt-1.5 shrink-0" />
+                      <li key={i} className="text-xs text-[var(--c-fg)] flex items-start gap-2.5 leading-relaxed">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--c-fg)] mt-1.5 shrink-0" />
                         <span>{resp}</span>
                       </li>
                     ))}
@@ -614,19 +614,19 @@ export default function AgentWorkspace({
                 </div>
 
                 {/* Active Work */}
-                <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+                <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
                     <div className="flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-[#141413]" />
-                      <h4 className="text-sm font-bold text-[#141413]">Active Workload</h4>
+                      <Activity className="w-4 h-4 text-[var(--c-fg)]" />
+                      <h4 className="text-sm font-bold text-[var(--c-fg)]">Active Workload</h4>
                     </div>
-                    <span className="text-[10px] font-mono text-[#696969]">In Flight</span>
+                    <span className="text-[10px] font-mono text-[var(--c-muted)]">In Flight</span>
                   </div>
                   <div className="space-y-2.5">
                     {detail.sampleTasks.slice(0, 3).map((task, i) => (
-                      <div key={i} className="p-3 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 flex items-center justify-between text-xs">
-                        <span className="text-[#141413] font-medium truncate">{task}</span>
-                        <span className="text-[10px] font-mono text-[#696969] bg-white px-2 py-0.5 rounded border border-[#141413]/10 shrink-0 ml-2">
+                      <div key={i} className="p-3 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] flex items-center justify-between text-xs">
+                        <span className="text-[var(--c-fg)] font-medium truncate">{task}</span>
+                        <span className="text-[10px] font-mono text-[var(--c-muted)] bg-white px-2 py-0.5 rounded border border-[var(--c-border)] shrink-0 ml-2">
                           Audited
                         </span>
                       </div>
@@ -636,30 +636,30 @@ export default function AgentWorkspace({
               </div>
 
               {/* 5. Recent Activity */}
-              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
-                <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+              <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4">
+                <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-[#696969]" />
-                    <h4 className="text-sm font-bold text-[#141413]">Recent Activity & Directives</h4>
+                    <Clock className="w-4 h-4 text-[var(--c-muted)]" />
+                    <h4 className="text-sm font-bold text-[var(--c-fg)]">Recent Activity & Directives</h4>
                   </div>
-                  <span className="text-[10px] font-mono text-[#696969]">Audit Trail</span>
+                  <span className="text-[10px] font-mono text-[var(--c-muted)]">Audit Trail</span>
                 </div>
                 {roleDecisions.length > 0 ? (
                   <div className="space-y-2.5">
                     {roleDecisions.slice(0, 3).map((dec) => (
-                      <div key={dec.id} className="p-3.5 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div key={dec.id} className="p-3.5 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                         <div>
-                          <span className="font-bold text-[#141413]">{dec.title}</span>
-                          <p className="text-[#696969] text-[11px] mt-0.5">{dec.description}</p>
+                          <span className="font-bold text-[var(--c-fg)]">{dec.title}</span>
+                          <p className="text-[var(--c-muted)] text-[11px] mt-0.5">{dec.description}</p>
                         </div>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white border border-[#141413]/10 text-[#141413] shrink-0">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--c-surface)] border border-[var(--c-border)] text-[var(--c-fg)] shrink-0">
                           {dec.status.toUpperCase()}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-[#696969] italic py-2">
+                  <p className="text-xs text-[var(--c-muted)] italic py-2">
                     No custom directives logged for {activeAgent.name} yet. System commands record automatically during execution.
                   </p>
                 )}
@@ -670,29 +670,29 @@ export default function AgentWorkspace({
           {/* TAB 2: RESPONSIBILITIES */}
           {agentTab === 'responsibilities' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeIn">
-              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 pb-1 border-b border-[#141413]/06">
-                  <CheckCircle2 className="w-4 h-4 text-[#141413]" />
-                  <h4 className="text-sm font-bold text-[#141413]">Official Responsibilities</h4>
+              <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-[var(--c-border)]">
+                  <CheckCircle2 className="w-4 h-4 text-[var(--c-fg)]" />
+                  <h4 className="text-sm font-bold text-[var(--c-fg)]">Official Responsibilities</h4>
                 </div>
                 <ul className="space-y-2.5">
                   {detail.responsibilities.map((resp, i) => (
-                    <li key={i} className="text-xs text-[#141413] flex items-start gap-2.5 leading-relaxed">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#141413] mt-1.5 shrink-0" />
+                    <li key={i} className="text-xs text-[var(--c-fg)] flex items-start gap-2.5 leading-relaxed">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--c-fg)] mt-1.5 shrink-0" />
                       <span>{resp}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 pb-1 border-b border-[#141413]/06">
-                  <Layers className="w-4 h-4 text-[#141413]" />
-                  <h4 className="text-sm font-bold text-[#141413]">Core Capabilities & Tools</h4>
+              <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4">
+                <div className="flex items-center gap-2 pb-1 border-b border-[var(--c-border)]">
+                  <Layers className="w-4 h-4 text-[var(--c-fg)]" />
+                  <h4 className="text-sm font-bold text-[var(--c-fg)]">Core Capabilities & Tools</h4>
                 </div>
                 <ul className="space-y-2.5">
                   {detail.capabilities.map((cap, i) => (
-                    <li key={i} className="text-xs text-[#141413] flex items-start gap-2.5 leading-relaxed">
+                    <li key={i} className="text-xs text-[var(--c-fg)] flex items-start gap-2.5 leading-relaxed">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0" />
                       <span>{cap}</span>
                     </li>
@@ -704,20 +704,20 @@ export default function AgentWorkspace({
 
           {/* TAB 3: WORK & TASKS */}
           {agentTab === 'work' && (
-            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+            <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#141413]" />
-                  <h4 className="text-sm font-bold text-[#141413]">Operational Workload & Task Pipeline</h4>
+                  <Activity className="w-4 h-4 text-[var(--c-fg)]" />
+                  <h4 className="text-sm font-bold text-[var(--c-fg)]">Operational Workload & Task Pipeline</h4>
                 </div>
-                <span className="text-xs font-mono text-[#696969]">{detail.sampleTasks.length} Pipeline Items</span>
+                <span className="text-xs font-mono text-[var(--c-muted)]">{detail.sampleTasks.length} Pipeline Items</span>
               </div>
               <div className="space-y-3">
                 {detail.sampleTasks.map((task, i) => (
-                  <div key={i} className="p-4 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/08 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div key={i} className="p-4 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                     <div>
-                      <span className="text-sm font-semibold text-[#141413] block">{task}</span>
-                      <span className="text-[11px] text-[#696969] font-mono mt-0.5 block">Automated execution verified by Sentry (Auditor)</span>
+                      <span className="text-sm font-semibold text-[var(--c-fg)] block">{task}</span>
+                      <span className="text-[11px] text-[var(--c-muted)] font-mono mt-0.5 block">Automated execution verified by Sentry (Auditor)</span>
                     </div>
                     <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 shrink-0 w-fit">
                       Grounded
@@ -730,34 +730,34 @@ export default function AgentWorkspace({
 
           {/* TAB 4: DECISIONS */}
           {agentTab === 'decisions' && (
-            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+            <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#696969]" />
-                  <h4 className="text-sm font-bold text-[#141413]">Executive Directives & Decision History</h4>
+                  <Clock className="w-4 h-4 text-[var(--c-muted)]" />
+                  <h4 className="text-sm font-bold text-[var(--c-fg)]">Executive Directives & Decision History</h4>
                 </div>
-                <span className="text-[10px] font-mono text-[#696969]">PERSISTENT AUDIT TRAIL</span>
+                <span className="text-[10px] font-mono text-[var(--c-muted)]">PERSISTENT AUDIT TRAIL</span>
               </div>
 
               {roleDecisions.length > 0 ? (
                 <div className="space-y-3">
                   {roleDecisions.map((dec) => (
-                    <div key={dec.id} className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div key={dec.id} className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                       <div>
-                        <span className="font-bold text-[#141413] text-sm block">{dec.title}</span>
-                        <p className="text-[#696969] text-xs mt-1 leading-relaxed">{dec.description}</p>
+                        <span className="font-bold text-[var(--c-fg)] text-sm block">{dec.title}</span>
+                        <p className="text-[var(--c-muted)] text-xs mt-1 leading-relaxed">{dec.description}</p>
                       </div>
-                      <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-white border border-[#141413]/10 text-[#141413] shrink-0 font-bold w-fit">
+                      <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-[var(--c-surface)] border border-[var(--c-border)] text-[var(--c-fg)] shrink-0 font-bold w-fit">
                         {dec.status.toUpperCase()}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-8 rounded-xl border border-dashed border-[#141413]/15 text-center space-y-2">
-                  <Clock className="w-8 h-8 text-[#696969] mx-auto opacity-50" />
-                  <p className="text-xs font-bold text-[#141413]">No Directives Logged Yet</p>
-                  <p className="text-xs text-[#696969] max-w-sm mx-auto">
+                <div className="p-8 rounded-xl border border-dashed border-[var(--c-border)] text-center space-y-2">
+                  <Clock className="w-8 h-8 text-[var(--c-muted)] mx-auto opacity-50" />
+                  <p className="text-xs font-bold text-[var(--c-fg)]">No Directives Logged Yet</p>
+                  <p className="text-xs text-[var(--c-muted)] max-w-sm mx-auto">
                     Directives for {activeAgent.name} will record here when cross-agent council initiatives and decisions execute.
                   </p>
                 </div>
@@ -767,33 +767,33 @@ export default function AgentWorkspace({
 
           {/* TAB 5: ACTIVITY */}
           {agentTab === 'activity' && (
-            <div className="p-6 rounded-[20px] bg-white border border-[#141413]/08 shadow-sm space-y-4 animate-fadeIn">
-              <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+            <div className="p-6 rounded-[20px] bg-[var(--c-surface)] border border-[var(--c-border)] shadow-sm space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
                 <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#141413]" />
-                  <h4 className="text-sm font-bold text-[#141413]">Live Operational Stream</h4>
+                  <Activity className="w-4 h-4 text-[var(--c-fg)]" />
+                  <h4 className="text-sm font-bold text-[var(--c-fg)]">Live Operational Stream</h4>
                 </div>
-                <span className="text-[10px] font-mono text-[#696969]">Real-Time Telemetry</span>
+                <span className="text-[10px] font-mono text-[var(--c-muted)]">Real-Time Telemetry</span>
               </div>
 
               <div className="space-y-3">
-                <div className="p-4 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/08 flex items-center justify-between text-xs">
+                <div className="p-4 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <div>
-                      <p className="font-semibold text-[#141413]">{activeAgent.name} Status: {activeAgent.status}</p>
-                      <p className="text-[11px] text-[#696969]">{activeAgent.currentTask || 'Monitoring startup parameters and council updates'}</p>
+                      <p className="font-semibold text-[var(--c-fg)]">{activeAgent.name} Status: {activeAgent.status}</p>
+                      <p className="text-[11px] text-[var(--c-muted)]">{activeAgent.currentTask || 'Monitoring startup parameters and council updates'}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-[#696969]">Active</span>
+                  <span className="text-[10px] font-mono text-[var(--c-muted)]">Active</span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/08 flex items-center justify-between text-xs">
+                <div className="p-4 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
                     <span className="w-2 h-2 rounded-full bg-indigo-500" />
                     <div>
-                      <p className="font-semibold text-[#141413]">RAG Grounding Verification</p>
-                      <p className="text-[11px] text-[#696969]">Operating strictly against {knowledge.length} indexed corporate documents</p>
+                      <p className="font-semibold text-[var(--c-fg)]">RAG Grounding Verification</p>
+                      <p className="text-[11px] text-[var(--c-muted)]">Operating strictly against {knowledge.length} indexed corporate documents</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-mono text-emerald-700 font-bold">Verified</span>
@@ -809,10 +809,10 @@ export default function AgentWorkspace({
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-[#141413]">Autonomous Executive Council</h3>
-              <p className="text-xs text-[#696969] mt-0.5">8 AI executive agents orchestrating strategy, capital, talent, and compliance</p>
+              <h3 className="text-base font-bold text-[var(--c-fg)]">Autonomous Executive Council</h3>
+              <p className="text-xs text-[var(--c-muted)] mt-0.5">8 AI executive agents orchestrating strategy, capital, talent, and compliance</p>
             </div>
-            <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-white border border-[#141413]/10 text-[#141413]">
+            <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-[var(--c-surface)] border border-[var(--c-border)] text-[var(--c-fg)]">
               {agents.length} Executives Active
             </span>
           </div>
@@ -835,7 +835,7 @@ export default function AgentWorkspace({
                       src={agent.avatar}
                       alt={agent.name}
                       referrerPolicy="no-referrer"
-                      className="w-14 h-14 rounded-2xl object-cover border border-[#141413]/10 group-hover:scale-105 transition-transform shadow-xs"
+                      className="w-14 h-14 rounded-2xl object-cover border border-[var(--c-border)] group-hover:scale-105 transition-transform shadow-xs"
                     />
                     <span className="tech-badge">
                       {agent.role}
@@ -843,25 +843,25 @@ export default function AgentWorkspace({
                   </div>
 
                   <div className="mt-4">
-                    <h4 className="text-base font-bold text-[#141413] flex items-center gap-1.5 leading-snug">
+                    <h4 className="text-base font-bold text-[var(--c-fg)] flex items-center gap-1.5 leading-snug">
                       {getRoleIcon(agent.role)}
                       <span>{agent.name}</span>
                     </h4>
-                    <p className="text-[11px] font-medium text-[#696969] mt-0.5">
+                    <p className="text-[11px] font-medium text-[var(--c-muted)] mt-0.5">
                       {EXECUTIVE_DETAILS[agent.role]?.officialTitle || agent.role}
                     </p>
-                    <p className="text-xs text-[#141413]/80 mt-2.5 leading-relaxed line-clamp-2">
+                    <p className="text-xs text-[var(--c-fg)]/80 mt-2.5 leading-relaxed line-clamp-2">
                       {agent.description}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-3.5 border-t border-[#141413]/08 flex items-center justify-between text-xs">
+                <div className="mt-5 pt-3.5 border-t border-[var(--c-border)] flex items-center justify-between text-xs">
                   <div className="flex items-center gap-1.5">
                     <span className={`w-2 h-2 rounded-full ${agent.status !== 'idle' ? 'bg-emerald-500 animate-pulse' : 'bg-stone-300'}`} />
-                    <span className="text-[11px] font-mono text-[#696969] capitalize">{agent.status}</span>
+                    <span className="text-[11px] font-mono text-[var(--c-muted)] capitalize">{agent.status}</span>
                   </div>
-                  <span className="text-xs font-bold text-[#141413] group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                  <span className="text-xs font-bold text-[var(--c-fg)] group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
                     <span>Inspect</span>
                     <ArrowRight className="w-3 h-3" />
                   </span>
@@ -874,53 +874,53 @@ export default function AgentWorkspace({
 
       {/* VIEW 3: CONFIGURATION (Startup profile adjustment) */}
       {activeView === 'config' && (
-        <div className="max-w-xl mx-auto p-6 rounded-[20px] border border-[#141413]/10 bg-white shadow-sm">
+        <div className="max-w-xl mx-auto p-6 rounded-[20px] border border-[var(--c-border)] bg-[var(--c-surface)] shadow-sm">
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-[#141413]">Startup Profile Adjustments</h3>
-            <p className="text-xs text-[#696969] mt-1">Configure treasury details and business metadata. Changes update the canonical startup context.</p>
+            <h3 className="text-lg font-bold text-[var(--c-fg)]">Startup Profile Adjustments</h3>
+            <p className="text-xs text-[var(--c-muted)] mt-1">Configure treasury details and business metadata. Changes update the canonical startup context.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#696969] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Startup Legal Name</label>
+              <label className="block text-xs font-bold text-[var(--c-muted)] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Startup Legal Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/20 text-sm text-[#141413] focus:outline-none focus:border-[#141413] font-sans"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[var(--c-border-strong)] text-sm text-[var(--c-fg)] focus:outline-none focus:border-[#141413] font-sans"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#696969] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Primary Target Industry</label>
+              <label className="block text-xs font-bold text-[var(--c-muted)] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Primary Target Industry</label>
               <input
                 type="text"
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/20 text-sm text-[#141413] focus:outline-none focus:border-[#141413] font-sans"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[var(--c-border-strong)] text-sm text-[var(--c-fg)] focus:outline-none focus:border-[#141413] font-sans"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#696969] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Product Description & Objective</label>
+              <label className="block text-xs font-bold text-[var(--c-muted)] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Product Description & Objective</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 rows={3}
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/20 text-sm text-[#141413] focus:outline-none focus:border-[#141413] font-sans resize-none leading-relaxed"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[var(--c-border-strong)] text-sm text-[var(--c-fg)] focus:outline-none focus:border-[#141413] font-sans resize-none leading-relaxed"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-[#696969] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Funding Stage</label>
+                <label className="block text-xs font-bold text-[var(--c-muted)] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Funding Stage</label>
                 <select
                   value={fundingStage}
                   onChange={(e) => setFundingStage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#F3F0EE] border border-[#141413]/20 text-sm text-[#141413] focus:outline-none focus:border-[#141413]"
+                  className="w-full px-3.5 py-2.5 rounded-[12px] bg-[var(--c-surface-2)] border border-[var(--c-border-strong)] text-sm text-[var(--c-fg)] focus:outline-none focus:border-[#141413]"
                 >
                   <option value="Idea Phase">Idea Phase</option>
                   <option value="Pre-Seed">Pre-Seed</option>
@@ -930,25 +930,25 @@ export default function AgentWorkspace({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#696969] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Current Cash Balance ($)</label>
+                <label className="block text-xs font-bold text-[var(--c-muted)] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Current Cash Balance ($)</label>
                 <input
                   type="number"
                   value={cashBalance}
                   onChange={(e) => setCashBalance(Number(e.target.value))}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/20 text-sm text-[#141413] focus:outline-none focus:border-[#141413] font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[var(--c-border-strong)] text-sm text-[var(--c-fg)] focus:outline-none focus:border-[#141413] font-mono"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#696969] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Target Monthly Burn Rate ($)</label>
+              <label className="block text-xs font-bold text-[var(--c-muted)] mb-1.5 font-mono uppercase tracking-wider text-[10px]">Target Monthly Burn Rate ($)</label>
               <input
                 type="number"
                 value={burnRate}
                 onChange={(e) => setBurnRate(Number(e.target.value))}
                 required
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[#141413]/20 text-sm text-[#141413] focus:outline-none focus:border-[#141413] font-mono"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-white border border-[var(--c-border-strong)] text-sm text-[var(--c-fg)] focus:outline-none focus:border-[#141413] font-mono"
               />
             </div>
 
@@ -961,7 +961,7 @@ export default function AgentWorkspace({
               <button
                 type="submit"
                 disabled={isSaving}
-                className="ml-auto px-5 py-2.5 rounded-[20px] bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] transition-all disabled:opacity-50 cursor-pointer font-sans"
+                className="ml-auto px-5 py-2.5 rounded-[20px] bg-[var(--c-fg)] hover:opacity-90 text-xs font-bold text-[var(--c-bg)] transition-all disabled:opacity-50 cursor-pointer font-sans"
               >
                 {isSaving ? 'Updating...' : 'Save Configuration'}
               </button>

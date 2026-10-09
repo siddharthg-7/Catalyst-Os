@@ -89,9 +89,10 @@ const AGENT_ROLE_LABEL: Record<string, string> = {
   Auditor: 'Auditor',
 };
 
-// ── KPI Card Component ────────────────────────────────────────────────────────
+// ── KPI Card Component (Cute, Airy, Landing Page Aesthetic) ───────────────────
 interface KpiCardProps {
   icon: React.ReactNode;
+  roleTag?: string;
   label: string;
   value: string;
   delta: string;
@@ -103,46 +104,50 @@ interface KpiCardProps {
   actionHint?: string;
 }
 
-function KpiCard({ icon, label, value, delta, deltaPositive, showBar, barValue, accentColor, onClick, actionHint }: KpiCardProps) {
+function KpiCard({ icon, roleTag, label, value, delta, deltaPositive, showBar, barValue, accentColor, onClick, actionHint }: KpiCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`catalyst-card card-hover glow-border p-6 flex flex-col justify-between gap-4 transition-all duration-200 ${
-        onClick ? 'cursor-pointer hover:border-[#141413]/25 group' : ''
+      className={`rounded-3xl border p-5 flex flex-col justify-between gap-3.5 transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-md ${
+        onClick ? 'cursor-pointer hover:-translate-y-0.5 group' : ''
       }`}
+      style={{
+        backgroundColor: 'var(--c-surface)',
+        borderColor: 'var(--c-border)',
+      }}
     >
       <div className="flex items-center justify-between">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${accentColor}`}>
+        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs ${accentColor}`}>
           {icon}
         </div>
         <div className="flex items-center gap-1.5">
           {actionHint && (
-            <span className="opacity-0 group-hover:opacity-100 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full transition-opacity flex items-center gap-1">
+            <span className="opacity-0 group-hover:opacity-100 text-[10px] font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full transition-opacity flex items-center gap-1">
               <Edit3 className="w-2.5 h-2.5" />
               <span>{actionHint}</span>
             </span>
           )}
-          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold font-mono ${deltaPositive ? 'text-emerald-700 bg-emerald-50/80 border border-emerald-100' : 'text-amber-700 bg-amber-50/80 border border-amber-100'}`}>
+          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${deltaPositive ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800' : 'text-amber-600 bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800'}`}>
             {deltaPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {delta}
           </span>
         </div>
       </div>
       <div>
+        {roleTag && (
+          <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-slate-400 block mb-0.5">
+            {roleTag}
+          </span>
+        )}
         <div className="flex items-baseline justify-between">
-          <p className="text-3xl font-bold text-[#141413] tracking-tight font-sans">{value}</p>
-          {onClick && (
-            <span className="p-1 rounded-md text-[#141413]/20 group-hover:text-emerald-700 group-hover:bg-emerald-50 transition-colors">
-              <Edit3 className="w-3.5 h-3.5" />
-            </span>
-          )}
+          <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-sans" style={{ color: 'var(--c-fg)' }}>{value}</p>
         </div>
-        <p className="text-xs text-[#696969] mt-1.5 font-medium">{label}</p>
+        <p className="text-xs mt-1 font-medium" style={{ color: 'var(--c-muted)' }}>{label}</p>
       </div>
       {showBar && barValue !== undefined && (
-        <div className="h-1.5 w-full bg-[#141413]/06 rounded-full overflow-hidden mt-1">
+        <div className="h-1.5 w-full rounded-full overflow-hidden mt-0.5" style={{ backgroundColor: 'var(--c-surface-3)' }}>
           <div
-            className="h-full rounded-full bg-[#141413] transition-all duration-700"
+            className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-indigo-500 to-purple-600"
             style={{ width: `${Math.min(Math.max(barValue, 0), 100)}%` }}
           />
         </div>
@@ -592,26 +597,26 @@ export default function SaaSDashboard({
   return (
     <div className="space-y-6 pb-12">
 
-      {/* ── 1. Welcome & Status Sentinel ──────────────────────────────── */}
+      {/* ── 1. Welcome & Status Sentinel (Airy, Cute, Landing Page Style) ──── */}
       <Section delay={0.03} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-gray-900 text-white uppercase tracking-wider">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span>AI Executive Council · Synchronized</span>
+            </span>
+            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border text-slate-500 border-slate-200 dark:border-slate-800">
               {startup.fundingStage || 'Pre-Seed'}
             </span>
-            <span className="text-xs font-medium text-gray-500 font-sans">
+            <span className="text-xs font-medium text-slate-400">
               {startup.industry || 'Technology'}
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-mono font-bold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Orchestrator Online</span>
-            </span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Founder Command Center · {getGreeting()}, {firstName} 👋
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            {getGreeting()}, {firstName}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Operating view for <span className="font-semibold text-gray-800">{startup.name || 'Your Startup'}</span> · 8 Executive Agents Synchronized
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl">
+            Operating command center for <span className="font-semibold text-slate-700 dark:text-slate-200">{startup.name || 'Your Startup'}</span> · 8 autonomous agents monitoring runway, operations, and growth.
           </p>
         </div>
 
@@ -622,15 +627,25 @@ export default function SaaSDashboard({
               setEditBurn(burnRate);
               setIsCalibratingTreasury(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#141413]/10 text-[#141413] text-xs font-semibold hover:border-[#141413]/25 hover:bg-stone-50 transition-all shadow-subtle interactive-btn"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-xs font-semibold transition-all cursor-pointer shadow-xs hover:border-indigo-400 hover:text-indigo-600"
+            style={{ 
+              backgroundColor: 'var(--c-surface)', 
+              borderColor: 'var(--c-border)', 
+              color: 'var(--c-fg)' 
+            }}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-700" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
             <span>Calibrate Financials</span>
           </button>
           {onNavigate && (
             <button
               onClick={() => onNavigate('scenarios')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-[#141413]/10 text-[#141413] text-xs font-semibold hover:border-[#141413]/25 hover:bg-stone-50 transition-all shadow-subtle interactive-btn"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border text-xs font-semibold transition-all cursor-pointer shadow-xs hover:border-indigo-400 hover:text-indigo-600"
+              style={{ 
+                backgroundColor: 'var(--c-surface)', 
+                borderColor: 'var(--c-border)', 
+                color: 'var(--c-fg)' 
+              }}
             >
               <Compass className="w-3.5 h-3.5 text-indigo-600" />
               <span>Scenario Studio</span>
@@ -639,62 +654,71 @@ export default function SaaSDashboard({
         </div>
       </Section>
 
-      {/* ── 2. HERO: THE CATALYST COMMAND BOX (The Central Concept) ─────── */}
-      <Section delay={0.06} className="bg-white rounded-2xl border border-[#141413]/10 shadow-md overflow-hidden relative">
-        {/* Central Concept Architecture Banner */}
-        <div className="px-6 py-2.5 bg-[#141413] text-[#F3F0EE] flex items-center justify-between border-b border-white/10 text-xs">
-          <div className="flex items-center gap-2 font-mono text-[11px]">
-            <span className="font-bold text-white/90">FOUNDER</span>
-            <span className="text-white/40">─►</span>
-            <span className="px-2 py-0.5 rounded bg-white/10 text-emerald-400 font-bold border border-white/10">CATALYST COMMAND BOX</span>
-            <span className="text-white/40">─►</span>
-            <span className="font-bold text-white/90">ORCHESTRATOR</span>
+      {/* ── 2. HERO: EXECUTIVE DIRECTIVE COMMAND BOX ────────────────────── */}
+      <Section delay={0.06} className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] overflow-hidden transition-all backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+        {/* Command Orchestrator Header Bar */}
+        <div 
+          className="px-6 py-3.5 flex items-center justify-between border-b text-xs flex-wrap gap-2"
+          style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-bold text-xs text-slate-900 dark:text-white block">Sophia Vance · CEO Agent</span>
+              <span className="text-[10px] text-slate-400 font-medium">Autonomous Strategic Dispatcher</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsVoiceModeOpen(true)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer hover:border-indigo-400"
+              style={{ 
+                backgroundColor: 'var(--c-surface)', 
+                borderColor: 'var(--c-border)', 
+                color: 'var(--c-fg)' 
+              }}
               title="Launch Hands-Free Voice Mode"
             >
-              <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+              <Radio className="w-3 h-3 text-indigo-500 animate-pulse" />
               <span>Voice Mode</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setIsVoiceStudioOpen(true)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-semibold text-white/80 hover:text-white border border-white/10 hover:bg-white/10 transition-all cursor-pointer"
-              title="Configure Voice Studio Neural Models"
-            >
-              <SlidersHorizontal className="w-3 h-3" />
-              <span>Voice Studio</span>
-            </button>
-
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
-            <span className="text-[10px] font-mono text-white/70">SSE Real-Time Stream</span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full border text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live Council</span>
+            </span>
           </div>
         </div>
 
         {/* Command Box Input Area */}
-        <div className="p-5 space-y-3">
+        <div className="p-6 space-y-4">
           {aiPermissionError && (
-            <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2 flex justify-between items-center">
+            <div className="text-xs text-rose-500 bg-rose-500/10 border border-rose-500/30 rounded-2xl px-4 py-2.5 flex justify-between items-center">
               <span>{aiPermissionError}</span>
               <button onClick={() => setAiPermissionError(null)} className="text-rose-500 hover:text-rose-700 font-semibold ml-2">✕</button>
             </div>
           )}
 
-          <div className="flex items-end gap-2 p-3 bg-[#F3F0EE]/40 border border-[#141413]/12 rounded-2xl focus-within:border-[#141413]/40 focus-within:bg-white transition-all shadow-inner">
+          <div 
+            className="flex items-end gap-3 p-3.5 border rounded-2xl transition-all shadow-inner focus-within:border-indigo-400"
+            style={{ 
+              backgroundColor: 'var(--c-surface-2)', 
+              borderColor: 'var(--c-border)' 
+            }}
+          >
             <textarea
               ref={textareaRef}
               value={aiInput}
               onChange={e => setAiInput(e.target.value.slice(0, 2000))}
               onKeyDown={handleAiKeyDown}
-              placeholder={isRecording ? 'Listening... speak your founder command' : 'Issue a strategic command to your autonomous council... e.g., "What are our biggest risks?", "Prepare a 30-day GTM plan", "Can we afford to hire three engineers?"'}
+              placeholder={isRecording ? 'Listening... speak your founder command' : 'Ask anything or issue a command: "What are our biggest risks?", "Prepare a 30-day GTM plan", "Can we afford to hire 2 engineers?"'}
               disabled={aiSending}
               rows={2}
-              className="flex-1 bg-transparent px-2.5 py-1 text-sm text-[#141413] placeholder:text-[#696969]/65 focus:outline-none resize-none leading-relaxed font-sans"
+              className="flex-1 bg-transparent px-2 py-1 text-sm focus:outline-none resize-none leading-relaxed font-sans placeholder:text-slate-400"
+              style={{ color: 'var(--c-fg)' }}
             />
 
             {/* Mic button */}
@@ -702,50 +726,60 @@ export default function SaaSDashboard({
               type="button"
               onClick={toggleRecording}
               title={isRecording ? 'Stop recording' : 'Voice input'}
-              className={`p-2.5 rounded-xl transition-all cursor-pointer shrink-0 ${
+              className={`p-2.5 rounded-full transition-all cursor-pointer shrink-0 border ${
                 isRecording
-                  ? 'bg-rose-500 text-white animate-pulse'
-                  : 'text-[#696969] hover:text-[#141413] hover:bg-white'
+                  ? 'bg-rose-500 text-white animate-pulse border-rose-600'
+                  : 'hover:border-indigo-400'
               }`}
+              style={{
+                backgroundColor: isRecording ? undefined : 'var(--c-surface)',
+                borderColor: isRecording ? undefined : 'var(--c-border)',
+                color: isRecording ? undefined : 'var(--c-muted)',
+              }}
             >
               {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </button>
 
-            {/* Send button */}
+            {/* Send button with Cute Gradient Pill */}
             <button
               type="button"
               onClick={() => handleAiSend()}
               disabled={!aiInput.trim() || aiSending}
-              className={`p-2.5 rounded-xl transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`px-5 py-2.5 rounded-full transition-all shrink-0 cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-md ${
                 aiInput.trim() && !aiSending
-                  ? 'bg-[#141413] text-[#F3F0EE] hover:bg-black shadow-sm'
-                  : 'bg-[#141413]/10 text-[#696969]/40 cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-95 hover:shadow-indigo-500/25'
+                  : 'opacity-40 cursor-not-allowed bg-slate-200 text-slate-500'
               }`}
             >
-              {aiSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              <span className="text-xs font-semibold pr-1 hidden sm:inline">Execute</span>
+              {aiSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+              <span>Run Directive</span>
             </button>
           </div>
 
-          {/* Quick Action Suggestion Chips */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-[10px] font-mono text-[#696969] font-bold uppercase tracking-wider mr-1">
-              Suggested Directives:
+          {/* Quick Action Suggestion Chips (Cute Landing Page Pill Style) */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+              Suggestions:
             </span>
             {[
-              "What is our current runway at current burn?",
-              "Can we afford to hire three engineers?",
-              "What are the biggest risks to the company right now?",
-              "Prepare a 30-day GTM plan based on our ICP.",
-              "Review pending founder approvals.",
-            ].map(prompt => (
+              { label: '💡 Check Runway', prompt: 'What is our current runway at current burn?' },
+              { label: '👥 Plan Q3 Hiring', prompt: 'Can we afford to hire three engineers?' },
+              { label: '⚠️ Risk Assessment', prompt: 'What are the biggest risks to the company right now?' },
+              { label: '🚀 Launch GTM Sprint', prompt: 'Prepare a 30-day GTM plan based on our ICP.' },
+              { label: '📋 Founder Approvals', prompt: 'Review pending founder approvals and next steps.' },
+            ].map(item => (
               <button
-                key={prompt}
-                onClick={() => handleAiSend(prompt)}
+                key={item.label}
+                onClick={() => handleAiSend(item.prompt)}
                 disabled={aiSending}
-                className="text-xs text-[#696969] hover:text-[#141413] bg-[#F3F0EE]/60 hover:bg-white border border-[#141413]/08 hover:border-[#141413]/25 px-2.5 py-1 rounded-full transition-all cursor-pointer disabled:opacity-50"
+                className="text-xs px-3.5 py-1.5 rounded-full border transition-all cursor-pointer disabled:opacity-50 font-medium hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40"
+                style={{
+                  backgroundColor: 'var(--c-surface)',
+                  borderColor: 'var(--c-border)',
+                  color: 'var(--c-muted)'
+                }}
               >
-                {prompt}
+                {item.label}
               </button>
             ))}
           </div>
@@ -753,51 +787,77 @@ export default function SaaSDashboard({
 
         {/* Live Conversation & Stream Output */}
         {messages.length > 0 && (
-          <div className="px-6 py-4 max-h-[500px] overflow-y-auto space-y-4 border-t border-[#141413]/06 bg-[#F3F0EE]/15">
+          <div 
+            className="px-6 py-4 max-h-[500px] overflow-y-auto space-y-4 border-t"
+            style={{ 
+              borderColor: 'var(--c-border)', 
+              backgroundColor: 'var(--c-surface-2)' 
+            }}
+          >
             {messages.slice(-3).map(msg => (
               <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-xl bg-[#141413] flex items-center justify-center shrink-0 shadow-xs mt-0.5">
-                    <Sparkles className="w-4 h-4 text-[#F3F0EE]" />
+                  <div 
+                    className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-xs mt-0.5"
+                    style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+                  >
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
                   </div>
                 )}
-                <div className={`max-w-[85%] px-4 py-3.5 rounded-2xl text-sm leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-[#141413] text-[#F3F0EE] rounded-tr-sm shadow-xs'
-                    : 'bg-white text-[#141413] border border-[#141413]/10 rounded-tl-sm shadow-sm'
-                }`}>
+                <div 
+                  className={`max-w-[85%] px-4 py-3.5 rounded-2xl text-sm leading-relaxed border shadow-xs ${
+                    msg.role === 'user' ? 'rounded-tr-sm' : 'rounded-tl-sm'
+                  }`}
+                  style={{
+                    backgroundColor: msg.role === 'user' ? 'var(--c-fg)' : 'var(--c-surface)',
+                    color: msg.role === 'user' ? 'var(--c-bg)' : 'var(--c-fg)',
+                    borderColor: 'var(--c-border)',
+                  }}
+                >
                   {/* Provider Unavailable Alert Banner */}
                   {msg.role === 'assistant' && msg.status === 'provider_unavailable' && (
-                    <div className="mb-2.5 p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800 font-medium flex items-center gap-1.5 font-mono">
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <div className="mb-2.5 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-500 font-medium flex items-center gap-1.5 font-mono">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                       <span>Operating in Deterministic Mathematical Fallback Mode</span>
                     </div>
                   )}
 
                   {/* Intent & Objective pill */}
                   {msg.role === 'assistant' && (msg.intent || msg.objective) && (
-                    <div className="mb-2.5 px-2.5 py-1 rounded-md bg-stone-100 border border-stone-200 text-[11px] font-mono text-stone-800 flex items-center gap-2">
-                      <span className="font-bold uppercase tracking-wider text-[10px] text-stone-600">Intent:</span>
+                    <div 
+                      className="mb-2.5 px-2.5 py-1 rounded-md border text-[11px] font-mono flex items-center gap-2"
+                      style={{ 
+                        backgroundColor: 'var(--c-surface-2)', 
+                        borderColor: 'var(--c-border)',
+                        color: 'var(--c-fg)' 
+                      }}
+                    >
+                      <span className="font-bold uppercase tracking-wider text-[10px]" style={{ color: 'var(--c-muted)' }}>Intent:</span>
                       <span className="font-semibold">{msg.intent || 'Strategic Directive'}</span>
-                      {msg.objective && <span className="text-stone-500 truncate">· {msg.objective}</span>}
+                      {msg.objective && <span className="opacity-70 truncate">· {msg.objective}</span>}
                     </div>
                   )}
 
                   {/* Dynamic Executive Agent Strip */}
                   {msg.role === 'assistant' && msg.activeAgents && msg.activeAgents.some(a => a.status !== 'idle') && (
-                    <div className="flex flex-wrap items-center gap-1.5 mb-2.5 pb-2 border-b border-[#141413]/08">
-                      <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#696969] mr-1">
-                        Executive Matrix:
+                    <div className="flex flex-wrap items-center gap-1.5 mb-2.5 pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
+                      <span className="text-[10px] font-mono uppercase tracking-wider font-bold mr-1" style={{ color: 'var(--c-faint)' }}>
+                        Council Matrix:
                       </span>
                       {msg.activeAgents.filter(a => a.status !== 'idle').map(ag => (
                         <span
                           key={ag.role}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-50 border border-[#141413]/10 text-[#141413] text-[10px] font-medium font-mono"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-medium font-mono"
+                          style={{ 
+                            backgroundColor: 'var(--c-surface-2)', 
+                            borderColor: 'var(--c-border)',
+                            color: 'var(--c-fg)' 
+                          }}
                           title={ag.contribution || `${ag.role}: ${ag.status}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${ag.status === 'completed' ? 'bg-emerald-500' : 'bg-blue-500 animate-pulse'}`} />
                           <span>{ag.role}</span>
-                          {ag.status === 'completed' && <Check className="w-3 h-3 text-emerald-600 inline" />}
+                          {ag.status === 'completed' && <Check className="w-3 h-3 text-emerald-500 inline" />}
                         </span>
                       ))}
                     </div>
@@ -805,22 +865,35 @@ export default function SaaSDashboard({
 
                   {/* Supporting Data / Verified Audit Evidence */}
                   {msg.role === 'assistant' && ((msg.supportingData && msg.supportingData.length > 0) || (msg.calculations && msg.calculations.length > 0)) && (
-                    <div className="mb-3 p-3 rounded-xl bg-stone-50 border border-[#141413]/08 shadow-xs">
-                      <div className="text-[10px] font-mono font-bold text-[#141413] uppercase tracking-wider flex items-center justify-between border-b border-[#141413]/06 pb-1.5 mb-2">
-                        <div className="flex items-center gap-1.5">
-                          <Calculator className="w-3.5 h-3.5 text-indigo-600" />
+                    <div 
+                      className="mb-3 p-3 rounded-xl border shadow-xs"
+                      style={{ 
+                        backgroundColor: 'var(--c-surface-2)', 
+                        borderColor: 'var(--c-border)' 
+                      }}
+                    >
+                      <div className="text-[10px] font-mono font-bold uppercase tracking-wider flex items-center justify-between border-b pb-1.5 mb-2" style={{ borderColor: 'var(--c-border)' }}>
+                        <div className="flex items-center gap-1.5 text-indigo-500">
+                          <Calculator className="w-3.5 h-3.5" />
                           <span>SUPPORTING AUDIT EVIDENCE</span>
                         </div>
-                        <span className="text-[9px] text-[#696969] font-mono">DETERMINISTIC VERIFICATION</span>
+                        <span className="text-[9px] font-mono" style={{ color: 'var(--c-faint)' }}>DETERMINISTIC VERIFICATION</span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                         {(msg.supportingData && msg.supportingData.length > 0 ? msg.supportingData : (msg.calculations || []).map(c => ({ label: c.metric, value: String(c.value), source: c.source }))).map((sd, idx) => (
-                          <div key={idx} className="text-xs bg-white px-2.5 py-1.5 rounded-lg border border-[#141413]/06 flex justify-between items-center gap-2">
+                          <div 
+                            key={idx} 
+                            className="text-xs px-2.5 py-1.5 rounded-lg border flex justify-between items-center gap-2"
+                            style={{ 
+                              backgroundColor: 'var(--c-surface)', 
+                              borderColor: 'var(--c-border)' 
+                            }}
+                          >
                             <div>
-                              <span className="text-[#141413] font-medium block text-[11px]">{sd.label}</span>
-                              <span className="text-[9px] text-[#696969] font-mono">Source: {sd.source}</span>
+                              <span className="font-medium block text-[11px]" style={{ color: 'var(--c-fg)' }}>{sd.label}</span>
+                              <span className="text-[9px] font-mono" style={{ color: 'var(--c-muted)' }}>Source: {sd.source}</span>
                             </div>
-                            <span className="font-bold text-[#141413] font-mono shrink-0 text-xs">{sd.value}</span>
+                            <span className="font-bold font-mono shrink-0 text-xs text-indigo-500">{sd.value}</span>
                           </div>
                         ))}
                       </div>
@@ -834,13 +907,21 @@ export default function SaaSDashboard({
 
                   {/* Grounded In Citations */}
                   {msg.role === 'assistant' && ((msg.citations && msg.citations.length > 0) || (msg.evidence && msg.evidence.length > 0)) && (
-                    <div className="mt-3 pt-2.5 border-t border-[#141413]/08 flex flex-wrap items-center gap-1.5 text-[10px]">
-                      <span className="font-bold text-[#141413] font-mono flex items-center gap-1">
-                        <FileText className="w-3 h-3 text-[#696969]" />
+                    <div className="mt-3 pt-2.5 border-t flex flex-wrap items-center gap-1.5 text-[10px]" style={{ borderColor: 'var(--c-border)' }}>
+                      <span className="font-bold font-mono flex items-center gap-1" style={{ color: 'var(--c-fg)' }}>
+                        <FileText className="w-3 h-3 opacity-60" />
                         Grounded In:
                       </span>
                       {(msg.citations && msg.citations.length > 0 ? msg.citations.map(c => ({ citationId: c.id, documentName: c.title })) : (msg.evidence || [])).map((ev, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded-md bg-stone-50 border border-[#141413]/10 text-[#141413] font-mono shadow-xs">
+                        <span 
+                          key={i} 
+                          className="px-2 py-0.5 rounded-md border font-mono shadow-xs"
+                          style={{ 
+                            backgroundColor: 'var(--c-surface-2)', 
+                            borderColor: 'var(--c-border)', 
+                            color: 'var(--c-fg)' 
+                          }}
+                        >
                           [{ev.citationId}] {ev.documentName || 'Document'}
                         </span>
                       ))}
@@ -849,12 +930,18 @@ export default function SaaSDashboard({
 
                   {/* Human-in-the-Loop Approval Gate */}
                   {msg.role === 'assistant' && msg.approval?.required && (
-                    <div className="mt-3.5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                    <div 
+                      className="mt-3.5 p-3 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                      style={{ 
+                        backgroundColor: 'rgba(245, 158, 11, 0.08)', 
+                        borderColor: 'rgba(245, 158, 11, 0.25)' 
+                      }}
+                    >
                       <div className="flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                         <div>
-                          <span className="font-bold block text-amber-950">Action Requires Founder Approval</span>
-                          <span className="text-[11px] text-amber-800 leading-snug">
+                          <span className="font-bold block text-amber-500">Action Requires Founder Approval</span>
+                          <span className="text-[11px] opacity-80 leading-snug">
                             {msg.approval.reason || 'High-stakes execution pending review.'}
                           </span>
                         </div>
@@ -862,7 +949,11 @@ export default function SaaSDashboard({
                       {onNavigate && (
                         <button
                           onClick={() => onNavigate('approvals')}
-                          className="px-3 py-1.5 rounded-lg bg-[#141413] text-[#F3F0EE] font-semibold text-[11px] hover:bg-black transition-colors shrink-0 shadow-xs cursor-pointer flex items-center justify-center gap-1 w-fit"
+                          className="px-3 py-1.5 rounded-lg font-semibold text-[11px] transition-colors shrink-0 shadow-xs cursor-pointer flex items-center justify-center gap-1 w-fit"
+                          style={{ 
+                            backgroundColor: 'var(--c-fg)', 
+                            color: 'var(--c-bg)' 
+                          }}
                         >
                           <span>Review in Approvals</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -876,15 +967,25 @@ export default function SaaSDashboard({
 
             {isTyping && (
               <div className="flex gap-3 animate-fade-in">
-                <div className="w-8 h-8 rounded-xl bg-[#141413] flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                  <Sparkles className="w-4 h-4 text-[#F3F0EE] animate-spin" />
+                <div 
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 shadow-xs"
+                  style={{ backgroundColor: 'var(--c-fg)', color: 'var(--c-bg)' }}
+                >
+                  <Sparkles className="w-4 h-4 animate-spin text-indigo-400" />
                 </div>
-                <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-white border border-[#141413]/10 shadow-xs space-y-1.5 max-w-[85%]">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#141413]">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#141413]" />
+                <div 
+                  className="px-4 py-3 rounded-2xl rounded-tl-sm border shadow-xs space-y-1.5 max-w-[85%]"
+                  style={{ 
+                    backgroundColor: 'var(--c-surface)', 
+                    borderColor: 'var(--c-border)', 
+                    color: 'var(--c-fg)' 
+                  }}
+                >
+                  <div className="flex items-center gap-2 text-xs font-bold" style={{ color: 'var(--c-fg)' }}>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-500" />
                     <span>Atlas (CEO Orchestrator) Synthesizing Council Directives...</span>
                   </div>
-                  <p className="text-[11px] text-[#696969] font-sans">
+                  <p className="text-[11px] font-sans" style={{ color: 'var(--c-muted)' }}>
                     Grounding strategy against verified startup documents, treasury bounds, and auditor compliance.
                   </p>
                 </div>
@@ -898,52 +999,50 @@ export default function SaaSDashboard({
       <Section delay={0.09} className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-            <h2 className="text-sm font-bold text-[#141413] uppercase tracking-wider font-mono text-[11px]">
+            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <h2 className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--c-fg)' }}>
               Important Risks Sentinel
             </h2>
           </div>
           <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
             detectedRisks.some(r => r.severity === 'CRITICAL')
-              ? 'bg-rose-50 text-rose-700 border-rose-200'
+              ? 'bg-rose-500/10 text-rose-500 border-rose-500/30'
               : detectedRisks.length > 0
-              ? 'bg-amber-50 text-amber-800 border-amber-200'
-              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
+              : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
           }`}>
             {detectedRisks.length > 0 ? `${detectedRisks.length} Risk Flag${detectedRisks.length > 1 ? 's' : ''}` : 'All Clear'}
           </span>
         </div>
 
-        {detectedRisks.length > 0 ? (
+        {detectedRisks.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {detectedRisks.map(risk => (
               <div
                 key={risk.id}
-                className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
-                  risk.severity === 'CRITICAL'
-                    ? 'bg-rose-50/60 border-rose-200 text-rose-950'
-                    : risk.severity === 'HIGH'
-                    ? 'bg-orange-50/60 border-orange-200 text-orange-950'
-                    : 'bg-amber-50/40 border-amber-200/80 text-amber-950'
-                }`}
+                className="p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 shadow-xs"
+                style={{
+                  backgroundColor: risk.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.04)' : 'rgba(245, 158, 11, 0.04)',
+                  borderColor: risk.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                }}
               >
                 <div className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                      risk.severity === 'CRITICAL' ? 'bg-rose-600 text-white' : risk.severity === 'HIGH' ? 'bg-orange-600 text-white' : 'bg-amber-600 text-white'
+                    <span className={`text-[9px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider text-white ${
+                      risk.severity === 'CRITICAL' ? 'bg-rose-500' : 'bg-amber-500'
                     }`}>
                       {risk.severity} RISK
                     </span>
                   </div>
-                  <h3 className="text-xs font-bold pt-1">{risk.title}</h3>
-                  <p className="text-[11px] leading-relaxed opacity-85">{risk.description}</p>
+                  <h3 className="text-xs font-bold pt-1 text-slate-900 dark:text-white">{risk.title}</h3>
+                  <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{risk.description}</p>
                 </div>
 
                 <div className="flex items-center justify-end pt-1">
                   {risk.actionType === 'calibrate' && (
                     <button
                       onClick={() => setIsCalibratingTreasury(true)}
-                      className="px-3 py-1 rounded-lg bg-[#141413] text-[#F3F0EE] text-[11px] font-semibold hover:bg-black transition-colors"
+                      className="px-3.5 py-1 rounded-full text-[11px] font-semibold transition-opacity cursor-pointer shadow-xs hover:opacity-90 bg-indigo-600 text-white"
                     >
                       {risk.actionLabel}
                     </button>
@@ -951,7 +1050,7 @@ export default function SaaSDashboard({
                   {risk.actionType === 'approvals' && onNavigate && (
                     <button
                       onClick={() => onNavigate('approvals')}
-                      className="px-3 py-1 rounded-lg bg-[#141413] text-[#F3F0EE] text-[11px] font-semibold hover:bg-black transition-colors"
+                      className="px-3.5 py-1 rounded-full text-[11px] font-semibold transition-opacity cursor-pointer shadow-xs hover:opacity-90 bg-indigo-600 text-white"
                     >
                       {risk.actionLabel}
                     </button>
@@ -959,7 +1058,7 @@ export default function SaaSDashboard({
                   {risk.actionType === 'people' && onNavigate && (
                     <button
                       onClick={() => onNavigate('people')}
-                      className="px-3 py-1 rounded-lg bg-[#141413] text-[#F3F0EE] text-[11px] font-semibold hover:bg-black transition-colors"
+                      className="px-3.5 py-1 rounded-full text-[11px] font-semibold transition-opacity cursor-pointer shadow-xs hover:opacity-90 bg-indigo-600 text-white"
                     >
                       {risk.actionLabel}
                     </button>
@@ -967,7 +1066,7 @@ export default function SaaSDashboard({
                   {risk.actionType === 'knowledge' && onNavigate && (
                     <button
                       onClick={() => onNavigate('knowledge')}
-                      className="px-3 py-1 rounded-lg bg-[#141413] text-[#F3F0EE] text-[11px] font-semibold hover:bg-black transition-colors"
+                      className="px-3.5 py-1 rounded-full text-[11px] font-semibold transition-opacity cursor-pointer shadow-xs hover:opacity-90 bg-indigo-600 text-white"
                     >
                       {risk.actionLabel}
                     </button>
@@ -975,7 +1074,7 @@ export default function SaaSDashboard({
                   {risk.actionType === 'prompt' && risk.promptText && (
                     <button
                       onClick={() => handleAiSend(risk.promptText)}
-                      className="px-3 py-1 rounded-lg bg-[#141413] text-[#F3F0EE] text-[11px] font-semibold hover:bg-black transition-colors"
+                      className="px-3.5 py-1 rounded-full text-[11px] font-semibold transition-opacity cursor-pointer shadow-xs hover:opacity-90 bg-indigo-600 text-white"
                     >
                       {risk.actionLabel}
                     </button>
@@ -984,25 +1083,17 @@ export default function SaaSDashboard({
               </div>
             ))}
           </div>
-        ) : (
-          <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between text-xs text-emerald-900">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>All Financial Bounds, Compliance Thresholds & Operational Vectors Nominal</span>
-            </div>
-            <span className="font-mono text-[10px] text-emerald-700 font-bold">ZERO ACTIVE BLOCKS</span>
-          </div>
         )}
       </Section>
 
       {/* ── 4. FINANCIAL ENGINE TELEMETRY: Cash, Burn, Runway & Health ─── */}
-      <Section delay={0.12} className="space-y-2.5">
+      <Section delay={0.12} className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#696969] uppercase tracking-wider font-mono text-[10px]">
-              Treasury, Burn & Financial Engine
-            </span>
-            <span className="text-[10px] text-[#696969]/60 font-mono">Real Backend Metrics</span>
+            <Wallet className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              Financial Telemetry & Treasury
+            </h2>
           </div>
           <button
             onClick={() => {
@@ -1010,18 +1101,41 @@ export default function SaaSDashboard({
               setEditBurn(burnRate);
               setIsCalibratingTreasury(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-all shadow-subtle interactive-btn"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border hover:border-indigo-400 transition-all shadow-xs cursor-pointer"
+            style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
           >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
             <span>Calibrate</span>
           </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard
-            icon={<Wallet className="w-4 h-4 text-emerald-700" />}
-            accentColor="bg-emerald-50"
-            label="Cash Reserves"
+            icon={<Hourglass className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+            roleTag="CFO AGENT · RUNWAY"
+            accentColor="bg-indigo-50 dark:bg-indigo-950/60"
+            label="Verified Runway Horizon"
+            value={`${runwayMonths.toFixed(1)} Mo`}
+            delta={
+              isRunwayCritical
+                ? 'Critical (< 4mo)'
+                : isRunwayAdequate
+                ? 'Adequate Runway'
+                : 'Verified (> 12mo)'
+            }
+            deltaPositive={isRunwayHealthy}
+            onClick={() => {
+              setEditCash(cashBalance);
+              setEditBurn(burnRate);
+              setIsCalibratingTreasury(true);
+            }}
+            actionHint="Calibrate"
+          />
+          <KpiCard
+            icon={<Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
+            roleTag="TREASURY RESERVES"
+            accentColor="bg-emerald-50 dark:bg-emerald-950/60"
+            label="Total Cash In Treasury"
             value={formatCurrency(cashBalance)}
             delta={`${burnRate > 0 ? `${monthlyBurnRatio}% burn/mo` : 'Active Treasury'}`}
             deltaPositive={burnRate < cashBalance * 0.15}
@@ -1033,11 +1147,12 @@ export default function SaaSDashboard({
             actionHint="Calibrate"
           />
           <KpiCard
-            icon={<Flame className="w-4 h-4 text-orange-500" />}
-            accentColor="bg-orange-50"
-            label="Monthly Burn Rate"
+            icon={<Flame className="w-5 h-5 text-orange-500" />}
+            roleTag="FINANCE · BURN RATE"
+            accentColor="bg-orange-50 dark:bg-orange-950/60"
+            label="Monthly Net Burn"
             value={formatCurrency(burnRate)}
-            delta={`${isRunwayHealthy ? 'Healthy Burn' : isRunwayAdequate ? 'Moderate Burn' : 'High Burn Alert'}`}
+            delta={`${isRunwayHealthy ? 'Disciplined Burn' : isRunwayAdequate ? 'Moderate Burn' : 'High Burn'}`}
             deltaPositive={isRunwayHealthy}
             onClick={() => {
               setEditCash(cashBalance);
@@ -1047,31 +1162,12 @@ export default function SaaSDashboard({
             actionHint="Calibrate"
           />
           <KpiCard
-            icon={<Hourglass className="w-4 h-4 text-gray-900" />}
-            accentColor="bg-gray-100"
-            label="Runway Horizon"
-            value={`${runwayMonths.toFixed(1)} Months`}
-            delta={
-              isRunwayCritical
-                ? 'CRITICAL (< 4mo)'
-                : isRunwayAdequate
-                ? 'ADEQUATE (4-12mo)'
-                : 'HEALTHY (> 12mo)'
-            }
-            deltaPositive={isRunwayHealthy}
-            onClick={() => {
-              setEditCash(cashBalance);
-              setEditBurn(burnRate);
-              setIsCalibratingTreasury(true);
-            }}
-            actionHint="Calibrate"
-          />
-          <KpiCard
-            icon={<Activity className="w-4 h-4 text-indigo-600" />}
-            accentColor="bg-indigo-50"
+            icon={<Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
+            roleTag="CEO AGENT · VENTURE HEALTH"
+            accentColor="bg-purple-50 dark:bg-purple-950/60"
             label="Composite Health Score"
             value={`${healthScore} / 100`}
-            delta={`${healthScore >= 70 ? '+' : ''}${(healthScore - 70).toFixed(0)} vs baseline (70)`}
+            delta={`${healthScore >= 70 ? '+' : ''}${(healthScore - 70).toFixed(0)} vs Baseline`}
             deltaPositive={healthScore >= 70}
             showBar={true}
             barValue={healthScore}
@@ -1082,13 +1178,13 @@ export default function SaaSDashboard({
       {/* ── 5. STRATEGIC HEALTH RADAR & RUNWAY TRAJECTORY (Two Columns) ──── */}
       <Section delay={0.15} className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* 5-Dimension Department Health */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col justify-between gap-5">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+        <div className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 flex flex-col justify-between gap-5 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+          <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
             <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-[#141413]" />
-              <h2 className="text-sm font-bold text-[#141413]">Company Health Matrix (5 Vectors)</h2>
+              <BarChart3 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Company Health Matrix (5 Vectors)</h2>
             </div>
-            <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 px-3 py-1 rounded-full">
               {healthScore}% Composite
             </span>
           </div>
@@ -1103,69 +1199,69 @@ export default function SaaSDashboard({
             ].map(item => (
               <div key={item.label} className="space-y-1.5">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-semibold text-[#141413]">{item.label}</span>
-                  <span className="font-mono font-bold text-[#141413]">{item.value}%</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">{item.label}</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">{item.value}%</span>
                 </div>
-                <div className="h-2 w-full bg-[#141413]/06 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${item.color} transition-all duration-700`}
                     style={{ width: `${Math.min(Math.max(item.value, 0), 100)}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-[#696969] font-sans">{item.text}</p>
+                <p className="text-[10px] text-slate-400 font-sans">{item.text}</p>
               </div>
             ))}
           </div>
 
-          <div className="pt-3 border-t border-[#141413]/06 flex items-center justify-between text-xs text-[#696969] font-medium">
-            <span>CompanyContextService Data Grounding</span>
-            <span className="text-[#141413] font-semibold">Continuous Audit Active</span>
+          <div className="pt-3 border-t flex items-center justify-between text-xs text-slate-400 font-medium" style={{ borderColor: 'var(--c-border)' }}>
+            <span>Company Context Grounding</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">Continuous Audit Active</span>
           </div>
         </div>
 
         {/* Financial Runway Trajectory Projection */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col justify-between gap-5">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+        <div className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 flex flex-col justify-between gap-5 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+          <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
             <div className="flex items-center gap-2">
-              <LineChart className="w-4 h-4 text-orange-500" />
-              <h2 className="text-sm font-bold text-[#141413]">Runway Burn Trajectory (6-Month Projection)</h2>
+              <LineChart className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Runway Burn Trajectory (6-Month Projection)</h2>
             </div>
-            <span className="text-xs font-mono font-semibold text-[#696969]">
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               Burn: {formatCurrency(burnRate)}/mo
             </span>
           </div>
 
           {/* Dynamic SVG Cash Trajectory Chart */}
           <div className="relative pt-4 pb-2">
-            <div className="flex items-end justify-between gap-2 h-36 border-b border-[#141413]/10 pb-2 px-1">
+            <div className="flex items-end justify-between gap-2 h-36 border-b pb-2 px-1" style={{ borderColor: 'var(--c-border)' }}>
               {runwayProjections.map((p) => (
                 <div key={p.month} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                  <span className="text-[10px] font-mono font-bold text-[#696969] group-hover:text-emerald-700 transition-colors">
+                  <span className="text-[10px] font-mono font-bold text-slate-400 group-hover:text-indigo-600 transition-colors">
                     {formatCurrency(p.cash)}
                   </span>
                   <div
-                    className="w-full rounded-t-lg bg-gradient-to-t from-[#141413] to-stone-700 group-hover:from-emerald-700 group-hover:to-emerald-500 transition-all duration-300"
+                    className="w-full rounded-t-xl bg-gradient-to-t from-indigo-600 to-purple-500 group-hover:opacity-90 transition-all duration-300 shadow-xs"
                     style={{ height: `${Math.max(p.percentage, 8)}%` }}
                   />
-                  <span className="text-[10px] font-mono text-[#696969] mt-1">{p.month}</span>
+                  <span className="text-[10px] font-mono text-slate-400 mt-1">{p.month}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="p-3.5 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06">
-              <span className="text-[10px] font-medium text-[#696969] block uppercase font-mono">Zero-Cash Horizon</span>
-              <p className="text-sm font-bold text-[#141413] font-mono mt-0.5">
+            <div className="p-3.5 rounded-2xl border" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
+              <span className="text-[10px] font-medium text-slate-400 block uppercase font-mono">Zero-Cash Horizon</span>
+              <p className="text-sm font-bold font-mono mt-0.5 text-slate-900 dark:text-white">
                 {runwayMonths > 24 ? 'Safe (> 24 Months)' : `${runwayMonths.toFixed(1)} Months Left`}
               </p>
             </div>
-            <div className="p-3.5 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06">
-              <span className="text-[10px] font-medium text-[#696969] block uppercase font-mono">Risk Threshold Status</span>
+            <div className="p-3.5 rounded-2xl border" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
+              <span className="text-[10px] font-medium text-slate-400 block uppercase font-mono">Risk Threshold</span>
               <p className={`text-sm font-bold font-mono mt-0.5 ${
-                isRunwayCritical ? 'text-rose-600' : isRunwayAdequate ? 'text-amber-700' : 'text-emerald-700'
+                isRunwayCritical ? 'text-rose-600' : isRunwayAdequate ? 'text-amber-600' : 'text-emerald-600'
               }`}>
-                {isRunwayCritical ? 'CRITICAL (< 4mo)' : isRunwayAdequate ? 'ADEQUATE' : 'HEALTHY'}
+                {isRunwayCritical ? 'Critical (< 4mo)' : isRunwayAdequate ? 'Adequate Runway' : 'Healthy Buffer'}
               </p>
             </div>
           </div>
@@ -1175,11 +1271,11 @@ export default function SaaSDashboard({
       {/* ── 6. GROWTH INDICATORS & TEAM INDICATORS (Two Columns) ───────── */}
       <Section delay={0.18} className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Growth Indicators */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+        <div className="bg-[var(--c-surface)] rounded-2xl border border-[var(--c-border)] shadow-sm p-6 flex flex-col justify-between gap-4">
+          <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-emerald-700" />
-              <h2 className="text-sm font-bold text-[#141413]">Growth & Market Indicators</h2>
+              <h2 className="text-sm font-bold text-[var(--c-fg)]">Growth & Market Indicators</h2>
             </div>
             <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
               {metrics.growthRate}% Index
@@ -1188,32 +1284,32 @@ export default function SaaSDashboard({
 
           <div className="space-y-3">
             {/* Target ICP */}
-            <div className="p-3.5 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 space-y-1">
-              <span className="text-[10px] font-mono font-bold text-[#696969] uppercase tracking-wider block">
+            <div className="p-3.5 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] space-y-1">
+              <span className="text-[10px] font-mono font-bold text-[var(--c-muted)] uppercase tracking-wider block">
                 Target Ideal Customer Profile (ICP)
               </span>
-              <p className="text-xs font-semibold text-[#141413]">
+              <p className="text-xs font-semibold text-[var(--c-fg)]">
                 {startup.targetIcp || 'Enterprise Engineering Leaders & Series A-C SaaS Executives'}
               </p>
             </div>
 
             {/* Primary Product */}
-            <div className="p-3.5 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 space-y-1">
-              <span className="text-[10px] font-mono font-bold text-[#696969] uppercase tracking-wider block">
+            <div className="p-3.5 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] space-y-1">
+              <span className="text-[10px] font-mono font-bold text-[var(--c-muted)] uppercase tracking-wider block">
                 Primary Product & Offering
               </span>
-              <p className="text-xs font-semibold text-[#141413]">
+              <p className="text-xs font-semibold text-[var(--c-fg)]">
                 {startup.primaryProduct || startup.description || 'Autonomous Operating System for Startups'}
               </p>
             </div>
 
             {/* Strategic Milestones / Goals */}
             {startup.goals && startup.goals.length > 0 && (
-              <div className="p-3.5 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 space-y-1.5">
-                <span className="text-[10px] font-mono font-bold text-[#696969] uppercase tracking-wider block">
+              <div className="p-3.5 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] space-y-1.5">
+                <span className="text-[10px] font-mono font-bold text-[var(--c-muted)] uppercase tracking-wider block">
                   Active Strategic Milestones
                 </span>
-                <ul className="text-xs text-[#141413] space-y-1 list-disc pl-4">
+                <ul className="text-xs text-[var(--c-fg)] space-y-1 list-disc pl-4">
                   {startup.goals.slice(0, 3).map((goal, idx) => (
                     <li key={idx} className="leading-snug">{goal}</li>
                   ))}
@@ -1222,18 +1318,18 @@ export default function SaaSDashboard({
             )}
           </div>
 
-          <div className="pt-2 border-t border-[#141413]/06 flex items-center justify-between text-xs text-[#696969]">
+          <div className="pt-2 border-t border-[var(--c-border)] flex items-center justify-between text-xs text-[var(--c-muted)]">
             <span>GTM alignment verified across Growth & CEO agents</span>
-            <span className="font-semibold text-[#141413]">Stage: {startup.fundingStage || 'Pre-Seed'}</span>
+            <span className="font-semibold text-[var(--c-fg)]">Stage: {startup.fundingStage || 'Pre-Seed'}</span>
           </div>
         </div>
 
         {/* Team Indicators */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col justify-between gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
+        <div className="bg-[var(--c-surface)] rounded-2xl border border-[var(--c-border)] shadow-sm p-6 flex flex-col justify-between gap-4">
+          <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-indigo-600" />
-              <h2 className="text-sm font-bold text-[#141413]">Team & Organization Indicators</h2>
+              <h2 className="text-sm font-bold text-[var(--c-fg)]">Team & Organization Indicators</h2>
             </div>
             {onNavigate && (
               <button
@@ -1248,23 +1344,23 @@ export default function SaaSDashboard({
 
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-2.5">
-              <div className="p-3 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 text-center">
-                <span className="text-[10px] font-mono text-[#696969] block">Total Team Size</span>
-                <span className="text-lg font-bold text-[#141413] font-mono">{teamSizeDisplay}</span>
+              <div className="p-3 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] text-center">
+                <span className="text-[10px] font-mono text-[var(--c-muted)] block">Total Team Size</span>
+                <span className="text-lg font-bold text-[var(--c-fg)] font-mono">{teamSizeDisplay}</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 text-center">
-                <span className="text-[10px] font-mono text-[#696969] block">Active Accounts</span>
+              <div className="p-3 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] text-center">
+                <span className="text-[10px] font-mono text-[var(--c-muted)] block">Active Accounts</span>
                 <span className="text-lg font-bold text-emerald-700 font-mono">{activeMembersCount}</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 text-center">
-                <span className="text-[10px] font-mono text-[#696969] block">Pending Invites</span>
+              <div className="p-3 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] text-center">
+                <span className="text-[10px] font-mono text-[var(--c-muted)] block">Pending Invites</span>
                 <span className="text-lg font-bold text-amber-700 font-mono">{pendingInvitesCount}</span>
               </div>
             </div>
 
             {/* Department Roles Coverage Matrix */}
-            <div className="p-3.5 rounded-xl bg-[#F3F0EE]/40 border border-[#141413]/06 space-y-2">
-              <span className="text-[10px] font-mono font-bold text-[#696969] uppercase tracking-wider block">
+            <div className="p-3.5 rounded-xl bg-[var(--c-surface-2)] border border-[var(--c-border)] space-y-2">
+              <span className="text-[10px] font-mono font-bold text-[var(--c-muted)] uppercase tracking-wider block">
                 Functional Department Coverage
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
@@ -1276,11 +1372,11 @@ export default function SaaSDashboard({
                   { name: 'Legal', covered: true, agent: 'Helena, Esq.' },
                   { name: 'Auditor', covered: true, agent: 'Sentry Core' },
                 ].map(dept => (
-                  <div key={dept.name} className="flex items-center gap-1.5 bg-white p-2 rounded-lg border border-[#141413]/06">
+                  <div key={dept.name} className="flex items-center gap-1.5 bg-[var(--c-surface)] p-2 rounded-lg border border-[var(--c-border)]">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                     <div className="min-w-0">
-                      <span className="font-semibold block truncate text-[11px] text-[#141413]">{dept.name}</span>
-                      <span className="text-[9px] text-[#696969] font-mono block truncate">{dept.agent}</span>
+                      <span className="font-semibold block truncate text-[11px] text-[var(--c-fg)]">{dept.name}</span>
+                      <span className="text-[9px] text-[var(--c-muted)] font-mono block truncate">{dept.agent}</span>
                     </div>
                   </div>
                 ))}
@@ -1288,12 +1384,12 @@ export default function SaaSDashboard({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[#141413]/06 flex items-center justify-between text-xs text-[#696969]">
+          <div className="pt-2 border-t border-[var(--c-border)] flex items-center justify-between text-xs text-[var(--c-muted)]">
             <span>Hybrid human-agent workspace structure</span>
             {onNavigate && (
               <button
                 onClick={() => onNavigate('people')}
-                className="font-semibold text-[#141413] hover:underline"
+                className="font-semibold text-[var(--c-fg)] hover:underline"
               >
                 Manage Workspace Access →
               </button>
@@ -1305,13 +1401,13 @@ export default function SaaSDashboard({
       {/* ── 7. PENDING APPROVALS & OPERATIONAL PRIORITIES ──────────────── */}
       <Section delay={0.21} className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Pending Approvals (Human-in-the-Loop Review Gates) */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
-            <h2 className="text-sm font-bold text-[#141413] flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#141413]" />
+        <div className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 flex flex-col gap-4 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+          <div className="flex items-center justify-between pb-2 border-b" style={{ borderColor: 'var(--c-border)' }}>
+            <h2 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--c-fg)' }}>
+              <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <span>Pending Approvals (Founder Gates)</span>
             </h2>
-            <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
               {pendingApprovals.length} Awaiting Sign-Off
             </span>
           </div>
@@ -1321,45 +1417,46 @@ export default function SaaSDashboard({
               pendingApprovals.slice(0, 3).map(appr => (
                 <div
                   key={appr.id}
-                  className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 hover:border-[#141413]/20 transition-all flex flex-col gap-2.5"
+                  className="p-4 rounded-2xl border transition-all flex flex-col gap-2.5 shadow-xs"
+                  style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white border border-[#141413]/10 text-[#141413]">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}>
                           {appr.type.toUpperCase()}
                         </span>
                         {appr.financialChange ? (
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${appr.financialChange < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${appr.financialChange < 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                             {appr.financialChange < 0 ? '-' : '+'}{formatCurrency(Math.abs(appr.financialChange))}
                           </span>
                         ) : null}
                       </div>
-                      <h3 className="text-sm font-bold text-[#141413] line-clamp-1">{appr.title}</h3>
+                      <h3 className="text-sm font-bold line-clamp-1" style={{ color: 'var(--c-fg)' }}>{appr.title}</h3>
                     </div>
                   </div>
 
-                  <p className="text-xs text-[#696969] line-clamp-2 leading-relaxed">
+                  <p className="text-xs line-clamp-2 leading-relaxed" style={{ color: 'var(--c-muted)' }}>
                     {appr.description || 'Executive deliverable formulated by autonomous council requiring founder ratification.'}
                   </p>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-[#141413]/06">
-                    <span className="text-[11px] text-[#696969] font-medium">
-                      Impact: <strong className="text-[#141413] font-semibold">{appr.impact || 'Standard'}</strong>
+                  <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--c-border)' }}>
+                    <span className="text-[11px] font-medium" style={{ color: 'var(--c-muted)' }}>
+                      Impact: <strong style={{ color: 'var(--c-fg)' }}>{appr.impact || 'Standard'}</strong>
                     </span>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleQuickReject(appr.id)}
                         disabled={reviewingId === appr.id}
-                        className="px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer"
+                        className="px-3 py-1 rounded-full text-xs font-semibold text-rose-600 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 transition-colors cursor-pointer"
                       >
                         Reject
                       </button>
                       <button
                         onClick={() => handleQuickApprove(appr.id)}
                         disabled={reviewingId === appr.id}
-                        className="px-3 py-1 rounded-lg text-xs font-semibold bg-[#141413] text-[#F3F0EE] hover:bg-black transition-colors shadow-xs cursor-pointer flex items-center gap-1"
+                        className="px-3.5 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 shadow-xs hover:opacity-95 transition-all cursor-pointer flex items-center gap-1"
                       >
                         {reviewingId === appr.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                         <span>Approve</span>
@@ -1369,10 +1466,10 @@ export default function SaaSDashboard({
                 </div>
               ))
             ) : (
-              <div className="p-8 rounded-xl border border-dashed border-[#141413]/15 text-center space-y-2">
+              <div className="p-8 rounded-2xl border border-dashed text-center space-y-2" style={{ borderColor: 'var(--c-border)' }}>
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-                <p className="text-xs font-bold text-[#141413]">All Decision Gates Cleared</p>
-                <p className="text-[11px] text-[#696969] max-w-xs mx-auto">
+                <p className="text-xs font-bold" style={{ color: 'var(--c-fg)' }}>All Decision Gates Cleared</p>
+                <p className="text-[11px] max-w-xs mx-auto" style={{ color: 'var(--c-muted)' }}>
                   No executive authorizations currently blocking autonomous operational sprints.
                 </p>
               </div>
@@ -1382,7 +1479,8 @@ export default function SaaSDashboard({
           {onNavigate && (
             <button
               onClick={() => onNavigate('approvals')}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#141413] hover:text-black transition-colors mt-auto pt-2 border-t border-[#141413]/06 cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-semibold hover:text-indigo-600 transition-colors mt-auto pt-2 border-t cursor-pointer"
+              style={{ color: 'var(--c-fg)', borderColor: 'var(--c-border)' }}
             >
               <span>Open Complete Approval Center</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -1391,13 +1489,13 @@ export default function SaaSDashboard({
         </div>
 
         {/* Dynamic Priorities (Derived from Approvals, Tasks & Initiatives) */}
-        <div className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between pb-1 border-b border-[#141413]/06">
-            <h2 className="text-sm font-bold text-[#141413] flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-[#141413]" />
+        <div className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 flex flex-col gap-4 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+          <div className="flex items-center justify-between pb-1 border-b border-[var(--c-border)]">
+            <h2 className="text-sm font-bold text-[var(--c-fg)] flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-[var(--c-fg)]" />
               <span>Operational Priorities & Action Items</span>
             </h2>
-            <span className="text-xs font-mono text-[#696969]">
+            <span className="text-xs font-mono text-[var(--c-muted)]">
               {dynamicPriorities.filter(t => !completedTaskIds[t.id]).length} remaining
             </span>
           </div>
@@ -1410,29 +1508,29 @@ export default function SaaSDashboard({
                   key={task.id}
                   className={`flex items-start gap-3 p-3.5 rounded-xl border transition-all ${
                     isDone
-                      ? 'bg-[#F3F0EE]/30 border-[#141413]/05 opacity-60'
-                      : 'bg-white border-[#141413]/08 hover:border-[#141413]/20 hover:shadow-xs'
+                      ? 'bg-[var(--c-surface-2)] border-[var(--c-border)] opacity-60'
+                      : 'bg-[var(--c-surface)] border-[var(--c-border)] hover:border-[var(--c-border-strong)] hover:shadow-xs'
                   }`}
                 >
                   <button
                     onClick={() => toggleTask(task.id)}
                     className={`mt-0.5 shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all cursor-pointer ${
                       isDone
-                        ? 'bg-[#141413] border-[#141413] text-[#F3F0EE]'
-                        : 'border-[#141413]/20 hover:border-[#141413]/50 bg-white'
+                        ? 'bg-[var(--c-fg)] text-[var(--c-bg)] border-[var(--c-border-strong)] text-[var(--c-bg)]'
+                        : 'border-[var(--c-border-strong)] hover:border-[var(--c-border-strong)]/50 bg-[var(--c-surface)]'
                     }`}
                   >
                     {isDone && <Check className="w-3 h-3" />}
                   </button>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${isDone ? 'line-through text-[#696969]' : 'text-[#141413]'}`}>
+                    <p className={`text-sm font-medium ${isDone ? 'line-through text-[var(--c-muted)]' : 'text-[var(--c-fg)]'}`}>
                       {task.title}
                     </p>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${CATEGORY_COLOR[task.category] ?? 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${CATEGORY_COLOR[task.category] ?? 'bg-gray-50 text-[var(--c-fg-secondary)] border-gray-200'}`}>
                         {task.category}
                       </span>
-                      <span className="text-[11px] text-[#696969] flex items-center gap-1 font-mono">
+                      <span className="text-[11px] text-[var(--c-muted)] flex items-center gap-1 font-mono">
                         <Clock className="w-3 h-3" />
                         {task.due}
                       </span>
@@ -1444,17 +1542,17 @@ export default function SaaSDashboard({
           </div>
 
           {onNavigate && (
-            <div className="flex items-center justify-between pt-2 border-t border-[#141413]/06 mt-auto">
+            <div className="flex items-center justify-between pt-2 border-t border-[var(--c-border)] mt-auto">
               <button
                 onClick={() => onNavigate('approvals')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#141413] hover:text-black transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-semibold text-[var(--c-fg)] hover:text-black transition-colors cursor-pointer"
               >
                 <span>View Approvals</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => onNavigate('workflows')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#696969] hover:text-[#141413] transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-semibold text-[var(--c-muted)] hover:text-[var(--c-fg)] transition-colors cursor-pointer"
               >
                 <span>Workflows</span>
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -1465,20 +1563,20 @@ export default function SaaSDashboard({
       </Section>
 
       {/* ── 8. ACTIVE WORK (Council Delegated Tasks & Initiatives) ─────── */}
-      <Section delay={0.24} className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#141413]/06">
+      <Section delay={0.24} className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] p-6 space-y-4 backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b" style={{ borderColor: 'var(--c-border)' }}>
           <div>
             <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#141413]" />
-              <h2 className="text-base font-bold text-[#141413] tracking-tight">
-                Active Work & Delegated Council Work Orders
+              <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-white">
+                Active Work & Delegated Council Tasks
               </h2>
-              <span className="px-2 py-0.5 rounded bg-stone-100 border border-stone-200 text-stone-800 text-[10px] font-mono font-bold">
-                {tasks.length} Persisted Tasks
+              <span className="px-2.5 py-0.5 rounded-full border text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}>
+                {tasks.length} Tasks
               </span>
             </div>
-            <p className="text-xs text-[#696969] mt-0.5">
-              Live tasks decomposed by the executive council from founder commands and assigned across departmental roles.
+            <p className="text-xs text-slate-400 mt-0.5">
+              Tasks decomposed by executive council agents from strategic founder directives.
             </p>
           </div>
 
@@ -1486,16 +1584,17 @@ export default function SaaSDashboard({
             {onNavigate && (
               <button
                 onClick={() => onNavigate('workspace')}
-                className="text-xs font-semibold bg-[#141413] text-[#F3F0EE] hover:bg-black px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                className="text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 rounded-full transition-all flex items-center gap-1.5 cursor-pointer shadow-xs hover:opacity-95"
               >
                 <Briefcase className="w-3.5 h-3.5" />
-                <span>Open Employee Workspace</span>
+                <span>Employee Workspace</span>
               </button>
             )}
             {onRefreshTasks && (
               <button
                 onClick={() => onRefreshTasks()}
-                className="text-xs font-semibold text-[#696969] hover:text-[#141413] px-3 py-1.5 rounded-lg border border-[#141413]/10 hover:bg-stone-50 transition-all cursor-pointer"
+                className="text-xs font-semibold text-slate-600 dark:text-slate-300 px-3.5 py-2 rounded-full border hover:border-indigo-400 transition-all cursor-pointer"
+                style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
               >
                 Sync
               </button>
@@ -1508,36 +1607,37 @@ export default function SaaSDashboard({
             {tasks.map(task => (
               <div
                 key={task.id}
-                className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 hover:border-[#141413]/20 transition-all flex flex-col justify-between gap-2.5"
+                className="p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 shadow-xs hover:border-indigo-400 hover:shadow-sm"
+                style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
               >
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white border border-[#141413]/10 text-[#141413]">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}>
                       {task.department}
                     </span>
-                    <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
-                      task.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                      task.status === 'submitted' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                      task.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      'bg-stone-100 text-stone-700 border border-stone-200'
+                    <span className={`text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full border ${
+                      task.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:border-blue-800' :
+                      task.status === 'submitted' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:border-amber-800' :
+                      task.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:border-emerald-800' :
+                      'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
                     }`}>
                       {task.status}
                     </span>
                   </div>
-                  <h3 className="text-xs font-bold text-[#141413] leading-snug line-clamp-2">
+                  <h3 className="text-xs font-bold leading-snug line-clamp-2" style={{ color: 'var(--c-fg)' }}>
                     {task.title}
                   </h3>
                   {task.result && (
-                    <p className="text-[11px] text-emerald-800 bg-emerald-50/70 p-2 rounded-lg border border-emerald-100 font-sans line-clamp-2">
+                    <p className="text-[11px] text-emerald-800 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900 font-sans line-clamp-2">
                       Result: {task.result}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-[#141413]/06 flex items-center justify-between text-[10px] text-[#696969] font-mono">
-                  <span>Assisting: <strong>{task.agent}</strong></span>
+                <div className="pt-2 border-t flex items-center justify-between text-[10px] text-slate-400 font-mono" style={{ borderColor: 'var(--c-border)' }}>
+                  <span>Assisting: <strong style={{ color: 'var(--c-fg)' }}>{task.agent}</strong></span>
                   <span>
-                    Owner: <strong className={task.needsHumanOwner ? 'text-amber-700' : 'text-[#141413]'}>
+                    Owner: <strong className={task.needsHumanOwner ? 'text-amber-600' : ''} style={{ color: task.needsHumanOwner ? undefined : 'var(--c-fg)' }}>
                       {task.ownerRole || 'Needs Human'}
                     </strong>
                   </span>
@@ -1546,39 +1646,39 @@ export default function SaaSDashboard({
             ))}
           </div>
         ) : (
-          <div className="p-8 rounded-xl border border-dashed border-[#141413]/15 text-center space-y-2">
-            <Layers className="w-8 h-8 text-[#696969]/50 mx-auto" />
-            <p className="text-xs font-bold text-[#141413]">No Delegated Council Work Orders Yet</p>
-            <p className="text-[11px] text-[#696969] max-w-sm mx-auto">
-              Issue a command in the Catalyst Command Box above. The Orchestrator will analyze your directive, select relevant executive agents, and decompose the objective into persisted delegated tasks.
+          <div className="p-8 rounded-2xl border border-dashed text-center space-y-2" style={{ borderColor: 'var(--c-border)' }}>
+            <Layers className="w-8 h-8 text-slate-300 mx-auto" />
+            <p className="text-xs font-bold" style={{ color: 'var(--c-fg)' }}>No Delegated Tasks Queued</p>
+            <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
+              Issue a directive in the Command Box above. The Orchestrator will decompose your goal and assign work orders across your AI executive team.
             </p>
           </div>
         )}
       </Section>
 
       {/* ── 9. AI RECOMMENDATIONS & GROUNDED FINDINGS ─────────────────── */}
-      <Section delay={0.27} className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 space-y-5">
-        <div className="flex items-center justify-between pb-3 border-b border-[#141413]/06">
+      <Section delay={0.27} className="bg-[var(--c-surface)] rounded-2xl border border-[var(--c-border)] shadow-sm p-6 space-y-5">
+        <div className="flex items-center justify-between pb-3 border-b border-[var(--c-border)]">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-700" />
-            <h2 className="text-sm font-bold text-[#141413]">
+            <h2 className="text-sm font-bold text-[var(--c-fg)]">
               Autonomous Executive Council Recommendations
             </h2>
           </div>
-          <span className="text-xs font-mono text-[#696969]">Grounded Strategy</span>
+          <span className="text-xs font-mono text-[var(--c-muted)]">Grounded Strategy</span>
         </div>
 
         {/* Dynamic Context Recommendations */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 space-y-2 flex flex-col justify-between">
+          <div className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] space-y-2 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 FINANCIAL STRATEGY
               </span>
-              <h3 className="text-xs font-bold text-[#141413] mt-2">
+              <h3 className="text-xs font-bold text-[var(--c-fg)] mt-2">
                 {isRunwayCritical ? 'Immediate Burn Compression' : 'Runway Horizon Preservation'}
               </h3>
-              <p className="text-[11px] text-[#696969] leading-relaxed mt-1">
+              <p className="text-[11px] text-[var(--c-muted)] leading-relaxed mt-1">
                 {isRunwayCritical
                   ? `Runway is ${runwayMonths.toFixed(1)}mo. Aura (CFO) recommends auditing monthly recurring software expenses to extend runway beyond 6 months.`
                   : `Treasury supports ${runwayMonths.toFixed(1)} months. Maintaining current $${burnRate.toLocaleString()}/mo burn preserves zero-cash date past next year.`}
@@ -1586,49 +1686,49 @@ export default function SaaSDashboard({
             </div>
             <button
               onClick={() => handleAiSend('Audit our operating expenses and simulate a 20% burn compression plan.')}
-              className="text-xs font-semibold text-[#141413] hover:underline flex items-center gap-1 pt-2 border-t border-[#141413]/06 cursor-pointer"
+              className="text-xs font-semibold text-[var(--c-fg)] hover:underline flex items-center gap-1 pt-2 border-t border-[var(--c-border)] cursor-pointer"
             >
               <span>Execute with Council</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 space-y-2 flex flex-col justify-between">
+          <div className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] space-y-2 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
                 TALENT & HIRING
               </span>
-              <h3 className="text-xs font-bold text-[#141413] mt-2">
+              <h3 className="text-xs font-bold text-[var(--c-fg)] mt-2">
                 Headcount Pacing & Role Allocation
               </h3>
-              <p className="text-[11px] text-[#696969] leading-relaxed mt-1">
+              <p className="text-[11px] text-[var(--c-muted)] leading-relaxed mt-1">
                 Evelyn (Talent) and Marcus (CFO) ensure all new offers stay within approved treasury envelopes before employment contracts reach founder signature.
               </p>
             </div>
             <button
               onClick={() => handleAiSend('Evaluate if we can afford to hire two senior engineers this quarter.')}
-              className="text-xs font-semibold text-[#141413] hover:underline flex items-center gap-1 pt-2 border-t border-[#141413]/06 cursor-pointer"
+              className="text-xs font-semibold text-[var(--c-fg)] hover:underline flex items-center gap-1 pt-2 border-t border-[var(--c-border)] cursor-pointer"
             >
               <span>Run Affordability Check</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/30 space-y-2 flex flex-col justify-between">
+          <div className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] space-y-2 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                 GTM & GROWTH LOOPS
               </span>
-              <h3 className="text-xs font-bold text-[#141413] mt-2">
+              <h3 className="text-xs font-bold text-[var(--c-fg)] mt-2">
                 Enterprise ICP Conversion Engine
               </h3>
-              <p className="text-[11px] text-[#696969] leading-relaxed mt-1">
+              <p className="text-[11px] text-[var(--c-muted)] leading-relaxed mt-1">
                 Dax (Growth) tracks acquisition velocity against your target ICP. Formulate outbound email sequencing and design partner outreach.
               </p>
             </div>
             <button
               onClick={() => handleAiSend('Formulate a 30-day enterprise design partner outreach strategy.')}
-              className="text-xs font-semibold text-[#141413] hover:underline flex items-center gap-1 pt-2 border-t border-[#141413]/06 cursor-pointer"
+              className="text-xs font-semibold text-[var(--c-fg)] hover:underline flex items-center gap-1 pt-2 border-t border-[var(--c-border)] cursor-pointer"
             >
               <span>Draft GTM Campaign</span>
               <ArrowRight className="w-3 h-3" />
@@ -1638,7 +1738,7 @@ export default function SaaSDashboard({
 
         {/* Extracted Grounded Strategic Insights Strip */}
         {allGroundedInsights.length > 0 && (
-          <div className="p-4 bg-[#141413] text-[#F3F0EE] rounded-xl border border-white/10 space-y-2">
+          <div className="p-4 bg-[var(--c-fg)] text-[var(--c-bg)] text-[var(--c-bg)] rounded-xl border border-white/10 space-y-2">
             <div className="flex items-center justify-between text-xs border-b border-white/10 pb-1.5">
               <div className="flex items-center gap-1.5 font-semibold text-white/90">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
@@ -1650,7 +1750,7 @@ export default function SaaSDashboard({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
               {allGroundedInsights.slice(0, 4).map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2 bg-white/06 px-3 py-2 rounded-lg border border-white/08">
+                <div key={idx} className="flex items-start gap-2 bg-[var(--c-surface)]/06 px-3 py-2 rounded-lg border border-white/08">
                   <span className="text-emerald-400 text-xs mt-0.5">•</span>
                   <div className="min-w-0">
                     <p className="text-white/90 leading-snug">{item.insight}</p>
@@ -1697,7 +1797,7 @@ export default function SaaSDashboard({
           {/* Activity Item 1 */}
           <div className="relative">
             <div className="absolute -left-[27px] sm:-left-[31px] top-6 w-3.5 h-3.5 rounded-full bg-indigo-600 border-4 border-indigo-200 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
-            <div className="p-5 sm:p-6 rounded-2xl border shadow-subtle grid grid-cols-1 md:grid-cols-12 gap-5 items-start bg-white border-[#141413]/08">
+            <div className="p-5 sm:p-6 rounded-2xl border shadow-subtle grid grid-cols-1 md:grid-cols-12 gap-5 items-start bg-[var(--c-surface)] border-[var(--c-border)]">
               <div className="md:col-span-7 space-y-2">
                 <span className="text-[10px] font-bold font-mono text-indigo-600 uppercase tracking-wider">
                   IMMUTABLE AUDIT LOG
@@ -1741,7 +1841,7 @@ export default function SaaSDashboard({
           {/* Activity Item 2 */}
           <div className="relative">
             <div className="absolute -left-[27px] sm:-left-[31px] top-6 w-3.5 h-3.5 rounded-full bg-indigo-600 border-4 border-indigo-200 shadow-[0_0_10px_rgba(79,70,229,0.5)]" />
-            <div className="p-5 sm:p-6 rounded-2xl border shadow-subtle grid grid-cols-1 md:grid-cols-12 gap-5 items-start bg-white border-[#141413]/08">
+            <div className="p-5 sm:p-6 rounded-2xl border shadow-subtle grid grid-cols-1 md:grid-cols-12 gap-5 items-start bg-[var(--c-surface)] border-[var(--c-border)]">
               <div className="md:col-span-7 space-y-2">
                 <span className="text-[10px] font-bold font-mono text-indigo-600 uppercase tracking-wider">
                   STRATEGIC MILESTONE
@@ -1785,15 +1885,15 @@ export default function SaaSDashboard({
       </Section>
 
       {/* ── 11. COMPANY KNOWLEDGE: Document Grounding Hub ─────────────── */}
-      <Section delay={0.32} className="bg-white rounded-2xl border border-[#141413]/08 shadow-sm p-6 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#141413]/06">
+      <Section delay={0.32} className="bg-[var(--c-surface)] rounded-2xl border border-[var(--c-border)] shadow-sm p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--c-border)]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center shrink-0">
               <Database className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-[#141413] tracking-tight">Company Knowledge & Grounding</h2>
+                <h2 className="text-base font-bold text-[var(--c-fg)] tracking-tight">Company Knowledge & Grounding</h2>
                 {knowledge.length > 0 ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-semibold font-mono">
                     <ShieldCheck className="w-3 h-3 text-indigo-600" />
@@ -1806,7 +1906,7 @@ export default function SaaSDashboard({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#696969] mt-0.5">
+              <p className="text-xs text-[var(--c-muted)] mt-0.5">
                 Organizational context and ground-truth documents driving AI executive suite decisions without hallucination.
               </p>
             </div>
@@ -1815,7 +1915,7 @@ export default function SaaSDashboard({
           {onNavigate && (
             <button
               onClick={() => onNavigate('knowledge')}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#141413] hover:text-black transition-colors self-start sm:self-center cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--c-fg)] hover:text-black transition-colors self-start sm:self-center cursor-pointer"
             >
               <span>Manage Knowledge Base</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -1829,25 +1929,25 @@ export default function SaaSDashboard({
               <div
                 key={doc.id}
                 onClick={() => onNavigate?.('knowledge')}
-                className="p-4 rounded-xl border border-[#141413]/08 bg-[#F3F0EE]/40 hover:bg-[#F3F0EE]/80 hover:border-[#141413]/20 transition-all cursor-pointer group flex flex-col justify-between gap-2.5"
+                className="p-4 rounded-xl border border-[var(--c-border)] bg-[var(--c-surface-2)] hover:bg-[var(--c-surface-2)]/80 hover:border-[var(--c-border-strong)] transition-all cursor-pointer group flex flex-col justify-between gap-2.5"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
                     <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <p className="text-xs font-bold text-[#141413] truncate group-hover:text-emerald-700 transition-colors">
+                    <p className="text-xs font-bold text-[var(--c-fg)] truncate group-hover:text-emerald-700 transition-colors">
                       {doc.name}
                     </p>
                   </div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white border border-[#141413]/10 text-[#696969] shrink-0">
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--c-surface)] border border-[var(--c-border)] text-[var(--c-muted)] shrink-0">
                     {doc.size || 'Vetted'}
                   </span>
                 </div>
 
-                <p className="text-[11px] text-[#696969] line-clamp-2 leading-relaxed">
+                <p className="text-[11px] text-[var(--c-muted)] line-clamp-2 leading-relaxed">
                   {doc.summary || 'Organizational record parsed and indexed into vector semantic retrieval.'}
                 </p>
 
-                <div className="flex items-center justify-between pt-1 border-t border-[#141413]/06 text-[10px] text-[#696969]">
+                <div className="flex items-center justify-between pt-1 border-t border-[var(--c-border)] text-[10px] text-[var(--c-muted)]">
                   <span className="capitalize">{doc.type.replace('_', ' ')}</span>
                   <span className="font-semibold text-emerald-700">{doc.insights?.length || 0} Key Insights</span>
                 </div>
@@ -1855,20 +1955,20 @@ export default function SaaSDashboard({
             ))}
           </div>
         ) : (
-          <div className="p-8 rounded-xl border border-dashed border-[#141413]/15 bg-[#F3F0EE]/30 flex flex-col items-center justify-center text-center space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-white border border-[#141413]/10 shadow-xs flex items-center justify-center text-emerald-700">
+          <div className="p-8 rounded-xl border border-dashed border-[var(--c-border)] bg-[var(--c-surface-2)] flex flex-col items-center justify-center text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--c-surface)] border border-[var(--c-border)] shadow-xs flex items-center justify-center text-emerald-700">
               <UploadCloud className="w-6 h-6" />
             </div>
             <div className="max-w-md">
-              <h3 className="text-sm font-bold text-[#141413]">Ground Your AI Executive Matrix in Corporate Reality</h3>
-              <p className="text-xs text-[#696969] mt-1 leading-relaxed">
+              <h3 className="text-sm font-bold text-[var(--c-fg)]">Ground Your AI Executive Matrix in Corporate Reality</h3>
+              <p className="text-xs text-[var(--c-muted)] mt-1 leading-relaxed">
                 Ingest your Pitch Deck, P&L statements, hiring specs, and legal contracts. The RAG grounding engine extracts structured constraints, eliminating hallucinations across all 8 executive agents.
               </p>
             </div>
             {onNavigate && (
               <button
                 onClick={() => onNavigate('knowledge')}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#141413] text-[#F3F0EE] text-xs font-semibold hover:bg-black transition-colors shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--c-fg)] text-[var(--c-bg)] text-[var(--c-bg)] text-xs font-semibold hover:bg-black transition-colors shadow-xs cursor-pointer"
               >
                 <UploadCloud className="w-3.5 h-3.5" />
                 <span>Upload First Document (PDF / DOCX / CSV)</span>
@@ -1897,20 +1997,20 @@ export default function SaaSDashboard({
       {/* ── 12. TREASURY & RUNWAY CALIBRATION MODAL ───────────────────── */}
       {isCalibratingTreasury && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-lg w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[var(--c-surface)] rounded-2xl border border-gray-100 shadow-2xl max-w-lg w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center">
                   <SlidersHorizontal className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Calibrate Treasury & Runway</h3>
-                  <p className="text-xs text-gray-500">Update your startup's live bank reserves and monthly burn rate</p>
+                  <h3 className="text-base font-bold text-[var(--c-fg)]">Calibrate Treasury & Runway</h3>
+                  <p className="text-xs text-[var(--c-muted)]">Update your startup's live bank reserves and monthly burn rate</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsCalibratingTreasury(false)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--c-fg-secondary)] hover:bg-gray-100 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1942,7 +2042,7 @@ export default function SaaSDashboard({
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-[var(--c-fg-secondary)] mb-1">
                     Cash Reserves ($)
                   </label>
                   <div className="relative">
@@ -1953,7 +2053,7 @@ export default function SaaSDashboard({
                       step="1000"
                       value={editCash}
                       onChange={(e) => setEditCash(Number(e.target.value))}
-                      className="w-full pl-7 pr-3 py-2 rounded-xl border border-gray-200 focus:outline-hidden focus:border-emerald-600 text-sm font-semibold text-gray-900"
+                      className="w-full pl-7 pr-3 py-2 rounded-xl border border-gray-200 focus:outline-hidden focus:border-emerald-600 text-sm font-semibold text-[var(--c-fg)]"
                       placeholder="245000"
                       required
                     />
@@ -1962,7 +2062,7 @@ export default function SaaSDashboard({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-[var(--c-fg-secondary)] mb-1">
                     Monthly Burn Rate ($/mo)
                   </label>
                   <div className="relative">
@@ -1973,7 +2073,7 @@ export default function SaaSDashboard({
                       step="500"
                       value={editBurn}
                       onChange={(e) => setEditBurn(Number(e.target.value))}
-                      className="w-full pl-7 pr-3 py-2 rounded-xl border border-gray-200 focus:outline-hidden focus:border-emerald-600 text-sm font-semibold text-gray-900"
+                      className="w-full pl-7 pr-3 py-2 rounded-xl border border-gray-200 focus:outline-hidden focus:border-emerald-600 text-sm font-semibold text-[var(--c-fg)]"
                       placeholder="18500"
                       required
                     />
@@ -1986,13 +2086,13 @@ export default function SaaSDashboard({
               <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-between text-xs">
                 <div>
                   <span className="text-gray-400 font-medium">Calculated Runway: </span>
-                  <span className="font-bold text-gray-900">
+                  <span className="font-bold text-[var(--c-fg)]">
                     {editBurn > 0 ? (editCash / editBurn).toFixed(1) : '∞'} Months
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-400 font-medium">Monthly Burn Ratio: </span>
-                  <span className="font-bold text-gray-900">
+                  <span className="font-bold text-[var(--c-fg)]">
                     {editCash > 0 ? ((editBurn / editCash) * 100).toFixed(1) : 0}% / mo
                   </span>
                 </div>
@@ -2002,7 +2102,7 @@ export default function SaaSDashboard({
                 <button
                   type="button"
                   onClick={() => setIsCalibratingTreasury(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--c-muted)] hover:bg-gray-100 transition-colors"
                 >
                   Cancel
                 </button>

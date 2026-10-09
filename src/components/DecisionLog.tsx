@@ -1,5 +1,6 @@
 /**
  * CatalystOS - Corporate Decision Ledger Component (Section 15)
+ * Redesigned with Apple × Linear × Notion aesthetics.
  * Institutional memory & auditable corporate record.
  * Formatted with clean table columns (Decision, Context, Owner, Recommendation, Status, Date)
  * and an interactive slide-over detail drawer.
@@ -8,9 +9,7 @@
 import React, { useState, useMemo } from 'react';
 import { DecisionRecord } from '../types';
 import {
-  FileText, Search, Filter, Download, CheckCircle2, XCircle,
-  AlertTriangle, ArrowUpRight, ArrowDownRight, Calendar,
-  Shield, Users, DollarSign, ExternalLink, ChevronRight, X,
+  FileText, Search, Download, ChevronRight, X,
   Clock, Check
 } from 'lucide-react';
 import Section from './Section';
@@ -102,21 +101,21 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
     <div id="decision-log-container" className="space-y-6 font-sans">
       
       {/* ── HEADER ────────────────────────────────────────────────────────── */}
-      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#141413]/10 pb-6">
+      <Section delay={0.05} className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4" style={{ borderBottom: '1px solid var(--c-border)' }}>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold text-[#696969]">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-semibold" style={{ color: 'var(--c-accent)' }}>
               Institutional Memory
             </span>
-            <span className="w-1 h-1 rounded-full bg-[#141413]/30" />
-            <span className="text-[11px] font-mono text-[#696969]">
+            <span className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--c-border-strong)' }} />
+            <span className="text-[11px] font-mono" style={{ color: 'var(--c-muted)' }}>
               {decisions.length} Decisions Archived
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#141413]">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: 'var(--c-fg)' }}>
             Decision Ledger
           </h1>
-          <p className="text-sm text-[#696969] mt-1 max-w-2xl">
+          <p className="text-sm mt-1 max-w-2xl" style={{ color: 'var(--c-muted)' }}>
             Immutable, auditable corporate record of all executive deliberations, founder verdicts, financial shifts, and board authorizations.
           </p>
         </div>
@@ -124,14 +123,23 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
         <div className="flex items-center gap-2">
           <button
             onClick={exportCSV}
-            className="interactive-btn px-3.5 py-2 rounded-xl bg-white border border-[#141413]/15 hover:border-[#141413] text-xs font-semibold text-[#141413] flex items-center gap-1.5 transition-all shadow-subtle"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+            style={{
+              backgroundColor: 'var(--c-surface-2)',
+              border: '1px solid var(--c-border)',
+              color: 'var(--c-fg)'
+            }}
           >
-            <Download className="w-3.5 h-3.5 text-[#696969]" />
+            <Download className="w-3.5 h-3.5" style={{ color: 'var(--c-muted)' }} />
             <span>Export CSV</span>
           </button>
           <button
             onClick={exportJSON}
-            className="interactive-btn magnetic-btn px-3.5 py-2 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-semibold text-[#F3F0EE] flex items-center gap-1.5 transition-all shadow-sm"
+            className="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+            style={{
+              backgroundColor: 'var(--c-fg)',
+              color: 'var(--c-bg)'
+            }}
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Audit JSON</span>
@@ -141,29 +149,57 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
 
       {/* ── METRIC SUMMARY ROW ────────────────────────────────────────────── */}
       <Section delay={0.1} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="catalyst-card card-hover glow-border p-4 rounded-xl space-y-1">
-          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#696969]">
+        <div 
+          className="p-4 rounded-xl space-y-1 transition-all"
+          style={{
+            backgroundColor: 'var(--c-surface)',
+            border: '1px solid var(--c-border)',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          <span className="text-[10px] uppercase font-mono font-bold tracking-wider" style={{ color: 'var(--c-muted)' }}>
             Total Decisions
           </span>
-          <p className="text-2xl font-bold font-mono text-[#141413]">{stats.total}</p>
+          <p className="text-2xl font-bold font-mono" style={{ color: 'var(--c-fg)' }}>{stats.total}</p>
         </div>
-        <div className="catalyst-card card-hover glow-border p-4 rounded-xl space-y-1">
-          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#696969]">
+        <div 
+          className="p-4 rounded-xl space-y-1 transition-all"
+          style={{
+            backgroundColor: 'var(--c-surface)',
+            border: '1px solid var(--c-border)',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          <span className="text-[10px] uppercase font-mono font-bold tracking-wider" style={{ color: 'var(--c-muted)' }}>
             Authorizations
           </span>
-          <p className="text-2xl font-bold font-mono text-emerald-700">{stats.approved}</p>
+          <p className="text-2xl font-bold font-mono text-emerald-500">{stats.approved}</p>
         </div>
-        <div className="catalyst-card card-hover glow-border p-4 rounded-xl space-y-1">
-          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#696969]">
+        <div 
+          className="p-4 rounded-xl space-y-1 transition-all"
+          style={{
+            backgroundColor: 'var(--c-surface)',
+            border: '1px solid var(--c-border)',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          <span className="text-[10px] uppercase font-mono font-bold tracking-wider" style={{ color: 'var(--c-muted)' }}>
             Rejected / Vetoed
           </span>
-          <p className="text-2xl font-bold font-mono text-rose-700">{stats.rejected}</p>
+          <p className="text-2xl font-bold font-mono text-rose-500">{stats.rejected}</p>
         </div>
-        <div className="catalyst-card card-hover glow-border p-4 rounded-xl space-y-1">
-          <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-[#696969]">
+        <div 
+          className="p-4 rounded-xl space-y-1 transition-all"
+          style={{
+            backgroundColor: 'var(--c-surface)',
+            border: '1px solid var(--c-border)',
+            boxShadow: 'var(--shadow-sm)'
+          }}
+        >
+          <span className="text-[10px] uppercase font-mono font-bold tracking-wider" style={{ color: 'var(--c-muted)' }}>
             Committed Capital
           </span>
-          <p className={`text-2xl font-bold font-mono ${stats.netCapital >= 0 ? 'text-emerald-700' : 'text-[#141413]'}`}>
+          <p className={`text-2xl font-bold font-mono ${stats.netCapital >= 0 ? 'text-emerald-500' : ''}`} style={{ color: stats.netCapital < 0 ? 'var(--c-fg)' : undefined }}>
             {stats.netCapital >= 0 ? '+' : ''}${Math.round(stats.netCapital).toLocaleString()}
           </p>
         </div>
@@ -172,13 +208,19 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
       {/* ── SEARCH & FILTER CONTROLS ──────────────────────────────────────── */}
       <Section delay={0.15} className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-[#696969] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--c-muted)' }} />
           <input
             type="text"
             placeholder="Search ledger by title, keyword, context..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-[#141413]/15 text-xs text-[#141413] placeholder-[#696969] focus:outline-none focus:border-[#141413]"
+            className="w-full pl-10 pr-4 py-2 rounded-xl text-xs outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              color: 'var(--c-fg)',
+              boxShadow: 'var(--shadow-sm)'
+            }}
           />
         </div>
 
@@ -186,7 +228,12 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl bg-white border border-[#141413]/15 text-[#141413] font-medium focus:outline-none focus:border-[#141413]"
+            className="px-3 py-2 text-xs rounded-xl font-medium outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              color: 'var(--c-fg)'
+            }}
           >
             <option value="ALL">All Tracks</option>
             <option value="HIRING">Hiring & Talent</option>
@@ -200,7 +247,12 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 text-xs rounded-xl bg-white border border-[#141413]/15 text-[#141413] font-medium focus:outline-none focus:border-[#141413]"
+            className="px-3 py-2 text-xs rounded-xl font-medium outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              color: 'var(--c-fg)'
+            }}
           >
             <option value="ALL">All Statuses</option>
             <option value="APPROVED">Approved & Executed</option>
@@ -211,9 +263,16 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
       </Section>
 
       {/* ── CLEAN TABLE / LIST: SECTION 15 COMPLIANT ─────────────────────── */}
-      <Section delay={0.2} className="catalyst-card rounded-2xl overflow-hidden divide-y divide-[#141413]/05">
+      <Section delay={0.2} className="rounded-2xl overflow-hidden divide-y" style={{ backgroundColor: 'var(--c-surface)', border: '1px solid var(--c-border)' }}>
         {/* Table Header Columns: Decision | Context | Owner | Recommendation | Status | Date */}
-        <div className="hidden lg:grid grid-cols-12 gap-4 px-6 py-3.5 bg-[#FCFBFA] text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] border-b border-[#141413]/10">
+        <div 
+          className="hidden lg:grid grid-cols-12 gap-4 px-6 py-3.5 text-[10px] font-mono font-bold uppercase tracking-wider"
+          style={{
+            backgroundColor: 'var(--c-surface-2)',
+            color: 'var(--c-muted)',
+            borderBottom: '1px solid var(--c-border)'
+          }}
+        >
           <div className="col-span-3">Decision</div>
           <div className="col-span-3">Context & Directives</div>
           <div className="col-span-2">Owner / Lead</div>
@@ -236,29 +295,36 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
               <div
                 key={record.id}
                 onClick={() => setSelectedRecord(record)}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 px-6 py-4 items-center hover:bg-[#FCFBFA] transition-colors cursor-pointer group"
+                className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 px-6 py-4 items-center transition-colors cursor-pointer group"
+                style={{
+                  backgroundColor: 'var(--c-surface)',
+                  borderBottom: '1px solid var(--c-border)'
+                }}
               >
                 {/* 1. Decision (Col 3) */}
                 <div className="lg:col-span-3 space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 text-[9px] font-mono font-bold rounded-md bg-[#141413]/05 text-[#141413] uppercase">
+                    <span 
+                      className="px-2 py-0.5 text-[9px] font-mono font-bold rounded-md uppercase"
+                      style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                    >
                       {record.category}
                     </span>
                     {record.reversibility && (
                       <span className={`text-[8px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
-                        record.reversibility === 'REVERSIBLE' ? 'bg-sky-50 text-sky-700' : 'bg-amber-50 text-amber-800'
+                        record.reversibility === 'REVERSIBLE' ? 'bg-sky-500/10 text-sky-500' : 'bg-amber-500/10 text-amber-500'
                       }`}>
                         {record.reversibility}
                       </span>
                     )}
                   </div>
-                  <h4 className="text-xs font-bold text-[#141413] group-hover:text-black line-clamp-1">
+                  <h4 className="text-xs font-bold line-clamp-1 transition-colors group-hover:text-indigo-400" style={{ color: 'var(--c-fg)' }}>
                     {record.title}
                   </h4>
                 </div>
 
                 {/* 2. Context & Directives (Col 3) */}
-                <div className="lg:col-span-3 text-xs text-[#696969]">
+                <div className="lg:col-span-3 text-xs" style={{ color: 'var(--c-muted)' }}>
                   <p className="line-clamp-2 leading-relaxed">
                     {record.impactText || record.description}
                   </p>
@@ -266,10 +332,13 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
 
                 {/* 3. Owner / Lead (Col 2) */}
                 <div className="lg:col-span-2 flex items-center gap-2 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-[#141413]/10 text-[#141413] flex items-center justify-center font-bold text-[10px] font-mono">
+                  <div 
+                    className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] font-mono shrink-0"
+                    style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                  >
                     {record.approver ? record.approver[0] : 'F'}
                   </div>
-                  <span className="font-semibold text-[#141413] truncate">
+                  <span className="font-semibold truncate" style={{ color: 'var(--c-fg)' }}>
                     {record.approver || 'Founder Sign-off'}
                   </span>
                 </div>
@@ -277,13 +346,13 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
                 {/* 4. Recommendation / Impact (Col 2) */}
                 <div className="lg:col-span-2 text-xs font-mono">
                   {record.financialImpact ? (
-                    <span className={`font-bold ${record.financialImpact > 0 ? 'text-emerald-700' : 'text-[#141413]'}`}>
+                    <span className={`font-bold ${record.financialImpact > 0 ? 'text-emerald-500' : ''}`} style={{ color: record.financialImpact < 0 ? 'var(--c-fg)' : undefined }}>
                       {record.financialImpact > 0 ? '+' : ''}${Math.abs(record.financialImpact).toLocaleString()}
                     </span>
                   ) : (
-                    <span className="text-[#696969]">Operational Alignment</span>
+                    <span style={{ color: 'var(--c-muted)' }}>Operational Alignment</span>
                   )}
-                  <span className="text-[10px] text-[#696969] block font-sans truncate">
+                  <span className="text-[10px] block font-sans truncate" style={{ color: 'var(--c-muted)' }}>
                     {record.recommendationBy || 'Executive Council'}
                   </span>
                 </div>
@@ -291,9 +360,9 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
                 {/* 5. Status (Col 1) */}
                 <div className="lg:col-span-1">
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
-                    isApproved ? 'bg-emerald-500/10 text-emerald-800 border border-emerald-500/20' :
-                    isFailed ? 'bg-amber-500/10 text-amber-800 border border-amber-500/20' :
-                    'bg-rose-500/10 text-rose-800 border border-rose-500/20'
+                    isApproved ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25' :
+                    isFailed ? 'bg-amber-500/10 text-amber-500 border border-amber-500/25' :
+                    'bg-rose-500/10 text-rose-500 border border-rose-500/25'
                   }`}>
                     {isApproved ? <Check className="w-2.5 h-2.5" /> : null}
                     {record.status}
@@ -301,16 +370,16 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
                 </div>
 
                 {/* 6. Date (Col 1) */}
-                <div className="lg:col-span-1 text-right text-xs font-mono text-[#696969] flex items-center justify-end gap-1.5">
+                <div className="lg:col-span-1 text-right text-xs font-mono flex items-center justify-end gap-1.5" style={{ color: 'var(--c-muted)' }}>
                   <span>{dateStr}</span>
-                  <ChevronRight className="w-3.5 h-3.5 text-[#696969]/50 group-hover:text-[#141413] group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-all" />
                 </div>
               </div>
             );
           })
         ) : (
-          <div className="p-12 text-center text-xs text-[#696969] space-y-1">
-            <p className="font-bold text-[#141413]">No ledger records matching filters</p>
+          <div className="p-12 text-center text-xs space-y-1" style={{ color: 'var(--c-muted)' }}>
+            <p className="font-bold" style={{ color: 'var(--c-fg)' }}>No ledger records matching filters</p>
             <p>Try refining your search terms or selecting all tracks.</p>
           </div>
         )}
@@ -318,32 +387,48 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
 
       {/* ── FOCUSED DETAIL DRAWER ─────────────────────────────────────────── */}
       {selectedRecord && (
-        <div className="fixed inset-0 z-50 bg-[#141413]/40 backdrop-blur-sm flex items-center justify-end">
-          <div className="w-full max-w-xl h-full bg-white shadow-2xl flex flex-col justify-between overflow-y-auto animate-fade-in border-l border-[#141413]/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(4px)' }}>
+          <div 
+            className="w-full max-w-xl h-full shadow-2xl flex flex-col justify-between overflow-y-auto animate-fade-in"
+            style={{
+              backgroundColor: 'var(--c-surface)',
+              borderLeft: '1px solid var(--c-border)'
+            }}
+          >
             
-            <div className="p-6 border-b border-[#141413]/10 space-y-3 sticky top-0 bg-white/95 backdrop-blur-md z-10">
+            <div 
+              className="p-6 space-y-3 sticky top-0 z-10 backdrop-blur-md"
+              style={{
+                backgroundColor: 'var(--c-surface)',
+                borderBottom: '1px solid var(--c-border)'
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full bg-[#141413]/05 text-[#141413] uppercase">
+                  <span 
+                    className="px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase"
+                    style={{ backgroundColor: 'var(--c-surface-2)', color: 'var(--c-fg)', border: '1px solid var(--c-border)' }}
+                  >
                     {selectedRecord.category}
                   </span>
                   <span className={`px-2.5 py-0.5 text-[10px] font-mono font-bold rounded-full uppercase ${
-                    selectedRecord.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                    selectedRecord.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/25' : 'bg-rose-500/10 text-rose-500 border border-rose-500/25'
                   }`}>
                     {selectedRecord.status}
                   </span>
                 </div>
                 <button
                   onClick={() => setSelectedRecord(null)}
-                  className="p-1.5 rounded-full hover:bg-[#141413]/05 text-[#696969] hover:text-[#141413] transition-colors"
+                  className="p-1.5 rounded-full transition-colors cursor-pointer"
+                  style={{ color: 'var(--c-muted)', backgroundColor: 'var(--c-surface-2)' }}
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-[#141413]">{selectedRecord.title}</h3>
-                <span className="text-[11px] font-mono text-[#696969] flex items-center gap-1.5 mt-1">
+                <h3 className="text-lg font-bold" style={{ color: 'var(--c-fg)' }}>{selectedRecord.title}</h3>
+                <span className="text-[11px] font-mono flex items-center gap-1.5 mt-1" style={{ color: 'var(--c-muted)' }}>
                   <Clock className="w-3.5 h-3.5" />
                   Logged: {new Date(selectedRecord.timestamp).toLocaleString()}
                 </span>
@@ -353,31 +438,51 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
             <div className="p-6 space-y-6 flex-1">
               
               <div className="space-y-1.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] block">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider block" style={{ color: 'var(--c-muted)' }}>
                   Deliberation Context & Summary
                 </span>
-                <p className="text-xs text-[#141413] leading-relaxed bg-[#FCFBFA] p-4 rounded-xl border border-[#141413]/08">
+                <p 
+                  className="text-xs leading-relaxed p-4 rounded-xl"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
+                >
                   {selectedRecord.description}
                 </p>
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] block">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider block" style={{ color: 'var(--c-muted)' }}>
                   Forecasted & Executed Impact
                 </span>
-                <p className="text-xs text-[#141413] leading-relaxed bg-[#FCFBFA] p-4 rounded-xl border border-[#141413]/08">
+                <p 
+                  className="text-xs leading-relaxed p-4 rounded-xl"
+                  style={{
+                    backgroundColor: 'var(--c-surface-2)',
+                    border: '1px solid var(--c-border)',
+                    color: 'var(--c-fg)'
+                  }}
+                >
                   {selectedRecord.impactText || 'Standard strategic trajectory parameters recorded.'}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3.5 rounded-xl border border-[#141413]/08 bg-[#FCFBFA] space-y-1">
-                  <span className="text-[10px] font-mono font-bold uppercase text-[#696969] block">Authorizing Party</span>
-                  <span className="font-bold text-[#141413]">{selectedRecord.approver || 'Founder Sign-off'}</span>
+                <div 
+                  className="p-3.5 rounded-xl space-y-1"
+                  style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}
+                >
+                  <span className="text-[10px] font-mono font-bold uppercase block" style={{ color: 'var(--c-muted)' }}>Authorizing Party</span>
+                  <span className="font-bold" style={{ color: 'var(--c-fg)' }}>{selectedRecord.approver || 'Founder Sign-off'}</span>
                 </div>
-                <div className="p-3.5 rounded-xl border border-[#141413]/08 bg-[#FCFBFA] space-y-1">
-                  <span className="text-[10px] font-mono font-bold uppercase text-[#696969] block">Capital Delta</span>
-                  <span className="font-bold font-mono text-[#141413]">
+                <div 
+                  className="p-3.5 rounded-xl space-y-1"
+                  style={{ backgroundColor: 'var(--c-surface-2)', border: '1px solid var(--c-border)' }}
+                >
+                  <span className="text-[10px] font-mono font-bold uppercase block" style={{ color: 'var(--c-muted)' }}>Capital Delta</span>
+                  <span className="font-bold font-mono" style={{ color: 'var(--c-fg)' }}>
                     {selectedRecord.financialImpact ? `$${Math.abs(selectedRecord.financialImpact).toLocaleString()}` : '$0 (Neutral)'}
                   </span>
                 </div>
@@ -385,10 +490,17 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
 
               {selectedRecord.rawCouncilDeliberation && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#696969] block">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider block" style={{ color: 'var(--c-muted)' }}>
                     Audited Council Raw Log
                   </span>
-                  <div className="p-4 rounded-xl border border-[#141413]/10 bg-[#FCFBFA] max-h-48 overflow-y-auto text-[11px] font-mono text-[#141413] leading-relaxed whitespace-pre-wrap">
+                  <div 
+                    className="p-4 rounded-xl max-h-48 overflow-y-auto text-[11px] font-mono leading-relaxed whitespace-pre-wrap"
+                    style={{
+                      backgroundColor: 'var(--c-surface-2)',
+                      border: '1px solid var(--c-border)',
+                      color: 'var(--c-fg)'
+                    }}
+                  >
                     {selectedRecord.rawCouncilDeliberation}
                   </div>
                 </div>
@@ -396,11 +508,18 @@ export default function DecisionLog({ decisions, onRefresh }: DecisionLogProps) 
 
             </div>
 
-            <div className="p-5 border-t border-[#141413]/10 bg-[#FCFBFA] flex items-center justify-between">
-              <span className="text-[10px] font-mono text-[#696969]">Record ID: {selectedRecord.id}</span>
+            <div 
+              className="p-5 flex items-center justify-between"
+              style={{ backgroundColor: 'var(--c-surface)', borderTop: '1px solid var(--c-border)' }}
+            >
+              <span className="text-[10px] font-mono" style={{ color: 'var(--c-muted)' }}>Record ID: {selectedRecord.id}</span>
               <button
                 onClick={() => setSelectedRecord(null)}
-                className="px-4 py-2 rounded-xl bg-[#141413] hover:bg-[#262627] text-xs font-bold text-[#F3F0EE] transition-all"
+                className="px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all"
+                style={{
+                  backgroundColor: 'var(--c-fg)',
+                  color: 'var(--c-bg)'
+                }}
               >
                 Close Drawer
               </button>

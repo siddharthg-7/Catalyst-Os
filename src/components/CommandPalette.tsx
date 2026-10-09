@@ -1,11 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Activity, CheckSquare, FileText, Database, Sparkles, Rocket, Loader2, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { 
+  Search, 
+  Activity, 
+  CheckSquare, 
+  Briefcase,
+  Database, 
+  Sparkles, 
+  Rocket, 
+  Loader2, 
+  ShieldCheck, 
+  CheckCircle2, 
+  AlertCircle,
+  Layers,
+  Users,
+  TrendingUp,
+  Shield,
+  Radio,
+  ArrowRight,
+  CornerDownLeft
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (tab: 'dashboard' | 'approvals' | 'knowledge') => void;
+  onNavigate: (tab: any) => void;
   onRunAction: (actionName: string) => void;
 }
 
@@ -19,6 +38,7 @@ interface ExecutionStep {
 export default function CommandPalette({ isOpen, onClose, onNavigate, onRunAction }: CommandPaletteProps) {
   const { apiFetch } = useAuth();
   const [query, setQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [isFetchingAI, setIsFetchingAI] = useState(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>([]);
@@ -31,6 +51,24 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
   
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const commands = [
+    { id: 'nav-dash',  name: 'Executive Dashboard', category: 'Navigation', icon: Activity, action: () => onNavigate('dashboard'), hint: 'Real-time KPIs & Runway' },
+    { id: 'nav-work',  name: 'Employee Workspace', category: 'Navigation', icon: Briefcase, action: () => onNavigate('workspace'), hint: 'Role task board & co-pilot' },
+    { id: 'nav-appr',  name: 'Approval Queue', category: 'Navigation', icon: CheckSquare, action: () => onNavigate('approvals'), hint: 'Founder sign-offs' },
+    { id: 'nav-flow',  name: 'Workflows & DAG', category: 'Navigation', icon: Layers, action: () => onNavigate('workflows'), hint: 'Strategic initiatives' },
+    { id: 'nav-know',  name: 'Company Knowledge', category: 'Navigation', icon: Database, action: () => onNavigate('knowledge'), hint: 'RAG vector corpus' },
+    { id: 'nav-scen',  name: 'Scenario Studio', category: 'Navigation', icon: TrendingUp, action: () => onNavigate('scenarios'), hint: 'Financial What-Ifs' },
+    { id: 'nav-peop',  name: 'People & Access', category: 'Navigation', icon: Users, action: () => onNavigate('people'), hint: 'Team roster & invites' },
+    { id: 'nav-deci',  name: 'Decision Ledger', category: 'Navigation', icon: Shield, action: () => onNavigate('decisions'), hint: 'Immutable audit logs' },
+    { id: 'act-sim',   name: 'Simulate Collaboration Cycle', category: 'Quick Actions', icon: Sparkles, action: () => onRunAction('simulate'), hint: 'Multi-agent DAG run' },
+  ];
+
+  const filtered = commands.filter(cmd => 
+    cmd.name.toLowerCase().includes(query.toLowerCase()) || 
+    cmd.category.toLowerCase().includes(query.toLowerCase()) ||
+    (cmd.hint && cmd.hint.toLowerCase().includes(query.toLowerCase()))
+  );
 
   async function handleExecuteCommand(userCommand: string) {
     if (!userCommand.trim() || isFetchingAI) return;
@@ -89,7 +127,12 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
 
   useEffect(() => {
     if (isOpen) {
-      inputRef.current?.focus();
+      setQuery('');
+      setSelectedIndex(0);
+      setAiResponse(null);
+      setApiError(null);
+      setExecutionSteps([]);
+      setTimeout(() => inputRef.current?.focus(), 50);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -113,81 +156,124 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
     };
   }, [isOpen, onClose]);
 
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev + 1) % Math.max(filtered.length, 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev - 1 + Math.max(filtered.length, 1)) % Math.max(filtered.length, 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (query.trim().length > 0 && filtered.length === 0) {
+        handleExecuteCommand(query);
+      } else if (filtered[selectedIndex]) {
+        filtered[selectedIndex].action();
+        onClose();
+      } else if (query.trim()) {
+        handleExecuteCommand(query);
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
-  const commands = [
-    { id: 'nav-dash',  name: 'Go to Dashboard',    category: 'Navigation', icon: Activity,    action: () => onNavigate('dashboard') },
-    { id: 'nav-appr',  name: 'Go to Approvals',    category: 'Navigation', icon: CheckSquare, action: () => onNavigate('approvals') },
-    { id: 'nav-know',  name: 'Go to RAG Knowledge Base', category: 'Navigation', icon: Database, action: () => onNavigate('knowledge') },
-    { id: 'act-sim',   name: 'Simulate Collaboration Cycle', category: 'Actions', icon: Sparkles, action: () => onRunAction('simulate') },
-  ];
-
-  const filtered = commands.filter(cmd => 
-    cmd.name.toLowerCase().includes(query.toLowerCase()) || 
-    cmd.category.toLowerCase().includes(query.toLowerCase())
-  );
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] p-4 bg-[#141413]/40 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] p-4 bg-black/60 backdrop-blur-md animate-fade-in select-none">
       <div 
         ref={containerRef}
-        className="w-full max-w-xl bg-white border border-[#141413]/10 rounded-[20px] shadow-[rgba(0,0,0,0.16)_0px_24px_48px_0px] overflow-hidden flex flex-col max-h-[600px]"
+        className="w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[640px] border transition-all"
+        style={{ 
+          backgroundColor: 'var(--c-surface)', 
+          borderColor: 'var(--c-border)',
+          color: 'var(--c-fg)',
+          boxShadow: 'var(--shadow-xl)'
+        }}
       >
-        {/* Search Input bar */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#141413]/10 bg-white">
-          <Search className="w-5 h-5 text-[#696969] shrink-0" />
+        {/* Raycast-Style Search Bar */}
+        <div 
+          className="flex items-center gap-3 px-4 py-3.5 border-b"
+          style={{ borderColor: 'var(--c-border)', backgroundColor: 'var(--c-surface)' }}
+        >
+          <Search className="w-5 h-5 shrink-0 opacity-60" style={{ color: 'var(--c-muted)' }} />
           <input
             ref={inputRef}
             type="text"
-            placeholder="Ask CEO Orchestrator (e.g. Can we afford to hire three engineers?)..."
+            placeholder="Ask CEO Orchestrator or search commands..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && query.trim() && !isFetchingAI) {
-                handleExecuteCommand(query);
-              }
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
             }}
-            className="w-full bg-transparent text-sm text-[#141413] placeholder-[#696969] focus:outline-none font-sans"
+            onKeyDown={handleKeyDown}
+            className="w-full bg-transparent text-sm focus:outline-none font-sans"
+            style={{ color: 'var(--c-fg)' }}
           />
-          <span className="px-1.5 py-0.5 rounded bg-[#F3F0EE] border border-[#141413]/10 text-[9px] font-mono font-semibold text-[#696969] shrink-0">
+          <span 
+            className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold border shrink-0"
+            style={{ 
+              backgroundColor: 'var(--c-surface-2)', 
+              borderColor: 'var(--c-border)', 
+              color: 'var(--c-muted)' 
+            }}
+          >
             ESC
           </span>
         </div>
 
-        {/* Command list & Execution status */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[#FCFBFA]">
+        {/* Content list & Live Execution view */}
+        <div 
+          className="flex-1 overflow-y-auto p-2.5 space-y-2.5"
+          style={{ backgroundColor: 'var(--c-bg)' }}
+        >
           {query.trim().length > 0 && (
-            <div className="mb-3">
-              <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold text-[#141413] uppercase tracking-wider font-mono">
-                <span>AI Executive Team (CEO Orchestrator)</span>
-                <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Online
+            <div className="mb-2">
+              <div className="flex items-center justify-between px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider font-mono text-[var(--c-faint)]">
+                <span>Direct AI Directive</span>
+                <span className="text-emerald-500 font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  CEO Orchestrator Ready
                 </span>
               </div>
               <button
                 onClick={() => handleExecuteCommand(query)}
                 disabled={isFetchingAI}
-                className="w-full text-left flex items-center justify-between px-3.5 py-2.5 rounded-[12px] text-xs font-semibold text-[#141413] bg-[#F3F0EE] hover:bg-[#F3F0EE]/80 transition-colors border border-[#141413]/10 font-sans"
+                className="w-full text-left flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all border font-sans cursor-pointer group"
+                style={{
+                  backgroundColor: 'var(--c-surface)',
+                  borderColor: 'var(--c-border)',
+                  color: 'var(--c-fg)'
+                }}
               >
-                <span className="flex items-center gap-2.5">
-                  <Rocket className="w-4 h-4 text-gray-900" />
-                  Execute via CEO Orchestrator: "{query}"
+                <span className="flex items-center gap-2.5 min-w-0">
+                  <Rocket className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <span className="truncate">Execute Directive: <span className="text-indigo-500">"{query}"</span></span>
                 </span>
-                <span className="text-[10px] font-mono text-[#696969]">↵ Enter</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--c-surface-2)] border border-[var(--c-border)] text-[var(--c-muted)] shrink-0 flex items-center gap-1">
+                  <CornerDownLeft className="w-2.5 h-2.5" /> Enter
+                </span>
               </button>
 
               {/* Execution Steps & Live Progress */}
               {isFetchingAI && (
-                <div className="mt-2.5 p-3.5 rounded-[12px] bg-white border border-[#141413]/10 text-xs text-[#141413] font-sans space-y-2">
-                  <div className="flex items-center gap-2 font-semibold text-gray-900">
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-900" />
-                    CEO Orchestrator Coordinating Executive Specialists...
+                <div 
+                  className="mt-2.5 p-3.5 rounded-xl border text-xs font-sans space-y-2"
+                  style={{ 
+                    backgroundColor: 'var(--c-surface)', 
+                    borderColor: 'var(--c-border)' 
+                  }}
+                >
+                  <div className="flex items-center gap-2 font-semibold" style={{ color: 'var(--c-fg)' }}>
+                    <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                    <span>CEO Orchestrator Coordinating Executive Specialists...</span>
                   </div>
-                  <div className="space-y-1.5 pl-6 text-[11px] text-gray-600">
+                  <div className="space-y-1.5 pl-6 text-[11px]" style={{ color: 'var(--c-muted)' }}>
                     <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" />
-                      Analyzing intent, consulting startup memory & RAG context
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+                      Analyzing intent, consulting company memory & RAG context
                     </div>
                   </div>
                 </div>
@@ -195,13 +281,21 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
 
               {/* Completed Execution Steps */}
               {!isFetchingAI && executionSteps.length > 0 && (
-                <div className="mt-2.5 p-3 rounded-[12px] bg-white border border-gray-100 text-xs space-y-1.5">
-                  <div className="font-semibold text-[11px] text-gray-500 uppercase tracking-wider">Executive Agents Involved</div>
+                <div 
+                  className="mt-2.5 p-3 rounded-xl border text-xs space-y-2"
+                  style={{ 
+                    backgroundColor: 'var(--c-surface)', 
+                    borderColor: 'var(--c-border)' 
+                  }}
+                >
+                  <div className="font-semibold text-[10px] uppercase tracking-wider font-mono" style={{ color: 'var(--c-faint)' }}>
+                    Executive Agents Engaged
+                  </div>
                   {executionSteps.map((step, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-[11px] text-gray-700">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                    <div key={idx} className="flex items-start gap-2 text-[11px]" style={{ color: 'var(--c-fg-secondary)' }}>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                       <div>
-                        <span className="font-semibold capitalize">{step.agent.replace('_', ' ')}</span>: {step.action}
+                        <span className="font-semibold capitalize text-[var(--c-fg)]">{step.agent.replace('_', ' ')}</span>: {step.action}
                       </div>
                     </div>
                   ))}
@@ -210,18 +304,31 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
 
               {/* Deterministic Calculations */}
               {!isFetchingAI && calculations.length > 0 && (
-                <div className="mt-2.5 p-3 rounded-[12px] bg-blue-50/60 border border-blue-200/60 text-xs space-y-1.5">
-                  <div className="font-semibold text-[10px] text-blue-900 uppercase tracking-wider font-mono">
+                <div 
+                  className="mt-2.5 p-3 rounded-xl border text-xs space-y-1.5"
+                  style={{ 
+                    backgroundColor: 'rgba(99, 102, 241, 0.05)', 
+                    borderColor: 'rgba(99, 102, 241, 0.2)' 
+                  }}
+                >
+                  <div className="font-semibold text-[10px] uppercase tracking-wider font-mono text-indigo-500">
                     Deterministic Financial Models
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {calculations.map((calc, idx) => (
-                      <div key={idx} className="bg-white p-2 rounded-lg border border-blue-100">
-                        <div className="text-[10px] text-gray-500">{calc.metric}</div>
-                        <div className="text-xs font-bold text-gray-900 font-mono">
+                      <div 
+                        key={idx} 
+                        className="p-2 rounded-lg border"
+                        style={{ 
+                          backgroundColor: 'var(--c-surface)', 
+                          borderColor: 'var(--c-border)' 
+                        }}
+                      >
+                        <div className="text-[10px]" style={{ color: 'var(--c-muted)' }}>{calc.metric}</div>
+                        <div className="text-xs font-bold font-mono" style={{ color: 'var(--c-fg)' }}>
                           {typeof calc.value === 'number' ? calc.value.toLocaleString() : calc.value}
                         </div>
-                        <div className="text-[9px] text-blue-600">{calc.source}</div>
+                        <div className="text-[9px] text-indigo-500">{calc.source}</div>
                       </div>
                     ))}
                   </div>
@@ -230,22 +337,36 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
 
               {/* AI Response Card */}
               {aiResponse && (
-                <div className="mt-2.5 p-4 rounded-[12px] bg-white border border-[#141413]/10 shadow-[rgba(0,0,0,0.02)_0px_4px_12px_0px] text-xs text-[#141413] font-sans">
-                  <div className="flex items-center gap-1.5 font-bold text-gray-900 mb-2 pb-1.5 border-b border-gray-100">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    Unified Recommendation (Audited & Verified)
+                <div 
+                  className="mt-2.5 p-4 rounded-xl border text-xs font-sans"
+                  style={{ 
+                    backgroundColor: 'var(--c-surface)', 
+                    borderColor: 'var(--c-border)' 
+                  }}
+                >
+                  <div className="flex items-center gap-1.5 font-bold mb-2 pb-1.5 border-b" style={{ borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}>
+                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                    Unified Recommendation (Audited & Grounded)
                   </div>
-                  <div className="leading-relaxed whitespace-pre-wrap font-sans text-gray-800">
+                  <div className="leading-relaxed whitespace-pre-wrap font-sans" style={{ color: 'var(--c-fg-secondary)' }}>
                     {aiResponse}
                   </div>
 
                   {/* Evidence Citations */}
                   {evidence.length > 0 && (
-                    <div className="mt-2.5 pt-2 border-t border-gray-100">
-                      <div className="text-[10px] font-mono text-gray-500 font-semibold mb-1">Grounded Evidence / Sources:</div>
+                    <div className="mt-2.5 pt-2 border-t" style={{ borderColor: 'var(--c-border)' }}>
+                      <div className="text-[10px] font-mono font-semibold mb-1" style={{ color: 'var(--c-muted)' }}>Grounded Evidence / Sources:</div>
                       <div className="flex flex-wrap gap-1">
                         {evidence.map((ev, idx) => (
-                          <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] bg-gray-100 text-gray-700 border border-gray-200 font-mono">
+                          <span 
+                            key={idx} 
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] border font-mono"
+                            style={{ 
+                              backgroundColor: 'var(--c-surface-2)', 
+                              borderColor: 'var(--c-border)', 
+                              color: 'var(--c-fg)' 
+                            }}
+                          >
                             {ev.citationId}: {ev.documentName || 'Startup Record'}
                           </span>
                         ))}
@@ -254,9 +375,15 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
                   )}
 
                   {approval && approval.required && (
-                    <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/50">
-                      <span className="text-[11px] text-amber-800 font-medium flex items-center gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                    <div 
+                      className="mt-3 pt-2.5 flex items-center justify-between p-2.5 rounded-lg border"
+                      style={{ 
+                        backgroundColor: 'rgba(245, 158, 11, 0.08)', 
+                        borderColor: 'rgba(245, 158, 11, 0.25)' 
+                      }}
+                    >
+                      <span className="text-[11px] font-medium flex items-center gap-1.5 text-amber-500">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
                         Requires Founder Approval: {approval.reason || 'High-impact decision'}
                       </span>
                       <button
@@ -264,9 +391,13 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
                           onNavigate('approvals');
                           onClose();
                         }}
-                        className="px-2.5 py-1 text-[10px] font-semibold bg-gray-900 text-white rounded-md hover:bg-black transition-colors"
+                        className="px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors cursor-pointer"
+                        style={{ 
+                          backgroundColor: 'var(--c-fg)', 
+                          color: 'var(--c-bg)' 
+                        }}
                       >
-                        Review in Approval Center →
+                        Review in Approvals →
                       </button>
                     </div>
                   )}
@@ -274,44 +405,71 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
               )}
 
               {apiError && (
-                <div className="mt-2 p-3 rounded-[12px] bg-rose-50 border border-rose-200 text-xs text-rose-700 font-semibold">
+                <div className="mt-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-500 font-semibold">
                   {apiError}
                 </div>
               )}
             </div>
           )}
 
-          {filtered.length === 0 ? (
-            <div className="text-center py-6 text-xs text-[#696969] font-sans">
-              No navigation commands found for "{query}"
+          {filtered.length === 0 && !query.trim() ? (
+            <div className="text-center py-6 text-xs font-sans" style={{ color: 'var(--c-muted)' }}>
+              Type to search views or issue an AI directive...
             </div>
-          ) : (
+          ) : filtered.length === 0 && query.trim() ? null : (
             <>
-              {['Navigation', 'Actions'].map(category => {
+              {['Navigation', 'Quick Actions'].map(category => {
                 const categoryCmds = filtered.filter(c => c.category === category);
                 if (categoryCmds.length === 0) return null;
 
                 return (
                   <div key={category} className="space-y-1">
-                    <div className="px-3 py-1 text-[10px] font-bold text-[#696969] uppercase tracking-wider font-mono">
+                    <div className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider font-mono" style={{ color: 'var(--c-faint)' }}>
                       {category}
                     </div>
-                    {categoryCmds.map(cmd => (
-                      <button
-                        key={cmd.id}
-                        onClick={() => {
-                          cmd.action();
-                          onClose();
-                        }}
-                        className="w-full text-left flex items-center justify-between px-3 py-2 rounded-[10px] text-xs font-medium text-[#696969] hover:bg-[#F3F0EE] hover:text-[#141413] transition-colors font-sans"
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <cmd.icon className="w-4 h-4 text-[#141413]" />
-                          {cmd.name}
-                        </span>
-                        <span className="text-[10px] font-mono text-[#696969]">↵ Enter</span>
-                      </button>
-                    ))}
+                    {categoryCmds.map((cmd) => {
+                      const itemIndex = filtered.indexOf(cmd);
+                      const isHighlighted = itemIndex === selectedIndex;
+                      return (
+                        <button
+                          key={cmd.id}
+                          onClick={() => {
+                            cmd.action();
+                            onClose();
+                          }}
+                          onMouseEnter={() => setSelectedIndex(itemIndex)}
+                          className="w-full text-left flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all font-sans cursor-pointer border"
+                          style={{
+                            backgroundColor: isHighlighted ? 'var(--c-surface-2)' : 'var(--c-surface)',
+                            borderColor: isHighlighted ? 'var(--c-border-strong)' : 'transparent',
+                            color: isHighlighted ? 'var(--c-fg)' : 'var(--c-muted)',
+                          }}
+                        >
+                          <span className="flex items-center gap-2.5 min-w-0">
+                            <cmd.icon 
+                              className="w-4 h-4 shrink-0 transition-colors" 
+                              style={{ color: isHighlighted ? 'var(--c-accent)' : 'inherit' }} 
+                            />
+                            <span className="truncate">{cmd.name}</span>
+                            {cmd.hint && (
+                              <span className="text-[10px] font-normal truncate opacity-60 ml-1">
+                                {cmd.hint}
+                              </span>
+                            )}
+                          </span>
+                          <span 
+                            className="text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 opacity-70"
+                            style={{ 
+                              backgroundColor: 'var(--c-bg)', 
+                              borderColor: 'var(--c-border)',
+                              color: 'var(--c-muted)'
+                            }}
+                          >
+                            ↵ Jump
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -319,10 +477,23 @@ export default function CommandPalette({ isOpen, onClose, onNavigate, onRunActio
           )}
         </div>
 
-        {/* Footer shortcuts helper */}
-        <div className="px-4 py-2 bg-[#F3F0EE] border-t border-[#141413]/10 flex items-center justify-between text-[10px] text-[#696969] font-mono">
-          <span>Google ADK Multi-Agent Executive Engine</span>
-          <span>Press Esc to close</span>
+        {/* Raycast Keyboard Shortcuts Footer */}
+        <div 
+          className="px-4 py-2 border-t flex items-center justify-between text-[11px] font-mono"
+          style={{ 
+            backgroundColor: 'var(--c-surface-2)', 
+            borderColor: 'var(--c-border)', 
+            color: 'var(--c-muted)' 
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <span>↑↓ Navigate</span>
+            <span>↵ Select</span>
+            <span>Esc Close</span>
+          </div>
+          <div className="text-[10px] text-[var(--c-faint)]">
+            CatalystOS Raycast Engine
+          </div>
         </div>
       </div>
     </div>
