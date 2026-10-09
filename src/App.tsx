@@ -17,6 +17,7 @@ import ScenarioSimulator from './components/ScenarioSimulator';
 import PeopleDirectory from './components/PeopleDirectory';
 import AcceptInvitation from './components/AcceptInvitation';
 import EmployeeWorkspace from './components/EmployeeWorkspace';
+import ExecutiveCouncilWorkspace from './components/ExecutiveCouncilWorkspace';
 import { 
   Bell,
   CheckSquare, 
@@ -157,7 +158,8 @@ export default function App() {
   };
 
   // ── Derive activeTab from URL pathname ───────────────────────────────────────
-  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'people' => {
+  const getActiveTabFromPath = (pathname: string): 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people' => {
+    if (pathname.includes('/council')) return 'council';
     if (pathname.includes('/workspace')) return 'workspace';
     if (pathname.includes('/approvals')) return 'approvals';
     if (pathname.includes('/scenarios')) return 'scenarios';
@@ -184,7 +186,7 @@ export default function App() {
     }
   }, [location.pathname]);
 
-  const handleTabChange = (tab: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'people', agentId?: string) => {
+  const handleTabChange = (tab: 'dashboard' | 'workspace' | 'approvals' | 'scenarios' | 'decisions' | 'knowledge' | 'workflows' | 'agents' | 'council' | 'people', agentId?: string) => {
     if (tab === 'agents') {
       const targetAgent = agentId || selectedAgentId || 'ceo';
       setSelectedAgentId(targetAgent);
@@ -364,7 +366,7 @@ export default function App() {
   // Founder-equivalent defaults keep the UI usable until /api/permissions/me answers.
   const [permissions, setPermissions] = useState<UserPermissions>({
     role: 'FOUNDER',
-    areas: ['dashboard', 'approvals', 'knowledge', 'workflows', 'agents', 'people', 'scenarios', 'decisions'],
+    areas: ['dashboard', 'approvals', 'knowledge', 'workflows', 'agents', 'council', 'people', 'scenarios', 'decisions'],
     agents: ['CEO', 'Finance', 'Talent', 'Growth', 'Legal', 'Operations', 'Investment', 'Auditor'],
     actions: [
       'startup:write', 'approvals:review', 'knowledge:write',
@@ -799,6 +801,7 @@ export default function App() {
     // ── Navigation helpers ─────────────────────────────────────────────────────
     const navItems = [
       { id: 'dashboard' as const,  label: 'Dashboard',  Icon: Activity,    badge: `${startup.healthScore}%`, badgeColor: 'text-emerald-700' },
+      { id: 'council' as const,    label: 'Executive Council', Icon: Sparkles, badge: 'Phase B', badgeColor: 'text-indigo-600' },
       { id: 'workspace' as const,  label: 'Employee Workspace', Icon: Briefcase, badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', badgeColor: 'text-amber-600' },
       { id: 'approvals' as const,  label: 'Approvals',  Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-700' },
       { id: 'knowledge' as const,  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-indigo-600' },
@@ -806,7 +809,7 @@ export default function App() {
       { id: 'people' as const,     label: 'People',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : 'New', badgeColor: 'text-emerald-600' },
       { id: 'scenarios' as const,  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-indigo-600' },
       { id: 'decisions' as const,  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-[#696969]' },
-    ].filter(item => item.id === 'workspace' || permissions.areas.includes(item.id as any));
+    ].filter(item => item.id === 'workspace' || item.id === 'council' || permissions.areas.includes(item.id as any));
 
     const tabLabel = navItems.find(n => n.id === activeTab)?.label ?? activeTab;
 
@@ -1114,6 +1117,25 @@ export default function App() {
                   />
                 )}
                 
+                {activeTab === 'council' && (
+                  <ExecutiveCouncilWorkspace
+                    agents={agents}
+                    startup={startup}
+                    decisions={decisions}
+                    knowledge={knowledge}
+                    tasks={tasks}
+                    initiatives={initiatives}
+                    approvals={approvals}
+                    selectedAgentId={selectedAgentId}
+                    onSelectAgent={handleSelectAgent}
+                    onReviewItem={handleReviewItem}
+                    onUpdateStartup={handleUpdateStartup}
+                    onRefreshTasks={hydrateTasks}
+                    onNavigate={(tab) => handleTabChange(tab as any)}
+                    apiFetch={apiFetch}
+                  />
+                )}
+
                 {activeTab === 'agents' && (
                   <AgentWorkspace 
                     agents={agents} 
@@ -1423,6 +1445,7 @@ export default function App() {
       <Route path="/decisions" element={<Navigate to="/dashboard/decisions" replace />} />
       <Route path="/agents" element={<Navigate to="/dashboard/agents" replace />} />
       <Route path="/agents/:agentId" element={<Navigate to="/dashboard/agents" replace />} />
+      <Route path="/council" element={<Navigate to="/dashboard/council" replace />} />
 
       {/* Executive Workspace Dashboard Phase Route */}
       <Route

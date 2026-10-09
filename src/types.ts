@@ -255,7 +255,7 @@ export type UserRole =
 /** P1 Task 7 — effective permission set returned by GET /api/permissions/me. */
 export type PermissionArea =
   | 'dashboard' | 'approvals' | 'knowledge' | 'workflows'
-  | 'agents' | 'people' | 'scenarios' | 'decisions';
+  | 'agents' | 'council' | 'people' | 'scenarios' | 'decisions';
 
 export type PermissionAction =
   | 'startup:write' | 'approvals:review' | 'knowledge:write'

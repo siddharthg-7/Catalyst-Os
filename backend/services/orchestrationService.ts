@@ -1194,6 +1194,18 @@ INSTRUCTIONS:
               ag.contribution = `${ag.role} verified data directly from company knowledge base.`;
             }
           }
+        } else if (analysis.intent === 'hiring_scenario' || (decomposedPlan && decomposedPlan.explicitSteps.length > 0)) {
+          console.log(`[Command] commandId=${commandId} Grounded in deterministic multi-agent council decomposition and hiring plan.`);
+          finalSummary = councilResult.finalSynthesis.summary || `Executive Council formulated hiring plan for: "${command}".`;
+          finalDetails = `PLAN\n\n${decomposedPlan.formattedPlanText}\n\n${councilResult.finalSynthesis.details || ''}`;
+          confidence = 0.95;
+
+          for (const ag of agents) {
+            if (ag.status === 'analyzing') {
+              ag.status = 'completed';
+              ag.contribution = `${ag.role} formulated departmental work orders and execution parameters.`;
+            }
+          }
         } else {
           // Rule 3 & 25: Never disguise AI failure as a successful response for complex analysis!
           const unavailableResponse: OrchestrationResponse = {

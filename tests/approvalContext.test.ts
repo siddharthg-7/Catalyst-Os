@@ -265,7 +265,7 @@ async function runTests() {
     assert(startupAAfterDuplicate?.burnRate === 41000, 'Burn rate NOT double-incremented (remains 41,000, not 57,000)');
 
     const executionsCount = await prisma.execution.count({
-      where: { action: hiringApproval.title }
+      where: { action: hiringApproval.title, plan: { startupId: startupAId } }
     });
     assert(executionsCount === 1, 'Only 1 execution record exists despite duplicate API call');
 
