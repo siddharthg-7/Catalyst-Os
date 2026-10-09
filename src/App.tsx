@@ -835,11 +835,9 @@ export default function App() {
               : normRole === 'OPERATIONS' ? 'Operations Command' 
               : 'Department Command',  
             Icon: Activity,    
-            badge: `${startup.healthScore}%`, 
-            badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' 
           },
           ...(isPrivileged ? [
-            { id: 'council', label: 'Executive Council', Icon: Sparkles, badge: 'Phase B', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' }
+            { id: 'council', label: 'Executive Council', Icon: Sparkles }
           ] : []),
           { 
             id: 'workspace',  
@@ -851,27 +849,27 @@ export default function App() {
               : normRole === 'OPERATIONS' ? 'Assigned Tasks (Helix)' 
               : 'Assigned Tasks', 
             Icon: Briefcase, 
-            badge: tasks.length > 0 ? String(tasks.length) : 'Co-Pilot', 
-            badgeColor: 'text-amber-500 bg-amber-500/10 border-amber-500/20' 
           },
-          ...(isPrivileged ? [
-            { id: 'approvals', label: 'Approval Queue', Icon: CheckSquare, badge: approvals.length > 0 ? String(approvals.length) : '', badgeColor: 'text-rose-500 bg-rose-500/10 border-rose-500/20' }
+          ...(isPrivileged && approvals.length > 0 ? [
+            { id: 'approvals', label: 'Approval Queue', Icon: CheckSquare, badge: String(approvals.length), badgeColor: 'text-rose-600 bg-rose-50 border-rose-200' }
+          ] : isPrivileged ? [
+            { id: 'approvals', label: 'Approval Queue', Icon: CheckSquare }
           ] : []),
         ].filter(item => item.id === 'workspace' || item.id === 'council' || permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
         title: 'Intelligence & Strategy',
         items: [
-          { id: 'workflows',  label: 'Workflows & DAG',  Icon: Layers,      badge: initiatives.length > 0 ? String(initiatives.length) : '', badgeColor: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' },
-          { id: 'knowledge',  label: 'Company Knowledge', Icon: Database, badge: `${knowledge.length} docs`, badgeColor: 'text-sky-500 bg-sky-500/10 border-sky-500/20' },
-          { id: 'scenarios',  label: 'Scenario Studio', Icon: TrendingUp, badge: 'What-If', badgeColor: 'text-purple-500 bg-purple-500/10 border-purple-500/20' },
+          { id: 'workflows',  label: 'Workflows & DAG',  Icon: Layers },
+          { id: 'knowledge',  label: 'Company Knowledge', Icon: Database },
+          { id: 'scenarios',  label: 'Scenario Studio', Icon: TrendingUp },
         ].filter(item => permissions.areas.includes(item.id as any)) as NavItem[]
       },
       {
         title: 'Governance & Team',
         items: [
-          { id: 'decisions',  label: 'Decision Ledger', Icon: Shield, badge: decisions.length > 0 ? `${decisions.length}` : '', badgeColor: 'text-slate-400 bg-slate-500/10 border-slate-500/20' },
-          { id: 'people',     label: 'People & Access',     Icon: Users,       badge: teamMembers.length > 0 ? String(teamMembers.length) : '', badgeColor: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' },
+          { id: 'decisions',  label: 'Decision Ledger', Icon: Shield },
+          { id: 'people',     label: 'People & Access',     Icon: Users },
         ].filter(item => permissions.areas.includes(item.id as any)) as NavItem[]
       }
     ];
@@ -919,7 +917,7 @@ export default function App() {
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-xs" title="System Operational" />
                   </div>
                   <span className="text-[11px] block truncate font-medium text-slate-400">
-                    {startup?.stage || 'Seed'} · {startup?.healthScore}% Health
+                    AI Operating System
                   </span>
                 </div>
               </div>
@@ -1070,7 +1068,7 @@ export default function App() {
             {/* Voice Studio Quick Launch */}
             <button
               onClick={() => setIsVoiceStudioOpen(true)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border hover:border-indigo-400"
               style={{
                 backgroundColor: 'var(--c-surface-2)',
                 borderColor: 'var(--c-border)',
@@ -1078,13 +1076,8 @@ export default function App() {
               }}
               title="Open Voice Studio & Neural Voice Stream"
             >
-              <span className="flex items-center gap-2">
-                <Radio className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-                <span>Voice Studio</span>
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 font-bold">
-                Neural Live
-              </span>
+              <Radio className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Voice Studio</span>
             </button>
             
             {/* User Profile & Session Sign Out */}

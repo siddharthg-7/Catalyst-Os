@@ -92,24 +92,22 @@ const AGENT_ROLE_LABEL: Record<string, string> = {
 // ── KPI Card Component (Cute, Airy, Landing Page Aesthetic) ───────────────────
 interface KpiCardProps {
   icon: React.ReactNode;
-  roleTag?: string;
   label: string;
   value: string;
-  delta: string;
-  deltaPositive: boolean;
+  delta?: string;
+  deltaPositive?: boolean;
   showBar?: boolean;
   barValue?: number;
   accentColor: string;
   onClick?: () => void;
-  actionHint?: string;
 }
 
-function KpiCard({ icon, roleTag, label, value, delta, deltaPositive, showBar, barValue, accentColor, onClick, actionHint }: KpiCardProps) {
+function KpiCard({ icon, label, value, delta, deltaPositive, showBar, barValue, accentColor, onClick }: KpiCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`rounded-3xl border p-5 flex flex-col justify-between gap-3.5 transition-all duration-300 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-md ${
-        onClick ? 'cursor-pointer hover:-translate-y-0.5 group' : ''
+      className={`rounded-2xl border p-5 flex flex-col justify-between gap-3.5 transition-all duration-200 shadow-xs hover:shadow-sm ${
+        onClick ? 'cursor-pointer hover:border-indigo-400 group' : ''
       }`}
       style={{
         backgroundColor: 'var(--c-surface)',
@@ -117,35 +115,28 @@ function KpiCard({ icon, roleTag, label, value, delta, deltaPositive, showBar, b
       }}
     >
       <div className="flex items-center justify-between">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-xs ${accentColor}`}>
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-xs ${accentColor}`}>
           {icon}
         </div>
-        <div className="flex items-center gap-1.5">
-          {actionHint && (
-            <span className="opacity-0 group-hover:opacity-100 text-[10px] font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 rounded-full transition-opacity flex items-center gap-1">
-              <Edit3 className="w-2.5 h-2.5" />
-              <span>{actionHint}</span>
-            </span>
-          )}
-          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${deltaPositive ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800' : 'text-amber-600 bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800'}`}>
-            {deltaPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+        {delta && (
+          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+            deltaPositive 
+              ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80' 
+              : 'text-amber-700 bg-amber-50 border-amber-200/80'
+          }`}>
+            {deltaPositive ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-amber-600" />}
             {delta}
           </span>
-        </div>
+        )}
       </div>
       <div>
-        {roleTag && (
-          <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-slate-400 block mb-0.5">
-            {roleTag}
-          </span>
-        )}
         <div className="flex items-baseline justify-between">
           <p className="text-2xl sm:text-3xl font-extrabold tracking-tight font-sans" style={{ color: 'var(--c-fg)' }}>{value}</p>
         </div>
         <p className="text-xs mt-1 font-medium" style={{ color: 'var(--c-muted)' }}>{label}</p>
       </div>
       {showBar && barValue !== undefined && (
-        <div className="h-1.5 w-full rounded-full overflow-hidden mt-0.5" style={{ backgroundColor: 'var(--c-surface-3)' }}>
+        <div className="h-1.5 w-full rounded-full overflow-hidden mt-0.5" style={{ backgroundColor: 'var(--c-surface-2)' }}>
           <div
             className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-indigo-500 to-purple-600"
             style={{ width: `${Math.min(Math.max(barValue, 0), 100)}%` }}
@@ -600,15 +591,6 @@ export default function SaaSDashboard({
       {/* ── 1. Welcome & Status Sentinel (Airy, Clean, High Contrast) ──── */}
       <Section delay={0.03} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 border border-indigo-200/80 shadow-xs" style={{ color: 'var(--c-accent)' }}>
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              <span>AI Executive Council · Synchronized</span>
-            </span>
-            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border" style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)', color: 'var(--c-muted)' }}>
-              {startup.fundingStage || 'Pre-Seed'}
-            </span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: 'var(--c-fg)' }}>
             {getGreeting()}, {firstName}
           </h1>
@@ -641,7 +623,7 @@ export default function SaaSDashboard({
       <Section delay={0.06} className="rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.03)] overflow-hidden transition-all backdrop-blur-xl" style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)' }}>
         {/* Command Orchestrator Header Bar */}
         <div 
-          className="px-6 py-3.5 flex items-center justify-between border-b text-xs flex-wrap gap-2"
+          className="px-6 py-3.5 flex items-center justify-between border-b text-xs"
           style={{ backgroundColor: 'var(--c-surface-2)', borderColor: 'var(--c-border)' }}
         >
           <div className="flex items-center gap-2.5">
@@ -649,15 +631,9 @@ export default function SaaSDashboard({
               <Bot className="w-4 h-4" />
             </div>
             <div>
-              <span className="font-bold text-xs block" style={{ color: 'var(--c-fg)' }}>Sophia Vance · CEO Agent</span>
-              <span className="text-[10px] font-medium" style={{ color: 'var(--c-muted)' }}>Autonomous Strategic Dispatcher</span>
+              <span className="font-bold text-xs block" style={{ color: 'var(--c-fg)' }}>Sophia Vance</span>
+              <span className="text-[10px] font-medium" style={{ color: 'var(--c-muted)' }}>Executive Directive Dispatcher</span>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full border text-emerald-600 bg-emerald-500/10 border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live Council</span>
-            </span>
           </div>
         </div>
 
@@ -972,26 +948,13 @@ export default function SaaSDashboard({
               Financial Telemetry & Treasury
             </h2>
           </div>
-          <button
-            onClick={() => {
-              setEditCash(cashBalance);
-              setEditBurn(burnRate);
-              setIsCalibratingTreasury(true);
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border hover:border-indigo-400 transition-all shadow-xs cursor-pointer"
-            style={{ backgroundColor: 'var(--c-surface)', borderColor: 'var(--c-border)', color: 'var(--c-fg)' }}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Calibrate</span>
-          </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard
             icon={<Hourglass className="w-5 h-5 text-indigo-600" />}
-            roleTag="CFO AGENT · RUNWAY"
             accentColor="bg-indigo-50"
-            label="Verified Runway Horizon"
+            label="Runway Horizon"
             value={`${runwayMonths.toFixed(1)} Mo`}
             delta={
               isRunwayCritical
@@ -1006,13 +969,11 @@ export default function SaaSDashboard({
               setEditBurn(burnRate);
               setIsCalibratingTreasury(true);
             }}
-            actionHint="Calibrate"
           />
           <KpiCard
             icon={<Wallet className="w-5 h-5 text-emerald-600" />}
-            roleTag="TREASURY RESERVES"
             accentColor="bg-emerald-50"
-            label="Total Cash In Treasury"
+            label="Treasury Reserves"
             value={formatCurrency(cashBalance)}
             delta={`${burnRate > 0 ? `${monthlyBurnRatio}% burn/mo` : 'Active Treasury'}`}
             deltaPositive={burnRate < cashBalance * 0.15}
@@ -1021,11 +982,9 @@ export default function SaaSDashboard({
               setEditBurn(burnRate);
               setIsCalibratingTreasury(true);
             }}
-            actionHint="Calibrate"
           />
           <KpiCard
             icon={<Flame className="w-5 h-5 text-orange-500" />}
-            roleTag="FINANCE · BURN RATE"
             accentColor="bg-orange-50"
             label="Monthly Net Burn"
             value={formatCurrency(burnRate)}
@@ -1036,13 +995,11 @@ export default function SaaSDashboard({
               setEditBurn(burnRate);
               setIsCalibratingTreasury(true);
             }}
-            actionHint="Calibrate"
           />
           <KpiCard
             icon={<Activity className="w-5 h-5 text-purple-600" />}
-            roleTag="CEO AGENT · VENTURE HEALTH"
             accentColor="bg-purple-50"
-            label="Composite Health Score"
+            label="Venture Health Score"
             value={`${healthScore} / 100`}
             delta={`${healthScore >= 70 ? '+' : ''}${(healthScore - 70).toFixed(0)} vs Baseline`}
             deltaPositive={healthScore >= 70}
