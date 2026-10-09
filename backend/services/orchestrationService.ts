@@ -79,6 +79,8 @@ interface HeadcountExtraction {
   estimatedAnnualSalary: number;
 }
 
+const exhaustedModels = new Set<string>();
+
 function extractHeadcountDetails(command: string): HeadcountExtraction {
   const lower = command.toLowerCase();
   const hiringKeywords = ['hire', 'hiring', 'headcount', 'recruit', 'bring on', 'onboard'];
@@ -630,8 +632,8 @@ export class OrchestrationService {
       const burn = canonical.financials.monthlyBurn;
       const runway = canonical.financials.runwayMonths;
 
-      const summary = `Hello! I am your AI Executive Orchestrator for ${name}. All executive specialist agents (Finance, Talent, Growth, Legal, Operations, Auditor) are active and grounded in your live company records.`;
-      const details = `Company Overview:\n• Startup: ${name} (${stage} stage, ${industry})\n• Cash Reserves: $${(cash / 1000).toFixed(1)}K\n• Monthly Burn: $${(burn / 1000).toFixed(1)}K/mo\n• Runway Horizon: ${runway} Months\n\nHow can the executive team assist you today? You can ask about hiring scenarios, financial runway modeling, GTM planning, or compliance checks.`;
+      const summary = `Hello! I am your AI Executive Orchestrator for **${name}**.`;
+      const details = `**Company Snapshot:**\n• **Stage:** ${stage} · ${industry}\n• **Treasury:** $${cash.toLocaleString()} cash ($${burn.toLocaleString()}/mo burn)\n• **Runway:** ${runway} months\n\nHow can the team assist you today? You can direct a hiring plan, test runway scenarios, plan go-to-market execution, or check company status.`;
 
       const supportingData = [
         { label: 'Startup Name', value: name, source: 'Startup Profile' },
@@ -682,8 +684,8 @@ export class OrchestrationService {
       const runway = canonical.financials.runwayMonths;
 
       const docCount = canonical.documents?.length || 0;
-      const summary = `${name} is a ${stage} company in the ${industry} sector building ${product}. Your primary target customer profile is ${icp}.`;
-      let details = `• Strategic Goals: ${goals}\n• Financial Baseline: $${cash.toLocaleString('en-US')} in cash reserves, $${burn.toLocaleString('en-US')}/mo burn rate\n• Operational Runway: ${runway} months\n• Leadership: ${canonical.founder.name} (${canonical.founder.role})\n• Knowledge Base: ${docCount > 0 ? `${docCount} verified company documents (${canonical.documents.map(d => d.name).join(', ')})` : 'Living company profile initialized'}`;
+      const summary = `**${name}** is a ${stage} stage startup in ${industry}${product ? ` building ${product}` : ''}.`;
+      let details = `• **Target Market:** ${icp}\n• **Treasury:** $${cash.toLocaleString()} cash ($${burn.toLocaleString()}/mo burn, ${runway} mos runway)\n• **Current Priorities:** ${goals}\n• **Knowledge Base:** ${docCount > 0 ? `${docCount} verified company documents` : 'Foundational company profile'}`;
 
       const supportingData = [
         { label: 'Startup Name', value: name, source: 'Startup Profile' },
@@ -766,11 +768,11 @@ export class OrchestrationService {
       let details = '';
       if (docCount === 0) {
         summary = `No corporate documents have been uploaded for ${name} yet.`;
-        details = `Your company workspace is currently grounded in your foundational onboarding profile and treasury records. To expand your AI council's RAG knowledge, upload pitch decks, PRDs, contracts, or financial plans in the Knowledge Center.`;
+        details = `Your company workspace is grounded in your foundational onboarding profile. You can upload pitch decks, PRDs, contracts, or financial plans in the Knowledge Center to expand RAG intelligence.`;
       } else {
-        summary = `${name} has ${docCount} verified document(s) indexed in the corporate Knowledge Base, fully accessible across all executive agents.`;
-        const docList = docs.map((d, i) => `• [${d.type.toUpperCase()}] **${d.name}** (${d.size || 'Grounded'})\n  Summary: ${d.summary || 'Strategic corporate reference.'}`).join('\n\n');
-        details = `### Verified Company Documents (RAG Grounded):\n${docList}\n\nAll documents are tenant-isolated and actively accessible to CEO, CFO, CMO, CTO, Legal, and Operations agents.`;
+        summary = `${name} has ${docCount} verified document(s) in its corporate knowledge base.`;
+        const docList = docs.map((d, i) => `• **${d.name}** (${d.type.toUpperCase()}): ${d.summary || 'Strategic corporate reference.'}`).join('\n');
+        details = `**Verified Documents:**\n${docList}`;
       }
 
       const evidence = (retrievedChunks.length > 0 ? retrievedChunks : docs).map((item: any, idx: number) => ({
@@ -894,10 +896,8 @@ export class OrchestrationService {
       const burn = canonical.financials.monthlyBurn;
       const runway = canonical.financials.runwayMonths;
 
-      const summary = `Based on your current cash balance of ₹${cash.toLocaleString()} and monthly burn rate of ₹${burn.toLocaleString()}/mo, your active runway is approximately ${runway} months.`;
-      const details = runway < 6
-        ? '⚠️ High Risk Warning: Runway has dropped below 6 months. Prioritize cash preservation and immediate bridge fundraising.'
-        : 'Treasury status is within safe operational thresholds (> 12 months) for continuous milestone execution.';
+      const summary = `Your active runway is **${runway} months**, with $${cash.toLocaleString()} in liquid reserves and a monthly burn of $${burn.toLocaleString()}/mo.`;
+      const details = `• **Cash Reserves:** $${cash.toLocaleString()}\n• **Monthly Net Burn:** $${burn.toLocaleString()}/mo\n• **Runway Horizon:** ${runway} months\n• **Status:** ${runway < 6 ? '⚠️ Low Runway (<6 months): Prioritize runway extension or fundraising.' : '✓ Operational runway is healthy (>6 months).'}`;
 
       const supportingData = [
         { label: 'Cash Balance', value: `₹${cash.toLocaleString()}`, source: 'Neon PostgreSQL Treasury' },
@@ -1156,56 +1156,51 @@ export class OrchestrationService {
 
     if (ai) {
       const calculationsSummary = calculations.length > 0
-        ? calculations.map(c => `- **${c.metric}:** ${c.value} (${c.source})`).join('\n')
-        : 'NONE (This inquiry does not require treasury or headcount math).';
+        ? calculations.map(c => `- ${c.metric}: ${c.value}`).join('\n')
+        : '';
 
       const history = this.conversationMemory.get(startupId) || [];
-      const recentContext = history.slice(-4).map(h => `${h.role === 'founder' ? 'Founder' : 'Catalyst'}: ${h.content}`).join('\n');
-
-      const councilFindingsText = Array.from(councilResult.executiveResults.values())
-        .map(r => `• ${r.role} [Vote: ${r.vote.verdict}]: ${r.recommendation}${r.conditions.length > 0 ? ` (Conditions: ${r.conditions.join('; ')})` : ''}`)
-        .join('\n');
+      const recentContext = history.slice(-2).map(h => `${h.role === 'founder' ? 'Founder' : 'Catalyst'}: ${h.content}`).join('\n');
 
       const synthesisPrompt = `
-You are the CEO of Catalyst OS, an autonomous startup operating system.
-You are delivering a unified, grounded, decision-ready response to the Founder.
+You are the CEO and AI Executive Orchestrator of ${activeStartup.name}.
+Founder Command: "${command}"
+Intent: ${analysis.intent} - ${analysis.objective}
 
-FOUNDER COMMAND: "${command}"
-INTENT: ${analysis.intent} - ${analysis.objective}
+COMPANY CONTEXT:
+- Startup: ${activeStartup.name} (${activeStartup.fundingStage || 'Early'} Stage, ${activeStartup.industry})
+- Financial Ground Truth: Cash $${activeStartup.cashBalance.toLocaleString()} | Monthly Burn $${activeStartup.burnRate.toLocaleString()}/mo | Runway ${baseRunway} months
+${calculationsSummary ? `- Calculations:\n${calculationsSummary}` : ''}
+${retrievedContextText !== 'No specific internal documents were indexed or retrieved.' ? `- Verified Knowledge Base:\n${retrievedContextText.slice(0, 500)}` : ''}
 
-CANONICAL COMPANY CONTEXT (SINGLE SOURCE OF TRUTH):
-${companyContextService.toPromptContext(canonical, 'CEO', command)}
-
-${recentContext ? `RECENT CONVERSATION HISTORY:\n${recentContext}\n` : ''}
-${calculations.length > 0 ? `DETERMINISTIC APPLICATION CALCULATIONS:\n${calculationsSummary}\n` : ''}
-${retrievedContextText !== 'No specific internal documents were indexed or retrieved.' ? `INTERNAL VERIFIED KNOWLEDGE BASE:\n${retrievedContextText}\n` : 'NO RELEVANT INTERNAL COMPANY DOCUMENTS FOUND FOR THIS TOPIC.'}
-
-INDEPENDENT EXECUTIVE COUNCIL DELIBERATIONS & FORMAL VOTES:
-${councilFindingsText}
-
-BOARD CONSENSUS:
+EXECUTIVE COUNCIL RECOMMENDATION:
 ${councilResult.boardConsensus.summary}
-${councilResult.boardConsensus.hasUnresolvedVeto ? '⚠️ CRITICAL: Council consensus is BLOCKED by one or more formal executive vetoes.' : '✓ Board consensus satisfied.'}
 
-EXPLICIT OPERATING PLAN:
+OPERATIONAL ACTION PLAN:
 ${decomposedPlan.formattedPlanText}
 
 INSTRUCTIONS:
-1. Deliver ONE authoritative executive briefing written from the perspective of the CEO synthesizing the real council deliberation above.
-2. If an active veto is present, explain the exact risk and propose alternative restructuring or escalation.
-3. For startup identity questions, state company name, industry, and description.
-4. Prominently include the explicit PLAN with numbered steps in your response details.
-5. Return clean JSON matching this exact structure:
+Deliver a concise, direct, and high-value response just like top modern LLMs (e.g. ChatGPT, Claude, Gemini):
+1. "summary": 1-2 decisive sentences giving the direct answer or executive verdict. No generic filler or preamble.
+2. "details": Crisp, readable breakdown:
+   - **Key Takeaways**: 1-2 short bullet points on the financial/operational impact.
+   - **Action Plan**: The numbered steps for execution.
+3. STRICTLY PROHIBITED: Do NOT dump raw voting ballots, internal agent deliberation transcripts, condition lists, calculation sources, or duplicate plan text. Keep it clean, executive, and immediately actionable.
+
+Return JSON:
 {
-  "summary": "1-3 sentence decisive executive verdict or direct answer",
-  "details": "Actionable breakdown with specific bullet points and next steps, including the PLAN",
+  "summary": "1-2 decisive sentences giving the direct answer",
+  "details": "Key Takeaways and Action Plan",
   "confidence": 0.95
 }
 `;
 
       try {
         const preferredModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-        const candidateModels = Array.from(new Set([preferredModel, 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3.6-flash']));
+        const candidatePool = Array.from(new Set([preferredModel, 'gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-3.6-flash']));
+        const candidateModels = candidatePool.filter(m => !exhaustedModels.has(m)).length > 0
+          ? candidatePool.filter(m => !exhaustedModels.has(m))
+          : candidatePool;
         let rawSynthesis = '';
         let lastErr: any = null;
 
@@ -1229,6 +1224,9 @@ INSTRUCTIONS:
             lastErr = mErr;
             const errCode = classifyAIError(mErr);
             console.warn(`[Synthesis] Model ${candidate} failed with ${errCode}: ${mErr.message}. Trying next candidate model...`);
+            if (errCode === 'QUOTA_EXCEEDED') {
+              exhaustedModels.add(candidate);
+            }
             if (errCode === 'SERVICE_UNAVAILABLE' || errCode === 'RATE_LIMITED' || errCode === 'QUOTA_EXCEEDED') {
               await new Promise(r => setTimeout(r, 600));
             }
@@ -1241,9 +1239,16 @@ INSTRUCTIONS:
         }
 
         const parsedSynthesis = JSON.parse(rawSynthesis);
-        finalSummary = parsedSynthesis.summary || councilResult.finalSynthesis.summary;
-        finalDetails = parsedSynthesis.details || councilResult.finalSynthesis.details;
-        confidence = parsedSynthesis.confidence || 0.95;
+        finalSummary = typeof parsedSynthesis.summary === 'string' ? parsedSynthesis.summary : (councilResult.finalSynthesis.summary || '');
+        const rawDetails = parsedSynthesis.details ?? councilResult.finalSynthesis.details;
+        if (Array.isArray(rawDetails)) {
+          finalDetails = rawDetails.join('\n\n');
+        } else if (typeof rawDetails === 'object' && rawDetails !== null) {
+          finalDetails = Object.entries(rawDetails).map(([k, v]) => `### ${k}\n${Array.isArray(v) ? v.join('\n') : v}`).join('\n\n');
+        } else {
+          finalDetails = String(rawDetails || '');
+        }
+        confidence = typeof parsedSynthesis.confidence === 'number' ? parsedSynthesis.confidence : 0.95;
       } catch (err: any) {
         const errCode = classifyAIError(err);
         console.error(`[AI] provider=gemini error=${errCode} action=NO_RETRY message="${err.message}"`);
@@ -1291,8 +1296,8 @@ INSTRUCTIONS:
           }
         } else if (analysis.intent === 'hiring_scenario' || (decomposedPlan && decomposedPlan.explicitSteps.length > 0)) {
           console.log(`[Command] commandId=${commandId} Grounded in deterministic multi-agent council decomposition and hiring plan.`);
-          finalSummary = councilResult.finalSynthesis.summary || `Executive Council formulated hiring plan for: "${command}".`;
-          finalDetails = `PLAN\n\n${decomposedPlan.formattedPlanText}\n\n${councilResult.finalSynthesis.details || ''}`;
+          finalSummary = councilResult.finalSynthesis.summary || `Executive recommendation prepared for: "${command}".`;
+          finalDetails = `${councilResult.finalSynthesis.details || ''}\n\n### Operational Plan\n${decomposedPlan.formattedPlanText}`;
           confidence = 0.95;
 
           for (const ag of agents) {
@@ -1336,9 +1341,13 @@ INSTRUCTIONS:
       confidence = 0.5;
     }
 
-    // Ensure the explicit execution plan is cleanly appended to details
-    if (!finalDetails.includes('1.') || !finalDetails.toLowerCase().includes('plan')) {
-      finalDetails = `${finalDetails}\n\n${decomposedPlan.formattedPlanText}`;
+    // Ensure finalDetails and finalSummary are safe strings
+    finalSummary = typeof finalSummary === 'string' ? finalSummary : String(finalSummary || '');
+    finalDetails = typeof finalDetails === 'string' ? finalDetails : String(finalDetails || '');
+
+    // Ensure the explicit execution plan is cleanly appended to details if not already present
+    if (decomposedPlan.explicitSteps.length > 0 && !finalDetails.includes(decomposedPlan.explicitSteps[0])) {
+      finalDetails = `${finalDetails}\n\n### Operational Plan\n${decomposedPlan.formattedPlanText}`;
     }
 
     onEvent?.({ type: 'chunk', text: finalSummary });

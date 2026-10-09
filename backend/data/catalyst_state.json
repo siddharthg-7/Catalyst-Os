@@ -7,15 +7,15 @@
     "cashBalance": 450000,
     "burnRate": 26000,
     "runwayMonths": 17.3,
-    "healthScore": 89,
+    "healthScore": 86,
     "metrics": {
-      "velocity": 80,
-      "financialHealth": 90,
+      "velocity": 85,
+      "financialHealth": 88,
       "legalCompliance": 90,
-      "growthRate": 65,
+      "growthRate": 60,
       "operationsEfficiency": 82
     },
-    "teamSize": 26
+    "teamSize": 30
   },
   "initiatives": [
     {
@@ -32,7 +32,7 @@
           "title": "Stress test runway impact of 2 new senior hires (-₹4L/mo) vs 1 senior hire (-₹2L/mo) against ₹72L reserves",
           "assignedTo": "Finance",
           "status": "completed",
-          "result": "Aura (Finance) runway audit: NovaTech holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway."
+          "result": "Aura (Finance) runway audit: Our startup holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway."
         },
         {
           "id": "task_o1",
@@ -61,7 +61,7 @@
           "id": "msg_finance_1791494661753",
           "sender": "Finance",
           "receiver": "CEO",
-          "content": "Aura (Finance) runway audit: NovaTech holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway.\n\n**Recommendations:**\n- **Approve 1 Senior Hire (Defer Second Hire to Post-Launch)**: Authorizes 1 senior platform engineer. Preserves 7.8 months of operational runway while unlocking core backend throughput. (Est. Impact: $-200000)",
+          "content": "Aura (Finance) runway audit: Our startup holds ₹72,00,000 in liquid reserves with an ₹8,00,000/month burn rate (9.0 months runway). Adding 2 senior engineers increases monthly burn to ₹12,00,000/mo, collapsing runway to 5.5 months—breaching our 6-month safety buffer before the enterprise launch. Adding 1 senior engineer increases monthly burn to ₹10,00,000/mo, maintaining a safe 7.8 months of runway.\n\n**Recommendations:**\n- **Approve 1 Senior Hire (Defer Second Hire to Post-Launch)**: Authorizes 1 senior platform engineer. Preserves 7.8 months of operational runway while unlocking core backend throughput. (Est. Impact: $-200000)",
           "timestamp": "2026-10-08T21:24:21.753Z",
           "isConflict": true
         },
@@ -119,6 +119,42 @@
     }
   ],
   "approvals": [
+    {
+      "id": "appr_1791535930596_k80x",
+      "initiativeId": "init_executive",
+      "title": "Migrate Core Cluster to Bare-Metal Data Center",
+      "description": "Infrastructure relocation commitment.",
+      "type": "contract",
+      "content": "Infrastructure relocation commitment.",
+      "impact": "Requires founder verification.",
+      "financialChange": -50000,
+      "status": "pending_review",
+      "metricChanges": {
+        "velocity": 0,
+        "financialHealth": 0,
+        "legalCompliance": 0,
+        "growthRate": 0,
+        "operationsEfficiency": 0
+      }
+    },
+    {
+      "id": "appr_1791535131937_cxwm",
+      "initiativeId": "init_executive",
+      "title": "Migrate Core Cluster to Bare-Metal Data Center",
+      "description": "Infrastructure relocation commitment.",
+      "type": "contract",
+      "content": "Infrastructure relocation commitment.",
+      "impact": "Requires founder verification.",
+      "financialChange": -50000,
+      "status": "pending_review",
+      "metricChanges": {
+        "velocity": 0,
+        "financialHealth": 0,
+        "legalCompliance": 0,
+        "growthRate": 0,
+        "operationsEfficiency": 0
+      }
+    },
     {
       "id": "appr_1791522736834_yaa4",
       "initiativeId": "init_executive",
@@ -283,6 +319,86 @@
     }
   ],
   "decisionLog": [
+    {
+      "id": "dec_1791535990868",
+      "title": "Approve: Strategic Angel Seed Extension Tranche",
+      "description": "Closing $250,000 strategic angel extension from robotics syndicate.",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T08:53:10.868Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 250000,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791535968566",
+      "title": "Approve: Approve Enterprise Sales One-Pager & Pitch Deck",
+      "description": "Marketing and customer collateral review for upcoming industry summit.",
+      "category": "DOCUMENT",
+      "timestamp": "2026-10-09T08:52:48.566Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 0,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791535928292",
+      "title": "Reject: Procure 10x Industrial Edge GPU Nodes",
+      "description": "Rejected by founder with feedback: \"Postpone capital expenditure until Series A financing.\"",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T08:52:08.292Z",
+      "impactText": "No operational metrics modified.",
+      "financialImpact": 0,
+      "status": "rejected"
+    },
+    {
+      "id": "dec_1791535908723",
+      "title": "Approve: Hire 2x Senior Robotics Systems Engineer",
+      "description": "Expands core perception stack and automated navigation throughput.",
+      "category": "CONTRACT",
+      "timestamp": "2026-10-09T08:51:48.723Z",
+      "impactText": "Increases monthly burn by $16,000/mo. Projected runway: 12.2 months.",
+      "financialImpact": -16000,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791535197832",
+      "title": "Approve: Strategic Angel Seed Extension Tranche",
+      "description": "Closing $250,000 strategic angel extension from robotics syndicate.",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T08:39:57.832Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 250000,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791535172918",
+      "title": "Approve: Approve Enterprise Sales One-Pager & Pitch Deck",
+      "description": "Marketing and customer collateral review for upcoming industry summit.",
+      "category": "DOCUMENT",
+      "timestamp": "2026-10-09T08:39:32.918Z",
+      "impactText": "Requires founder verification.",
+      "financialImpact": 0,
+      "status": "approved"
+    },
+    {
+      "id": "dec_1791535129139",
+      "title": "Reject: Procure 10x Industrial Edge GPU Nodes",
+      "description": "Rejected by founder with feedback: \"Postpone capital expenditure until Series A financing.\"",
+      "category": "FINANCIALS",
+      "timestamp": "2026-10-09T08:38:49.139Z",
+      "impactText": "No operational metrics modified.",
+      "financialImpact": 0,
+      "status": "rejected"
+    },
+    {
+      "id": "dec_1791535107434",
+      "title": "Approve: Hire 2x Senior Robotics Systems Engineer",
+      "description": "Expands core perception stack and automated navigation throughput.",
+      "category": "CONTRACT",
+      "timestamp": "2026-10-09T08:38:27.434Z",
+      "impactText": "Increases monthly burn by $16,000/mo. Projected runway: 12.2 months.",
+      "financialImpact": -16000,
+      "status": "approved"
+    },
     {
       "id": "dec_1791522788334",
       "title": "Approve: Strategic Angel Seed Extension Tranche",
@@ -636,6 +752,66 @@
   ],
   "knowledgeFiles": [
     {
+      "id": "doc_profile_6ffcbeab-5153-4be7-8cfd-1c55015a73ad",
+      "name": "[Company Profile] BioGen Systems",
+      "type": "business_plan",
+      "size": "3.2 KB",
+      "uploadDate": "2026-10-09T08:51:12.023Z",
+      "summary": "BioGen Systems is a pre-seed biotechnology startup developing an AI genomic analysis platform to accelerate clinical turnaround for genome sequencing. With a robust 20-month runway, the immediate strategic focus must be on achieving MVP delivery within 120 days and initiating critical market customer acquisition efforts. This strong financial position provides ample opportunity to de-risk the product and validate market fit.",
+      "insights": [
+        "The target ICP of Genomics Diagnostic Labs is well-defined, but the primary challenge lies in effectively acquiring these initial customers, which will be crucial for validating the product and market fit.",
+        "With a $200,000 cash balance and a lean $10,000 monthly burn, BioGen Systems boasts an impressive 20-month runway, providing ample time to achieve key milestones without immediate financial pressure.",
+        "The AI genomic analysis platform directly addresses the significant pain point of slow clinical turnaround, but successful MVP delivery is paramount to demonstrate value and overcome the technical and market adoption hurdles.",
+        "The ambitious 120-day milestone for MVP delivery is a critical operational target that, if met, will significantly de-risk the product and enable early customer engagement and feedback loops."
+      ],
+      "startupId": "6ffcbeab-5153-4be7-8cfd-1c55015a73ad"
+    },
+    {
+      "id": "doc_profile_54802bb1-429a-4f4e-990e-22bc2c6ac4a4",
+      "name": "[Company Profile] Apex Robotics Inc",
+      "type": "business_plan",
+      "size": "2.8 KB",
+      "uploadDate": "2026-10-09T08:50:40.871Z",
+      "summary": "Apex Robotics Inc is a Seed-stage company addressing critical inefficiencies in 3PL logistics with autonomous warehouse robots. With a strong 20-month financial runway and existing Tier-1 enterprise pilots, the immediate strategic focus is on successful MVP delivery within 90 days and scaling customer acquisition. This early market validation positions the company well for significant growth in a high-demand sector.",
+      "insights": [
+        "Early validation from 'Tier-1 enterprise pilots' is a significant advantage for market entry into 3PL Logistics, but scaling customer acquisition post-pilot remains a critical growth hurdle.",
+        "A 20-month runway provides substantial financial stability for a Seed-stage company, allowing ample time to achieve MVP delivery and secure follow-on funding without immediate pressure.",
+        "The product directly addresses a high-value problem in high-throughput fulfillment hubs, but successful MVP delivery within the 90-day timeline is paramount to convert pilots and demonstrate core value.",
+        "The aggressive 90-day milestone for MVP delivery, coupled with existing enterprise pilots, indicates a high-pressure operational environment requiring precise execution and resource allocation."
+      ],
+      "startupId": "54802bb1-429a-4f4e-990e-22bc2c6ac4a4"
+    },
+    {
+      "id": "doc_profile_e8e4cb7f-78b2-48e7-83af-426f8152517b",
+      "name": "[Company Profile] BioGen Systems",
+      "type": "business_plan",
+      "size": "3.5 KB",
+      "uploadDate": "2026-10-09T08:37:47.185Z",
+      "summary": "BioGen Systems is a pre-seed biotechnology startup developing an AI genomic analysis platform to address the slow clinical turnaround for genome sequencing. With a robust 20-month runway, the immediate strategic focus is on delivering an MVP within 120 days and initiating market customer acquisition among Genomics Diagnostic Labs.",
+      "insights": [
+        "The target ICP of Genomics Diagnostic Labs is well-defined, but the primary growth challenge lies in effective market customer acquisition for a pre-seed product in a specialized industry.",
+        "BioGen Systems boasts a robust financial position with a $200,000 cash balance and a low $10,000 monthly burn, providing an excellent 20-month runway for critical early-stage development and market validation.",
+        "The core product, an AI genomic analysis platform, directly tackles a significant industry problem of slow clinical turnaround, with MVP delivery being the critical near-term product challenge.",
+        "The ambitious 120-day milestone for MVP delivery is a key operational objective, directly impacting the ability to address the market customer acquisition challenge and validate the product's value."
+      ],
+      "startupId": "e8e4cb7f-78b2-48e7-83af-426f8152517b"
+    },
+    {
+      "id": "doc_profile_80de8816-9275-4c2d-885e-40d0792b7935",
+      "name": "[Company Profile] Apex Robotics Inc",
+      "type": "business_plan",
+      "size": "2.9 KB",
+      "uploadDate": "2026-10-09T08:37:14.445Z",
+      "summary": "Apex Robotics Inc. is a Seed-stage company addressing critical inefficiencies in 3PL logistics with autonomous warehouse mobile robots. With a robust 20-month runway and significant validation from signed Tier-1 enterprise pilots, the company is well-positioned for initial market penetration. The immediate focus must be on successful MVP delivery within 90 days and converting pilot engagements into long-term customer contracts.",
+      "insights": [
+        "The signed Tier-1 enterprise pilots provide strong market validation and a clear pathway for initial customer acquisition, significantly de-risking early market entry for Apex Robotics.",
+        "With a 20-month runway and a lean monthly burn, Apex Robotics possesses excellent financial stability for a Seed-stage company, allowing ample time for product development and market traction without immediate fundraising pressure.",
+        "The 90-day MVP delivery timeline is ambitious but critical; successful execution will be paramount for converting pilot engagements into paying customers and demonstrating product viability.",
+        "The core challenge of market customer acquisition post-pilot requires a well-defined strategy to scale beyond initial engagements and capitalize on the validated need within 3PL Logistics."
+      ],
+      "startupId": "80de8816-9275-4c2d-885e-40d0792b7935"
+    },
+    {
       "id": "doc_profile_e36571eb-bd46-4c5b-b5fe-2e90dc491b7e",
       "name": "[Company Profile] BioGen Systems",
       "type": "business_plan",
@@ -948,21 +1124,6 @@
         "Runway preservation guardrail: Maintain a minimum 6-month operational runway buffer at all times before approving non-essential headcount expansion.",
         "Target ICP: Mid-market B2B SaaS engineering teams with 20-100 developers building microservices.",
         "Engineering capacity is the primary delivery bottleneck; strategic technical hiring is prioritized over sales expansion."
-      ]
-    },
-    {
-      "id": "doc_novatech_strategy",
-      "name": "NovaTech_Enterprise_Strategy.md",
-      "type": "pitch_deck",
-      "size": "18.4 KB",
-      "uploadDate": "2026-10-05T09:00:00.000Z",
-      "startupId": "st_catalystos",
-      "summary": "Executive roadmap for NovaTech Enterprise Orchestrator. Documents our 6-week launch timeline with 5 pilot enterprise customers, 3 developers bandwidth bottleneck, and ₹8L/mo burn boundary.",
-      "insights": [
-        "Enterprise launch is firmly committed in 6 weeks with 5 pilot partner contracts.",
-        "The engineering team currently has only 3 core developers and is operating at 95% workload capacity.",
-        "Hiring 2 senior engineers immediately would accelerate backend pipeline delivery, but increases monthly burn by ₹4L/mo, dangerously reducing runway from 9 months to 5.5 months.",
-        "Orchestrator consensus recommendation: Hire 1 senior platform engineer now, and postpone the second hire until enterprise launch revenue milestone is reached."
       ]
     }
   ]

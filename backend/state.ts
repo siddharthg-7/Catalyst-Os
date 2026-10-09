@@ -205,21 +205,6 @@ export const DEFAULT_KNOWLEDGE_FILES: KnowledgeFile[] = [
       'Target ICP: Mid-market B2B SaaS engineering teams with 20-100 developers building microservices.',
       'Engineering capacity is the primary delivery bottleneck; strategic technical hiring is prioritized over sales expansion.'
     ]
-  },
-  {
-    id: 'doc_novatech_strategy',
-    name: 'NovaTech_Enterprise_Strategy.md',
-    type: 'pitch_deck',
-    size: '18.4 KB',
-    uploadDate: '2026-10-05T09:00:00.000Z',
-    startupId: 'st_catalystos',
-    summary: 'Executive roadmap for NovaTech Enterprise Orchestrator. Documents our 6-week launch timeline with 5 pilot enterprise customers, 3 developers bandwidth bottleneck, and ₹8L/mo burn boundary.',
-    insights: [
-      'Enterprise launch is firmly committed in 6 weeks with 5 pilot partner contracts.',
-      'The engineering team currently has only 3 core developers and is operating at 95% workload capacity.',
-      'Hiring 2 senior engineers immediately would accelerate backend pipeline delivery, but increases monthly burn by ₹4L/mo, dangerously reducing runway from 9 months to 5.5 months.',
-      'Orchestrator consensus recommendation: Hire 1 senior platform engineer now, and postpone the second hire until enterprise launch revenue milestone is reached.'
-    ]
   }
 ];
 

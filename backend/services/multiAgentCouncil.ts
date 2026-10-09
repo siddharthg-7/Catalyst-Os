@@ -1175,36 +1175,38 @@ export class MultiAgentCouncil {
     let summaryText = '';
     let detailsText = '';
 
-    const bulletPoints: string[] = [];
-    if (talentOutput) {
-      bulletPoints.push(`• Talent: Sourcing timeline ~${talentOutput.onboardingLeadTimeDays} days at $${talentOutput.baseSalary.toLocaleString()}/yr base.`);
-    }
+    const keyTakeaways: string[] = [];
     if (cfoRes) {
-      bulletPoints.push(`• Finance: Projected runway ${cfoRes.financialImpact?.projectedRunway ?? context.financials.runwayMonths} months (burn impact: ${monthlyBurnDelta > 0 ? `+$${monthlyBurnDelta.toLocaleString()}/mo` : '$0/mo'}).`);
+      keyTakeaways.push(`• Finance: Projected runway is ${cfoRes.financialImpact?.projectedRunway ?? context.financials.runwayMonths} months (net burn delta: ${monthlyBurnDelta > 0 ? `+$${monthlyBurnDelta.toLocaleString()}/mo` : '$0/mo'}).`);
+    }
+    if (talentOutput) {
+      keyTakeaways.push(`• Talent: Sourcing timeline ~${talentOutput.onboardingLeadTimeDays} days for ${talentOutput.count}x ${talentOutput.role} ($${talentOutput.baseSalary.toLocaleString()}/yr base).`);
     }
     if (executiveResults.has('Growth')) {
       const g = executiveResults.get('Growth')!;
-      bulletPoints.push(`• Growth: ${g.recommendation}`);
+      keyTakeaways.push(`• Growth: ${g.recommendation}`);
     }
     if (executiveResults.has('Legal')) {
       const l = executiveResults.get('Legal')!;
-      bulletPoints.push(`• Legal: ${l.recommendation}`);
+      keyTakeaways.push(`• Legal: ${l.recommendation}`);
     }
     if (executiveResults.has('Operations')) {
       const o = executiveResults.get('Operations')!;
-      bulletPoints.push(`• Operations: ${o.recommendation}`);
+      keyTakeaways.push(`• Operations: ${o.recommendation}`);
     }
-    bulletPoints.push(`• Consensus: ${consensusSummary}`);
+    if (hasUnresolvedVeto) {
+      keyTakeaways.push(`• Veto Notice: ${consensusSummary}`);
+    }
 
     if (hasUnresolvedVeto) {
-      summaryText = `Council execution blocked by formal veto. Escalated to Founder for review.`;
-      detailsText = `Executive Veto: ${consensusSummary}. The proposal cannot proceed automatically without restructuring.\n\n${bulletPoints.join('\n')}`;
+      summaryText = `Proposal requires founder review due to an executive council veto.`;
+      detailsText = `**Key Risk:** ${consensusSummary}\n\n${keyTakeaways.join('\n')}`;
     } else if (isHiring && talentOutput) {
-      summaryText = `Executive Council recommends hiring ${talentOutput.count}x ${talentOutput.role} at $${talentOutput.baseSalary.toLocaleString()}/yr base.`;
-      detailsText = bulletPoints.join('\n');
+      summaryText = `Executive recommendation: Authorize ${talentOutput.count}x ${talentOutput.role} headcount requisition.`;
+      detailsText = keyTakeaways.join('\n');
     } else {
-      summaryText = `Executive Council completed cross-functional analysis for: "${command}".`;
-      detailsText = bulletPoints.join('\n');
+      summaryText = `Strategic analysis complete for: "${command}".`;
+      detailsText = keyTakeaways.length > 0 ? keyTakeaways.join('\n') : `Evaluated across operations and treasury parameters.`;
     }
 
     agentRunService.completeWorkflow(

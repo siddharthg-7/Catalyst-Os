@@ -2552,7 +2552,7 @@ function generateGroundedRagFallback(
   }
 ): string {
   const q = query.toLowerCase();
-  const runwayMonths = startup.burnRate > 0 ? (startup.cashBalance / startup.burnRate).toFixed(1) : '999';
+  const runwayMonths = startup.burnRate > 0 ? (startup.cashBalance / startup.burnRate).toFixed(1) : 'Sustainable';
 
   // 1. Runway / Treasury / Financial Inquiry
   if (
@@ -2564,20 +2564,13 @@ function generateGroundedRagFallback(
     q.includes('budget') ||
     q.includes('money')
   ) {
-    let answer = `### Financial & Runway Status: ${startup.name}\n\n`;
-    answer += `Based on verified financial records in your corporate treasury:\n\n`;
-    answer += `* **Cash Reserves:** $${startup.cashBalance.toLocaleString()}\n`;
-    answer += `* **Monthly Net Burn:** $${startup.burnRate.toLocaleString()}/month\n`;
-    answer += `* **Projected Runway:** **${runwayMonths} months**\n`;
-    answer += `* **Funding Stage:** ${startup.fundingStage}\n\n`;
+    let answer = `**${startup.name} Financial Status**\n\n`;
+    answer += `• **Cash Reserves:** ${startup.cashBalance.toLocaleString()}\n`;
+    answer += `• **Monthly Burn:** ${startup.burnRate.toLocaleString()}/mo\n`;
+    answer += `• **Projected Runway:** **${runwayMonths} months** (${startup.fundingStage} stage)\n`;
 
     if (citations.length > 0) {
-      answer += `#### Corroborating Corporate Records\n`;
-      citations.slice(0, 3).forEach((c) => {
-        const snippet = c.chunkContent.replace(/\\s+/g, ' ').trim().slice(0, 200);
-        answer += `* ${c.citationId} **${c.documentName}**: "${snippet}..."\n`;
-      });
-      answer += `\n*Executive Note:* Treasury projections are calculated deterministically from active ledger balances.`;
+      answer += `\n*Source: ${citations[0].documentName}*`;
     }
     return answer;
   }
@@ -2592,40 +2585,28 @@ function generateGroundedRagFallback(
     q.includes('what is') ||
     q.includes('about')
   ) {
-    let answer = `### Executive Summary: ${startup.name}\n\n`;
-    answer += `* **Company Name:** ${startup.name}\n`;
-    answer += `* **Industry Sector:** ${startup.industry}\n`;
-    answer += `* **Funding Stage:** ${startup.fundingStage}\n`;
+    let answer = `**${startup.name}** (${startup.fundingStage} stage, ${startup.industry})\n\n`;
     if (startup.description) {
-      answer += `* **Core Focus:** ${startup.description}\n`;
+      answer += `• **Core Focus:** ${startup.description}\n`;
     }
-    answer += `\n#### Grounded Knowledge Base Insights\n`;
-    citations.slice(0, 3).forEach((c) => {
-      const cleanSnippet = c.chunkContent
-        .split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 0)
-        .slice(0, 3)
-        .join('\n> ');
-      answer += `\n**From ${c.documentName}** ${c.citationId}:\n> ${cleanSnippet}\n`;
-    });
-    answer += `\n*(Extracted directly from connected corporate documents & pitch deck records)*`;
+    answer += `• **Treasury:** ${startup.cashBalance.toLocaleString()} cash | ${startup.burnRate.toLocaleString()}/mo burn (${runwayMonths} mos runway)\n`;
+    if (citations.length > 0) {
+      answer += `• **Verified Reference:** ${citations.map(c => c.documentName).join(', ')}`;
+    }
     return answer;
   }
 
   // 3. General Query Grounded Synthesis
-  let answer = `### Grounded Intelligence: ${startup.name}\n\n`;
-  answer += `Here is the verified information retrieved from your company knowledge base regarding **"${query}"**:\n\n`;
-  citations.slice(0, 3).forEach((c, idx) => {
-    const cleanSnippet = c.chunkContent
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 0)
-      .slice(0, 3)
-      .join('\n> ');
-    answer += `#### ${idx + 1}. ${c.documentName} ${c.citationId}\n> ${cleanSnippet}\n\n`;
-  });
-  answer += `*(Synthesized directly from ${citations.length} verified internal documents)*`;
+  let answer = `**${startup.name} Knowledge Base**\n\n`;
+  if (citations.length > 0) {
+    const top = citations.slice(0, 2);
+    top.forEach((c) => {
+      const snippet = c.chunkContent.replace(/\s+/g, ' ').trim().slice(0, 160);
+      answer += `• **${c.documentName}**: "${snippet}..."\n`;
+    });
+  } else {
+    answer += `No specific internal records found regarding "${query}".`;
+  }
   return answer;
 }
 

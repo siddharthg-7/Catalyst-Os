@@ -1573,14 +1573,14 @@ export async function updateTaskForUser(params: {
           data: {
             id: approvalId,
             title: approvalTitle,
-            description: summary,
+            description: rawContent || summary,
             type: approvalType,
             content: rawContent,
             impact: impact,
             financialChange: 0,
             metricChanges: metricChangesPayload as any,
             planId: row.planId,
-            status: 'pending'
+            status: 'pending_review'
           }
         });
       } else {
@@ -1588,11 +1588,11 @@ export async function updateTaskForUser(params: {
           where: { id: approvalId },
           data: {
             title: approvalTitle,
-            description: summary,
+            description: rawContent || summary,
             content: rawContent,
             impact: impact,
             metricChanges: metricChangesPayload as any,
-            status: 'pending'
+            status: 'pending_review'
           }
         });
       }
@@ -1685,20 +1685,32 @@ export function generateAgentDraftContent(task: DelegatedTask, companyName?: str
   const lower = task.title.toLowerCase();
 
   if (dept === 'TALENT' || dept === 'HR' || lower.includes('hiring') || lower.includes('engineer') || lower.includes('recruit')) {
+    const isTechRole = lower.includes('engineer') || lower.includes('developer') || lower.includes('architect') || lower.includes('platform') || lower.includes('backend') || lower.includes('frontend');
+    const isDesignRole = lower.includes('design') || lower.includes('ui') || lower.includes('ux');
+    const isSalesGrowth = lower.includes('sales') || lower.includes('growth') || lower.includes('marketing') || lower.includes('ae') || lower.includes('bdr');
+
+    const domainCompetency = isTechRole
+      ? 'System architecture, clean code execution, distributed systems, and feature velocity.'
+      : isDesignRole
+      ? 'Product UI/UX design systems, user research, rapid prototyping, and interaction design.'
+      : isSalesGrowth
+      ? 'Pipeline generation, enterprise deal execution, customer acquisition, and CRM mastery.'
+      : 'Domain excellence, startup velocity, cross-functional collaboration, and proactive execution.';
+
     return {
       draftContent: `### Talent Executive Working Draft: ${task.title}
 **Assisting AI:** Echo (Chief People Officer)
-**Target Organization:** ${companyName || 'Engineering & Operations'}
+**Target Organization:** ${companyName || 'Team & Operations'}
 
 #### 1. Candidate Persona & Competency Matrix
-- **Core Technical Stack:** TypeScript, React 19, Node.js / PostgreSQL, Cloud Architecture.
-- **Leveling:** Senior / Staff IC. Minimum 5+ years building distributed resilient systems.
-- **Autonomous Velocity:** Proven track record leading features end-to-end with high quality.
+- **Core Competencies:** ${domainCompetency}
+- **Leveling:** Senior / Staff IC. Proven track record leading key initiatives with high ownership.
+- **Autonomous Velocity:** Self-starter mindset capable of shipping in high-growth startup environments.
 
 #### 2. Four-Stage Interview Loop
 1. **Recruiter Screen (30m):** Experience alignment, compensation expectation check, work authorization.
-2. **Technical Deep-Dive & Live Pairing (60m):** System design scenario, clean code decomposition.
-3. **Bar Raiser Architecture Review (45m):** Resilience, database concurrency, API design.
+2. **Domain Deep-Dive & Live Case (60m):** Real-world scenario problem solving, quality assessment.
+3. **Cross-Functional Architecture & Impact (45m):** Collaboration, system complexity, quality standards.
 4. **Founder Executive & Culture Fit (45m):** Startup mindset, ownership ethos, mutual alignment.
 
 #### 3. Compensation & Leveling Guardrail
@@ -1707,9 +1719,9 @@ export function generateAgentDraftContent(task: DelegatedTask, companyName?: str
 - **Budget Compliance:** Checked against company financial policies and cash runway bounds.
 
 #### 4. 90-Day Onboarding Plan
-- **Day 1–30:** Complete local setup, deploy first pull request within week 1, shadow on-call rotation.
-- **Day 31–60:** Own core feature architecture, pair with product stakeholders.
-- **Day 61–90:** Lead autonomous sprint deliverables, contribute to system scaling improvements.`,
+- **Day 1–30:** Complete setup, complete first meaningful delivery within week 1, understand team workflows.
+- **Day 31–60:** Own core domain milestones, partner with cross-functional teammates.
+- **Day 61–90:** Lead autonomous quarterly deliverables, contribute to company-wide improvements.`,
       guidelines: [
         'Verify headcount authorization with Finance before extending offers.',
         'Follow company interview scorecard standards.',
@@ -1873,77 +1885,94 @@ export async function getRoleScopedContext(params: {
     return [];
   }) || [];
 
-  // Standard curated company reference documents scoped strictly by role
-  const standardDocs = [
+  // STRICT ROLE FILTERING: Zero cross-department leaks!
+  // Map real documents from database and classify by department
+  const formattedDocs = (allDocs as any[]).map(doc => {
+    let category = doc.category;
+    if (!category) {
+      const lower = `${doc.name} ${doc.summary || ''}`.toLowerCase();
+      if (lower.includes('hiring') || lower.includes('handbook') || lower.includes('talent') || lower.includes('recruitment') || lower.includes('interview') || lower.includes('offer')) {
+        category = 'TALENT';
+      } else if (lower.includes('financial') || lower.includes('treasury') || lower.includes('budget') || lower.includes('burn') || lower.includes('runway') || lower.includes('cash') || lower.includes('cap table')) {
+        category = 'FINANCE';
+      } else if (lower.includes('growth') || lower.includes('marketing') || lower.includes('gtm') || lower.includes('campaign') || lower.includes('sales') || lower.includes('brand')) {
+        category = 'GROWTH';
+      } else if (lower.includes('operation') || lower.includes('runbook') || lower.includes('infra') || lower.includes('sla') || lower.includes('devops')) {
+        category = 'OPERATIONS';
+      } else {
+        category = 'GENERAL';
+      }
+    }
+    return {
+      id: doc.id,
+      name: doc.name,
+      type: doc.type,
+      summary: doc.summary || 'Verified corporate document.',
+      category
+    };
+  });
+
+  const baselinePolicyTemplates = [
     {
-      id: 'doc_hiring_policy',
-      name: 'Engineering Hiring Policy & Leveling Rubric.pdf',
-      type: 'pdf',
-      summary: 'Guidelines for technical interviews, candidate rubrics, compensation bands, and offer sign-offs.',
+      id: `std_doc_hiring_${membership.startupId}`,
+      name: 'Engineering Hiring Policy & Leveling Rubric',
+      type: 'policy',
+      summary: 'Company baseline hiring protocols, interview stages, and leveling rubric.',
       category: 'TALENT'
     },
     {
-      id: 'doc_employee_handbook',
-      name: 'Employee Handbook & Culture Principles.pdf',
-      type: 'pdf',
-      summary: 'Company values, remote work policies, equipment stipends, leave entitlements, and code of conduct.',
+      id: `std_doc_handbook_${membership.startupId}`,
+      name: 'Employee Handbook & Operating Principles',
+      type: 'handbook',
+      summary: 'Company operational guidelines, working norms, and employee governance.',
       category: 'TALENT'
     },
     {
-      id: 'doc_financial_statement',
-      name: 'Q3 Financial Statements & Treasury Allocation.xlsx',
-      type: 'spreadsheet',
-      summary: 'Cash balance reserves, monthly recurring burn, departmental budgets, and runway projections.',
+      id: `std_doc_financials_${membership.startupId}`,
+      name: 'Financial Statements & Treasury Allocation',
+      type: 'financial',
+      summary: 'Quarterly financial statements, burn rate accounting, and treasury ledger.',
       category: 'FINANCE'
     },
     {
-      id: 'doc_cap_table',
-      name: 'Cap Table & Equity Incentive Pool.xlsx',
-      type: 'spreadsheet',
-      summary: 'Shareholder distribution, option pool reserve, vesting schedules, and 409A valuation benchmarks.',
+      id: `std_doc_captable_${membership.startupId}`,
+      name: 'Cap Table & Equity Pool Summary',
+      type: 'equity',
+      summary: 'Equity ownership breakdown, option pool allocation, and share ledger.',
       category: 'FINANCE'
     },
     {
-      id: 'doc_gtm_strategy',
-      name: 'Go-To-Market & Growth Playbook.pdf',
-      type: 'pdf',
-      summary: 'ICP definitions, acquisition funnels, brand guidelines, content distribution, and CAC payback targets.',
-      category: 'GROWTH'
-    },
-    {
-      id: 'doc_marketing_assets',
-      name: 'Brand Guidelines & Product Messaging.pdf',
-      type: 'pdf',
-      summary: 'Tone of voice, typography, color palettes, logo usage, and competitive positioning matrix.',
-      category: 'GROWTH'
-    },
-    {
-      id: 'doc_ops_runbook',
-      name: 'Operations Infrastructure & Tooling Runbook.pdf',
-      type: 'pdf',
-      summary: 'Cloud provisioning, incident response procedures, security compliance policies, and service level agreements.',
+      id: `std_doc_runbook_${membership.startupId}`,
+      name: 'Technical Architecture & Operations Runbook',
+      type: 'runbook',
+      summary: 'Infrastructure deployment runbooks, SLA tracking, and operational standards.',
       category: 'OPERATIONS'
+    },
+    {
+      id: `std_doc_growth_${membership.startupId}`,
+      name: 'Growth Strategy & Market Acquisition',
+      type: 'gtm',
+      summary: 'Customer acquisition channels, marketing funnels, and growth roadmap.',
+      category: 'GROWTH'
+    },
+    {
+      id: `std_doc_charter_${membership.startupId}`,
+      name: 'Company Governance Charter',
+      type: 'general',
+      summary: 'Corporate governance policies and cross-functional operating standards.',
+      category: 'GENERAL'
     }
   ];
 
-  const combinedDocs = [...standardDocs, ...allDocs];
+  const docsToFilter = formattedDocs.length > 0 ? formattedDocs : baselinePolicyTemplates;
 
-  // STRICT ROLE FILTERING: Zero cross-department leaks!
-  const accessibleDocuments = combinedDocs.filter(doc => {
-    if (isPrivileged) return true; // Founders / Admins see everything
+  const accessibleDocuments = docsToFilter.filter(doc => {
+    if (isPrivileged) return true; // Founders / Admins see all company documents
     const docCat = (doc.category || '').toUpperCase();
-    if (role === 'HR') {
-      return docCat === 'TALENT' || docCat === 'HR' || doc.name.toLowerCase().includes('hiring') || doc.name.toLowerCase().includes('handbook');
-    }
-    if (role === 'FINANCE') {
-      return docCat === 'FINANCE' || doc.name.toLowerCase().includes('financial') || doc.name.toLowerCase().includes('treasury') || doc.name.toLowerCase().includes('cap table') || doc.name.toLowerCase().includes('budget');
-    }
-    if (role === 'GROWTH') {
-      return docCat === 'GROWTH' || doc.name.toLowerCase().includes('marketing') || doc.name.toLowerCase().includes('growth') || doc.name.toLowerCase().includes('gtm') || doc.name.toLowerCase().includes('brand');
-    }
-    if (role === 'OPERATIONS') {
-      return docCat === 'OPERATIONS' || doc.name.toLowerCase().includes('runbook') || doc.name.toLowerCase().includes('infrastructure') || doc.name.toLowerCase().includes('operations');
-    }
+    if (role === 'HR') return docCat === 'TALENT' || docCat === 'HR' || docCat === 'GENERAL';
+    if (role === 'FINANCE') return docCat === 'FINANCE' || docCat === 'GENERAL';
+    if (role === 'GROWTH') return docCat === 'GROWTH' || docCat === 'GENERAL';
+    if (role === 'OPERATIONS') return docCat === 'OPERATIONS' || docCat === 'GENERAL';
     return false;
   });
 
@@ -2179,13 +2208,13 @@ ${question}
 INSTRUCTIONS:
 1. Act as a supportive, expert, and professional AI executive partner.
 2. Directly answer the employee's question or fulfill their request grounded in the permitted policies.
-3. If founder feedback is present, ensure the advice explicitly satisfies the founder's directive.
-4. If past decision memories are present, cite them to answer questions on why decisions were made.
-5. If the employee asks to edit, refine, or add to their draft, provide concrete, ready-to-use text in a designated suggestions section.
-6. Explain the rationale for your recommendation clearly and concisely.
+3. Keep the response short, clear, and useful like top modern LLMs (ChatGPT, Claude). Avoid verbose boilerplate, generic filler, or unrelated context.
+4. If founder feedback is present, ensure the advice explicitly satisfies the founder's directive.
+5. If past decision memories are present, cite them concisely to explain why decisions were made.
+6. If the employee asks to edit, refine, or add to their draft, provide concrete, ready-to-use text in suggestedEdits.
 7. Return your response in JSON format with fields:
-   - "reply": string (conversational response to the employee)
-   - "explanation": string (brief justification or policy grounding)
+   - "reply": string (short, direct conversational response to the employee)
+   - "explanation": string (1-2 sentence justification or policy grounding)
    - "suggestedEdits": string (optional concrete snippet or improved deliverable section to apply)
 `;
       const candidateModels = ['gemini-2.5-flash', 'gemini-3.5-flash', 'gemini-2.5-pro'];
