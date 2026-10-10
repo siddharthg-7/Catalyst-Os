@@ -13,7 +13,11 @@
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down",
     "docker:build": "docker compose build",
-    "docker:logs": "docker compose logs -f"
+    "docker:logs": "docker compose logs -f",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up --build -d",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma db push"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1136.0",

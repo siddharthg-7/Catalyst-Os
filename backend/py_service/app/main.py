@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Injects all variables from .env into system memory at boot time
 
 import logging
+import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session

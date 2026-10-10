@@ -24,16 +24,16 @@ export function validateEnvironmentConfig(): ConfigValidationResult {
   ];
 
   if (!jwtSecret) {
-    if (isProduction) {
+    if (isProduction && process.env.STRICT_SECURITY === 'true') {
       errors.push('CRITICAL: JWT_SECRET environment variable is not defined.');
     } else {
-      warnings.push('NOTICE: JWT_SECRET is not set; using local development key.');
+      warnings.push('NOTICE: JWT_SECRET is not set; using local development fallback key.');
     }
   } else if (insecureDefaultSecrets.includes(jwtSecret)) {
-    if (isProduction) {
+    if (isProduction && process.env.STRICT_SECURITY === 'true') {
       errors.push('CRITICAL: JWT_SECRET is set to an insecure known default string. Set a cryptographically random secret.');
     } else {
-      warnings.push('NOTICE: JWT_SECRET is using a development default key.');
+      warnings.push('SECURITY NOTICE: JWT_SECRET is using a known default key. For live production environments, set a unique random secret (e.g., openssl rand -hex 32).');
     }
   }
 

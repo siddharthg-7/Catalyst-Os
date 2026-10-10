@@ -1,14 +1,30 @@
+# =================================================================
+# CatalystOS - Production Multi-Container Deployment Orchestration
+# Includes: Nginx Reverse Proxy, Node Gateway (SPA+API), FastAPI AI, PostgreSQL+pgvector
+# =================================================================
+
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: catalyst-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      node-gateway:
+        condition: service_healthy
+
   postgres:
     image: pgvector/pgvector:pg16
     container_name: catalyst-postgres
     restart: always
     environment:
-      POSTGRES_DB: catalyst_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: catalyst_secure_pass
-    ports:
-      - "5433:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-catalyst_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-catalyst_secure_pass}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./prisma/migrations/init_pgvector.sql:/docker-entrypoint-initdb.d/01-init_pgvector.sql:ro
@@ -24,11 +40,11 @@ services:
       dockerfile: Dockerfile
     container_name: catalyst-fastapi
     restart: always
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     env_file:
       - path: .env
-        required: false
+        required: true
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:catalyst_secure_pass@postgres:5432/catalyst_db?schema=public}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
@@ -52,11 +68,11 @@ services:
       dockerfile: Dockerfile
     container_name: catalyst-node-gateway
     restart: always
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     env_file:
       - path: .env
-        required: false
+        required: true
     environment:
       - PORT=3000
       - NODE_ENV=production
@@ -66,7 +82,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-${GEMINI_API_KEY}}
       - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
-      - JWT_SECRET=${JWT_SECRET:-catalyst_os_neon_jwt_secret_2026}
+      - JWT_SECRET=${JWT_SECRET}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION:-us-east-1}

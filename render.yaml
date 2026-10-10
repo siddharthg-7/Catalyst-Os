@@ -1,0 +1,56 @@
+# =========================================================
+# CatalystOS Render Blueprint Specification (render.yaml)
+# Deploy with Render Blueprints: https://render.com/docs/blueprint-spec
+# =========================================================
+
+services:
+  # 1. Main CatalystOS Full-Stack Server (Express API + Vite React SPA)
+  - type: web
+    name: catalyst-node-gateway
+    runtime: docker
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    plan: standard
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: FASTAPI_URL
+        fromService:
+          type: web
+          name: catalyst-fastapi
+          property: host
+
+  # 2. FastAPI Python AI Agent Service
+  - type: web
+    name: catalyst-fastapi
+    runtime: docker
+    dockerfilePath: backend/py_service/Dockerfile
+    dockerContext: backend/py_service
+    plan: standard
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 8000
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
